@@ -76,7 +76,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
 
   beforeEach(function() {
     ['event', 'recurringEventWithTwoExceptions'].forEach(function(file) {
-      shells[file] = new CalendarShell(ICAL.Component.fromString(__FIXTURES__[('modules/linagora.esn.calendar/frontend/app/fixtures/calendar/' + file + '.ics')]), {
+      shells[file] = new CalendarShell(ICAL.Component.fromString(__FIXTURES__[('frontend/app/fixtures/calendar/' + file + '.ics')]), {
         etag: 'etag',
         path: 'path'
       });

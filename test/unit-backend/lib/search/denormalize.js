@@ -6,7 +6,7 @@ var fs = require('fs-extra');
 describe('search helpers', function() {
 
   beforeEach(function() {
-    this.calendarModulePath = this.moduleHelpers.modulesPath + 'linagora.esn.calendar';
+    this.calendarModulePath = this.moduleHelpers.modulePath;
     this.denormalize = require(this.calendarModulePath + '/backend/lib/search/denormalize');
   });
 

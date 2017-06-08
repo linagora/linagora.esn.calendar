@@ -12,8 +12,6 @@ describe('The calendar WS events module', function() {
     let self, eventHandler, calendarHandler;
 
     beforeEach(function() {
-      this.moduleHelpers.backendPath = this.moduleHelpers.modulesPath + 'linagora.esn.calendar/backend';
-
       self = this;
 
       this.publishSpy = sinon.spy();

@@ -32,7 +32,7 @@ describe('The calendar controller', function() {
       }
     };
     this.moduleHelpers.addDep('user', userModuleMock);
-    this.calendarModulePath = this.moduleHelpers.modulesPath + 'linagora.esn.calendar';
+    this.calendarModulePath = this.moduleHelpers.modulePath;
   });
 
   describe('the changeParticipation function', function() {

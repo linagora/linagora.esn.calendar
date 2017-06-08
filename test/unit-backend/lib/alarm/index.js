@@ -12,7 +12,7 @@ describe('alarm module', function() {
   var emailModule, sendHTMLMock, helpers, localstub, cron, userLib, esnConfigMock;
 
   beforeEach(function() {
-    this.calendarModulePath = this.moduleHelpers.modulesPath + 'linagora.esn.calendar';
+    this.calendarModulePath = this.moduleHelpers.modulePath;
     sendHTMLMock = sinon.stub().returns(q.when({}));
     emailModule = {
       getMailer: function() {

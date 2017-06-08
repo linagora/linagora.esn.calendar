@@ -4,7 +4,7 @@ var expect = require('chai').expect;
 
 describe('The calendar middlewares', function() {
   beforeEach(function() {
-    this.calendarModulePath = this.moduleHelpers.modulesPath + 'linagora.esn.calendar';
+    this.calendarModulePath = this.moduleHelpers.modulePath;
   });
 
   describe('the decodeJWT middleware', function() {

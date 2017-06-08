@@ -9,7 +9,6 @@ describe('The calendar search pubsub module', function() {
   let jcal, ics, logger, pubsub, globalpubsub, localpubsub;
 
   beforeEach(function() {
-    this.moduleHelpers.backendPath = this.moduleHelpers.modulesPath + 'linagora.esn.calendar/backend';
     logger = {
       error: function() {},
       debug: function() {},

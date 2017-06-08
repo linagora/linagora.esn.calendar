@@ -7,7 +7,7 @@ var icaljs = require('ical.js');
 describe('jcalHelper', function() {
 
   beforeEach(function() {
-    this.calendarModulePath = this.moduleHelpers.modulesPath + 'linagora.esn.calendar';
+    this.calendarModulePath = this.moduleHelpers.modulePath;
     this.jcalHelper = require(this.calendarModulePath + '/backend/lib/helpers/jcal');
   });
 

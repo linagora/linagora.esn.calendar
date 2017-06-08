@@ -1222,7 +1222,7 @@ describe('The calEventService service', function() {
     });
 
     it('should change the participation status if the event is recurrent', function(done) {
-      var recurrentCalendarShell = new self.CalendarShell(new ICAL.Component(ICAL.parse(__FIXTURES__['modules/linagora.esn.calendar/frontend/app/fixtures/calendar/reventWithTz.ics'])), {path: '/path/to/uid.ics'});
+      var recurrentCalendarShell = new self.CalendarShell(new ICAL.Component(ICAL.parse(__FIXTURES__['frontend/app/fixtures/calendar/reventWithTz.ics'])), {path: '/path/to/uid.ics'});
 
       recurrentCalendarShell.attendees = [{email: 'test@example.com'}];
       var copy = new self.CalendarShell(new ICAL.Component(ICAL.helpers.clone(recurrentCalendarShell.vcalendar.toJSON(), true)));

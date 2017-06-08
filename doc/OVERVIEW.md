@@ -84,7 +84,7 @@ To achieve that:
 * a Sabre plugin pushes a message in RabbitMQ each time something happens which targets a calendar or an event.
 * the ESN then listens to RabbitMQ and propagates the action from Sabre to connected OP clients using websockets.
 
-In the ESN: the code listening to RabbitMq and sending events through websockets is in `modules/linagora.esn.calendar/backend/ws/calendar.js`.
+In the ESN: the code listening to RabbitMq and sending events through websockets is in `backend/ws/calendar.js`.
 
 ## Frontend
 
@@ -92,7 +92,7 @@ In the ESN: the code listening to RabbitMq and sending events through websockets
 
 The frontend of the calendar module uses Fullcalendar (https://fullcalendar.io/) through its Angular wrapper ui-calendar (http://angular-ui.github.io/ui-calendar/) to display and interact with a calendar view.
 
-The main interactions with ui-calendar are done in `modules/linagora.esn.calendar/frontend/app/calendar/calendar-view/calendar-view.controller.js`
+The main interactions with ui-calendar are done in `frontend/app/calendar/calendar-view/calendar-view.controller.js`
 
 This file defines most of the behavior of interactions between the frontend code and the calendar display.
 
@@ -100,21 +100,21 @@ This file defines most of the behavior of interactions between the frontend code
 
 Fullcalendar uses a modified version of momentjs (https://momentjs.com) to manage all the time & dates inside the calendar.
 
-But we had to modify it to have it usable with ICAL objects. (cf `modules/linagora.esn.calendar/frontend/app/services/fc-moment.js`)
+But we had to modify it to have it usable with ICAL objects. (cf `frontend/app/services/fc-moment.js`)
 
 ### Event Sources
 
 Fullcalendar uses "event sources" to fetch events. So we built event sources which fetch events from Sabre. It is worth noting that an event source represents a given calendar.
 
-They can be created using an Angular service in `modules/linagora.esn.calendar/frontend/app/services/calendar-event-source.js`
+They can be created using an Angular service in `frontend/app/services/calendar-event-source.js`
 
-In order to reduce the number of event requests we built a cache around these event sources : `modules/linagora.esn.calendar/frontend/app/services/cached-event-source.js`
+In order to reduce the number of event requests we built a cache around these event sources : `frontend/app/services/cached-event-source.js`
 
 ### Shells
 
 Events and Calendars are fetched from Sabre as Jcal objects and then parsed using ical.js into ical.js objects.
 
-However these objects are not as easy to manipulate as we wanted. For example, we wanted to have FcMoments for dates instead of Ical.js datetimes. So we created wrappers around them. They can be found in `modules/linagora.esn.calendar/frontend/app/services/shells`:
+However these objects are not as easy to manipulate as we wanted. For example, we wanted to have FcMoments for dates instead of Ical.js datetimes. So we created wrappers around them. They can be found in `frontend/app/services/shells`:
 
 * CalendarShell : shell built around a Vcalendar object
 * CalendarCollectionShell: object representing a calendar
@@ -134,7 +134,7 @@ These services are built around `calendar-api` and `event-api` which themselves 
 
 ### Caldav-client
 
-`modules/linagora.esn.calendar/backend/lib/caldav-client/index.js`
+`backend/lib/caldav-client/index.js`
 
 This file allows to query Sabre from the backend. It is used by some other features.
 
@@ -148,7 +148,7 @@ For now we only handle the 'EMAIL' type of VAlarm which means that an email is s
 
 Due to our realtime mechanism, when an event is created/modified/deleted in Sabre, the ESN is notified of this through RabbitMq.
 
-And then the ESN calendar backend triggers a special treatment if the event has a VAlarm. (cf `modules/linagora.esn.calendar/backend/lib/alarm/index.js`).
+And then the ESN calendar backend triggers a special treatment if the event has a VAlarm. (cf `backend/lib/alarm/index.js`).
 
 This treatment is to create/modify/delete a future email sending task built using another ESN module (linagora.esn.cron)
 
@@ -160,4 +160,4 @@ Each module who wants to be searchable has to provide 3 things:
 + in the backend: a route which queries ES to retrieve the Data
 + in the frontend:  a provider which queries the backend to get the data from ES and display it in the search main page
 
-The backend part interacting with ES is in `modules/linagora.esn.calendar/backend/lib/search` and the client side (provider) is `modules/linagora.esn.calendar/frontend/app/services/events-provider/events-provider.js`
+The backend part interacting with ES is in `backend/lib/search` and the client side (provider) is `frontend/app/services/events-provider/events-provider.js`

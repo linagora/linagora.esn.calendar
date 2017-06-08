@@ -12,7 +12,7 @@ describe('EventMailListener module', function() {
 
   beforeEach(function() {
 
-    calendarModulePath = this.moduleHelpers.modulesPath + 'linagora.esn.calendar';
+    calendarModulePath = this.moduleHelpers.modulePath;
 
     jsonMessage = {
       method: 'REQUEST',

@@ -10,20 +10,7 @@ describe('CalendarRightShell factory', function() {
   beforeEach(function() {
     defaultOwnerId = 'ownerId';
 
-    session = {
-      user: {
-        _id: defaultOwnerId
-      },
-      ready: {
-        then: angular.noop
-      }
-    };
-
     angular.mock.module('esn.calendar');
-
-    angular.mock.module(function($provide) {
-      $provide.value('session', session);
-    });
 
     angular.mock.inject(function(_CalendarRightShell_, _session_, _CAL_CALENDAR_PUBLIC_RIGHT_, _CAL_CALENDAR_SHARED_RIGHT_) {
       CalendarRightShell = _CalendarRightShell_;
@@ -32,13 +19,15 @@ describe('CalendarRightShell factory', function() {
       CAL_CALENDAR_SHARED_RIGHT = _CAL_CALENDAR_SHARED_RIGHT_;
     });
 
-    var serverPropfindResponse = JSON.parse(__FIXTURES__['modules/linagora.esn.calendar/test/unit-frontend/fixtures/shell/propfind_right_result.json']);
+    var serverPropfindResponse = JSON.parse(__FIXTURES__['test/unit-frontend/fixtures/shell/propfind_right_result.json']);
 
     calendarRightShell = new CalendarRightShell(serverPropfindResponse.acl, serverPropfindResponse.invite);
   });
 
   describe('Constructor', function() {
     it('should initialize ownerId with defaultOwnerId when invite are not specified', function() {
+      session.user._id = defaultOwnerId;
+
       calendarRightShell = new CalendarRightShell();
       expect(calendarRightShell.getOwnerId()).to.be.equal(defaultOwnerId);
     });

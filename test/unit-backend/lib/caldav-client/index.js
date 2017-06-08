@@ -17,7 +17,7 @@ describe('Caldav-client helper', function() {
   });
 
   beforeEach(function() {
-    this.calendarModulePath = this.moduleHelpers.modulesPath + 'linagora.esn.calendar';
+    this.calendarModulePath = this.moduleHelpers.modulePath;
     authMock = {
       token: {
         getNewToken: sinon.spy(function(opts, callback) {

@@ -5,7 +5,7 @@ const expect = require('chai').expect;
 describe('The event helper', function() {
 
   beforeEach(function() {
-    this.calendarModulePath = this.moduleHelpers.modulesPath + 'linagora.esn.calendar';
+    this.calendarModulePath = this.moduleHelpers.modulePath;
     this.eventHelper = require(this.calendarModulePath + '/backend/lib/helpers/event');
   });
 

@@ -8,7 +8,6 @@ describe('The websocket event handler module', function() {
   beforeEach(function() {
     var self = this;
 
-    this.moduleHelpers.backendPath = this.moduleHelpers.modulesPath + 'linagora.esn.calendar/backend';
     this.socketListeners = {};
     this.io = {
       of: function() {

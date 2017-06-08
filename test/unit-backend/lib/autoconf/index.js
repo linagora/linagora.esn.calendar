@@ -17,7 +17,7 @@ describe('The Calendar autoconf transformer', function() {
 
   beforeEach(function() {
     config = {};
-    modulePath = this.moduleHelpers.modulesPath + 'linagora.esn.calendar';
+    modulePath = this.moduleHelpers.modulePath;
   });
 
   it('should call client.getCalendarList and reject if it rejects', function(done) {
