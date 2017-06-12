@@ -14,6 +14,7 @@
     'esn.form.helper',
     'esn.header',
     'esn.highlight',
+    'esn.i18n',
     'esn.ical',
     'esn.lodash-wrapper',
     'esn.media.query',
