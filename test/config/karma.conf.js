@@ -74,6 +74,7 @@ module.exports = function(config) {
       'frontend/components/angular-auto-focus/angular-auto-focus.js',
       'frontend/components/awesome-angular-swipe/lib/awesome-angular-swipe.js',
       'frontend/components/Autolinker.js/dist/Autolinker.js',
+      'frontend/components/angular-translate/angular-translate.min.js',
       'frontend/components/angular-component/dist/angular-component.min.js',
       'frontend/components/waves/dist/waves.min.js',
 
