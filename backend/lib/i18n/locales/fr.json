@@ -166,5 +166,7 @@
   "%s has been modified.": "%s a été modifiée.",
   "You will attend this meeting": "Vous allez assister à cette réunion",
   "You will not attend this meeting": "Vous n'assisterez pas à cette réunion",
-  "You may attend this meeting": "Vous pouvez assister à cette réunion"
+  "You may attend this meeting": "Vous pouvez assister à cette réunion",
+  "%s, %s in %s": "%s, %s à %s",
+  "%s, %s": "%s, %s"
 }

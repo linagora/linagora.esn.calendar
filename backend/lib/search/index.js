@@ -13,7 +13,8 @@ module.exports = dependencies => {
     indexEvent,
     listen,
     removeEventFromIndex,
-    searchEvents
+    searchEvents,
+    searchNextEvent
   };
 
   function indexEvent(event, callback) {
@@ -40,8 +41,43 @@ module.exports = dependencies => {
     searchHandler.removeFromIndex(event, callback);
   }
 
+  function searchNextEvent(user, callback) {
+    return _searchEvents({
+      range: {
+        start: {
+          gt: 'now'
+        }
+      }
+    }, {
+      limit: 1,
+      sortKey: 'start',
+      sortOrder: 'asc',
+      userId: user.id
+    }, callback);
+  }
+
   function searchEvents(query, callback) {
     const terms = query.search;
+
+    return _searchEvents({
+      multi_match: {
+        query: terms,
+        type: 'cross_fields',
+        fields: [
+          'summary',
+          'description',
+          'organizer.cn',
+          'organizer.email',
+          'attendees.email',
+          'attendees.cn'
+        ],
+        operator: 'and',
+        tie_breaker: 0.5
+      }
+    }, query, callback);
+  }
+
+  function _searchEvents(esQuery, query, callback) {
     const offset = query.offset || 0;
     const limit = 'limit' in query ? query.limit : SEARCH.DEFAULT_LIMIT;
     const sortKey = query.sortKey || SEARCH.DEFAULT_SORT_KEY;
@@ -56,22 +92,7 @@ module.exports = dependencies => {
     const elasticsearchQuery = {
       query: {
         bool: {
-          must: {
-            multi_match: {
-              query: terms,
-              type: 'cross_fields',
-              fields: [
-                'summary',
-                'description',
-                'organizer.cn',
-                'organizer.email',
-                'attendees.email',
-                'attendees.cn'
-              ],
-              operator: 'and',
-              tie_breaker: 0.5
-            }
-          }
+          must: esQuery
         }
       },
       sort: sort
@@ -102,10 +123,10 @@ module.exports = dependencies => {
     logger.debug('Searching events with options', {
       userId: query.userId.toString(),
       calendarId: query.calendarId,
-      search: terms,
-      offset: offset,
-      limit: limit,
-      sort: sort
+      esQuery,
+      offset,
+      limit,
+      sort
     });
 
     elasticsearch.searchDocuments({

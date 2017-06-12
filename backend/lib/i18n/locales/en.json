@@ -166,5 +166,7 @@
   "%s has been modified.": "%s has been modified.",
   "You will attend this meeting": "You will attend this meeting",
   "You will not attend this meeting": "You will not attend this meeting",
-  "You may attend this meeting": "You may attend this meeting"
+  "You may attend this meeting": "You may attend this meeting",
+  "%s, %s in %s": "%s, %s in %s",
+  "%s, %s": "%s, %s"
 }

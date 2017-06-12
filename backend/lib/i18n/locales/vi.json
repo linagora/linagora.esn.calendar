@@ -166,5 +166,7 @@
   "%s has been modified.": "%s đã được sửa.",
   "You will attend this meeting": "Bạn sẽ tham dự sự kiện này",
   "You will not attend this meeting": "Bạn sẽ không tham dự sự kiện này",
-  "You may attend this meeting": "Bạn có thể sẽ tham dự sự kiện này"
+  "You may attend this meeting": "Bạn có thể sẽ tham dự sự kiện này",
+  "%s, %s in %s": "%s, %s ở %s",
+  "%s, %s": "%s, %s"
 }

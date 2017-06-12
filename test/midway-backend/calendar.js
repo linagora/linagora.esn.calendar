@@ -38,6 +38,13 @@ describe('The calendars API', function() {
 
   });
 
+  beforeEach(function() {
+    var expressApp = require('../../backend/webserver/application')(this.helpers.modules.current.deps);
+
+    expressApp.use('/api', this.helpers.modules.current.lib.api);
+    this.app = this.helpers.modules.getWebServer(expressApp);
+  });
+
   afterEach(function(done) {
     this.helpers.api.cleanDomainDeployment(this.models, function() {
       davserver.close(done);
@@ -45,12 +52,6 @@ describe('The calendars API', function() {
   });
 
   describe('POST /api/calendars/:objectType/:id/events', function() {
-
-    beforeEach(function() {
-      var expressApp = require('../../backend/webserver/application')(this.helpers.modules.current.deps);
-      expressApp.use('/', this.helpers.modules.current.lib.api.calendar);
-      this.app = this.helpers.modules.getWebServer(expressApp);
-    });
 
     it('should return 401 if not logged in', function(done) {
       this.helpers.api.requireLogin(this.app, 'post', '/api/calendars/community/' + community._id + '/events', done);
@@ -177,10 +178,6 @@ describe('The calendars API', function() {
     var jwtCoreModule;
 
     beforeEach(function(done) {
-      var expressApp = require('../../backend/webserver/application')(this.helpers.modules.current.deps);
-      expressApp.use('/', this.helpers.modules.current.lib.api.calendar);
-      this.app = this.helpers.modules.getWebServer(expressApp);
-
       jwtCoreModule = this.helpers.requireBackend('core/auth/jwt');
 
       this.helpers.jwt.saveTestConfiguration(done);
@@ -201,12 +198,6 @@ describe('The calendars API', function() {
   });
 
   describe('POST /api/calendars/inviteattendees', function() {
-
-    beforeEach(function() {
-      var expressApp = require('../../backend/webserver/application')(this.helpers.modules.current.deps);
-      expressApp.use('/', this.helpers.modules.current.lib.api.calendar);
-      this.app = this.helpers.modules.getWebServer(expressApp);
-    });
 
     it('should send 401 if not logged in', function(done) {
       this.helpers.api.requireLogin(this.app, 'post', '/api/calendars/inviteattendees', done);
@@ -337,9 +328,6 @@ describe('The calendars API', function() {
     };
 
     beforeEach(function() {
-      var expressApp = require('../../backend/webserver/application')(this.helpers.modules.current.deps);
-      expressApp.use('/', this.helpers.modules.current.lib.api.calendar);
-      this.app = this.helpers.modules.getWebServer(expressApp);
       require('../../backend/lib/search')(this.helpers.modules.current.deps).listen();
     });
 
