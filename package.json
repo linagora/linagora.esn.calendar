@@ -4,20 +4,27 @@
   "description": "Calendar",
   "main": "index.js",
   "scripts": {
-    "test": "grunt test"
+    "test": "grunt test",
+    "postinstall": "bower install --production --allow-root"
   },
   "author": "Linagora folks <dev@linagora.com>",
   "license": "AGPL-3.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/linagora/linagora.esn.calendar"
+    "url": "https://ci.linagora.com/linagora/lgs/openpaas/linagora.esn.calendar.git"
   },
   "dependencies": {
+    "async": "2.4.1",
     "awesome-module": "1.0.0",
     "express": "4.14.0",
     "glob-all": "3.1.0",
+    "ical.js": "linagora/ical.js#v1.1.2-#279-require-twice-protection",
+    "lodash": "4.17.4",
+    "moment-timezone": "0.5.13",
+    "mongoose": "4.7.1",
     "q": "1.4.1",
-    "ldapauth-fork": "github:linagora/node-ldapauth-fork#a07fabf472c16cbf533dfe0c7319d5ce79a869dc"
+    "request": "2.81.0",
+    "url-join": "2.0.2"
   },
   "devDependencies": {
     "body-parser": "1.15.2",
@@ -51,7 +58,6 @@
     "grunt-wait-server": "0.3.0",
     "i18n": "0.8.3",
     "i18n-checker": "git+https://ci.open-paas.org/stash/scm/or/i18n-checker.git#3539a122a59",
-    "ical.js": "linagora/ical.js#v1.1.2-#279-require-twice-protection",
     "karma": "1.3.0",
     "karma-chrome-launcher": "2.0.0",
     "karma-coverage": "1.1.1",
