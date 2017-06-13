@@ -6,9 +6,12 @@ const async = require('async');
 const Q = require('q');
 const _ = require('lodash');
 const path = require('path');
+const uuid = require('node-uuid');
+const ICAL = require('ical.js');
 
 const JSON_CONTENT_TYPE = 'application/json';
 const DEFAULT_CALENDAR_NAME = 'Events';
+const DEFAULT_CALENDAR_URI = 'events';
 
 module.exports = dependencies => {
   const davserver = dependencies('davserver').utils;
@@ -17,9 +20,52 @@ module.exports = dependencies => {
   return {
     getCalendarList,
     getEvent,
+    getEventInDefaultCalendar,
     getEventPath,
-    iTipRequest
+    storeEvent,
+    storeEventInDefaultCalendar,
+    deleteEvent,
+    deleteEventInDefaultCalendar,
+    iTipRequest,
+    createEventInDefaultCalendar
   };
+
+  function createEventInDefaultCalendar(user, options) {
+    const eventUid = uuid.v4(),
+          event = _buildJCalEvent(eventUid, options);
+
+    return storeEventInDefaultCalendar(user, eventUid, event);
+  }
+
+  function storeEventInDefaultCalendar(user, eventUid, event) {
+    return storeEvent(user, DEFAULT_CALENDAR_URI, eventUid, event);
+  }
+
+  function storeEvent(user, calendarUri, eventUid, event) {
+    return _requestCaldav(user.id, calendarUri, eventUid, (url, token) => ({
+      method: 'PUT',
+      url,
+      json: true,
+      headers: {
+        ESNToken: token
+      },
+      body: event
+    }));
+  }
+
+  function deleteEventInDefaultCalendar(user, eventUid) {
+    return deleteEvent(user, DEFAULT_CALENDAR_URI, eventUid);
+  }
+
+  function deleteEvent(user, calendarUri, eventUid) {
+    return _requestCaldav(user.id, calendarUri, eventUid, (url, token) => ({
+      method: 'DELETE',
+      url,
+      headers: {
+        ESNToken: token
+      }
+    }));
+  }
 
   function getCalendarList(userId) {
     return _requestCaldav(userId, null, null, (url, token) => ({
@@ -47,6 +93,10 @@ module.exports = dependencies => {
 
         return [];
       });
+  }
+
+  function getEventInDefaultCalendar(user, eventUID) {
+    return getEvent(user.id, DEFAULT_CALENDAR_URI, eventUID);
   }
 
   function getEvent(userId, calendarURI, eventUID) {
@@ -108,5 +158,21 @@ module.exports = dependencies => {
     davserver.getDavEndpoint(function(davserver) {
       return callback(urljoin(davserver, 'calendars', getEventPath(userId, calendarURI, eventUID)));
     });
+  }
+
+  function _buildJCalEvent(uid, options) {
+    const vCalendar = new ICAL.Component(['vcalendar', [], []]),
+          vEvent = new ICAL.Component('vevent'),
+          event = new ICAL.Event(vEvent);
+
+    event.uid = uid;
+    event.summary = options.summary;
+    event.location = options.location;
+    event.startDate = ICAL.Time.fromJSDate(options.start.toDate(), true);
+    event.endDate = ICAL.Time.fromJSDate(options.start.add(1, 'hour').toDate(), true);
+
+    vCalendar.addSubcomponent(vEvent);
+
+    return vCalendar;
   }
 };

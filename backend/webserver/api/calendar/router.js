@@ -11,24 +11,24 @@ module.exports = dependencies => {
   const tokenMW = dependencies('tokenMW');
   const router = express.Router();
 
-  router.post('/api/calendars/:objectType/:id/events',
+  router.post('/:objectType/:id/events',
     authorizationMW.requiresAPILogin,
     collaborationMW.load,
     collaborationMW.requiresCollaborationMember,
     controller.dispatchEvent);
 
-  router.post('/api/calendars/inviteattendees',
+  router.post('/inviteattendees',
     authorizationMW.requiresAPILogin,
     controller.inviteAttendees);
 
-  router.get('/api/calendars/event/participation',
+  router.get('/event/participation',
     authorizationMW.requiresJWT,
     calendarMW.decodeJWT,
     tokenMW.generateNewToken(),
     davMiddleware.getDavEndpoint,
     controller.changeParticipation);
 
-  router.get('/api/calendars/:calendarId/events.json',
+  router.get('/:calendarId/events.json',
     authorizationMW.requiresAPILogin,
     controller.searchEvents);
 

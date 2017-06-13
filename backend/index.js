@@ -38,7 +38,7 @@ const AwesomeCalendarModule = new AwesomeModule('linagora.esn.calendar', {
 
   states: {
     lib: function(dependencies, callback) {
-      const calendar = require('./webserver/api/calendar')(dependencies),
+      const api = require('./webserver/api')(dependencies),
             alarm = require('./lib/alarm')(dependencies),
             eventMailListener = require('./lib/event-mail-listener')(dependencies),
             search = require('./lib/search')(dependencies),
@@ -49,9 +49,7 @@ const AwesomeCalendarModule = new AwesomeModule('linagora.esn.calendar', {
         eventMailListener,
         search,
         constants,
-        api: {
-          calendar: calendar
-        }
+        api
       };
 
       return callback(null, lib);
@@ -72,7 +70,7 @@ const AwesomeCalendarModule = new AwesomeModule('linagora.esn.calendar', {
       // Register the webapp
       const app = require('./webserver/application')(dependencies);
 
-      app.use('/', this.api.calendar);
+      app.use('/api', this.api);
 
       const webserverWrapper = dependencies('webserver-wrapper');
 

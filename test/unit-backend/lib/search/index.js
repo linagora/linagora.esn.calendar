@@ -244,4 +244,47 @@ describe('The calendar search Module', function() {
       });
     });
   });
+
+  describe('The searchNextEvent function', function() {
+
+    it('should call search.searchDocuments with right parameters', function() {
+      deps.elasticsearch.searchDocuments = sinon.spy();
+
+      require('../../../../backend/lib/search')(dependencies).searchNextEvent({ id: 'userId' });
+
+      expect(deps.elasticsearch.searchDocuments).to.have.been.calledWith({
+        index: 'events.idx',
+        type: 'events',
+        from: 0,
+        size: 1,
+        body: {
+          sort: {
+            start: {
+              order: 'asc'
+            }
+          },
+          query: {
+            bool: {
+              filter: {
+                and: [{
+                  term: {
+                    userId: 'userId'
+                  }
+                }]
+              },
+              must: {
+                range: {
+                  start: {
+                    gt: 'now'
+                  }
+                }
+              }
+            }
+          }
+        }
+      });
+    });
+
+  });
+
 });

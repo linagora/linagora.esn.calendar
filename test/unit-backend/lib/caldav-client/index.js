@@ -1,8 +1,11 @@
 'use strict';
 
-const expect = require('chai').expect;
-const sinon = require('sinon');
-const mockery = require('mockery');
+const expect = require('chai').expect,
+      sinon = require('sinon'),
+      mockery = require('mockery'),
+      moment = require('moment');
+
+const DEFAULT_CALENDAR_URI = 'events';
 
 describe('Caldav-client helper', function() {
   let authMock, davServerMock, request, davEndpoint, userId, calendarId, eventId, token, jcal;
@@ -375,4 +378,157 @@ describe('Caldav-client helper', function() {
     });
 
   });
+
+  describe('the getEventInDefaultCalendar function', function() {
+
+    it('should GET an event in the default calendar', function(done) {
+      mockery.registerMock('request', opts => {
+        expect(opts).to.deep.equal({
+          method: 'GET',
+          url: [davEndpoint, 'calendars', userId, DEFAULT_CALENDAR_URI, eventId + '.ics'].join('/'),
+          headers: {
+            ESNToken: token
+          }
+        });
+
+        done();
+      });
+
+      this.requireModule().getEventInDefaultCalendar({ id: userId }, eventId);
+    });
+
+  });
+
+  describe('the storeEvent function', function() {
+
+    it('should PUT the event', function(done) {
+      const event = [['vcalendar', [], []]];
+
+      mockery.registerMock('request', opts => {
+        expect(opts).to.deep.equal({
+          method: 'PUT',
+          url: [davEndpoint, 'calendars', userId, calendarId, eventId + '.ics'].join('/'),
+          json: true,
+          headers: {
+            ESNToken: token
+          },
+          body: event
+        });
+
+        done();
+      });
+
+      this.requireModule().storeEvent({ id: userId }, calendarId, eventId, event);
+    });
+
+  });
+
+  describe('the storeEventInDefaultCalendar function', function() {
+
+    it('should PUT the event in the default calendar', function(done) {
+      const event = ['vcalendar', [], []];
+
+      mockery.registerMock('request', opts => {
+        expect(opts).to.deep.equal({
+          method: 'PUT',
+          url: [davEndpoint, 'calendars', userId, DEFAULT_CALENDAR_URI, eventId + '.ics'].join('/'),
+          json: true,
+          headers: {
+            ESNToken: token
+          },
+          body: event
+        });
+
+        done();
+      });
+
+      this.requireModule().storeEventInDefaultCalendar({ id: userId }, eventId, event);
+    });
+
+  });
+
+  describe('the deleteEvent function', function() {
+
+    it('should DELETE the event', function(done) {
+      mockery.registerMock('request', opts => {
+        expect(opts).to.deep.equal({
+          method: 'DELETE',
+          url: [davEndpoint, 'calendars', userId, calendarId, eventId + '.ics'].join('/'),
+          headers: {
+            ESNToken: token
+          }
+        });
+
+        done();
+      });
+
+      this.requireModule().deleteEvent({ id: userId }, calendarId, eventId);
+    });
+
+  });
+
+  describe('the deleteEventInDefaultCalendar function', function() {
+
+    it('should DELETE the event in the default calendar', function(done) {
+      mockery.registerMock('request', opts => {
+        expect(opts).to.deep.equal({
+          method: 'DELETE',
+          url: [davEndpoint, 'calendars', userId, DEFAULT_CALENDAR_URI, eventId + '.ics'].join('/'),
+          headers: {
+            ESNToken: token
+          }
+        });
+
+        done();
+      });
+
+      this.requireModule().deleteEventInDefaultCalendar({ id: userId }, eventId);
+    });
+
+  });
+
+  describe('the createEventInDefaultCalendar function', function() {
+
+    it('should create a 1h event in the default calendar', function(done) {
+      const summary = 'Summary',
+            location = 'Location',
+            start = moment('2017-01-01T12:00:00Z'),
+            event = [
+              'vcalendar',
+              [],
+              [
+                [
+                  'vevent',
+                  [
+                    ['uid', {}, 'text', 'UUIDv4'],
+                    ['summary', {}, 'text', summary],
+                    ['location', {}, 'text', location],
+                    ['dtstart', {}, 'date-time', '2017-01-01T12:00:00Z'],
+                    ['dtend', {}, 'date-time', '2017-01-01T13:00:00Z'] // 1h event
+                  ],
+                  []
+                ]
+              ]
+            ];
+
+      mockery.registerMock('node-uuid', { v4: () => 'UUIDv4' });
+      mockery.registerMock('request', opts => {
+        expect(opts).to.shallowDeepEqual({
+          method: 'PUT',
+          url: [davEndpoint, 'calendars', userId, DEFAULT_CALENDAR_URI, 'UUIDv4.ics'].join('/'),
+          json: true,
+          headers: {
+            ESNToken: token
+          }
+        });
+        expect(opts.body.jCal).to.deep.equal(event);
+
+        done();
+      });
+
+      this.requireModule().createEventInDefaultCalendar({ id: userId }, { summary, location, start });
+    });
+
+  });
+
 });
