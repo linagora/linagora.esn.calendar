@@ -310,7 +310,7 @@ describe('The calendars API', function() {
   });
 
   describe('/api/calendars/:calendarId/events.json', function() {
-    var localpubsub, message;
+    var localpubsub, message, counter = 1;
 
     var search = function(term, expectedSize, done) {
       var self = this;
@@ -348,7 +348,7 @@ describe('The calendars API', function() {
       message = {
         userId: user._id,
         calendarId: 'myCalendar',
-        eventUid: '8f043139-d7c3-4bf3-bf9d-eb31d4b067bf'
+        eventUid: 'event_' + counter++
       };
       message.ics = fs.readFileSync(__dirname + '/fixtures/completeMeeting.ics').toString('utf8');
       this.helpers.redis.publishConfiguration();
