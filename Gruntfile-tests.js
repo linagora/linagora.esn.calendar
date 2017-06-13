@@ -40,6 +40,7 @@ module.exports = function(grunt) {
     },
     mochacli: {
       options: {
+        flags: process.env.INSPECT ? ['--debug-brk', '--inspect'] : [],
         require: ['chai', 'mockery'],
         reporter: 'spec',
         timeout: process.env.TEST_TIMEOUT || 20000,

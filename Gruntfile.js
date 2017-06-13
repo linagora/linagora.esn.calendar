@@ -117,7 +117,8 @@ module.exports = function(grunt) {
   grunt.registerTask('kill-servers', 'kill servers', ['shell:mongo:kill', 'shell:redis:kill', 'shell:elasticsearch:kill']);
   grunt.registerTask('setup-environment', 'create temp folders and files for tests', gruntfileUtils.setupEnvironment());
   grunt.registerTask('clean-environment', 'remove temp folder for tests', gruntfileUtils.cleanEnvironment());
-  grunt.registerTask('setup-servers', ['spawn-servers', 'continue:on']);
+  grunt.registerTask('setup-elasticsearch-index', 'setup elasticsearch indexes', gruntfileUtils.setupElasticsearchIndex());
+  grunt.registerTask('setup-servers', ['spawn-servers', 'continue:on', 'setup-elasticsearch-index']);
   grunt.registerTask('test-midway-backend', ['setup-environment', 'setup-servers', 'run_grunt:midway_backend', 'kill-servers', 'clean-environment']);
   grunt.registerTask('test-unit-backend', 'Test backend code', ['run_grunt:unit_backend']);
   grunt.registerTask('test-unit-frontend', 'Test frontend code', ['run_grunt:unit_frontend']);

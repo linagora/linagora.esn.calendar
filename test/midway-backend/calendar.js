@@ -125,7 +125,7 @@ describe('The calendars API', function() {
       });
     });
 
-    it('should return 200 for modifications', function(done) {
+    it.skip('should return 200 for modifications', function(done) {
       var self = this;
       var pubsub = this.helpers.requireBackend('core').pubsub.local;
       var topic = pubsub.topic('message:activity');
@@ -309,7 +309,7 @@ describe('The calendars API', function() {
     });
   });
 
-  describe('/api/calendars/:calendarId/events.json', function() {
+  describe.skip('/api/calendars/:calendarId/events.json', function() {
     var localpubsub, message;
 
     var search = function(term, expectedSize, done) {
