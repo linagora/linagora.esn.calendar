@@ -1,6 +1,5 @@
 'use strict';
 
-const mockery = require('mockery');
 const chai = require('chai');
 const path = require('path');
 const fs = require('fs-extra');
@@ -76,18 +75,14 @@ after(function() {
 });
 
 beforeEach(function() {
-  mockery.enable({warnOnReplace: false, warnOnUnregistered: false, useCleanCache: true});
   this.testEnv.writeDBConfigFile();
 });
 
 afterEach(function() {
   try {
+    mongoose.disconnect();
     this.testEnv.removeDBConfigFile();
   } catch (e) {
     console.error(e);
   }
-
-  mockery.resetCache();
-  mockery.deregisterAll();
-  mockery.disable();
 });
