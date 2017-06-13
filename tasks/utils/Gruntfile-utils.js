@@ -287,19 +287,20 @@ GruntfileUtils.prototype.setupMongoReplSet = function setupMongoReplSet() {
 GruntfileUtils.prototype.setupElasticsearchIndex = function() {
   const grunt = this.grunt;
   const servers = this.servers;
-  const p = path.normalize(__dirname + '/../../config/elasticsearch/');
+  const p = path.normalize(__dirname + '/../../node_modules/esn-elasticsearch-configuration/dist/data/');
 
   return function() {
     const done = this.async();
     const esnConf = new EsnConfig({host: servers.host, port: servers.elasticsearch.port, path: p});
 
     Q.all([
-      esnConf.createIndex('chat.messages'),
-      esnConf.createIndex('chat.conversations')
+      esnConf.createIndex('users'),
+      esnConf.createIndex('events'),
+      esnConf.createIndex('contacts')
     ]).then(function() {
       grunt.log.write('Elasticsearch settings are successfully added');
       done(true);
-    }, done);
+    }, err => { throw err; });
   };
 };
 
