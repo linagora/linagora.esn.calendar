@@ -5,11 +5,14 @@
   angular.module('esn.calendar')
     .factory('calendarRestangular', calendarRestangular);
 
-  function calendarRestangular(Restangular) {
-    return Restangular.withConfig(function(RestangularConfigurer) {
-      RestangularConfigurer.setBaseUrl('/calendar/api/calendars');
+  function calendarRestangular(Restangular, httpConfigurer) {
+    var restangularInstance = Restangular.withConfig(function(RestangularConfigurer) {
       RestangularConfigurer.setFullResponse(true);
     });
+
+    httpConfigurer.manageRestangular(restangularInstance, '/calendar/api/calendars');
+
+    return restangularInstance;
   }
 
 })();
