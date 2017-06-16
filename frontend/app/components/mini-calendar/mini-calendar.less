@@ -1,5 +1,5 @@
 @mini-calendar-highlight-size-mobile: 35px;
-@mini-calendar-highlight-size-desktop: 38px;
+@mini-calendar-highlight-size-desktop: 28px;
 
 .mini-calendar {
 
@@ -17,11 +17,11 @@
   }
 
   .fc-basic-view .fc-body .fc-row {
-    min-height: 3em;
+    min-height: 2.7em;
   }
 
   tr:first-child>td>.fc-day-grid-event {
-    margin-top: 1px;
+    margin-top: 0;
   }
 
   .fc-head-container .fc-day-header, .fc-head-container .ui-widget-header .fc-week-number {
@@ -33,7 +33,7 @@
   }
 
   .fc-rigid .fc-content-skeleton {
-    top: 10px;
+    top: 8px;
   }
 
   .fc td, .fc th {
@@ -55,7 +55,7 @@
     height: @mini-calendar-highlight-size-mobile;
     margin-left: auto;
     margin-right: auto;
-    margin-top: 3px;
+    margin-top: 0;
   }
 
   .fc-today {
@@ -146,7 +146,7 @@
     padding-right: 0;
   }
 
-  tr:first-child>td>.fc-day-grid-event {
+  tr:first-child > td > .fc-day-grid-event {
     margin-left: auto;
     margin-right: auto;
   }
@@ -162,36 +162,84 @@
   }
 }
 
-
 @media (min-width: @screen-md-min) {
-  .mini-calendar {
-    .fc-basic-view .fc-body .fc-row {
-      min-height: 3.5em;
-    }
+  .calendar-view {
+    .mini-calendar {
+      padding-right: 10px;
 
-    .fc-rigid .fc-content-skeleton {
-      top: 12px;
-    }
+      .fc {
+        background-color: @body-bg;
+        box-shadow: none;
+      }
 
-    tr:first-child>td>.fc-day-grid-event {
-      margin-top: 2px;
-    }
+      .fc-toolbar {
+        background-color: darken(@body-bg, 2%);
+        color: @secondaryTextColor;
+        padding: 2px 4px;
 
-    .fc-day.ui-widget-content.fc-today {
-      width: @mini-calendar-highlight-size-desktop;
-      height: @mini-calendar-highlight-size-desktop;
-      margin-top: 5px;
-    }
+        .ui-button {
+          color: @secondaryTextColor;
 
-    .fc-row .fc-highlight {
-      background: @text-color;
-      opacity: 0.1;
-    }
+          > span {
+            font-size: 25px;
+            margin-top: 0;
+          }
+        }
 
-    .fc-row  td[colspan="1"].fc-highlight {
-      width: @mini-calendar-highlight-size-desktop;
-      height: @mini-calendar-highlight-size-desktop;
-      margin-top: 5px;
+        h2 {
+          color: @secondaryTextColor;
+          font-size: 13px;
+          font-weight: 500;
+          text-transform: none;
+        }
+      }
+
+      .fc thead td, .fc thead th {
+        border-color: darken(@body-bg, 2%);
+      }
+
+      .fc-head-container .fc-day-header, .fc-head-container .ui-widget-header .fc-week-number {
+        background-color: @body-bg;
+        font-weight: 600;
+        color: @secondaryTextColor;
+      }
+
+      .fc-basic-view .fc-body .fc-row {
+        min-height: @mini-calendar-highlight-size-desktop;
+        height: @mini-calendar-highlight-size-desktop !important; /* override parent !important property */
+      }
+
+      .fc-rigid .fc-content-skeleton {
+        top: 4px;
+      }
+
+      tr:first-child > td > .fc-day-grid-event {
+        margin-top: -2px;
+      }
+
+      .fc-day.ui-widget-content.fc-today {
+        width: @mini-calendar-highlight-size-desktop;
+        height: @mini-calendar-highlight-size-desktop;
+        margin-top: 0;
+      }
+
+      .fc-row .fc-highlight {
+        background: @text-color;
+        opacity: 0.05;
+      }
+
+      .fc-event {
+        width: 5px;
+        height: 5px;
+        min-width: 5px;
+        min-height: 5px;
+      }
+
+      .fc-row  td[colspan="1"].fc-highlight {
+        width: @mini-calendar-highlight-size-desktop;
+        height: @mini-calendar-highlight-size-desktop;
+        margin-top: 0;
+      }
     }
   }
 }

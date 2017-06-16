@@ -1,6 +1,11 @@
 .listview.calendars-list {
   padding-right: 10px;
 
+  &:not(.lv-lg):not(.lv-message) .lv-item:not(.calendar-header-title-desktop) {
+    padding-top: 7px;
+    padding-bottom: 7px;
+  }
+
   .no-padding {
     padding: 0;
   }
@@ -51,7 +56,7 @@
       background-color: darken(@body-bg, 2%);
       margin-top: 10px;
       margin-bottom: 10px;
-      padding: 5px 5px;
+      padding: 5px 5px 5px 0;
 
       &.toggle-submenu:first-child {
         margin-top: 15px;
@@ -63,7 +68,8 @@
         min-width: 240px;
 
         .calendar-item-left {
-          padding-right: 0;
+          padding-right: 5px;
+          margin-left: -6px;
 
           .mdi {
             font-size: 24px;
