@@ -5,7 +5,7 @@ var request = require('supertest');
 var async = require('async');
 var fs = require('fs');
 
-describe('The calendars API', function() {
+describe('The Calendar calendars API /api/calendars', function() {
   var user, user3, community;
   var password = 'secret';
   var moduleName = 'linagora.esn.calendar';
