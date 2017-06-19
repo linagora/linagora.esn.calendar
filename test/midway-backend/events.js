@@ -9,7 +9,7 @@ const fs = require('fs-extra'),
 
 const calendarId = 'events';
 
-describe('The Calendar events API', function() {
+describe('The Calendar events API /api/events', function() {
   let helpers, models, userId, app, davserver, davHandlers, counter = 1;
 
   beforeEach(function(done) {
@@ -34,13 +34,12 @@ describe('The Calendar events API', function() {
 
   beforeEach(function() {
     const deps = helpers.modules.current.deps;
+    const expressApp = require('../../backend/webserver/application')(deps);
 
-    app = require('../../backend/webserver/application')(deps);
-
-    app.use(bodyParser.json());
-    app.use('/api', helpers.modules.current.lib.api);
-
+    expressApp.use(bodyParser.json());
+    expressApp.use('/api', helpers.modules.current.lib.api);
     require('../../backend/lib/search')(deps).listen();
+    app = helpers.modules.getWebServer(expressApp);
   });
 
   afterEach(function(done) {
@@ -49,11 +48,11 @@ describe('The Calendar events API', function() {
 
   function indexEventFromFixture(eventUid, next) {
     const message = {
-            eventUid: `event_${counter++}`,
-            userId,
-            calendarId,
-            ics: fs.readFileSync(`${__dirname}/fixtures/${eventUid}.ics`, { encoding: 'utf8' })
-          };
+      eventUid: `event_${counter++}`,
+      userId,
+      calendarId,
+      ics: fs.readFileSync(`${__dirname}/fixtures/${eventUid}.ics`, { encoding: 'utf8' })
+    };
 
     helpers.requireBackend('core/pubsub').local.topic('events:event:add').publish(message);
     helpers.elasticsearch.checkDocumentsIndexed({
