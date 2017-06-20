@@ -5,7 +5,8 @@ const fs = require('fs-extra'),
       request = require('supertest'),
       ICAL = require('ical.js'),
       moment = require('moment'),
-      bodyParser = require('body-parser');
+      bodyParser = require('body-parser'),
+      _ = require('lodash');
 
 const calendarId = 'events';
 
@@ -33,12 +34,15 @@ describe('The Calendar events API /api/events', function() {
   });
 
   beforeEach(function() {
+    require('../../backend/lib/search')(helpers.modules.current.deps).listen();
+  });
+
+  beforeEach(function() {
     const deps = helpers.modules.current.deps;
     const expressApp = require('../../backend/webserver/application')(deps);
 
     expressApp.use(bodyParser.json());
     expressApp.use('/api', helpers.modules.current.lib.api);
-    require('../../backend/lib/search')(deps).listen();
     app = helpers.modules.getWebServer(expressApp);
   });
 
@@ -58,7 +62,8 @@ describe('The Calendar events API /api/events', function() {
     helpers.elasticsearch.checkDocumentsIndexed({
       index: 'events.idx',
       type: 'events',
-      ids: [message.eventUid]
+      ids: [message.eventUid],
+      check: res => res.status === 200 && _.find(res.body.hits.hits, hit => hit._id === message.eventUid)
     }, helpers.callbacks.noErrorAnd(next));
   }
 
