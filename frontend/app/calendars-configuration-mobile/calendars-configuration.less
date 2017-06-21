@@ -1,5 +1,12 @@
-.calendars-configuration {
+.calendars-configuration.card {
+  font-size: 1em;
+
+  .lv-body {
+    margin-top: 10px;
+  }
+
   hr {
+    margin: 10px 0;
     border-color: @secondaryTextColor;
   }
 
@@ -13,23 +20,26 @@
 
     .no-padding .lv-item {
       padding: 0;
-      margin-bottom: 10px;
 
       span {
-        color: @secondaryTextColor;
+        color: @text-color;
       }
+    }
+
+    .media {
+      padding: 8px 0 8px 8px;
     }
 
     .calendars-configuration-title {
       span.name {
         font-size: 1.1em;
-        font-weight: bold;
-        color: @primaryColor;
+        font-weight: 500;
+        color: @secondaryTextColor;
       }
 
       .mdi-calendar {
-        color: @secondaryTextColor;
-        font-size: 25px;
+        color: @primaryColor;
+        font-size: 20px;
       }
     }
   }
