@@ -23,18 +23,18 @@ function init(dependencies) {
   }
 
   _.forOwn(EVENTS.EVENT, topic => {
-    logger.debug('Subscribing to global topic', topic);
+    logger.debug(`Subscribing to ${topic} global topic for calendar events operations`);
     pubsub.global.topic(topic).subscribe(msg => {
-      logger.debug('Received a message on', topic);
+      logger.debug(`Received a message on global topic ${topic} for calendar events operations`, msg);
       pubsub.local.topic(topic).publish(msg);
       eventHandler.notify(topic, msg);
     });
   });
 
   _.forOwn(EVENTS.CALENDAR, topic => {
-    logger.debug('Subscribing to global topic', topic);
+    logger.debug(`Subscribing to ${topic} global topic for calendar related operations`);
     pubsub.global.topic(topic).subscribe(msg => {
-      logger.debug('Received a message on', topic, msg);
+      logger.debug(`Received a message on global topic ${topic} for calendar related operations`, msg);
       calendarHandler.notify(topic, msg);
     });
   });
