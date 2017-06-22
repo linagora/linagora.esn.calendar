@@ -34,6 +34,9 @@
       sio.on(CAL_WEBSOCKET.CALENDAR.CREATED, _onCalendarCreated);
       sio.on(CAL_WEBSOCKET.CALENDAR.UPDATED, _onCalendarUpdated);
       sio.on(CAL_WEBSOCKET.CALENDAR.DELETED, _onCalendarDeleted);
+      sio.on(CAL_WEBSOCKET.SUBSCRIPTION.CREATED, _onCalendarCreated);
+      sio.on(CAL_WEBSOCKET.SUBSCRIPTION.UPDATED, _onCalendarUpdated);
+      sio.on(CAL_WEBSOCKET.SUBSCRIPTION.DELETED, _onCalendarDeleted);
 
       return {
         clean: clean,
@@ -50,6 +53,9 @@
         sio.removeListener(CAL_WEBSOCKET.CALENDAR.CREATED, _onCalendarCreated);
         sio.removeListener(CAL_WEBSOCKET.CALENDAR.UPDATED, _onCalendarUpdated);
         sio.removeListener(CAL_WEBSOCKET.CALENDAR.DELETED, _onCalendarDeleted);
+        sio.removeListener(CAL_WEBSOCKET.SUBSCRIPTION.CREATED, _onCalendarCreated);
+        sio.removeListener(CAL_WEBSOCKET.SUBSCRIPTION.UPDATED, _onCalendarUpdated);
+        sio.removeListener(CAL_WEBSOCKET.SUBSCRIPTION.DELETED, _onCalendarDeleted);
       }
 
       function _onCalendarCreated(msg) {
