@@ -108,7 +108,7 @@ describe('The calendar WS events module', function() {
     });
 
     it('should register global pubsub subscribers for supported events', function() {
-      const mod = require(this.moduleHelpers.backendPath + '/ws/calendar');
+      const mod = require(this.moduleHelpers.backendPath + '/ws');
 
       mod.init(this.moduleHelpers.dependencies);
       _.forOwn(CONSTANTS.EVENTS.EVENT, topic => {
@@ -126,7 +126,7 @@ describe('The calendar WS events module', function() {
 
     describe('When message is received in events global pubsub', function() {
       beforeEach(function() {
-        const mod = require(this.moduleHelpers.backendPath + '/ws/calendar');
+        const mod = require(this.moduleHelpers.backendPath + '/ws');
 
         mod.init(this.moduleHelpers.dependencies);
       });
@@ -144,7 +144,7 @@ describe('The calendar WS events module', function() {
 
     describe('When message is received in calendars global pubsub', function() {
       beforeEach(function() {
-        const mod = require(this.moduleHelpers.backendPath + '/ws/calendar');
+        const mod = require(this.moduleHelpers.backendPath + '/ws');
 
         mod.init(this.moduleHelpers.dependencies);
       });
@@ -162,7 +162,7 @@ describe('The calendar WS events module', function() {
 
     describe('When message is received in subscription global pubsub', function() {
       beforeEach(function() {
-        const mod = require(this.moduleHelpers.backendPath + '/ws/calendar');
+        const mod = require(this.moduleHelpers.backendPath + '/ws');
 
         mod.init(this.moduleHelpers.dependencies);
       });

@@ -27,7 +27,7 @@ describe('The websocket subscription handler module', function() {
         notify: sinon.spy()
       };
 
-      mockery.registerMock('./subscription', function() {
+      mockery.registerMock('./calendar', function() {
         return calendarMock;
       });
 
