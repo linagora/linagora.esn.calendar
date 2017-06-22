@@ -14,6 +14,7 @@ function init(dependencies) {
   const io = dependencies('wsserver').io;
   const eventHandler = require('./handlers/event')(dependencies);
   const calendarHandler = require('./handlers/calendar')(dependencies);
+  const subscriptionHandler = require('./handlers/subscription')(dependencies);
 
   if (initialized) {
     logger.warn('The calendar notification service is already initialized');
@@ -35,6 +36,14 @@ function init(dependencies) {
     pubsub.global.topic(topic).subscribe(msg => {
       logger.debug('Received a message on', topic, msg);
       calendarHandler.notify(topic, msg);
+    });
+  });
+
+  _.forOwn(EVENTS.SUBSCRIPTION, topic => {
+    logger.debug(`Subscribing to ${topic} global topic for calendar subscription operations`);
+    pubsub.global.topic(topic).subscribe(msg => {
+      logger.debug(`Received a message on global topic ${topic} for calendar subscription operations`, msg);
+      subscriptionHandler.notify(topic, msg);
     });
   });
 
