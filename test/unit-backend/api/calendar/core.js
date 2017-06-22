@@ -389,6 +389,7 @@ describe('The calendar core module', function() {
         'organizer@open-paas.org'
       ],
       preferredEmail: 'organizer@open-paas.org',
+      email: 'organizer@open-paas.org',
       domains: [{ domain_id: 'domain123' }]
     };
     var attendee1 = {
@@ -911,7 +912,7 @@ describe('The calendar core module', function() {
 
           var method = 'REQUEST';
 
-          mockery.registerMock('../../../lib/helpers/jcal.js', {
+          mockery.registerMock('../../../lib/helpers/jcal', {
             jcal2content: function() {
               return event;
             }
@@ -935,7 +936,7 @@ describe('The calendar core module', function() {
           };
 
           this.module = require(this.moduleHelpers.backendPath + '/webserver/api/calendar/core')(this.moduleHelpers.dependencies);
-          this.module.inviteAttendees(organizer, attendeeEmail, true, method, ics, 'calendarURI', callback);
+          this.module.inviteAttendees(organizer, organizer.preferredEmail, true, method, ics, 'calendarURI', callback);
         };
 
       });
@@ -946,57 +947,75 @@ describe('The calendar core module', function() {
         });
       });
 
-      it('should return map-marker.png when location is specified', function() {
-        this.getFilter({organizer: organizer, location: 'aLocation'}, function(err, filter) {
-          expect(filter[0]('map-marker.png')).to.be.true;
+      it('should return map-marker.png when location is specified', function(done) {
+        this.getFilter({ organizer: organizer, location: 'aLocation' }, function(err, filter) {
+          expect(filter('map-marker.png')).to.be.true;
+
+          done();
         });
       });
 
-      it('should not return map-marker.png when location is not specified', function() {
-        this.getFilter({organizer: organizer}, function(err, filter) {
-          expect(filter[0]('map-marker.png')).to.be.false;
+      it('should not return map-marker.png when location is not specified', function(done) {
+        this.getFilter({ organizer: organizer }, function(err, filter) {
+          expect(filter('map-marker.png')).to.be.false;
+
+          done();
         });
       });
 
-      it('should return format-align-justify.png when description is specified', function() {
-        this.getFilter({organizer: organizer, description: 'aDescription'}, function(err, filter) {
-          expect(filter[0]('format-align-justify.png')).to.be.true;
+      it('should return format-align-justify.png when description is specified', function(done) {
+        this.getFilter({ organizer: organizer, description: 'aDescription' }, function(err, filter) {
+          expect(filter('format-align-justify.png')).to.be.true;
+
+          done();
         });
       });
 
-      it('should not return format-align-justify.png when description is not specified', function() {
-        this.getFilter({organizer: organizer}, function(err, filter) {
-          expect(filter[0]('format-align-justify.png')).to.be.false;
+      it('should not return format-align-justify.png when description is not specified', function(done) {
+        this.getFilter({ organizer: organizer }, function(err, filter) {
+          expect(filter('format-align-justify.png')).to.be.false;
+
+          done();
         });
       });
 
-      it('should return folder-download.png when files is specified', function() {
-        this.getFilter({organizer: organizer, files: 'someFiles'}, function(err, filter) {
-          expect(filter[0]('folder-download.png')).to.be.true;
+      it('should return folder-download.png when files is specified', function(done) {
+        this.getFilter({ organizer: organizer, files: 'someFiles' }, function(err, filter) {
+          expect(filter('folder-download.png')).to.be.true;
+
+          done();
         });
       });
 
-      it('should not return folder-download.png when files is not specified', function() {
-        this.getFilter({organizer: organizer}, function(err, filter) {
-          expect(filter[0]('folder-download.png')).to.be.false;
+      it('should not return folder-download.png when files is not specified', function(done) {
+        this.getFilter({ organizer: organizer }, function(err, filter) {
+          expect(filter('folder-download.png')).to.be.false;
+
+          done();
         });
       });
 
-      it('should return check.png for a timed event', function() {
-        this.getFilter({organizer: organizer, allDay: false}, function(err, filter) {
-          expect(filter[0]('check.png')).to.be.true;
+      it('should return check.png for a timed event', function(done) {
+        this.getFilter({ organizer: organizer, allDay: false }, function(err, filter) {
+          expect(filter('check.png')).to.be.true;
+
+          done();
         });
       });
 
-      it('should return check.png for a multi-allday event', function() {
-        this.getFilter({organizer: organizer, allDay: true, durationInDays: 2}, function(err, filter) {
-          expect(filter[0]('check.png')).to.be.true;
+      it('should return check.png for a multi-allday event', function(done) {
+        this.getFilter({ organizer: organizer, allDay: true, durationInDays: 2 }, function(err, filter) {
+          expect(filter('check.png')).to.be.true;
+
+          done();
         });
       });
 
-      it('should not return check.png for an allday event that lasts for one day', function() {
-        this.getFilter({organizer: organizer, allDay: true, durationInDays: 1}, function(err, filter) {
-          expect(filter[0]('check.png')).to.be.false;
+      it('should not return check.png for an allday event that lasts for one day', function(done) {
+        this.getFilter({ organizer: organizer, allDay: true, durationInDays: 1 }, function(err, filter) {
+          expect(filter('check.png')).to.be.false;
+
+          done();
         });
       });
     });

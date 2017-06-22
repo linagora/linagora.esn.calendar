@@ -330,7 +330,7 @@ module.exports = dependencies => {
           }
 
           if (!userIsInvolved) {
-            return q.reject(new Error('The user is not involved in the event')).nodeify(callback);
+            return q.reject(new Error('The user is not involved in the event'));
           }
 
           const jwtPayload = {
