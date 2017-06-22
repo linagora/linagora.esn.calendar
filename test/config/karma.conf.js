@@ -50,10 +50,10 @@ module.exports = function(config) {
       'frontend/components/localforage/dist/localforage.min.js',
       'frontend/components/angular-localforage/dist/angular-localForage.js',
       'node_modules/async/dist/async.js',
-      'node_modules/chai-jquery/chai-jquery.js',
       'frontend/components/angular-bootstrap-switch/dist/angular-bootstrap-switch.js',
       'frontend/components/showdown/dist/showdown.min.js',
       'frontend/components/angular-markdown-directive/markdown.js',
+      'frontend/components/angular-material/angular-material.min.js',
       'frontend/components/angular-scroll/angular-scroll.js',
       'frontend/components/blueimp-canvas-to-blob/js/canvas-to-blob.js',
       'frontend/components/re-tree/re-tree.js',
@@ -92,6 +92,9 @@ module.exports = function(config) {
       'frontend/app/**/*.jade',
       'frontend/app/*.js',
 
+      { pattern: 'node_modules/linagora-rse/frontend/js/modules/i18n/i18n.config.js', watched: false, included: false, served: true },
+      { pattern: 'frontend/images/*.*', watched: false, included: false, served: true },
+      { pattern: 'frontend/components/mdi/fonts/*.*', watched: false, included: false, served: true },
       'test/unit-frontend/fixtures/**',
       'frontend/app/fixtures/**'
     ],
@@ -112,6 +115,10 @@ module.exports = function(config) {
         flags: ['--remote-debugging-port=9222'],
         debug: true
       }
+    },
+
+    proxies: {
+      '/images/': '/base/frontend/images/'
     },
 
     reporters: singleRun ? ['coverage', 'spec'] : ['spec'],
