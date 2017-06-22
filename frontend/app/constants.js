@@ -18,15 +18,17 @@
         weekNumbers: true,
         firstDay: 1,
         header: {
-          left: 'prev, next, today',
+          left: 'agendaDay, agendaWeek, month',
           center: 'title',
-          right: 'month,agendaWeek,agendaDay'
+          right: 'prev, today, next'
         },
-        buttonText: {
-          today: 'Today',
-          month: 'month',
-          week: 'week',
-          day: 'day'
+        themeButtonIcons: {
+          today: ' mdi mdi-calendar-today',
+          month: ' mdi mdi-view-module',
+          agendaWeek: ' mdi mdi-view-week',
+          agendaDay: ' mdi mdi-view-day',
+          prev: ' mdi mdi-chevron-left',
+          next: ' mdi mdi-chevron-right'
         },
         handleWindowResize: false,
         views: {

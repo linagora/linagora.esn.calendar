@@ -11,9 +11,10 @@ block left
 block right
   .calendar-sub-header.flex-vertical-centered.hidden-md
     .calendar-controls
-      a(cal-toggle-today)
-        calendar-today-button(is-current-view-around-today="isCurrentViewAroundToday()")
+
       button.btn.btn-link.btn-icon(calendar-view-translation='prev')
         i.mdi.mdi-chevron-left
+      a(cal-toggle-today)
+        calendar-today-button(is-current-view-around-today="isCurrentViewAroundToday()")
       button.btn.btn-link.btn-icon(calendar-view-translation='next')
         i.mdi.mdi-chevron-right
