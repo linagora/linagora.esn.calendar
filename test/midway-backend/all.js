@@ -12,6 +12,8 @@ const host = testConfig.host;
 let rse;
 
 before(function(done) {
+  require('events').EventEmitter.prototype._maxListeners = 100;
+
   mongoose.Promise = require('q').Promise;
 
   chai.use(require('chai-shallow-deep-equal'));
