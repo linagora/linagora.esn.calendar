@@ -14,6 +14,7 @@ function init(dependencies) {
   const io = dependencies('wsserver').io;
   const eventHandler = require('./handlers/event')(dependencies);
   const calendarHandler = require('./handlers/calendar')(dependencies);
+  const subscriptionHandler = require('./handlers/subscription')(dependencies);
 
   if (initialized) {
     logger.warn('The calendar notification service is already initialized');
@@ -22,19 +23,27 @@ function init(dependencies) {
   }
 
   _.forOwn(EVENTS.EVENT, topic => {
-    logger.debug('Subscribing to global topic', topic);
+    logger.debug(`Subscribing to ${topic} global topic for calendar events operations`);
     pubsub.global.topic(topic).subscribe(msg => {
-      logger.debug('Received a message on', topic);
+      logger.debug(`Received a message on global topic ${topic} for calendar events operations`, msg);
       pubsub.local.topic(topic).publish(msg);
       eventHandler.notify(topic, msg);
     });
   });
 
   _.forOwn(EVENTS.CALENDAR, topic => {
-    logger.debug('Subscribing to global topic', topic);
+    logger.debug(`Subscribing to ${topic} global topic for calendar related operations`);
     pubsub.global.topic(topic).subscribe(msg => {
-      logger.debug('Received a message on', topic, msg);
+      logger.debug(`Received a message on global topic ${topic} for calendar related operations`, msg);
       calendarHandler.notify(topic, msg);
+    });
+  });
+
+  _.forOwn(EVENTS.SUBSCRIPTION, topic => {
+    logger.debug(`Subscribing to ${topic} global topic for calendar subscription operations`);
+    pubsub.global.topic(topic).subscribe(msg => {
+      logger.debug(`Received a message on global topic ${topic} for calendar subscription operations`, msg);
+      subscriptionHandler.notify(topic, msg);
     });
   });
 

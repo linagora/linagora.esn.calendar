@@ -29,6 +29,11 @@ module.exports = {
       UPDATED: 'calendar:calendar:updated',
       DELETED: 'calendar:calendar:deleted'
     },
+    SUBSCRIPTION: {
+      CREATED: 'calendar:subscription:created',
+      DELETED: 'calendar:subscription:deleted',
+      UPDATED: 'calendar:subscription:updated'
+    },
     EVENT: {
       CREATED: 'calendar:event:created',
       UPDATED: 'calendar:event:updated',

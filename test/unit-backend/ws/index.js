@@ -6,10 +6,11 @@ const _ = require('lodash');
 const sinon = require('sinon');
 const CONSTANTS = require('../../../backend/lib/constants');
 const eventsName = Object.keys(CONSTANTS.EVENTS.EVENT).map(key => CONSTANTS.EVENTS.EVENT[key]);
+const subscriptionsName = Object.keys(CONSTANTS.EVENTS.SUBSCRIPTION).map(key => CONSTANTS.EVENTS.SUBSCRIPTION[key]);
 
 describe('The calendar WS events module', function() {
   describe('init function', function() {
-    let self, eventHandler, calendarHandler;
+    let self, eventHandler, calendarHandler, subscriptionHandler;
 
     beforeEach(function() {
       self = this;
@@ -23,12 +24,22 @@ describe('The calendar WS events module', function() {
         self.calendarUpdatedPubsubCallback = callback;
       });
 
+      this.subscriptionSubscribeSpy = sinon.spy(function(callback) {
+        self.subscriptionUpdatedPubsubCallback = callback;
+      });
+
       this.pubsub = {
         global: {
           topic: sinon.spy(function(name) {
             if (eventsName.indexOf(name) > -1) {
               return {
                 subscribe: self.eventSubscribeSpy
+              };
+            }
+
+            if (subscriptionsName.indexOf(name) > -1) {
+              return {
+                subscribe: self.subscriptionSubscribeSpy
               };
             }
 
@@ -87,10 +98,17 @@ describe('The calendar WS events module', function() {
       mockery.registerMock('./handlers/calendar', function() {
         return calendarHandler;
       });
+
+      subscriptionHandler = {
+        notify: sinon.spy()
+      };
+      mockery.registerMock('./handlers/subscription', function() {
+        return subscriptionHandler;
+      });
     });
 
     it('should register global pubsub subscribers for supported events', function() {
-      const mod = require(this.moduleHelpers.backendPath + '/ws/calendar');
+      const mod = require(this.moduleHelpers.backendPath + '/ws');
 
       mod.init(this.moduleHelpers.dependencies);
       _.forOwn(CONSTANTS.EVENTS.EVENT, topic => {
@@ -100,11 +118,15 @@ describe('The calendar WS events module', function() {
       _.forOwn(CONSTANTS.EVENTS.CALENDAR, topic => {
         expect(this.pubsub.global.topic).to.have.been.calledWith(topic);
       });
+
+      _.forOwn(CONSTANTS.EVENTS.SUBSCRIPTION, topic => {
+        expect(this.pubsub.global.topic).to.have.been.calledWith(topic);
+      });
     });
 
     describe('When message is received in events global pubsub', function() {
       beforeEach(function() {
-        const mod = require(this.moduleHelpers.backendPath + '/ws/calendar');
+        const mod = require(this.moduleHelpers.backendPath + '/ws');
 
         mod.init(this.moduleHelpers.dependencies);
       });
@@ -122,7 +144,7 @@ describe('The calendar WS events module', function() {
 
     describe('When message is received in calendars global pubsub', function() {
       beforeEach(function() {
-        const mod = require(this.moduleHelpers.backendPath + '/ws/calendar');
+        const mod = require(this.moduleHelpers.backendPath + '/ws');
 
         mod.init(this.moduleHelpers.dependencies);
       });
@@ -134,6 +156,24 @@ describe('The calendar WS events module', function() {
         self.calendarUpdatedPubsubCallback(message);
 
         expect(calendarHandler.notify).to.have.been.calledWith(CONSTANTS.EVENTS.CALENDAR[lastKey], message);
+        expect(self.publishSpy).to.not.have.been.called;
+      });
+    });
+
+    describe('When message is received in subscription global pubsub', function() {
+      beforeEach(function() {
+        const mod = require(this.moduleHelpers.backendPath + '/ws');
+
+        mod.init(this.moduleHelpers.dependencies);
+      });
+
+      it('should call subscriptionHandler.notify', function() {
+        const message = {foo: 'bar'};
+        const lastKey = Object.keys(CONSTANTS.EVENTS.SUBSCRIPTION).pop();
+
+        self.subscriptionUpdatedPubsubCallback(message);
+
+        expect(subscriptionHandler.notify).to.have.been.calledWith(CONSTANTS.EVENTS.SUBSCRIPTION[lastKey], message);
         expect(self.publishSpy).to.not.have.been.called;
       });
     });

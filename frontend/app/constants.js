@@ -258,6 +258,11 @@
         CREATED: 'calendar:calendar:created',
         UPDATED: 'calendar:calendar:updated',
         DELETED: 'calendar:calendar:deleted'
+      },
+      SUBSCRIPTION: {
+        CREATED: 'calendar:subscription:created',
+        UPDATED: 'calendar:subscription:updated',
+        DELETED: 'calendar:subscription:deleted'
       }
     })
 
