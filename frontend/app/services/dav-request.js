@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .factory('calDavRequest', calDavRequest);
 
-  function calDavRequest($http, $q, CAL_DAV_PATH) {
+  function calDavRequest($http, $q, httpConfigurer, CAL_DAV_PATH) {
     return request;
 
     ////////////
@@ -23,7 +23,7 @@
       headers = headers || {};
 
       var config = {
-        url: url + _ensurePathToProxy(path),
+        url: httpConfigurer.getUrl(url + _ensurePathToProxy(path)),
         method: method,
         headers: headers,
         params: params
