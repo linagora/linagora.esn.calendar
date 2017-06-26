@@ -2,46 +2,27 @@
 @allday-background: #f7f7f7;
 
 .fc-toolbar {
-  background-color: @darkPrimaryColor;
+  background-color: @subHeaderBackground;
 
-  .fc-button-group {
-    box-shadow: none !important; /* override material-admin value */
+  h2 {
+    text-transform: none;
+  }
 
-    button {
-      box-shadow:none !important; /* override material-admin value */
-      width: auto;
+  .ui-state-active {
+    background-color: @black-alpha-10;
+  }
 
-      &.ui-button:focus {
-          color: @m-white;
-      }
+  .ui-button {
 
-      .btn;
+    &.ui-state-disabled {
+      .opacity(@opacity-btn-disabled);
     }
 
-    .ui-state-active {
-      font-weight: bold;
-      background-color: @black-alpha-10;
+    &:hover {
+      background: inherit;
+      background-color: @darkPrimaryColor;
+      color: @m-white !important; /* override material-admin value */
     }
-  }
-
-  .ui-button:hover {
-    background: inherit;
-    background-color: @primaryColor;
-    color: @m-white !important; /* override material-admin value */
-  }
-
-  .fc-today-button {
-    box-shadow:none !important; /* override material-admin value */
-    width: auto;
-    .btn;
-  }
-
-  .fc-today-button.ui-state-default {
-    font-weight: bold;
-  }
-
-  .fc-today-button.ui-state-default.ui-state-disabled {
-    font-weight: inherit;
   }
 
   .ui-state-hover {
@@ -63,9 +44,29 @@
     }
   }
 
+  .fc-week .fc-day:hover .fc-day-number {
+    background-color: @subHeaderBackground;
+    border-radius: 50%;
+    color: @m-white;
+    transition: background-color 0.2s;
+  }
 
   hr.fc-divider {
     padding: 0;
+  }
+
+  .fc-toolbar {
+
+    .ui-button {
+      width: 36px;
+      height: 36px;
+      margin-top: 0;
+
+      & > span {
+        font-size: 23px;
+        width: 36px;
+      }
+    }
   }
 }
 
@@ -77,29 +78,28 @@
 }
 
 .fc thead td, .fc thead th {
-  border-color: @darkPrimaryColor;
+  border-color: @subHeaderBackground;
   border-right: 0;
   &.fc-axis {
     text-align: center;
   }
 }
 
-.fc-toolbar .ui-button>span.ui-icon-circle-triangle-w:before {
-  font-family: 'MaterialDesignIcons';
-  content: "\f141";
-}
-
-.fc-toolbar .ui-button>span.ui-icon-circle-triangle-e:before {
-  font-family: 'MaterialDesignIcons';
-  content: "\f142";
-}
-
 .fc th {
-  background-color: @darkPrimaryColor;
+  background-color: @subHeaderBackground;
   color: @textPrimaryColor;
   font-size: 12px;
+  font-weight: 500;
 }
 
 .fc-head-container {
-  background-color: @darkPrimaryColor;
+  background-color: @subHeaderBackground;
+}
+
+.ui-widget td.fc-axis {
+  font-weight: 500;
+}
+
+.fc .fc-toolbar >* >* {
+  margin-left: .5em;
 }
