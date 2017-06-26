@@ -8,6 +8,7 @@
         attendee: '=',
         isOrganizer: '<'
       },
-      controllerAs: 'ctrl'
+      controllerAs: 'ctrl',
+      controller: 'CalAttendeeAvatarController'
     });
 })();
