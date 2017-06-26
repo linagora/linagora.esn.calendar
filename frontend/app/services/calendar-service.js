@@ -124,8 +124,18 @@
     }
 
     function addAndEmit(calendarHomeId, calendar) {
-      (calendarsCache[calendarHomeId] || []).push(calendar);
-      $rootScope.$broadcast(CAL_EVENTS.CALENDARS.ADD, calendar);
+      if (!calendarsCache[calendarHomeId]) {
+        calendarsCache[calendarHomeId] = [];
+      }
+
+      var isIn = _.find(calendarsCache[calendarHomeId], function(cached) {
+        return cached.id === calendar.id;
+      });
+
+      if (!isIn) {
+        (calendarsCache[calendarHomeId]).push(calendar);
+        $rootScope.$broadcast(CAL_EVENTS.CALENDARS.ADD, calendar);
+      }
     }
 
     function updateCache(calendarHomeId, calendar) {
