@@ -59,14 +59,49 @@ describe('The calendarService service', function() {
   });
 
   describe('The addAndEmit function', function() {
-    it('should broadcast a CALENDARS.ADD event when the calendar has been created', function() {
-      var calendar = {id: 'calId'};
+    var calendar, homeId;
 
+    beforeEach(function() {
+      calendar = {id: 'calId', uniqueId: 'uniqueId'};
+      homeId = 'homeId';
+    });
+
+    it('should broadcast a CALENDARS.ADD event when the calendar has been created', function() {
       this.$rootScope.$broadcast = sinon.stub().returns({});
-      this.calendarService.addAndEmit('homeId', calendar);
+      this.calendarService.addAndEmit(homeId, calendar);
       this.$rootScope.$digest();
 
       expect(self.$rootScope.$broadcast).to.have.been.calledWith(this.CAL_EVENTS.CALENDARS.ADD, calendar);
+    });
+
+    it('should not add the calendar if already in cache', function() {
+      var spy = sinon.spy(function() {
+        return {};
+      });
+
+      this.$rootScope.$broadcast = spy;
+      this.calendarService.addAndEmit(homeId, calendar);
+      this.$rootScope.$digest();
+      this.calendarService.addAndEmit(homeId, calendar);
+      this.$rootScope.$digest();
+
+      expect(spy.withArgs(this.CAL_EVENTS.CALENDARS.ADD, calendar)).to.have.been.calledOnce;
+    });
+
+    it('should add the calendar if not already in cache', function() {
+      var spy = sinon.spy(function() {
+        return {};
+      });
+      var calendar2 = {id: calendar.id + 'foo', uniqueId: calendar.uniqueId + 'bar'};
+
+      this.$rootScope.$broadcast = spy;
+      this.calendarService.addAndEmit(homeId, calendar);
+      this.$rootScope.$digest();
+      this.calendarService.addAndEmit(homeId, calendar2);
+      this.$rootScope.$digest();
+
+      expect(spy.withArgs(this.CAL_EVENTS.CALENDARS.ADD, calendar)).to.have.been.calledOnce;
+      expect(spy.withArgs(this.CAL_EVENTS.CALENDARS.ADD, calendar2)).to.have.been.calledOnce;
     });
   });
 
