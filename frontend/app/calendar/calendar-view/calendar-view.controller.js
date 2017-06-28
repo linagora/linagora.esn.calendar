@@ -281,8 +281,22 @@
         $scope.calendars.forEach(function(cal, index) {
           if (calendar.uniqueId === cal.uniqueId) {
             $scope.calendars[index] = calendar;
+            _forceEventsRedraw(calendar);
           }
         });
+      }
+
+      function _forceEventsRedraw(calendar) {
+        // For now we force redraw when calendar color changes.
+        // There is no other way to do this in fullcalendar but 'hopefuly' we have the event cache:
+        // Removing then adding the event source costs nothing and does not 'tilt'
+        if (calendar.color && calendar.color !== $scope.eventSourcesMap[calendar.uniqueId].backgroundColor) {
+          $scope.eventSourcesMap[calendar.uniqueId].backgroundColor = calendar.color;
+          calendarPromise.then(function(cal) {
+            cal.fullCalendar('removeEventSource', $scope.eventSourcesMap[calendar.uniqueId]);
+            cal.fullCalendar('addEventSource', $scope.eventSourcesMap[calendar.uniqueId]);
+          });
+        }
       }
 
       function _viewToday(event, calendar) {
