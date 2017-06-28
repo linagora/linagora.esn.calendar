@@ -1,5 +1,7 @@
 # linagora.esn.calendar
 
+[![build status](https://ci.linagora.com/linagora/lgs/openpaas/linagora.esn.calendar/badges/master/build.svg)](https://ci.linagora.com/linagora/lgs/openpaas/linagora.esn.calendar/commits/master)
+
 This repository contains source code of Calendar module for OpenPaaS ESN.
 
 ## Install
