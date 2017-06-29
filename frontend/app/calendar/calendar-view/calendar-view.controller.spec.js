@@ -339,6 +339,24 @@ describe('The calendarViewController', function() {
       this.rootScope.$broadcast(this.CAL_EVENTS.CALENDARS.UPDATE, newCal);
       expect(this.scope.calendars).to.be.deep.equal([{uniqueId: 1}, newCal]);
     });
+
+    it('should force redraw the events if calendar color is defined and changed', function() {
+      var updatedCalendar = {uniqueId: this.calendars[1].uniqueId, data: 'data', color: this.calendars[1].color + 'anothercolor'};
+
+      this.controller('calendarViewController', {$scope: this.scope});
+      this.scope.calendarReady(this.calendar);
+      this.scope.calendars = this.calendars;
+      this.scope.eventSourcesMap = {};
+      this.scope.eventSourcesMap[this.calendars[0].uniqueId] = this.calendars[0];
+      this.scope.eventSourcesMap[this.calendars[1].uniqueId] = this.calendars[1];
+      this.rootScope.$broadcast(this.CAL_EVENTS.CALENDARS.UPDATE, updatedCalendar);
+      this.scope.$digest();
+
+      expect(this.scope.calendars).to.be.deep.equal([this.calendars[0], updatedCalendar]);
+      expect(this.scope.eventSourcesMap[updatedCalendar.uniqueId].backgroundColor).to.equal(updatedCalendar.color);
+      expect(fullCalendarSpy).to.have.been.calledWith('removeEventSource', sinon.match.has('uniqueId', updatedCalendar.uniqueId));
+      expect(fullCalendarSpy).to.have.been.calledWith('addEventSource', sinon.match.has('uniqueId', updatedCalendar.uniqueId));
+    });
   });
 
   describe('The CAL_EVENTS.CALENDAR_REFRESH listener', function() {

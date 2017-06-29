@@ -39,6 +39,7 @@
       var calendarPromise = calendarDeffered.promise;
       var spinnerKey = 'calendar';
       var spinnerTimeoutPromise;
+      var miniCalendarHidden = true;
 
       elementScrollService.scrollToTop();
 
@@ -88,6 +89,25 @@
       $scope.uiConfig.calendar.loading = loading;
       $scope.uiConfig.calendar.nextDayThreshold = '00:00';
       $scope.calendarReady = calendarDeffered.resolve.bind(calendarDeffered);
+
+      var rootScopeListeners = [
+        $rootScope.$on(CAL_EVENTS.CALENDAR_REFRESH, _rerenderCalendar),
+        $rootScope.$on(CAL_EVENTS.CALENDAR_UNSELECT, _unselectCalendar),
+        $rootScope.$on(CAL_EVENTS.CALENDARS.ADD, _addCalendar),
+        $rootScope.$on(CAL_EVENTS.CALENDARS.REMOVE, _removeCalendar),
+        $rootScope.$on(CAL_EVENTS.CALENDARS.TODAY, _viewToday),
+        $rootScope.$on(CAL_EVENTS.CALENDARS.TOGGLE_VIEW, _toggleView),
+        $rootScope.$on(CAL_EVENTS.CALENDARS.TOGGLE_VIEW_MODE, _toggleViewMode),
+        $rootScope.$on(CAL_EVENTS.CALENDARS.UPDATE, _updateCalendar),
+        $rootScope.$on(CAL_EVENTS.ITEM_ADD, _rerenderCalendar),
+        $rootScope.$on(CAL_EVENTS.ITEM_MODIFICATION, _rerenderCalendar),
+        $rootScope.$on(CAL_EVENTS.ITEM_REMOVE, _rerenderCalendar),
+        $rootScope.$on(CAL_EVENTS.MINI_CALENDAR.DATE_CHANGE, _goToDate),
+        $rootScope.$on(CAL_EVENTS.MINI_CALENDAR.TOGGLE, _toggleMiniCalendar),
+        $rootScope.$on(CAL_EVENTS.VIEW_TRANSLATION, _changeView)
+      ];
+
+      var websocketListener = calWebsocketListenerService.listenEvents();
 
       activate();
 
@@ -187,71 +207,63 @@
         }
       }
 
-      var miniCalendarHidden = true;
-      var unregisterFunctions = [
-        $rootScope.$on(CAL_EVENTS.ITEM_MODIFICATION, _rerenderCalendar),
-        $rootScope.$on(CAL_EVENTS.ITEM_REMOVE, _rerenderCalendar),
-        $rootScope.$on(CAL_EVENTS.ITEM_ADD, _rerenderCalendar),
-        $rootScope.$on(CAL_EVENTS.CALENDARS.TODAY, withCalendar(function(calendar) {
-          calendar.fullCalendar('today');
-        })),
-        $rootScope.$on(CAL_EVENTS.CALENDAR_UNSELECT, withCalendar(function(calendar) {
-          calendar.fullCalendar('unselect');
-        })),
-        $rootScope.$on(CAL_EVENTS.CALENDARS.TOGGLE_VIEW_MODE, withCalendar(function(calendar, event, viewType) {
-          calendar.fullCalendar('changeView', viewType);
-        })),
-        $rootScope.$on(CAL_EVENTS.CALENDARS.TOGGLE_VIEW, withCalendar(function(calendar, event, data) { // eslint-disable-line
-          if (data.hidden) {
-            calendar.fullCalendar('removeEventSource', $scope.eventSourcesMap[data.calendarUniqueId]);
-          } else {
-            calendar.fullCalendar('addEventSource', $scope.eventSourcesMap[data.calendarUniqueId]);
-          }
-        })),
-        $rootScope.$on(CAL_EVENTS.MINI_CALENDAR.DATE_CHANGE, withCalendar(function(calendar, event, newDate) { // eslint-disable-line
+      function _addCalendar(event, calendar) {
+        $scope.eventSourcesMap[calendar.uniqueId] = {
+          events: calCachedEventSource.wrapEventSource(calendar.uniqueId, calendarEventSource(calendar, $scope.displayCalendarError)),
+          backgroundColor: calendar.color
+        };
+
+        calendarPromise.then(function(cal) {
+          cal.fullCalendar('addEventSource', $scope.eventSourcesMap[calendar.uniqueId]);
+        });
+      }
+
+      function _changeView(event, action) {
+        if (miniCalendarHidden) {
+          (action === 'prev' ? prev : next)();
+        }
+      }
+
+      function _goToDate(event, calendar) {
+        withCalendar(function(calendar, event, newDate) {
           var view = calendar.fullCalendar('getView');
 
           if (newDate && !newDate.isBetween(view.start, view.end)) {
             calendar.fullCalendar('gotoDate', newDate);
           }
-        })),
-        $rootScope.$on(CAL_EVENTS.CALENDARS.ADD, function(event, calendar) { // eslint-disable-line
-          $scope.eventSourcesMap[calendar.uniqueId] = {
-            events: calCachedEventSource.wrapEventSource(calendar.uniqueId, calendarEventSource(calendar, $scope.displayCalendarError)),
-            backgroundColor: calendar.color
-          };
+        })(event, calendar);
+      }
 
-          calendarPromise.then(function(cal) {
-            cal.fullCalendar('addEventSource', $scope.eventSourcesMap[calendar.uniqueId]);
-          });
-        }),
-        $rootScope.$on(CAL_EVENTS.CALENDARS.REMOVE, function(event, calendar) { // eslint-disable-line
-          _.remove($scope.calendars, {uniqueId: calendar.uniqueId});
-          var removedEventSource = $scope.eventSourcesMap[calendar.uniqueId];
+      function _removeCalendar(event, calendar) {
+        _.remove($scope.calendars, {uniqueId: calendar.uniqueId});
+        var removedEventSource = $scope.eventSourcesMap[calendar.uniqueId];
 
-          delete $scope.eventSourcesMap[calendar.uniqueId];
+        delete $scope.eventSourcesMap[calendar.uniqueId];
 
-          calendarPromise.then(function(cal) {
-            cal.fullCalendar('removeEventSource', removedEventSource);
-          });
-        }),
-        $rootScope.$on(CAL_EVENTS.CALENDARS.UPDATE, function(event, calendar) { // eslint-disable-line
-          $scope.calendars.forEach(function(cal, index) {
-            if (calendar.uniqueId === cal.uniqueId) {
-              $scope.calendars[index] = calendar;
-            }
-          });
-        }),
-        $rootScope.$on(CAL_EVENTS.CALENDAR_REFRESH, _rerenderCalendar),
-        $rootScope.$on(CAL_EVENTS.MINI_CALENDAR.TOGGLE, function() {
-          miniCalendarHidden = !miniCalendarHidden;
-        }),
-        $rootScope.$on(CAL_EVENTS.VIEW_TRANSLATION, function(event, action) { // eslint-disable-line
-          if (miniCalendarHidden) {
-            (action === 'prev' ? prev : next)();
+        calendarPromise.then(function(cal) {
+          cal.fullCalendar('removeEventSource', removedEventSource);
+        });
+      }
+
+      function _toggleMiniCalendar() {
+        miniCalendarHidden = !miniCalendarHidden;
+      }
+
+      function _toggleView(event, calendar) {
+        withCalendar(function(calendar, event, data) {
+          if (data.hidden) {
+            calendar.fullCalendar('removeEventSource', $scope.eventSourcesMap[data.calendarUniqueId]);
+          } else {
+            calendar.fullCalendar('addEventSource', $scope.eventSourcesMap[data.calendarUniqueId]);
           }
-        })
-      ];
+        })(event, calendar);
+      }
+
+      function _toggleViewMode(event, calendar) {
+        withCalendar(function(calendar, event, viewType) {
+          calendar.fullCalendar('changeView', viewType);
+        })(event, calendar);
+      }
 
       function _rerenderCalendar() {
         calendarPromise.then(function(calendar) {
@@ -259,11 +271,43 @@
         });
       }
 
-      var websocketListener = calWebsocketListenerService.listenEvents();
+      function _unselectCalendar(event, calendar) {
+        withCalendar(function(calendar) {
+          calendar.fullCalendar('unselect');
+        })(event, calendar);
+      }
+
+      function _updateCalendar(event, calendar) {
+        $scope.calendars.forEach(function(cal, index) {
+          if (calendar.uniqueId === cal.uniqueId) {
+            $scope.calendars[index] = calendar;
+            _forceEventsRedraw(calendar);
+          }
+        });
+      }
+
+      function _forceEventsRedraw(calendar) {
+        // For now we force redraw when calendar color changes.
+        // There is no other way to do this in fullcalendar but 'hopefuly' we have the event cache:
+        // Removing then adding the event source costs nothing and does not 'tilt'
+        if (calendar.color && calendar.color !== $scope.eventSourcesMap[calendar.uniqueId].backgroundColor) {
+          $scope.eventSourcesMap[calendar.uniqueId].backgroundColor = calendar.color;
+          calendarPromise.then(function(cal) {
+            cal.fullCalendar('removeEventSource', $scope.eventSourcesMap[calendar.uniqueId]);
+            cal.fullCalendar('addEventSource', $scope.eventSourcesMap[calendar.uniqueId]);
+          });
+        }
+      }
+
+      function _viewToday(event, calendar) {
+        withCalendar(function(calendar) {
+          calendar.fullCalendar('today');
+        })(event, calendar);
+      }
 
       $scope.$on('$destroy', function() {
         websocketListener.clean();
-        unregisterFunctions.forEach(function(unregisterFunction) {
+        rootScopeListeners.forEach(function(unregisterFunction) {
           unregisterFunction();
         });
         gracePeriodService.flushAllTasks();
