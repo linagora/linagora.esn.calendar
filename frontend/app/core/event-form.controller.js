@@ -172,20 +172,27 @@
         }
 
         if ($scope.calendar) {
-          var path = '/calendars/' + $scope.calendarHomeId + '/' + $scope.calendar.id;
+          var homeId = $scope.calendarHomeId;
+          var calendarId = $scope.calendar.id;
+
+          if ($scope.calendar.source) {
+            homeId = $scope.calendar.source.calendarHomeId;
+            calendarId = $scope.calendar.source.id;
+          }
+          var path = '/calendars/' + homeId + '/' + calendarId;
 
           $scope.restActive = true;
           _hideModal();
           setOrganizer()
             .then(function() {
-              return calEventService.createEvent($scope.calendar.id, path, $scope.editedEvent, {
+              return calEventService.createEvent(calendarId, path, $scope.editedEvent, {
                 graceperiod: true,
                 notifyFullcalendar: $state.is('calendar.main')
               });
             })
             .then(function(completed) {
               if (!completed) {
-                calOpenEventForm($scope.calendarHomeId, $scope.editedEvent);
+                calOpenEventForm(homeId, $scope.editedEvent);
               }
             })
             .finally(function() {
