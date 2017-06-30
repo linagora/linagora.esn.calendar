@@ -11,11 +11,13 @@
   }
 
   &.card {
-    .mdi {
-      font-size: 1.3em;
-      vertical-align: bottom;
-      margin-right: 5px;
-      color: @secondaryTextColor;
+    & .card-body {
+      .mdi {
+        font-size: 1.3em;
+        vertical-align: bottom;
+        margin-right: 5px;
+        color: @secondaryTextColor;
+      }
     }
 
     .no-padding .lv-item {
@@ -40,6 +42,18 @@
       .mdi-calendar {
         color: @primaryColor;
         font-size: 20px;
+      }
+    }
+  }
+  .md-fab-bottom-right {
+    position: fixed;
+    & md-fab-trigger .md-fab {
+      background-color: @m-amber;
+
+      & .mdi-plus {
+        font-size: 1.6em;
+        font-weight: 500;
+        line-height: 58px;
       }
     }
   }
