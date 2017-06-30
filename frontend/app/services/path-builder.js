@@ -7,6 +7,7 @@
   function calPathBuilder(CAL_DEFAULT_CALENDAR_ID) {
     var service = {
       rootPath: rootPath,
+      forCalendarPath: forCalendarPath,
       forCalendarHomeId: forCalendarHomeId,
       forCalendarId: forCalendarId,
       forEventId: forEventId,
@@ -25,8 +26,12 @@
       return rootPath() + '/' + calendarHomeId + '.json';
     }
 
+    function forCalendarPath(calendarHomeId, calendarId) {
+      return rootPath() + '/' + calendarHomeId + '/' + calendarId;
+    }
+
     function forCalendarId(calendarHomeId, calendarId) {
-      return rootPath() + '/' + calendarHomeId + '/' + calendarId + '.json';
+      return forCalendarPath(calendarHomeId, calendarId) + '.json';
     }
 
     function forEventId(calendarHomeId, eventId) {
