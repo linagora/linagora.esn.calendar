@@ -114,16 +114,16 @@
       return addAddedEvent(start, end, calendarUniqueId, applyUpdatedAndDeleteEvent(events, start, end, calendarUniqueId));
     }
 
-    function fetchEventOnlyIfNeeded(start, end, timezone, calId, calendarSource) {
+    function fetchEventOnlyIfNeeded(start, end, timezone, calendarUniqueId, calendarSource) {
       var defer = $q.defer();
       var period = {start: start, end: end};
 
-      if (calendarExploredPeriodService.getUnexploredPeriodsInPeriod(calId, period).length === 0) {
-        defer.resolve(calEventStore.getInPeriod(calId, period));
+      if (calendarExploredPeriodService.getUnexploredPeriodsInPeriod(calendarUniqueId, period).length === 0) {
+        defer.resolve(calEventStore.getInPeriod(calendarUniqueId, period));
       } else {
         calendarSource(start, end, timezone, function(events) {
-          calendarExploredPeriodService.registerExploredPeriod(calId, period);
-          events.map(calEventStore.save.bind(null, calId));
+          calendarExploredPeriodService.registerExploredPeriod(calendarUniqueId, period);
+          events.map(calEventStore.save.bind(null, calendarUniqueId));
           defer.resolve(events);
         });
       }
