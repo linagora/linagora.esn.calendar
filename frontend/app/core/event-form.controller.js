@@ -19,6 +19,7 @@
     calUIAuthorizationService,
     session,
     calendarUsersCache,
+    calPathBuilder,
     esnI18nService,
     CAL_EVENTS,
     CAL_EVENT_FORM) {
@@ -175,17 +176,18 @@
           var homeId = $scope.calendarHomeId;
           var calendarId = $scope.calendar.id;
 
+          // if we create an event in a subscription (ie in a public calendar we have rights to),
+          // we must create it in the calendar itself.
           if ($scope.calendar.source) {
             homeId = $scope.calendar.source.calendarHomeId;
             calendarId = $scope.calendar.source.id;
           }
-          var path = '/calendars/' + homeId + '/' + calendarId;
 
           $scope.restActive = true;
           _hideModal();
           setOrganizer()
             .then(function() {
-              return calEventService.createEvent(calendarId, path, $scope.editedEvent, {
+              return calEventService.createEvent(calPathBuilder.forCalendarPath(homeId, calendarId), $scope.editedEvent, {
                 graceperiod: true,
                 notifyFullcalendar: $state.is('calendar.main')
               });
@@ -252,8 +254,6 @@
           return;
         }
 
-        var path = $scope.event.path || '/calendars/' + $scope.calendarHomeId + '/' + $scope.calendar.id;
-
         $scope.restActive = true;
         _hideModal();
 
@@ -261,10 +261,16 @@
           $scope.editedEvent.deleteAllException();
         }
 
-        calEventService.modifyEvent(path, $scope.editedEvent, $scope.event, $scope.event.etag, angular.noop, { graceperiod: true, notifyFullcalendar: $state.is('calendar.main') })
-          .finally(function() {
-            $scope.restActive = false;
-          });
+        calEventService.modifyEvent(
+          $scope.event.path || calPathBuilder.forCalendarPath($scope.calendarHomeId, $scope.calendar.id),
+          $scope.editedEvent,
+          $scope.event,
+          $scope.event.etag,
+          angular.noop,
+          { graceperiod: true, notifyFullcalendar: $state.is('calendar.main') }
+        ).finally(function() {
+          $scope.restActive = false;
+        });
       }
 
       function updateAlarm() {
@@ -273,7 +279,6 @@
             return;
           }
         }
-        var path = $scope.editedEvent.path || '/calendars/' + $scope.calendarHomeId + '/' + $scope.calendar.id;
 
         $scope.restActive = true;
         var gracePeriodMessage = {
@@ -283,9 +288,16 @@
           successText: esnI18nService.translate('Alarm of %s has been modified.', $scope.event.title)
         };
 
-        calEventService.modifyEvent(path, $scope.editedEvent, $scope.event, $scope.event.etag, angular.noop, gracePeriodMessage).finally(function() {
-            $scope.restActive = false;
-          });
+        calEventService.modifyEvent(
+          $scope.editedEvent.path || calPathBuilder.forCalendarPath($scope.calendarHomeId, $scope.calendar.id),
+          $scope.editedEvent,
+          $scope.event,
+          $scope.event.etag,
+          angular.noop,
+          gracePeriodMessage
+        ).finally(function() {
+          $scope.restActive = false;
+        });
       }
 
       function modifyEvent() {

@@ -914,7 +914,7 @@ describe('The event-form module controllers', function() {
 
       it('should call createEvent with options.notifyFullcalendar true only if the state is calendar.main', function() {
         this.$state.is = sinon.stub().returns(true);
-        this.calEventServiceMock.createEvent = sinon.spy(function(calendarId, path, event, options) { // eslint-disable-line
+        this.calEventServiceMock.createEvent = sinon.spy(function(path, event, options) {
           expect(options).to.deep.equal({
             graceperiod: true,
             notifyFullcalendar: true
@@ -991,7 +991,7 @@ describe('The event-form module controllers', function() {
         this.scope.$digest();
 
         expect(this.$state.is).to.have.been.called;
-        expect(this.calEventServiceMock.createEvent).to.have.been.calledWith(calendarId, expectedPath, this.scope.editedEvent, {
+        expect(this.calEventServiceMock.createEvent).to.have.been.calledWith(expectedPath, this.scope.editedEvent, {
           graceperiod: true,
           notifyFullcalendar: this.$state.is()
         });
@@ -1015,7 +1015,7 @@ describe('The event-form module controllers', function() {
           name: 'owner owner',
           displayName: 'owner owner'
         });
-        expect(this.calEventServiceMock.createEvent).to.have.been.calledWith(calendarId, expectedPath, this.scope.editedEvent, {
+        expect(this.calEventServiceMock.createEvent).to.have.been.calledWith(expectedPath, this.scope.editedEvent, {
           graceperiod: true,
           notifyFullcalendar: this.$state.is()
         });

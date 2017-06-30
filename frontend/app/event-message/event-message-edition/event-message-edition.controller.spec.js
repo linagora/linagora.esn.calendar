@@ -133,23 +133,17 @@ describe('The CalEventMessageEditionController controller', function() {
       expect(controller.event.title).to.equal(title);
     });
 
-    it('should call calEventService.createEvent with calendarHomeId', function() {
-      controller.submit();
-
-      expect(self.calEventServiceMock.createEvent).to.have.been.calledWith(self.calendarHomeId);
-    });
-
     it('should give path to default calendars "/events"', function() {
       controller.submit();
 
-      expect(self.calEventServiceMock.createEvent).to.have.been.calledWith(sinon.match.any, '/calendars/' + self.calendarHomeId + '/events');
+      expect(self.calEventServiceMock.createEvent).to.have.been.calledWith('/calendars/' + self.calendarHomeId + '/events');
     });
 
     it('should path the event and option that disable graceperiod', function() {
       controller.event = { title: 'telephon maison' };
       controller.submit();
 
-      expect(self.calEventServiceMock.createEvent).to.have.been.calledWith(sinon.match.any, sinon.match.any, controller.event, { graceperiod: false });
+      expect(self.calEventServiceMock.createEvent).to.have.been.calledWith(sinon.match.any, controller.event, { graceperiod: false });
     });
 
     it('should not call createEvent and display an error if no activity_stream.uuid', function() {

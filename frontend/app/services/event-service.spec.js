@@ -317,7 +317,7 @@ describe('The calEventService service', function() {
 
       var catchSpy = sinon.spy();
 
-      self.calEventService.createEvent('calId', '/path/to/calendar', event, { graceperiod: true }).catch(catchSpy);
+      self.calEventService.createEvent('/path/to/calendar', event, { graceperiod: true }).catch(catchSpy);
       self.$httpBackend.flush();
 
       expect(catchSpy).to.have.been.calledWith(sinon.match({status: 500}));
@@ -339,7 +339,7 @@ describe('The calEventService service', function() {
 
       var catchSpy = sinon.spy();
 
-      self.calEventService.createEvent('calId', '/path/to/calendar', event, { graceperiod: true }).catch(catchSpy);
+      self.calEventService.createEvent('/path/to/calendar', event, { graceperiod: true }).catch(catchSpy);
       self.$httpBackend.flush();
 
       expect(catchSpy).to.have.been.calledWith(sinon.match({status: 200}));
@@ -375,7 +375,7 @@ describe('The calEventService service', function() {
 
       var thenSpy = sinon.spy();
 
-      self.calEventService.createEvent('calId', '/path/to/calendar', calendarShell, { graceperiod: true, notifyFullcalendar: true }).then(thenSpy);
+      self.calEventService.createEvent('/path/to/calendar', calendarShell, { graceperiod: true, notifyFullcalendar: true }).then(thenSpy);
       self.$httpBackend.flush();
 
       expect(thenSpy).to.have.been.calledWith(true);
@@ -402,7 +402,7 @@ describe('The calEventService service', function() {
 
       var spy = sinon.spy();
 
-      self.calEventService.createEvent('calId', '/path/to/calendar', event, { graceperiod: true }).then(spy);
+      self.calEventService.createEvent('/path/to/calendar', event, { graceperiod: true }).then(spy);
       self.$httpBackend.flush();
 
       expect(spy).to.have.been.calledWith(false);
@@ -424,7 +424,7 @@ describe('The calEventService service', function() {
 
       var spy = sinon.spy();
 
-      self.calEventService.createEvent('calId', '/path/to/calendar', event, { graceperiod: true }).then(spy);
+      self.calEventService.createEvent('/path/to/calendar', event, { graceperiod: true }).then(spy);
       self.$httpBackend.flush();
 
       expect(calCachedEventSourceMock.registerAdd).to.have.been.calledWith(event);
@@ -450,14 +450,14 @@ describe('The calEventService service', function() {
       self.gracePeriodService.cancel = $q.when.bind(null, {});
 
       self.$httpBackend.expectPUT('/dav/api/path/to/calendar/00000000-0000-4000-a000-000000000000.ics?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: '123456789'});
-      self.calEventService.createEvent('calId', '/path/to/calendar', event, { graceperiod: true });
+      self.calEventService.createEvent('/path/to/calendar', event, { graceperiod: true });
 
       self.$httpBackend.flush();
 
       event.isRecurring = _.constant(false);
 
       self.$httpBackend.expectPUT('/dav/api/path/to/calendar/00000000-0000-4000-a000-000000000000.ics?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: '123456789'});
-      self.calEventService.createEvent('calId', '/path/to/calendar', event, { graceperiod: true });
+      self.calEventService.createEvent('/path/to/calendar', event, { graceperiod: true });
 
       self.$httpBackend.flush();
 
@@ -480,7 +480,7 @@ describe('The calEventService service', function() {
 
       self.$httpBackend.expectPUT('/dav/api/path/to/calendar/00000000-0000-4000-a000-000000000000.ics?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: '123456789'});
 
-      self.calEventService.createEvent('calId', '/path/to/calendar', event, { graceperiod: true });
+      self.calEventService.createEvent('/path/to/calendar', event, { graceperiod: true });
       self.$httpBackend.flush();
 
       expect(calCachedEventSourceMock.deleteRegistration).to.have.been.calledWith(event);
@@ -500,13 +500,13 @@ describe('The calEventService service', function() {
       self.$httpBackend.expectPUT('/dav/api/path/to/calendar/00000000-0000-4000-a000-000000000000.ics?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: '123456789'});
 
       event.isRecurring = _.constant(true);
-      self.calEventService.createEvent('calId', '/path/to/calendar', event, { graceperiod: true });
+      self.calEventService.createEvent('/path/to/calendar', event, { graceperiod: true });
       self.$httpBackend.flush();
 
       self.$httpBackend.expectPUT('/dav/api/path/to/calendar/00000000-0000-4000-a000-000000000000.ics?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: '123456789'});
 
       event.isRecurring = _.constant(false);
-      self.calEventService.createEvent('calId', '/path/to/calendar', event, { graceperiod: true });
+      self.calEventService.createEvent('/path/to/calendar', event, { graceperiod: true });
       self.$httpBackend.flush();
 
       expect(self.calMasterEventCache.remove).to.have.been.calledOnce;

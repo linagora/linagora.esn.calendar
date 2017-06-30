@@ -153,13 +153,12 @@
       /**
        * Create a new event in the calendar defined by its path. If options.graceperiod is true, the request will be handled by the grace
        * period service.
-       * @param  {String}             calendarId   the calendar id.
-       * @param  {String}             calendarPath the calendar path. it should be something like /calendars/<homeId>/<id>.json
+       * @param  {String}             calendarPath the calendar path. it should be something like /calendars/<homeId>/<id>
        * @param  {CalendarShell}      event        the event to PUT to the caldav server
        * @param  {Object}             options      options needed for the creation. The structure is {graceperiod: Boolean}
        * @return {Mixed}                           true if success, false if cancelled, the http response if no graceperiod is used.
        */
-      function createEvent(calendarId, calendarPath, event, options) {
+      function createEvent(calendarPath, event, options) {
         var taskId = null;
 
         event.path = calendarPath.replace(/\/$/, '') + '/' + event.uid + '.ics';
@@ -176,23 +175,23 @@
           .then(function(response) {
             if (typeof response !== 'string') {
               return response;
-            } else {
-              event.gracePeriodTaskId = taskId = response;
-              event.isRecurring() && calMasterEventCache.save(event);
-              calCachedEventSource.registerAdd(event);
-              calendarEventEmitter.fullcalendar.emitCreatedEvent(event);
-
-              return gracePeriodService.grace({
-                id: taskId,
-                delay: CAL_GRACE_DELAY,
-                context: {id: event.uid},
-                performedAction: esnI18nService.translate('You are about to create a new event (%s).', event.title),
-                cancelFailed: 'An error has occured, the creation could not been reverted',
-                cancelTooLate: 'It is too late to cancel the creation',
-                gracePeriodFail: 'Event creation failed. Please refresh your calendar',
-                successText: esnI18nService.translate('Calendar - %s has been created.', event.title)
-              }).then(_.constant(true), onTaskCancel);
             }
+
+            event.gracePeriodTaskId = taskId = response;
+            event.isRecurring() && calMasterEventCache.save(event);
+            calCachedEventSource.registerAdd(event);
+            calendarEventEmitter.fullcalendar.emitCreatedEvent(event);
+
+            return gracePeriodService.grace({
+              id: taskId,
+              delay: CAL_GRACE_DELAY,
+              context: {id: event.uid},
+              performedAction: esnI18nService.translate('You are about to create a new event (%s).', event.title),
+              cancelFailed: 'An error has occured, the creation could not been reverted',
+              cancelTooLate: 'It is too late to cancel the creation',
+              gracePeriodFail: 'Event creation failed. Please refresh your calendar',
+              successText: esnI18nService.translate('Calendar - %s has been created.', event.title)
+            }).then(_.constant(true), onTaskCancel);
           }, function(err) {
             notificationFactory.weakError('Event creation failed', esnI18nService.translate('%s. Please refresh your calendar', err.statusText || err));
 
