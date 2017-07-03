@@ -136,7 +136,7 @@ describe('The CalEventMessageEditionController controller', function() {
     it('should give path to default calendars "/events"', function() {
       controller.submit();
 
-      expect(self.calEventServiceMock.createEvent).to.have.been.calledWith('/calendars/' + self.calendarHomeId + '/events');
+      expect(self.calEventServiceMock.createEvent).to.have.been.calledWith({ calendarHomeId: self.calendarHomeId, id: 'events' });
     });
 
     it('should path the event and option that disable graceperiod', function() {

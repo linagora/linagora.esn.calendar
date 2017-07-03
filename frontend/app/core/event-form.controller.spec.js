@@ -985,13 +985,10 @@ describe('The event-form module controllers', function() {
 
       it('should call calEventService.createEvent with the correct parameters', function() {
         this.scope.createEvent();
-        var calendarId = calendarTest.id;
-        var expectedPath = '/calendars/' + this.calendarHomeId + '/' + calendarId;
-
         this.scope.$digest();
 
         expect(this.$state.is).to.have.been.called;
-        expect(this.calEventServiceMock.createEvent).to.have.been.calledWith(expectedPath, this.scope.editedEvent, {
+        expect(this.calEventServiceMock.createEvent).to.have.been.calledWith(calendarTest, this.scope.editedEvent, {
           graceperiod: true,
           notifyFullcalendar: this.$state.is()
         });
@@ -1001,9 +998,6 @@ describe('The event-form module controllers', function() {
         calendarTest.isShared = sinon.stub().returns(true);
         this.userUtilsMock.displayNameOf = sinon.stub().returns('owner owner');
         this.scope.createEvent();
-        var calendarId = calendarTest.id;
-        var expectedPath = '/calendars/' + this.calendarHomeId + '/' + calendarId;
-
         this.scope.$digest();
 
         expect(this.$state.is).to.have.been.called;
@@ -1015,7 +1009,7 @@ describe('The event-form module controllers', function() {
           name: 'owner owner',
           displayName: 'owner owner'
         });
-        expect(this.calEventServiceMock.createEvent).to.have.been.calledWith(expectedPath, this.scope.editedEvent, {
+        expect(this.calEventServiceMock.createEvent).to.have.been.calledWith(calendarTest, this.scope.editedEvent, {
           graceperiod: true,
           notifyFullcalendar: this.$state.is()
         });

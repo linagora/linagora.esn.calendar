@@ -173,28 +173,18 @@
         }
 
         if ($scope.calendar) {
-          var homeId = $scope.calendarHomeId;
-          var calendarId = $scope.calendar.id;
-
-          // if we create an event in a subscription (ie in a public calendar we have rights to),
-          // we must create it in the calendar itself.
-          if ($scope.calendar.source) {
-            homeId = $scope.calendar.source.calendarHomeId;
-            calendarId = $scope.calendar.source.id;
-          }
-
           $scope.restActive = true;
           _hideModal();
           setOrganizer()
             .then(function() {
-              return calEventService.createEvent(calPathBuilder.forCalendarPath(homeId, calendarId), $scope.editedEvent, {
+              return calEventService.createEvent($scope.calendar, $scope.editedEvent, {
                 graceperiod: true,
                 notifyFullcalendar: $state.is('calendar.main')
               });
             })
             .then(function(completed) {
               if (!completed) {
-                calOpenEventForm(homeId, $scope.editedEvent);
+                calOpenEventForm($scope.calendarHomeId, $scope.editedEvent);
               }
             })
             .finally(function() {

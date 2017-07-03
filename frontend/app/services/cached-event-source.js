@@ -31,7 +31,6 @@
 
     function saveChange(action, event) {
       deleteRegistration(event);
-
       changes[event.id] = {
         added: new Date(),
         event: event,

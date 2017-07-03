@@ -16,6 +16,7 @@
     calendarUtils,
     calEventAPI,
     calEventUtils,
+    calPathBuilder,
     gracePeriodService,
     calMasterEventCache,
     notificationFactory,
@@ -158,10 +159,25 @@
        * @param  {Object}             options      options needed for the creation. The structure is {graceperiod: Boolean}
        * @return {Mixed}                           true if success, false if cancelled, the http response if no graceperiod is used.
        */
-      function createEvent(calendarPath, event, options) {
-        var taskId = null;
+      function createEvent(calendar, event, options) {
+        function buildICSPath(path) {
+          return path.replace(/\/$/, '') + '/' + event.uid + '.ics';
+        }
 
-        event.path = calendarPath.replace(/\/$/, '') + '/' + event.uid + '.ics';
+        var taskId = null;
+        var eventPath = buildICSPath(calPathBuilder.forCalendarPath(calendar.calendarHomeId, calendar.id));
+
+        // WARN: This is required to be set so that the event calendarUniqueId getter sends back the right value and so the event
+        // is stored at the right place in store, cache, sources, ...
+        // This means that the event.path we set here is the one which is really computed in the backend when we fetch events
+        event.path = eventPath;
+
+        // if we create an event in a subscription (ie in a public calendar we have rights to),
+        // we must create it in the public calendar itself.
+        // Note that event.path MUST NOT change due to the comment above
+        if (calendar.source) {
+          eventPath = buildICSPath(calPathBuilder.forCalendarPath(calendar.source.calendarHomeId, calendar.source.id));
+        }
 
         function onTaskCancel() {
           calCachedEventSource.deleteRegistration(event);
@@ -171,7 +187,7 @@
           return false;
         }
 
-        return calEventAPI.create(event.path, event.vcalendar, options)
+        return calEventAPI.create(eventPath, event.vcalendar, options)
           .then(function(response) {
             if (typeof response !== 'string') {
               return response;

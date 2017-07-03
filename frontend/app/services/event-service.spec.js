@@ -5,10 +5,15 @@
 var expect = chai.expect;
 
 describe('The calEventService service', function() {
-  var ICAL, calCachedEventSourceMock, self;
+  var ICAL, calCachedEventSourceMock, self, calendarHomeId, calendarId, eventUUID, dtstart, dtend;
 
   beforeEach(function() {
     self = this;
+    calendarHomeId = '123456789';
+    calendarId = '987654321';
+    eventUUID = '00000000-0000-4000-a000-000000000000';
+    dtstart = '2015-05-25T08:56:29+00:00';
+    dtend = '2015-05-25T09:56:29+00:00';
 
     self.tokenAPI = {
       _token: '123',
@@ -34,8 +39,7 @@ describe('The calEventService service', function() {
     };
 
     self.uuid4 = {
-      // This is a valid uuid4. Change this if you need other uuids generated.
-      _uuid: '00000000-0000-4000-a000-000000000000',
+      _uuid: eventUUID,
       generate: function() {
         return this._uuid;
       }
@@ -104,6 +108,10 @@ describe('The calEventService service', function() {
     self.CAL_GRACE_DELAY = CAL_GRACE_DELAY;
     self.$window = $window;
   }));
+
+  function getEventPath(home, id) {
+    return '/dav/api/calendars/' + (home || calendarHomeId) + '/' + (id || calendarId) + '/' + eventUUID + '.ics';
+  }
 
   describe('The listEvents fn', function() {
 
@@ -298,14 +306,22 @@ describe('The calEventService service', function() {
   });
 
   describe('The create fn', function() {
+    var calendar;
+
+    beforeEach(function() {
+      calendar = {
+        calendarHomeId: calendarHomeId,
+        id: calendarId
+      };
+    });
 
     it('should fail on 500 response status', function() {
-      self.$httpBackend.expectPUT('/dav/api/path/to/calendar/00000000-0000-4000-a000-000000000000.ics?graceperiod=' + self.CAL_GRACE_DELAY).respond(500, '');
+      self.$httpBackend.expectPUT(getEventPath() + '?graceperiod=' + self.CAL_GRACE_DELAY).respond(500, '');
 
       var vcalendar = new ICAL.Component('vcalendar');
       var vevent = new ICAL.Component('vevent');
 
-      vevent.addPropertyWithValue('uid', '00000000-0000-4000-a000-000000000000');
+      vevent.addPropertyWithValue('uid', eventUUID);
       vcalendar.addSubcomponent(vevent);
       var event = new self.CalendarShell(vcalendar);
 
@@ -315,7 +331,7 @@ describe('The calEventService service', function() {
 
       var catchSpy = sinon.spy();
 
-      self.calEventService.createEvent('/path/to/calendar', event, { graceperiod: true }).catch(catchSpy);
+      self.calEventService.createEvent(calendar, event, { graceperiod: true }).catch(catchSpy);
       self.$httpBackend.flush();
 
       expect(catchSpy).to.have.been.calledWith(sinon.match({status: 500}));
@@ -325,7 +341,7 @@ describe('The calEventService service', function() {
       var vcalendar = new ICAL.Component('vcalendar');
       var vevent = new ICAL.Component('vevent');
 
-      vevent.addPropertyWithValue('uid', '00000000-0000-4000-a000-000000000000');
+      vevent.addPropertyWithValue('uid', eventUUID);
       vcalendar.addSubcomponent(vevent);
       var event = new self.CalendarShell(vcalendar);
 
@@ -333,11 +349,11 @@ describe('The calEventService service', function() {
         return $q.when();
       };
 
-      self.$httpBackend.expectPUT('/dav/api/path/to/calendar/00000000-0000-4000-a000-000000000000.ics?graceperiod=' + self.CAL_GRACE_DELAY).respond(200, '');
+      self.$httpBackend.expectPUT(getEventPath() + '?graceperiod=' + self.CAL_GRACE_DELAY).respond(200, '');
 
       var catchSpy = sinon.spy();
 
-      self.calEventService.createEvent('/path/to/calendar', event, { graceperiod: true }).catch(catchSpy);
+      self.calEventService.createEvent(calendar, event, { graceperiod: true }).catch(catchSpy);
       self.$httpBackend.flush();
 
       expect(catchSpy).to.have.been.calledWith(sinon.match({status: 200}));
@@ -347,12 +363,12 @@ describe('The calEventService service', function() {
       var vcalendar = new ICAL.Component('vcalendar');
       var vevent = new ICAL.Component('vevent');
 
-      vevent.addPropertyWithValue('uid', '00000000-0000-4000-a000-000000000000');
-      vevent.addPropertyWithValue('dtstart', '2015-05-25T08:56:29+00:00');
-      vevent.addPropertyWithValue('dtend', '2015-05-25T09:56:29+00:00');
+      vevent.addPropertyWithValue('uid', eventUUID);
+      vevent.addPropertyWithValue('dtstart', dtstart);
+      vevent.addPropertyWithValue('dtend', dtend);
       vevent.addPropertyWithValue('summary', 'test event');
       vcalendar.addSubcomponent(vevent);
-      var path = '/path/to/calendar/00000000-0000-4000-a000-000000000000.ics';
+      var path = getEventPath();
       var etag = 'ETAG';
       var gracePeriodTaskId = '123456789';
       var calendarShell = new self.CalendarShell(vcalendar, {
@@ -369,11 +385,54 @@ describe('The calEventService service', function() {
         expect(taskId).to.equal(gracePeriodTaskId);
       };
 
-      self.$httpBackend.expectPUT('/dav/api/path/to/calendar/00000000-0000-4000-a000-000000000000.ics?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: gracePeriodTaskId});
+      self.$httpBackend.expectPUT(getEventPath() + '?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: gracePeriodTaskId});
 
       var thenSpy = sinon.spy();
 
-      self.calEventService.createEvent('/path/to/calendar', calendarShell, { graceperiod: true, notifyFullcalendar: true }).then(thenSpy);
+      self.calEventService.createEvent(calendar, calendarShell, { graceperiod: true, notifyFullcalendar: true }).then(thenSpy);
+      self.$httpBackend.flush();
+
+      expect(thenSpy).to.have.been.calledWith(true);
+      expect(self.calendarEventEmitterMock.emitCreatedEvent).to.have.been.called;
+    });
+
+    it('should send request to the source calendar if calendar.source is defined', function() {
+      var sourceHomeId = 'thesourcehomeid';
+      var sourceId = 'thesourceid';
+      var vcalendar = new ICAL.Component('vcalendar');
+      var vevent = new ICAL.Component('vevent');
+
+      vevent.addPropertyWithValue('uid', eventUUID);
+      vevent.addPropertyWithValue('dtstart', dtstart);
+      vevent.addPropertyWithValue('dtend', dtend);
+      vevent.addPropertyWithValue('summary', 'test event');
+      vcalendar.addSubcomponent(vevent);
+      var path = getEventPath();
+      var etag = 'ETAG';
+      var gracePeriodTaskId = '123456789';
+      var calendarShell = new self.CalendarShell(vcalendar, {
+        path: path,
+        etag: etag
+      });
+
+      self.gracePeriodService.grace = function() {
+        return $q.when({
+          cancelled: false
+        });
+      };
+      self.gracePeriodService.remove = function(taskId) {
+        expect(taskId).to.equal(gracePeriodTaskId);
+      };
+
+      self.$httpBackend.expectPUT(getEventPath(sourceHomeId, sourceId) + '?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: gracePeriodTaskId});
+      calendar.source = {
+        id: sourceId,
+        calendarHomeId: sourceHomeId
+      };
+
+      var thenSpy = sinon.spy();
+
+      self.calEventService.createEvent(calendar, calendarShell, { graceperiod: true, notifyFullcalendar: true }).then(thenSpy);
       self.$httpBackend.flush();
 
       expect(thenSpy).to.have.been.calledWith(true);
@@ -384,9 +443,9 @@ describe('The calEventService service', function() {
       var vcalendar = new ICAL.Component('vcalendar');
       var vevent = new ICAL.Component('vevent');
 
-      vevent.addPropertyWithValue('uid', '00000000-0000-4000-a000-000000000000');
-      vevent.addPropertyWithValue('dtstart', '2015-05-25T08:56:29+00:00');
-      vevent.addPropertyWithValue('dtend', '2015-05-25T09:56:29+00:00');
+      vevent.addPropertyWithValue('uid', eventUUID);
+      vevent.addPropertyWithValue('dtstart', dtstart);
+      vevent.addPropertyWithValue('dtend', dtend);
       vcalendar.addSubcomponent(vevent);
 
       var event = new self.CalendarShell(vcalendar);
@@ -396,11 +455,11 @@ describe('The calEventService service', function() {
         return $q.reject({});
       };
 
-      self.$httpBackend.expectPUT('/dav/api/path/to/calendar/00000000-0000-4000-a000-000000000000.ics?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: gracePeriodTaskId});
+      self.$httpBackend.expectPUT(getEventPath() + '?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: gracePeriodTaskId});
 
       var spy = sinon.spy();
 
-      self.calEventService.createEvent('/path/to/calendar', event, { graceperiod: true }).then(spy);
+      self.calEventService.createEvent(calendar, event, { graceperiod: true }).then(spy);
       self.$httpBackend.flush();
 
       expect(spy).to.have.been.calledWith(false);
@@ -411,18 +470,18 @@ describe('The calEventService service', function() {
       var vcalendar = new ICAL.Component('vcalendar');
       var vevent = new ICAL.Component('vevent');
 
-      vevent.addPropertyWithValue('uid', '00000000-0000-4000-a000-000000000000');
-      vevent.addPropertyWithValue('dtstart', '2015-05-25T08:56:29+00:00');
+      vevent.addPropertyWithValue('uid', eventUUID);
+      vevent.addPropertyWithValue('dtstart', dtstart);
       vcalendar.addSubcomponent(vevent);
       var event = new self.CalendarShell(vcalendar);
 
       self.gracePeriodService.grace = $q.when.bind(null, {});
 
-      self.$httpBackend.expectPUT('/dav/api/path/to/calendar/00000000-0000-4000-a000-000000000000.ics?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: '123456789'});
+      self.$httpBackend.expectPUT(getEventPath() + '?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: '123456789'});
 
       var spy = sinon.spy();
 
-      self.calEventService.createEvent('/path/to/calendar', event, { graceperiod: true }).then(spy);
+      self.calEventService.createEvent(calendar, event, { graceperiod: true }).then(spy);
       self.$httpBackend.flush();
 
       expect(calCachedEventSourceMock.registerAdd).to.have.been.calledWith(event);
@@ -433,8 +492,8 @@ describe('The calEventService service', function() {
       var vcalendar = new ICAL.Component('vcalendar');
       var vevent = new ICAL.Component('vevent');
 
-      vevent.addPropertyWithValue('uid', '00000000-0000-4000-a000-000000000000');
-      vevent.addPropertyWithValue('dtstart', '2015-05-25T08:56:29+00:00');
+      vevent.addPropertyWithValue('uid', eventUUID);
+      vevent.addPropertyWithValue('dtstart', dtstart);
       vcalendar.addSubcomponent(vevent);
       var event = new self.CalendarShell(vcalendar);
 
@@ -447,15 +506,15 @@ describe('The calEventService service', function() {
 
       self.gracePeriodService.cancel = $q.when.bind(null, {});
 
-      self.$httpBackend.expectPUT('/dav/api/path/to/calendar/00000000-0000-4000-a000-000000000000.ics?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: '123456789'});
-      self.calEventService.createEvent('/path/to/calendar', event, { graceperiod: true });
+      self.$httpBackend.expectPUT(getEventPath() + '?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: '123456789'});
+      self.calEventService.createEvent(calendar, event, { graceperiod: true });
 
       self.$httpBackend.flush();
 
       event.isRecurring = _.constant(false);
 
-      self.$httpBackend.expectPUT('/dav/api/path/to/calendar/00000000-0000-4000-a000-000000000000.ics?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: '123456789'});
-      self.calEventService.createEvent('/path/to/calendar', event, { graceperiod: true });
+      self.$httpBackend.expectPUT(getEventPath() + '?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: '123456789'});
+      self.calEventService.createEvent(calendar, event, { graceperiod: true });
 
       self.$httpBackend.flush();
 
@@ -467,8 +526,8 @@ describe('The calEventService service', function() {
       var vcalendar = new ICAL.Component('vcalendar');
       var vevent = new ICAL.Component('vevent');
 
-      vevent.addPropertyWithValue('uid', '00000000-0000-4000-a000-000000000000');
-      vevent.addPropertyWithValue('dtstart', '2015-05-25T08:56:29+00:00');
+      vevent.addPropertyWithValue('uid', eventUUID);
+      vevent.addPropertyWithValue('dtstart', dtstart);
       vcalendar.addSubcomponent(vevent);
       var event = new self.CalendarShell(vcalendar);
 
@@ -476,9 +535,9 @@ describe('The calEventService service', function() {
 
       calCachedEventSourceMock.deleteRegistration = sinon.spy();
 
-      self.$httpBackend.expectPUT('/dav/api/path/to/calendar/00000000-0000-4000-a000-000000000000.ics?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: '123456789'});
+      self.$httpBackend.expectPUT(getEventPath() + '?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: '123456789'});
 
-      self.calEventService.createEvent('/path/to/calendar', event, { graceperiod: true });
+      self.calEventService.createEvent(calendar, event, { graceperiod: true });
       self.$httpBackend.flush();
 
       expect(calCachedEventSourceMock.deleteRegistration).to.have.been.calledWith(event);
@@ -488,23 +547,23 @@ describe('The calEventService service', function() {
       var vcalendar = new ICAL.Component('vcalendar');
       var vevent = new ICAL.Component('vevent');
 
-      vevent.addPropertyWithValue('uid', '00000000-0000-4000-a000-000000000000');
-      vevent.addPropertyWithValue('dtstart', '2015-05-25T08:56:29+00:00');
+      vevent.addPropertyWithValue('uid', eventUUID);
+      vevent.addPropertyWithValue('dtstart', dtstart);
       vcalendar.addSubcomponent(vevent);
       var event = new self.CalendarShell(vcalendar);
 
       self.gracePeriodService.grace = $q.reject.bind(null, {});
 
-      self.$httpBackend.expectPUT('/dav/api/path/to/calendar/00000000-0000-4000-a000-000000000000.ics?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: '123456789'});
+      self.$httpBackend.expectPUT(getEventPath() + '?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: '123456789'});
 
       event.isRecurring = _.constant(true);
-      self.calEventService.createEvent('/path/to/calendar', event, { graceperiod: true });
+      self.calEventService.createEvent(calendar, event, { graceperiod: true });
       self.$httpBackend.flush();
 
-      self.$httpBackend.expectPUT('/dav/api/path/to/calendar/00000000-0000-4000-a000-000000000000.ics?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: '123456789'});
+      self.$httpBackend.expectPUT(getEventPath() + '?graceperiod=' + self.CAL_GRACE_DELAY).respond(202, {id: '123456789'});
 
       event.isRecurring = _.constant(false);
-      self.calEventService.createEvent('/path/to/calendar', event, { graceperiod: true });
+      self.calEventService.createEvent(calendar, event, { graceperiod: true });
       self.$httpBackend.flush();
 
       expect(self.calMasterEventCache.remove).to.have.been.calledOnce;
@@ -525,7 +584,7 @@ describe('The calEventService service', function() {
       var vcalendar = new ICAL.Component('vcalendar');
       var vevent = new ICAL.Component('vevent');
 
-      vevent.addPropertyWithValue('uid', '00000000-0000-4000-a000-000000000000');
+      vevent.addPropertyWithValue('uid', eventUUID);
       vevent.addPropertyWithValue('summary', 'test event');
       vevent.addPropertyWithValue('dtstart', ICAL.Time.fromJSDate(new Date())).setParameter('tzid', 'Europe/Paris');
       vevent.addPropertyWithValue('dtend', ICAL.Time.fromJSDate(new Date())).setParameter('tzid', 'Europe/Paris');
@@ -878,14 +937,14 @@ describe('The calEventService service', function() {
 
       var vevent = new ICAL.Component('vevent');
 
-      vevent.addPropertyWithValue('uid', '00000000-0000-4000-a000-000000000000');
+      vevent.addPropertyWithValue('uid', eventUUID);
       vevent.addPropertyWithValue('summary', 'test event');
       vcalendar.addSubcomponent(vevent);
 
       self.vcalendar = vcalendar;
 
       self.event = {
-        id: '00000000-0000-4000-a000-000000000000',
+        id: eventUUID,
         title: 'test event',
         start: self.calMoment(),
         end: self.calMoment(),
@@ -1119,7 +1178,7 @@ describe('The calEventService service', function() {
       var vcalendar = new ICAL.Component('vcalendar');
       var vevent = new ICAL.Component('vevent');
 
-      vevent.addPropertyWithValue('uid', '00000000-0000-4000-a000-000000000000');
+      vevent.addPropertyWithValue('uid', eventUUID);
       vevent.addPropertyWithValue('summary', 'test event');
       vevent.addPropertyWithValue('dtstart', ICAL.Time.fromJSDate(self.calMoment().toDate())).setParameter('tzid', self.jstz.determine().name());
       vevent.addPropertyWithValue('dtend', ICAL.Time.fromJSDate(self.calMoment().toDate())).setParameter('tzid', self.jstz.determine().name());

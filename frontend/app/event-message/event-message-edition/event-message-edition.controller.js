@@ -10,7 +10,6 @@
     calendarUtils,
     calendarService,
     calEventService,
-    calPathBuilder,
     calendarEventEmitter,
     notificationFactory,
     esnI18nService,
@@ -63,7 +62,7 @@
       }
 
       self.restActive = true;
-      calEventService.createEvent(calPathBuilder.forCalendarPath(self.calendarHomeId, CAL_DEFAULT_CALENDAR_ID), self.event, { graceperiod: false })
+      calEventService.createEvent({ calendarHomeId: self.calendarHomeId, id: CAL_DEFAULT_CALENDAR_ID }, self.event, { graceperiod: false })
         .then(function(response) {
           emitPostedMessage(response);
           resetEvent();
