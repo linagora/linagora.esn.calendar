@@ -37,10 +37,8 @@ describe('The calWebsocketListenerService service', function() {
     CalendarShellMock.fromIncompleteShell = sinon.spy();
 
     calendarEventEmitterMock = {
-      fullcalendar: {
-        emitModifiedEvent: sinon.spy(),
-        emitRemovedEvent: sinon.spy()
-      }
+      emitModifiedEvent: sinon.spy(),
+      emitRemovedEvent: sinon.spy()
     };
 
     calMasterEventCacheMock = {
@@ -146,7 +144,7 @@ describe('The calWebsocketListenerService service', function() {
         scope.$digest();
 
         expect(CalendarShellMock.from).to.have.been.calledWith(event, {path: path, etag: etag});
-        expect(calendarEventEmitterMock.fullcalendar[expectedEmitMethod]).to.have.been.calledWith(resultingEvent);
+        expect(calendarEventEmitterMock[expectedEmitMethod]).to.have.been.calledWith(resultingEvent);
         expect(calCachedEventSourceMock[expectedCacheMethod]).to.have.been.calledWith(resultingEvent);
       };
 
@@ -177,23 +175,23 @@ describe('The calWebsocketListenerService service', function() {
       expect(listener.sio.removeListener.getCalls().length).to.equal(12);
     });
 
-    it('should update event on calCachedEventSource and emit a fullCalendar event for a modification on EVENT_CREATED', function() {
+    it('should update event on calCachedEventSource and emit an event for a modification on EVENT_CREATED', function() {
       testUpdateCalCachedEventSourceAndFcEmit(wsEventCreateListener, 'registerUpdate', 'emitModifiedEvent');
     });
 
-    it('should update event on calCachedEventSource and broadcast emit a fullCalendar event for a modification on EVENT_REQUEST', function() {
+    it('should update event on calCachedEventSource and broadcast emit an event for a modification on EVENT_REQUEST', function() {
       testUpdateCalCachedEventSourceAndFcEmit(wsEventRequestListener, 'registerUpdate', 'emitModifiedEvent');
     });
 
-    it('should update event on calCachedEventSource and broadcast emit a fullCalendar event for a modification on EVENT_UPDATED', function() {
+    it('should update event on calCachedEventSource and broadcast emit an event for a modification on EVENT_UPDATED', function() {
       testUpdateCalCachedEventSourceAndFcEmit(wsEventModifyListener, 'registerUpdate', 'emitModifiedEvent');
     });
 
-    it('should remove event on calCachedEventSource and broadcast emit a fullCalendar event for a deletion on EVENT_DELETED', function() {
+    it('should remove event on calCachedEventSource and broadcast emit an event for a deletion on EVENT_DELETED', function() {
       testUpdateCalCachedEventSourceAndFcEmit(wsEventDeleteListener, 'registerDelete', 'emitRemovedEvent');
     });
 
-    it('should remove event on calCachedEventSource and broadcast emit a fullClaendar event for a deletion on EVENT_CANCEL', function() {
+    it('should remove event on calCachedEventSource and broadcast emit an event for a deletion on EVENT_CANCEL', function() {
       testUpdateCalCachedEventSourceAndFcEmit(wsEventCancelListener, 'registerDelete', 'emitRemovedEvent');
     });
 
@@ -223,7 +221,7 @@ describe('The calWebsocketListenerService service', function() {
       expect(CalendarShellMock.from).to.have.been.calledWith(event, {path: path, etag: etag});
       expect(calMasterEventCacheMock.get).to.have.been.calledWith(path);
       expect(originalEvent.applyReply).to.have.been.calledWith(resultingEvent);
-      expect(calendarEventEmitterMock.fullcalendar.emitModifiedEvent).to.have.been.calledWith(originalEvent);
+      expect(calendarEventEmitterMock.emitModifiedEvent).to.have.been.calledWith(originalEvent);
       expect(calCachedEventSourceMock.registerUpdate).to.have.been.calledWith(originalEvent);
     });
 
@@ -239,7 +237,7 @@ describe('The calWebsocketListenerService service', function() {
 
       expect(calMasterEventCacheMock.get).to.have.been.calledWith(path);
       expect(calEventServiceMock.getEvent).to.have.been.calledWith(path);
-      expect(calendarEventEmitterMock.fullcalendar.emitModifiedEvent).to.have.been.calledWith(sinon.match(originalEvent));
+      expect(calendarEventEmitterMock.emitModifiedEvent).to.have.been.calledWith(sinon.match(originalEvent));
       expect(calCachedEventSourceMock.registerUpdate).to.have.been.calledWith(sinon.match(originalEvent));
       expect(calMasterEventCacheMock.save).to.have.been.calledWith(sinon.match(originalEvent));
     });

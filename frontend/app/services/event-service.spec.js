@@ -59,11 +59,9 @@ describe('The calEventService service', function() {
       activitystream: {
         emitPostedMessage: sinon.spy()
       },
-      fullcalendar: {
-        emitCreatedEvent: sinon.spy(),
-        emitRemovedEvent: sinon.spy(),
-        emitModifiedEvent: sinon.spy()
-      }
+      emitCreatedEvent: sinon.spy(),
+      emitRemovedEvent: sinon.spy(),
+      emitModifiedEvent: sinon.spy()
     };
 
     angular.mock.module('esn.calendar');
@@ -379,7 +377,7 @@ describe('The calEventService service', function() {
       self.$httpBackend.flush();
 
       expect(thenSpy).to.have.been.calledWith(true);
-      expect(self.calendarEventEmitterMock.fullcalendar.emitCreatedEvent).to.have.been.called;
+      expect(self.calendarEventEmitterMock.emitCreatedEvent).to.have.been.called;
     });
 
     it('should resolve false if the graceperiod fail (user cancel or error)', function() {
@@ -406,7 +404,7 @@ describe('The calEventService service', function() {
       self.$httpBackend.flush();
 
       expect(spy).to.have.been.calledWith(false);
-      expect(self.calendarEventEmitterMock.fullcalendar.emitRemovedEvent).to.have.been.called;
+      expect(self.calendarEventEmitterMock.emitRemovedEvent).to.have.been.called;
     });
 
     it('should call calCachedEventSource.registerAdd', function() {
@@ -576,7 +574,7 @@ describe('The calEventService service', function() {
       self.calEventService.modifyEvent('/path/to/uid.ics', self.event, self.event, 'etag', angular.noop, {notifyFullcalendar: true}).then(spy);
 
       self.$httpBackend.flush();
-      expect(self.calendarEventEmitterMock.fullcalendar.emitModifiedEvent).to.have.been.called;
+      expect(self.calendarEventEmitterMock.emitModifiedEvent).to.have.been.called;
     });
 
     it('should provide a link to refresh the browser if graceperiod fail', function() {
@@ -757,10 +755,10 @@ describe('The calEventService service', function() {
       expect(self.gracePeriodService.cancel).to.have.been.calledWith(gracePeriodTaskId);
     });
 
-    it('should call given cancelCallback when graceperiod is cancelled before calling calendarEventEmitter.fullCalendar.emitModifiedEvent', function() {
+    it('should call given cancelCallback when graceperiod is cancelled before calling calendarEventEmitter.emitModifiedEvent', function() {
 
       self.gracePeriodService.grace = function() {
-        self.calendarEventEmitterMock.fullcalendar.emitModifiedEvent = sinon.spy();
+        self.calendarEventEmitterMock.emitModifiedEvent = sinon.spy();
 
         return $q.reject();
       };
@@ -774,7 +772,7 @@ describe('The calEventService service', function() {
       self.$httpBackend.flush();
 
       expect(onCancel).to.have.been.calledOnce;
-      expect(self.calendarEventEmitterMock.fullcalendar.emitModifiedEvent).to.have.been.calledOnce;
+      expect(self.calendarEventEmitterMock.emitModifiedEvent).to.have.been.calledOnce;
     });
 
     it('should call calCachedEventSource.registerUpdate', function() {
@@ -939,7 +937,7 @@ describe('The calEventService service', function() {
 
       expect(thenSpy).to.have.been.calledWith(true);
       expect(calCachedEventSourceMock.deleteRegistration).to.have.been.calledWith(self.event);
-      expect(self.calendarEventEmitterMock.fullcalendar.emitRemovedEvent).to.have.been.calledWith(self.event.id);
+      expect(self.calendarEventEmitterMock.emitRemovedEvent).to.have.been.calledWith(self.event.id);
       expect(self.gracePeriodService.cancel).to.have.been.calledWith(self.event.gracePeriodTaskId);
       expect(self.notificationFactoryMock.weakInfo).to.have.been.calledWith('Calendar', '%s has been deleted.');
     });
@@ -974,7 +972,7 @@ describe('The calEventService service', function() {
       self.$httpBackend.flush();
 
       expect(spy).to.have.been.calledWith(true);
-      expect(self.calendarEventEmitterMock.fullcalendar.emitRemovedEvent).to.have.been.called;
+      expect(self.calendarEventEmitterMock.emitRemovedEvent).to.have.been.called;
     });
 
     it('should call calCachedEventSource.registerDelete', function() {

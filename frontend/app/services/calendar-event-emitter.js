@@ -9,11 +9,9 @@
       activitystream: {
         emitPostedMessage: emitPostedMessage
       },
-      fullcalendar: {
-        emitCreatedEvent: emitCreatedEvent,
-        emitRemovedEvent: emitRemovedEvent,
-        emitModifiedEvent: emitModifiedEvent
-      }
+      emitCreatedEvent: emitCreatedEvent,
+      emitRemovedEvent: emitRemovedEvent,
+      emitModifiedEvent: emitModifiedEvent
     };
 
     return service;

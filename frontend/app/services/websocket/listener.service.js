@@ -98,7 +98,7 @@
 
         calCachedEventSource.registerUpdate(event);
         calMasterEventCache.save(event);
-        calendarEventEmitter.fullcalendar.emitModifiedEvent(event);
+        calendarEventEmitter.emitModifiedEvent(event);
       }
 
       function _liveNotificationHandlerOnReply(msg) {
@@ -110,7 +110,7 @@
         $q.when(event || calEventService.getEvent(replyEvent.path)).then(function(event) {
           calMasterEventCache.save(event);
           calCachedEventSource.registerUpdate(event);
-          calendarEventEmitter.fullcalendar.emitModifiedEvent(event);
+          calendarEventEmitter.emitModifiedEvent(event);
         });
       }
 
@@ -119,7 +119,7 @@
 
         calCachedEventSource.registerDelete(event);
         calMasterEventCache.remove(event);
-        calendarEventEmitter.fullcalendar.emitRemovedEvent(event);
+        calendarEventEmitter.emitRemovedEvent(event);
       }
     }
   }

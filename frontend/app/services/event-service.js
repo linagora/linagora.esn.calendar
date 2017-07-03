@@ -165,7 +165,7 @@
 
         function onTaskCancel() {
           calCachedEventSource.deleteRegistration(event);
-          calendarEventEmitter.fullcalendar.emitRemovedEvent(event.uid);
+          calendarEventEmitter.emitRemovedEvent(event.uid);
           event.isRecurring() && calMasterEventCache.remove(event);
 
           return false;
@@ -180,7 +180,7 @@
             event.gracePeriodTaskId = taskId = response;
             event.isRecurring() && calMasterEventCache.save(event);
             calCachedEventSource.registerAdd(event);
-            calendarEventEmitter.fullcalendar.emitCreatedEvent(event);
+            calendarEventEmitter.emitCreatedEvent(event);
 
             return gracePeriodService.grace({
               id: taskId,
@@ -219,7 +219,7 @@
 
           return gracePeriodService.cancel(event.gracePeriodTaskId).then(function() {
             calCachedEventSource.deleteRegistration(event);
-            calendarEventEmitter.fullcalendar.emitRemovedEvent(event.id);
+            calendarEventEmitter.emitRemovedEvent(event.id);
 
             return true;
           }, $q.reject);
@@ -231,7 +231,7 @@
 
         function onTaskCancel() {
           calCachedEventSource.deleteRegistration(event);
-          calendarEventEmitter.fullcalendar.emitCreatedEvent(event);
+          calendarEventEmitter.emitCreatedEvent(event);
         }
 
         function performRemove() {
@@ -239,7 +239,7 @@
             .then(function(id) {
               event.gracePeriodTaskId = taskId = id;
               calCachedEventSource.registerDelete(event);
-              calendarEventEmitter.fullcalendar.emitRemovedEvent(event.id);
+              calendarEventEmitter.emitRemovedEvent(event.id);
 
               return gracePeriodService.grace({
                 id: taskId,
@@ -340,7 +340,7 @@
           onCancel && onCancel(); //order matter, onCancel should be called before emitModifiedEvent because it can mute oldEvent
           calCachedEventSource.registerUpdate(oldEvent);
           oldEvent.isRecurring() && calMasterEventCache.save(oldEvent);
-          calendarEventEmitter.fullcalendar.emitModifiedEvent(oldEvent);
+          calendarEventEmitter.emitModifiedEvent(oldEvent);
         }
 
         return calEventAPI.modify(path, event.vcalendar, etag)
@@ -348,7 +348,7 @@
             event.gracePeriodTaskId = taskId = id;
             calCachedEventSource.registerUpdate(event);
             event.isRecurring() && calMasterEventCache.save(event);
-            calendarEventEmitter.fullcalendar.emitModifiedEvent(event);
+            calendarEventEmitter.emitModifiedEvent(event);
 
             return gracePeriodService.grace(angular.extend({
               id: taskId,
@@ -415,7 +415,7 @@
               } else if (response.status === 204) {
                 return getEvent(eventPath).then(function(shell) {
                   if (emitEvents) {
-                    calendarEventEmitter.fullcalendar.emitModifiedEvent(shell);
+                    calendarEventEmitter.emitModifiedEvent(shell);
                   }
 
                   return shell;
