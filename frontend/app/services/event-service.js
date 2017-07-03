@@ -154,7 +154,7 @@
       /**
        * Create a new event in the calendar defined by its path. If options.graceperiod is true, the request will be handled by the grace
        * period service.
-       * @param  {String}             calendarPath the calendar path. it should be something like /calendars/<homeId>/<id>
+       * @param  {Object}             calendar     the calendar to create the event in
        * @param  {CalendarShell}      event        the event to PUT to the caldav server
        * @param  {Object}             options      options needed for the creation. The structure is {graceperiod: Boolean}
        * @return {Mixed}                           true if success, false if cancelled, the http response if no graceperiod is used.

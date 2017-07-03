@@ -914,7 +914,7 @@ describe('The event-form module controllers', function() {
 
       it('should call createEvent with options.notifyFullcalendar true only if the state is calendar.main', function() {
         this.$state.is = sinon.stub().returns(true);
-        this.calEventServiceMock.createEvent = sinon.spy(function(path, event, options) {
+        this.calEventServiceMock.createEvent = sinon.spy(function(calendar, event, options) {
           expect(options).to.deep.equal({
             graceperiod: true,
             notifyFullcalendar: true
