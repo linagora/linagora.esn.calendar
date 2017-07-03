@@ -16,6 +16,7 @@
     calendarUtils,
     calEventAPI,
     calEventUtils,
+    calPathBuilder,
     gracePeriodService,
     calMasterEventCache,
     notificationFactory,
@@ -153,46 +154,60 @@
       /**
        * Create a new event in the calendar defined by its path. If options.graceperiod is true, the request will be handled by the grace
        * period service.
-       * @param  {String}             calendarId   the calendar id.
-       * @param  {String}             calendarPath the calendar path. it should be something like /calendars/<homeId>/<id>.json
+       * @param  {Object}             calendar     the calendar to create the event in
        * @param  {CalendarShell}      event        the event to PUT to the caldav server
        * @param  {Object}             options      options needed for the creation. The structure is {graceperiod: Boolean}
        * @return {Mixed}                           true if success, false if cancelled, the http response if no graceperiod is used.
        */
-      function createEvent(calendarId, calendarPath, event, options) {
-        var taskId = null;
+      function createEvent(calendar, event, options) {
+        function buildICSPath(path) {
+          return path.replace(/\/$/, '') + '/' + event.uid + '.ics';
+        }
 
-        event.path = calendarPath.replace(/\/$/, '') + '/' + event.uid + '.ics';
+        var taskId = null;
+        var eventPath = buildICSPath(calPathBuilder.forCalendarPath(calendar.calendarHomeId, calendar.id));
+
+        // WARN: This is required to be set so that the event calendarUniqueId getter sends back the right value and so the event
+        // is stored at the right place in store, cache, sources, ...
+        // This means that the event.path we set here is the one which is really computed in the backend when we fetch events
+        event.path = eventPath;
+
+        // if we create an event in a subscription (ie in a public calendar we have rights to),
+        // we must create it in the public calendar itself.
+        // Note that event.path MUST NOT change due to the comment above
+        if (calendar.source) {
+          eventPath = buildICSPath(calPathBuilder.forCalendarPath(calendar.source.calendarHomeId, calendar.source.id));
+        }
 
         function onTaskCancel() {
           calCachedEventSource.deleteRegistration(event);
-          calendarEventEmitter.fullcalendar.emitRemovedEvent(event.uid);
+          calendarEventEmitter.emitRemovedEvent(event.uid);
           event.isRecurring() && calMasterEventCache.remove(event);
 
           return false;
         }
 
-        return calEventAPI.create(event.path, event.vcalendar, options)
+        return calEventAPI.create(eventPath, event.vcalendar, options)
           .then(function(response) {
             if (typeof response !== 'string') {
               return response;
-            } else {
-              event.gracePeriodTaskId = taskId = response;
-              event.isRecurring() && calMasterEventCache.save(event);
-              calCachedEventSource.registerAdd(event);
-              calendarEventEmitter.fullcalendar.emitCreatedEvent(event);
-
-              return gracePeriodService.grace({
-                id: taskId,
-                delay: CAL_GRACE_DELAY,
-                context: {id: event.uid},
-                performedAction: esnI18nService.translate('You are about to create a new event (%s).', event.title),
-                cancelFailed: 'An error has occured, the creation could not been reverted',
-                cancelTooLate: 'It is too late to cancel the creation',
-                gracePeriodFail: 'Event creation failed. Please refresh your calendar',
-                successText: esnI18nService.translate('Calendar - %s has been created.', event.title)
-              }).then(_.constant(true), onTaskCancel);
             }
+
+            event.gracePeriodTaskId = taskId = response;
+            event.isRecurring() && calMasterEventCache.save(event);
+            calCachedEventSource.registerAdd(event);
+            calendarEventEmitter.emitCreatedEvent(event);
+
+            return gracePeriodService.grace({
+              id: taskId,
+              delay: CAL_GRACE_DELAY,
+              context: {id: event.uid},
+              performedAction: esnI18nService.translate('You are about to create a new event (%s).', event.title),
+              cancelFailed: 'An error has occured, the creation could not been reverted',
+              cancelTooLate: 'It is too late to cancel the creation',
+              gracePeriodFail: 'Event creation failed. Please refresh your calendar',
+              successText: esnI18nService.translate('Calendar - %s has been created.', event.title)
+            }).then(_.constant(true), onTaskCancel);
           }, function(err) {
             notificationFactory.weakError('Event creation failed', esnI18nService.translate('%s. Please refresh your calendar', err.statusText || err));
 
@@ -220,7 +235,7 @@
 
           return gracePeriodService.cancel(event.gracePeriodTaskId).then(function() {
             calCachedEventSource.deleteRegistration(event);
-            calendarEventEmitter.fullcalendar.emitRemovedEvent(event.id);
+            calendarEventEmitter.emitRemovedEvent(event.id);
 
             return true;
           }, $q.reject);
@@ -232,7 +247,7 @@
 
         function onTaskCancel() {
           calCachedEventSource.deleteRegistration(event);
-          calendarEventEmitter.fullcalendar.emitCreatedEvent(event);
+          calendarEventEmitter.emitCreatedEvent(event);
         }
 
         function performRemove() {
@@ -240,7 +255,7 @@
             .then(function(id) {
               event.gracePeriodTaskId = taskId = id;
               calCachedEventSource.registerDelete(event);
-              calendarEventEmitter.fullcalendar.emitRemovedEvent(event.id);
+              calendarEventEmitter.emitRemovedEvent(event.id);
 
               return gracePeriodService.grace({
                 id: taskId,
@@ -341,7 +356,7 @@
           onCancel && onCancel(); //order matter, onCancel should be called before emitModifiedEvent because it can mute oldEvent
           calCachedEventSource.registerUpdate(oldEvent);
           oldEvent.isRecurring() && calMasterEventCache.save(oldEvent);
-          calendarEventEmitter.fullcalendar.emitModifiedEvent(oldEvent);
+          calendarEventEmitter.emitModifiedEvent(oldEvent);
         }
 
         return calEventAPI.modify(path, event.vcalendar, etag)
@@ -349,7 +364,7 @@
             event.gracePeriodTaskId = taskId = id;
             calCachedEventSource.registerUpdate(event);
             event.isRecurring() && calMasterEventCache.save(event);
-            calendarEventEmitter.fullcalendar.emitModifiedEvent(event);
+            calendarEventEmitter.emitModifiedEvent(event);
 
             return gracePeriodService.grace(angular.extend({
               id: taskId,
@@ -416,7 +431,7 @@
               } else if (response.status === 204) {
                 return getEvent(eventPath).then(function(shell) {
                   if (emitEvents) {
-                    calendarEventEmitter.fullcalendar.emitModifiedEvent(shell);
+                    calendarEventEmitter.emitModifiedEvent(shell);
                   }
 
                   return shell;

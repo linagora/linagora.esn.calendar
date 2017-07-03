@@ -61,10 +61,8 @@
         return;
       }
 
-      var path = '/calendars/' + self.calendarHomeId + '/' + CAL_DEFAULT_CALENDAR_ID;
-
       self.restActive = true;
-      calEventService.createEvent(self.calendarHomeId, path, self.event, { graceperiod: false })
+      calEventService.createEvent({ calendarHomeId: self.calendarHomeId, id: CAL_DEFAULT_CALENDAR_ID }, self.event, { graceperiod: false })
         .then(function(response) {
           emitPostedMessage(response);
           resetEvent();

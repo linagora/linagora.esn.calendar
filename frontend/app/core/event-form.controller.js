@@ -19,6 +19,7 @@
     calUIAuthorizationService,
     session,
     calendarUsersCache,
+    calPathBuilder,
     esnI18nService,
     CAL_EVENTS,
     CAL_EVENT_FORM) {
@@ -172,13 +173,11 @@
         }
 
         if ($scope.calendar) {
-          var path = '/calendars/' + $scope.calendarHomeId + '/' + $scope.calendar.id;
-
           $scope.restActive = true;
           _hideModal();
           setOrganizer()
             .then(function() {
-              return calEventService.createEvent($scope.calendar.id, path, $scope.editedEvent, {
+              return calEventService.createEvent($scope.calendar, $scope.editedEvent, {
                 graceperiod: true,
                 notifyFullcalendar: $state.is('calendar.main')
               });
@@ -245,8 +244,6 @@
           return;
         }
 
-        var path = $scope.event.path || '/calendars/' + $scope.calendarHomeId + '/' + $scope.calendar.id;
-
         $scope.restActive = true;
         _hideModal();
 
@@ -254,10 +251,16 @@
           $scope.editedEvent.deleteAllException();
         }
 
-        calEventService.modifyEvent(path, $scope.editedEvent, $scope.event, $scope.event.etag, angular.noop, { graceperiod: true, notifyFullcalendar: $state.is('calendar.main') })
-          .finally(function() {
-            $scope.restActive = false;
-          });
+        calEventService.modifyEvent(
+          $scope.event.path || calPathBuilder.forCalendarPath($scope.calendarHomeId, $scope.calendar.id),
+          $scope.editedEvent,
+          $scope.event,
+          $scope.event.etag,
+          angular.noop,
+          { graceperiod: true, notifyFullcalendar: $state.is('calendar.main') }
+        ).finally(function() {
+          $scope.restActive = false;
+        });
       }
 
       function updateAlarm() {
@@ -266,7 +269,6 @@
             return;
           }
         }
-        var path = $scope.editedEvent.path || '/calendars/' + $scope.calendarHomeId + '/' + $scope.calendar.id;
 
         $scope.restActive = true;
         var gracePeriodMessage = {
@@ -276,9 +278,16 @@
           successText: esnI18nService.translate('Alarm of %s has been modified.', $scope.event.title)
         };
 
-        calEventService.modifyEvent(path, $scope.editedEvent, $scope.event, $scope.event.etag, angular.noop, gracePeriodMessage).finally(function() {
-            $scope.restActive = false;
-          });
+        calEventService.modifyEvent(
+          $scope.editedEvent.path || calPathBuilder.forCalendarPath($scope.calendarHomeId, $scope.calendar.id),
+          $scope.editedEvent,
+          $scope.event,
+          $scope.event.etag,
+          angular.noop,
+          gracePeriodMessage
+        ).finally(function() {
+          $scope.restActive = false;
+        });
       }
 
       function modifyEvent() {

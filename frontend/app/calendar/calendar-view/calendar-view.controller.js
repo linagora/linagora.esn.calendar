@@ -121,10 +121,7 @@
           .then(function(calendars) {
             $scope.calendars = calendars || [];
             $scope.calendars.forEach(function(calendar) {
-              $scope.eventSourcesMap[calendar.uniqueId] = {
-                events: calCachedEventSource.wrapEventSource(calendar.uniqueId, calendarEventSource(calendar, $scope.displayCalendarError)),
-                backgroundColor: calendar.color
-              };
+              $scope.eventSourcesMap[calendar.uniqueId] = buildEventSourceForCalendar(calendar);
 
               calendarVisibilityService.isHidden(calendar).then(function(calIsHidden) {
                 if (!calIsHidden) {
@@ -139,6 +136,13 @@
 
         windowJQuery.resize($scope.resizeCalendarHeight);
         $window.addEventListener('beforeunload', gracePeriodService.flushAllTasks);
+      }
+
+      function buildEventSourceForCalendar(calendar) {
+        return {
+          events: calCachedEventSource.wrapEventSource(calendar.uniqueId, calendarEventSource(calendar, $scope.displayCalendarError)),
+          backgroundColor: calendar.color
+        };
       }
 
       function eventClick(event) {
@@ -208,10 +212,7 @@
       }
 
       function _addCalendar(event, calendar) {
-        $scope.eventSourcesMap[calendar.uniqueId] = {
-          events: calCachedEventSource.wrapEventSource(calendar.uniqueId, calendarEventSource(calendar, $scope.displayCalendarError)),
-          backgroundColor: calendar.color
-        };
+        $scope.eventSourcesMap[calendar.uniqueId] = buildEventSourceForCalendar(calendar);
 
         calendarPromise.then(function(cal) {
           cal.fullCalendar('addEventSource', $scope.eventSourcesMap[calendar.uniqueId]);

@@ -7,8 +7,9 @@ form.event-quick-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !
       .modal-header
         button.close(type='button', data-dismiss="modal", aria-label="Close", ng-click="$hide()")
           span(aria-hidden="true") &times;
-        h4.modal-title(ng-if='isNew(editedEvent)') #{__('Create a new event')}
-        h4.modal-title(ng-if='!isNew(editedEvent)') #{__('Edit event')}
+        h4.modal-title(ng-if='canModifyEvent && isNew(editedEvent)') #{__('Create a new event')}
+        h4.modal-title(ng-if='canModifyEvent && !isNew(editedEvent)') #{__('Edit event')}
+        h4.modal-title(ng-if='!canModifyEvent') #{__('Consult')}
       .modal-body.overflow-none
         .row
           .col-xs-12
