@@ -18,20 +18,22 @@
     var defaultCalendarApiOptions = { withRights: true };
 
     this.addAndEmit = addAndEmit;
-    this.removeAndEmit = removeAndEmit;
-    this.updateAndEmit = updateAndEmit;
     this.createCalendar = createCalendar;
-    this.removeCalendar = removeCalendar;
     this.getCalendar = getCalendar;
-    this.listCalendars = listCalendars;
-    this.listPublicCalendars = listPublicCalendars;
-    this.modifyCalendar = modifyCalendar;
     this.getRight = getRight;
+    this.listCalendars = listCalendars;
+    this.listDelegationCalendars = listDelegationCalendars;
+    this.listPersonalAnAcceptedDelegationCalendars = listPersonalAnAcceptedDelegationCalendars;
+    this.listPublicCalendars = listPublicCalendars;
+    this.listSubscriptionCalendars = listSubscriptionCalendars;
+    this.modifyCalendar = modifyCalendar;
     this.modifyRights = modifyRights;
+    this.removeAndEmit = removeAndEmit;
+    this.removeCalendar = removeCalendar;
     this.subscribe = subscribe;
     this.unsubscribe = unsubscribe;
+    this.updateAndEmit = updateAndEmit;
     this.updateSubscription = updateSubscription;
-
     ////////////
 
     /**
@@ -62,15 +64,64 @@
     }
 
     /**
+     * List all calendars for the requested calendar home (user) as CalendarCollectionShells.
+     * @param  {String}     calendarHomeId  The calendar home id of the user
+     * @return {[CalendarCollectionShell]}  an array of CalendarCollectionShell
+     */
+    function listCalendarsAsCollectionShell(calendarHomeId, options) {
+      return calendarAPI.listCalendars(calendarHomeId, options).then(function(calendars) {
+        return calendars.map(function(calendar) {
+          return new CalendarCollectionShell(calendar);
+        });
+      });
+    }
+
+    /**
      * List all public calendars for the requested calendar home (user).
+     * public calendar = public calendar that users can subscribe to
      * @param  {String}     calendarHomeId  The calendar home id of the user
      * @return {[CalendarCollectionShell]}  an array of CalendarCollectionShell
      */
     function listPublicCalendars(calendarHomeId) {
-      return calendarAPI.listCalendars(calendarHomeId, { withRights: true, public: true }).then(function(calendars) {
-        return calendars.map(function(calendar) {
-          return new CalendarCollectionShell(calendar);
-        });
+      return listCalendarsAsCollectionShell(calendarHomeId, { withRights: true, sharedPublic: true });
+    }
+
+    /**
+     * List all subscription calendars for the requested calendar home (user).
+     * subscription calendar = public calendar that users have already subscribed to
+     * @param  {String}     calendarHomeId  The calendar home id of the user
+     * @return {[CalendarCollectionShell]}  an array of CalendarCollectionShell
+     */
+    function listSubscriptionCalendars(calendarHomeId) {
+      return listCalendarsAsCollectionShell(calendarHomeId, { withRights: true, sharedPublicSubscription: true });
+    }
+
+    /**
+     * List all delegation calendars for the requested calendar home (user).
+     * delegation calendar = a calendar that has been delegated by a user to the user defined by the calendarHomeId
+     * @param  {String}     calendarHomeId  The calendar home id of the user
+     * @param  {String}     status          The status of the delegated calendar: accepted | noresponse
+     * @return {[CalendarCollectionShell]}  an array of CalendarCollectionShell
+     */
+    function listDelegationCalendars(calendarHomeId, status) {
+      if (!(['accepted', 'noresponse'].indexOf(status) > -1)) {
+        return $q.reject('The status of the delegated calendar must be either "accepted" or "noresponse"');
+      }
+
+      return listCalendarsAsCollectionShell(calendarHomeId, { withRights: true, sharedDelegationStatus: status });
+    }
+
+    /**
+     * List both personal and accepted delegation calendars for the requested calendar home (user).
+     * @param  {String}     calendarHomeId  The calendar home id of the user
+     * @return {[CalendarCollectionShell]}  an array of CalendarCollectionShell
+     */
+    function listPersonalAnAcceptedDelegationCalendars(calendarHomeId) {
+      return listCalendarsAsCollectionShell(calendarHomeId, {
+        withRights: true,
+        personal: true,
+        sharedPublicSubscription: true,
+        sharedDelegationStatus: 'accepted'
       });
     }
 
