@@ -8,7 +8,6 @@
     var self = this;
 
     self.calendarsPerUser = [];
-    self.selectedCalendars = [];
     self.users = [];
     self.getSelectedCalendars = getSelectedCalendars;
     self.onUserAdded = onUserAdded;
@@ -47,7 +46,7 @@
     }
 
     function getSelectedCalendars() {
-      return _.chain(self.calendarsPerUser)
+      return _(self.calendarsPerUser)
         .filter('isSelected')
         .map(function(selected) {
           return selected.calendar;

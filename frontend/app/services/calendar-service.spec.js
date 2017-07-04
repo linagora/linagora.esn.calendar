@@ -231,7 +231,7 @@ describe('The calendarService service', function() {
 
       this.calendarService.listPublicCalendars(homeId);
 
-      expect(self.calendarAPI.listCalendars).to.be.calledWith(homeId, { withRights: true, public: true });
+      expect(self.calendarAPI.listCalendars).to.be.calledWith(homeId, { withRights: true, sharedPublic: true });
     });
 
     it('should return an array of CalendarCollectionShell', function(done) {
@@ -260,6 +260,192 @@ describe('The calendarService service', function() {
       });
 
       this.calendarService.listPublicCalendars(homeId).then(function(result) {
+        expect(result).to.be.an('array').to.have.lengthOf(calendars.length);
+        expect(result[0]).to.deep.equals(calendarCollection);
+        expect(CalendarCollectionShellFuncMock).to.have.been.calledOnce;
+        expect(CalendarCollectionShellFuncMock).to.have.been.calledWith(calendars[0]);
+        done();
+      }, done);
+
+      this.$rootScope.$digest();
+    });
+  });
+
+  describe('The listSubscriptionCalendars fn', function() {
+    var homeId;
+
+    beforeEach(function() {
+      homeId = 'TheHomeId';
+    });
+
+    it('should call calendarAPI.listCalendars with withRights and sharedPublicSubscription options', function() {
+      this.calendarAPI.listCalendars = sinon.spy(function() {
+        return $q.when();
+      });
+
+      this.calendarService.listSubscriptionCalendars(homeId);
+
+      expect(self.calendarAPI.listCalendars).to.be.calledWith(homeId, { withRights: true, sharedPublicSubscription: true });
+    });
+
+    it('should return an array of CalendarCollectionShell', function(done) {
+      var calendarCollection = {id: this.CAL_DEFAULT_CALENDAR_ID};
+      var calendars = [
+        {
+          _links: {
+            self: {
+              href: '/calendars/' + homeId + '/events.json'
+            }
+          },
+          'dav:name': null,
+          'caldav:description': null,
+          'calendarserver:ctag': 'http://sabre.io/ns/sync/3',
+          'apple:color': null,
+          'apple:order': null
+        }
+      ];
+
+      CalendarCollectionShellFuncMock = sinon.spy(function() {
+        return calendarCollection;
+      });
+
+      this.calendarAPI.listCalendars = sinon.spy(function() {
+        return $q.when(calendars);
+      });
+
+      this.calendarService.listSubscriptionCalendars(homeId).then(function(result) {
+        expect(result).to.be.an('array').to.have.lengthOf(calendars.length);
+        expect(result[0]).to.deep.equals(calendarCollection);
+        expect(CalendarCollectionShellFuncMock).to.have.been.calledOnce;
+        expect(CalendarCollectionShellFuncMock).to.have.been.calledWith(calendars[0]);
+        done();
+      }, done);
+
+      this.$rootScope.$digest();
+    });
+  });
+
+  describe('The listDelegationCalendars fn', function() {
+    var homeId, sharedDelegationStatus;
+
+    beforeEach(function() {
+      homeId = 'TheHomeId';
+      sharedDelegationStatus = 'accepted';
+    });
+
+    it('should reject with unsupported sharedDelegationStatus', function(done) {
+      this.calendarAPI.listCalendars = sinon.spy(function() {
+        return $q.when();
+      });
+
+      this.calendarService
+        .listDelegationCalendars(homeId, 'notSupportedSharedDelegationStatus')
+        .catch(function(error) {
+          expect(error).to.equal('The status of the delegated calendar must be either "accepted" or "noresponse"');
+
+          done();
+        });
+
+      expect(self.calendarAPI.listCalendars).to.not.have.been.called;
+
+      this.$rootScope.$digest();
+    });
+
+    it('should call calendarAPI.listCalendars with withRights and sharedDelegationStatus options', function() {
+      this.calendarAPI.listCalendars = sinon.spy(function() {
+        return $q.when();
+      });
+
+      this.calendarService.listDelegationCalendars(homeId, sharedDelegationStatus);
+
+      expect(self.calendarAPI.listCalendars).to.be.calledWith(homeId, { withRights: true, sharedDelegationStatus: sharedDelegationStatus });
+    });
+
+    it('should return an array of CalendarCollectionShell', function(done) {
+      var calendarCollection = {id: this.CAL_DEFAULT_CALENDAR_ID};
+      var calendars = [
+        {
+          _links: {
+            self: {
+              href: '/calendars/' + homeId + '/events.json'
+            }
+          },
+          'dav:name': null,
+          'caldav:description': null,
+          'calendarserver:ctag': 'http://sabre.io/ns/sync/3',
+          'apple:color': null,
+          'apple:order': null
+        }
+      ];
+
+      CalendarCollectionShellFuncMock = sinon.spy(function() {
+        return calendarCollection;
+      });
+
+      this.calendarAPI.listCalendars = sinon.spy(function() {
+        return $q.when(calendars);
+      });
+
+      this.calendarService.listDelegationCalendars(homeId, sharedDelegationStatus).then(function(result) {
+        expect(result).to.be.an('array').to.have.lengthOf(calendars.length);
+        expect(result[0]).to.deep.equals(calendarCollection);
+        expect(CalendarCollectionShellFuncMock).to.have.been.calledOnce;
+        expect(CalendarCollectionShellFuncMock).to.have.been.calledWith(calendars[0]);
+        done();
+      }, done);
+
+      this.$rootScope.$digest();
+    });
+  });
+
+  describe('The listPersonalAnAcceptedDelegationCalendars fn', function() {
+    var homeId;
+
+    beforeEach(function() {
+      homeId = 'TheHomeId';
+    });
+
+    it('should call calendarAPI.listCalendars with the correspondent options', function() {
+      this.calendarAPI.listCalendars = sinon.spy(function() {
+        return $q.when();
+      });
+
+      this.calendarService.listPersonalAnAcceptedDelegationCalendars(homeId);
+
+      expect(self.calendarAPI.listCalendars).to.be.calledWith(homeId, {
+        withRights: true,
+        personal: true,
+        sharedPublicSubscription: true,
+        sharedDelegationStatus: 'accepted'
+      });
+    });
+
+    it('should return an array of CalendarCollectionShell', function(done) {
+      var calendarCollection = {id: this.CAL_DEFAULT_CALENDAR_ID};
+      var calendars = [
+        {
+          _links: {
+            self: {
+              href: '/calendars/' + homeId + '/events.json'
+            }
+          },
+          'dav:name': null,
+          'caldav:description': null,
+          'calendarserver:ctag': 'http://sabre.io/ns/sync/3',
+          'apple:color': null,
+          'apple:order': null
+        }
+      ];
+
+      CalendarCollectionShellFuncMock = sinon.spy(function() {
+        return calendarCollection;
+      });
+
+      this.calendarAPI.listCalendars = sinon.spy(function() {
+        return $q.when(calendars);
+      });
+
+      this.calendarService.listPersonalAnAcceptedDelegationCalendars(homeId).then(function(result) {
         expect(result).to.be.an('array').to.have.lengthOf(calendars.length);
         expect(result[0]).to.deep.equals(calendarCollection);
         expect(CalendarCollectionShellFuncMock).to.have.been.calledOnce;
