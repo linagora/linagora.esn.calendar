@@ -1,0 +1,15 @@
+.calendar-shared-configuration-item
+  .meta
+    .avatar
+      img(src='/images/user.png', ng-src='/api/users/{{::$ctrl.item.user._id}}/profile/avatar', alt='#{__("User Avatar")}')
+    .title
+      .name
+        span {{::$ctrl.item.calendar.name}}
+      .owner
+        span {{::$ctrl.item.user.displayName}}
+  .rights
+    cal-public-rights-display(ng-if="$ctrl.item.type === 'public'", right="$ctrl.item.calendar.rights.getPublicRight()")
+    // must be modified to cal-share-rights: and maybe modify CalCalendarRightsUtilsService
+    cal-public-rights-display(ng-if="$ctrl.item.type === 'delegation'", right="$ctrl.item.calendar.rights.getShareeRight($ctrl.sessionUser._id)")
+  .actions
+    toggle-switch(ng-model='$ctrl.item.isSelected')

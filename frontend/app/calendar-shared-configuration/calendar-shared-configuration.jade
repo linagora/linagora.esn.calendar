@@ -3,16 +3,16 @@
     .modal-content
       .modal-header
         button.close(type="button", ng-click="$hide()") &times;
-        h4.modal-title #{__('Subscribe to public calendars')}
+        h4.modal-title #{__('Add shared calendars')}
       .modal-body
-        .calendar-public-configuration
+        .calendar-shared-configuration
           .user-search.form-group
             .autocomplete
               users-autocomplete-input(mutable-users='$ctrl.users', on-user-added='$ctrl.onUserAdded', on-user-removed='$ctrl.onUserRemoved', add-from-autocomplete-only='true')
 
           .calendar-list
             .empty(ng-if='!$ctrl.calendarsPerUser.length')
-              span #{__('Search users to subscribe to their public calendars')}
+              span #{__('Search users to add their shared calendars')}
 
             .header(ng-if='$ctrl.calendarsPerUser.length')
               .name
@@ -21,8 +21,8 @@
                 span #{__('Rights')}
               .actions
                 span #{__('Subscribe')}
-            cal-calendar-public-configuration-item(item="item", ng-repeat="item in $ctrl.calendarsPerUser")
+            cal-calendar-shared-configuration-item(item="item", ng-repeat="item in $ctrl.calendarsPerUser")
       .modal-footer
         button.btn.btn-default(type="button", ng-click="$hide()") #{__('Cancel')}
-        button.btn.btn-primary(type='button', ng-disabled='!$ctrl.getSelectedCalendars().length', ng-click='$ctrl.subscribeToSelectedCalendars(); $hide()') #{__('Save')}
+        button.btn.btn-primary(type='button', ng-disabled='!$ctrl.getSelectedCalendars($ctrl.calendarsPerUser).length', ng-click='$ctrl.addSharedCalendars(); $hide()') #{__('Save')}
 

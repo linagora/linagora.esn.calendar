@@ -4,7 +4,7 @@
 
 var expect = chai.expect;
 
-describe('The CalCalendarPublicConfigurationController controller', function() {
+describe('The CalCalendarSharedConfigurationController controller', function() {
   var $rootScope,
     $controller,
     $q,
@@ -56,7 +56,7 @@ describe('The CalCalendarPublicConfigurationController controller', function() {
   });
 
   function initController() {
-    return $controller('CalCalendarPublicConfigurationController');
+    return $controller('CalCalendarSharedConfigurationController');
   }
 
   describe('The getSelectedCalendars function', function() {
