@@ -1,4 +1,6 @@
 .calendar-left-pane {
+  .flex-column;
+
   bottom: 0;
   width: ~"calc(@{calendarLeftPaneWidth} + @{scrollbarWidth})";
   margin-top: 20px;
@@ -12,6 +14,12 @@
 
   .card-header {
     padding: 0;
+  }
+
+  cal-settings-sidebar-button {
+    .flex;
+    .flex-shorthand(1);
+    .flex-direction(column-reverse);
   }
 }
 
