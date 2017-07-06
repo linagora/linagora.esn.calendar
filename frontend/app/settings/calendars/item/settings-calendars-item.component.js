@@ -4,7 +4,8 @@
   angular.module('esn.calendar')
     .component('calSettingsCalendarsItem', {
       bindings: {
-        calendar: '<'
+        calendar: '<',
+        onRemove: '='
       },
       controllerAs: 'ctrl',
       controller: 'CalSettingsCalendarsItemController',

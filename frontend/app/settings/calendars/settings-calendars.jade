@@ -3,4 +3,4 @@ sub-header
 
 .cal-settings-calendars
   .list
-    cal-settings-calendars-item(ng-repeat="calendar in ctrl.calendars", calendar="calendar")
+    cal-settings-calendars-item(ng-repeat="calendar in ctrl.calendars", calendar="calendar", on-remove="ctrl.remove")
