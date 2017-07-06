@@ -2,5 +2,15 @@ sub-header
   cal-settings-subheader
 
 .cal-settings-calendars
-  .list
-    cal-settings-calendars-item(ng-repeat="calendar in ctrl.calendars", calendar="calendar", on-remove="ctrl.remove")
+  .calendar-list
+    .title
+      h3 #{__('My calendars')}
+    .list
+      cal-settings-calendars-item(ng-repeat="calendar in ctrl.userCalendars", calendar="calendar", on-remove="ctrl.remove")
+
+  .calendar-list
+    .title
+      h3 #{__('External calendars')}
+    .list
+      cal-settings-calendars-item(ng-repeat="calendar in ctrl.sharedCalendars", calendar="calendar", on-remove="ctrl.remove")
+      cal-settings-calendars-item(ng-repeat="calendar in ctrl.publicCalendars", calendar="calendar", on-remove="ctrl.remove")
