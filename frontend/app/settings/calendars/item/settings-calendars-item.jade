@@ -1,6 +1,7 @@
 .cal-settings-calendars-item
   .calendar-info
-    .name {{:: ctrl.calendar.name }}
+    .name 
+      a(ui-sref="calendar.edit({calendarUniqueId: 'ctrl.calendar.calendarUniqueId'})") {{:: ctrl.calendar.name }}
     .description {{:: ctrl.calendar.description }}
   .calendar-actions
-    a.clickable(ng-click="ctrl.remove()") #{__('Remove')}
+    a.clickable(ng-if='ctrl.canDeleteCalendar()', ng-click="ctrl.remove()") #{__('Remove')}

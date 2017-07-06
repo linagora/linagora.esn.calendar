@@ -5,10 +5,25 @@
 var expect = chai.expect;
 
 describe('The CalSettingsCalendarsItemController controller', function() {
-  var $rootScope, $controller, $scope;
+  var $rootScope, $controller, $scope, calUIAuthorizationService, calendar, session;
 
   beforeEach(function() {
-    angular.mock.module('esn.calendar');
+    calUIAuthorizationService = {};
+    calendar = {id: 1};
+    session = {
+      ready: {
+        then: angular.noop
+      },
+      user: {
+        id: 1
+      }
+    };
+  });
+
+  beforeEach(function() {
+    angular.mock.module('esn.calendar', function($provide) {
+      $provide.value('calUIAuthorizationService', calUIAuthorizationService);
+    });
   });
 
   beforeEach(function() {
@@ -23,10 +38,21 @@ describe('The CalSettingsCalendarsItemController controller', function() {
     return $controller('CalSettingsCalendarsItemController', { $scope: $scope }, bindings);
   }
 
+  describe('The canDeleteCalendar function', function() {
+    it('should call calUIAuthorizationService.canDeleteCalendar correctly', function() {
+      calUIAuthorizationService.canDeleteCalendar = sinon.spy();
+
+      var controller = initController({calendar: calendar});
+
+      controller.canDeleteCalendar();
+
+      expect(calUIAuthorizationService.canDeleteCalendar).to.have.been.calledWith(calendar, session.user._id);
+    });
+  });
+
   describe('The remove function', function() {
     it('should call the  onRemove function with the current calendar', function() {
       var onRemove = sinon.spy();
-      var calendar = {id: 1};
       var controller = initController({onRemove: onRemove, calendar: calendar});
 
       controller.remove();

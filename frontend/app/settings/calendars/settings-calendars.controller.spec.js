@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('The CalSettingsCalendarsController controller', function() {
-  var $rootScope, $controller, $scope, $log, session, calendarService, $modal, $q, calendar, otherCalendar;
+  var $rootScope, $controller, $scope, $log, session, calendarService, $modal, $q, calendar, otherCalendar, calendars, userAndExternalCalendars;
 
   beforeEach(function() {
     session = {
@@ -18,12 +18,19 @@ describe('The CalSettingsCalendarsController controller', function() {
     $modal = sinon.spy();
     calendar = {uniqueId: 1, calendarHomeId: 'MyId', name: 'MyName'};
     otherCalendar = {uniqueId: 2, calendarHomeId: 'MyOtherId', name: 'MyOtherName'};
+    calendars = [calendar, otherCalendar];
+    userAndExternalCalendars = sinon.spy(function() {
+      return {
+        userCalendars: calendars
+      };
+    });
   });
 
   beforeEach(function() {
     angular.mock.module('esn.calendar', function($provide) {
       $provide.value('session', session);
       $provide.value('calendarService', calendarService);
+      $provide.value('userAndExternalCalendars', userAndExternalCalendars);
       $provide.value('$modal', $modal);
     });
   });

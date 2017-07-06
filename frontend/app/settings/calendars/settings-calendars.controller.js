@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .controller('CalSettingsCalendarsController', CalSettingsCalendarsController);
 
-  function CalSettingsCalendarsController($log, $modal, _, session, calendarService) {
+  function CalSettingsCalendarsController($log, $modal, _, session, calendarService, userAndExternalCalendars) {
     var self = this;
 
     self.$onInit = $onInit;
@@ -17,6 +17,7 @@
     function listCalendars() {
       return calendarService.listCalendars(session.user._id).then(function(calendars) {
         self.calendars = calendars;
+        refreshCalendarsList();
       });
     }
 
@@ -27,7 +28,7 @@
     function _openDeleteConfirmationDialog(calendar) {
       function removeCalendar() {
         calendarService.removeCalendar(calendar.calendarHomeId, calendar).then(function() {
-          _remove(calendar);
+          handleCalendarRemove(calendar);
         }, function(err) {
           $log.error('Can not delete calendar', calendar, err);
         });
@@ -44,10 +45,17 @@
       });
     }
 
-    function _remove(calendar) {
-      _.remove(self.calendars, function(_calendar) {
-        return _calendar.uniqueId === calendar.uniqueId;
-      });
+    function handleCalendarRemove(calendar) {
+      _.remove(self.calendars, { uniqueId: calendar.uniqueId });
+      refreshCalendarsList();
+    }
+
+    function refreshCalendarsList() {
+      var calendars = userAndExternalCalendars(self.calendars);
+
+      self.userCalendars = calendars.userCalendars;
+      self.sharedCalendars = calendars.sharedCalendars;
+      self.publicCalendars = calendars.publicCalendars;
     }
   }
 })();
