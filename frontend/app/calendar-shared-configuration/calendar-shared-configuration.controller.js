@@ -4,7 +4,22 @@
   angular.module('esn.calendar')
     .controller('CalCalendarSharedConfigurationController', CalCalendarSharedConfigurationController);
 
-  function CalCalendarSharedConfigurationController($log, $q, $state, _, session, notificationFactory, userUtils, uuid4, calendarService, calendarHomeService, CalendarCollectionShell, userAndExternalCalendars) {
+  function CalCalendarSharedConfigurationController(
+    $log,
+    $q,
+    $state,
+    _,
+    session,
+    notificationFactory,
+    userUtils,
+    uuid4,
+    calendarService,
+    calendarHomeService,
+    CalendarCollectionShell,
+    userAndExternalCalendars,
+    CAL_CALENDAR_SHARED_INVITE_STATUS
+  ) {
+
     var self = this;
     var noResponseDelegationCalendars;
 
@@ -79,7 +94,7 @@
           });
         })
         .then(function(delegationCalendarsWrappers) {
-          delegationCalendarsWrappers.forEach(function(delegationCalendarsWrapper, index) {
+          delegationCalendarsWrappers.forEach(function(delegationCalendarsWrapper) {
             delegationCalendarsWrapper.calendar.getOwner().then(function(owner) {
               delegationCalendarsWrapper.user = owner;
               delegationCalendarsWrapper.user.displayName = userUtils.displayNameOf(owner);
@@ -136,9 +151,14 @@
       });
     }
 
-    function acceptInvitation() {
-      // this must be modified by the real service
-      return $q.when('yolo');
+    function acceptInvitation(calendars) {
+      return calendarHomeService.getUserCalendarHomeId().then(function(calendarHomeId) {
+        return $q.all(calendars.map(function(calendar) {
+          var inviteStatus = { invitestatus: CAL_CALENDAR_SHARED_INVITE_STATUS.INVITE_ACCEPTED };
+
+          return calendarService.updateInviteStatus(calendarHomeId, calendar, inviteStatus);
+        }));
+      });
     }
 
     function subscribeToSelectedCalendars() {

@@ -21,7 +21,7 @@
                 span #{__('Rights')}
               .actions
                 span #{__('Subscribe')}
-            cal-calendar-shared-configuration-item(item="item", ng-repeat="item in $ctrl.calendarsPerUser")
+            cal-calendar-shared-configuration-item(item="item", user="$ctrl.sessionUser", ng-repeat="item in $ctrl.calendarsPerUser")
       .modal-footer
         button.btn.btn-default(type="button", ng-click="$hide()") #{__('Cancel')}
         button.btn.btn-primary(type='button', ng-disabled='!$ctrl.getSelectedCalendars($ctrl.calendarsPerUser).length', ng-click='$ctrl.addSharedCalendars(); $hide()') #{__('Save')}
