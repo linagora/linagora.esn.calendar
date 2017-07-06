@@ -114,12 +114,29 @@
       FREE_BUSY: '{urn:ietf:params:xml:ns:caldav}read-free-busy'
     })
 
+    .constant('CAL_CALENDAR_SHARED_INVITE_STATUS', {
+      INVITE_NORESPONSE: 'noresponse',
+      INVITE_ACCEPTED: 'accepted',
+      INVITE_DECLINED: 'declined',
+      INVITE_INVALID: 'invalid'
+    })
+
     .constant('CAL_CALENDAR_PUBLIC_RIGHT_HUMAN_READABLE', {
       unknown: 'unknown',
       '': 'none',
       '{DAV:}read': 'read',
       '{DAV:}write': 'read/write',
       '{urn:ietf:params:xml:ns:caldav}read-free-busy': 'free/busy'
+    })
+
+    .constant('CAL_CALENDAR_DELEGATION_RIGHT_HUMAN_READABLE', {
+      unknown: 'unknown',
+      0: 'None',
+      1: 'Owner',
+      2: 'Read',
+      3: 'Read and Write',
+      5: 'Administration',
+      6: 'Free/Busy'
     })
 
     .constant('CAL_EVENT_CLASS', {
