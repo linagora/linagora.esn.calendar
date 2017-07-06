@@ -7,14 +7,10 @@
   function CalSettingsCalendarsItemController() {
     var self = this;
 
-    self.$onInit = $onInit;
-    self.unsubscribe = unsubscribe;
+    self.remove = remove;
 
-    function $onInit() {
-    }
-
-    function unsubscribe() {
-      console.log('Unsubscribe from', self.calendar);
-    }
+    function remove() {
+      self.onRemove(self.calendar);
+      }
   }
 })();

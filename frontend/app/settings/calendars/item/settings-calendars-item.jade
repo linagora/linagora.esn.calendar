@@ -1,6 +1,6 @@
 .cal-settings-calendars-item
-  .meta
+  .calendar-info
     .name {{:: ctrl.calendar.name }}
     .description {{:: ctrl.calendar.description }}
-  .actions
-    a(ng-click="ctrl.unsubscribe()")
+  .calendar-actions
+    a.clickable(ng-click="ctrl.remove()") #{__('Remove')}
