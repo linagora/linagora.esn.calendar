@@ -61,6 +61,29 @@
           }
         }
       })
+      .state('calendar.settings', {
+        url: '/settings',
+         deepStateRedirect: {
+          default: 'calendar.settings.calendars',
+          fn: function() {
+            return { state: 'calendar.settings.calendars' };
+          }
+        },
+        views: {
+          'content@calendar': {
+            templateUrl: '/calendar/app/settings/settings.html',
+            controller: 'CalSettingsIndexController'
+          }
+        }
+      })
+      .state('calendar.settings.calendars', {
+        url: '/calendars',
+        views: {
+          'settings@calendar.settings': {
+            template: '<cal-settings-calendars />'
+          }
+        }
+      })
       .state('calendar.edit', {
         url: '/edit/:calendarUniqueId',
         params: {
