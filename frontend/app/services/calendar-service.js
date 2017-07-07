@@ -38,12 +38,13 @@
     ////////////
 
     /**
-     * List all calendars in the calendar home.
+     * List all calendars (own, shared and subscriptions to public ones) from the calendar home.
+     * Non accepted shared calendars are not retrieved.
+     * This version uses basic cache to store sabre call results
      * @param  {String} calendarHomeId      The calendar home id we fetch the calendars in
-     * @param  {Object} options             Specific options that override default options
      * @return {[CalendarCollectionShell]}  an array of CalendarCollectionShell
      */
-    function listCalendars(calendarHomeId, options) {
+    function listCalendars(calendarHomeId) {
 
       function createCalendarsShell(calendars) {
         var vcalendars = [];
@@ -59,7 +60,14 @@
         return calendarsCache[calendarHomeId];
       }
 
-      calendarsCache[calendarHomeId] = calendarsCache[calendarHomeId] || calendarAPI.listCalendars(calendarHomeId, options || defaultCalendarApiOptions).then(createCalendarsShell);
+      calendarsCache[calendarHomeId] = calendarsCache[calendarHomeId] ||
+        calendarAPI.listCalendars(calendarHomeId, {
+          withRights: true,
+          personal: true,
+          sharedPublicSubscription: true,
+          sharedDelegationStatus: 'accepted'
+        })
+          .then(createCalendarsShell);
 
       return $q.when(calendarsCache[calendarHomeId]);
     }
@@ -142,7 +150,7 @@
     /**
      * Delete a calendar
      * @param  {String}     calendarHomeId  The calendar home id
-     * @param  {String}     calendarId      The calendar id
+     * @param  {String}     calendar      The calendar to be removed
      */
     function removeCalendar(calendarHomeId, calendar) {
       return calendarAPI.removeCalendar(calendarHomeId, calendar.id)
@@ -235,6 +243,8 @@
      * Modify the rights for a calendar in the specified calendar home.
      * @param {String}                  calendarHomeId  the id of the calendar home in which we will create a new calendar
      * @param {CalendarCollectionShell} calendar        the calendar to modify
+     * @param {CalendarRightShell} rightShell modified version of the rights to be persisted
+     * @param {CalendarRightShell} oldRightShell rights of the calendar
      */
     function modifyRights(calendarHomeId, calendar, rightShell, oldRightShell) {
       return calendarAPI.modifyShares(calendarHomeId, calendar.id, rightShell.toDAVShareRightsUpdate(oldRightShell)).then(function() {
