@@ -140,14 +140,6 @@
           }
         }
       })
-      .state('calendar.list', {
-        url: '/list',
-        views: {
-          content: {
-            template: '<calendars-configuration-mobile calendars="calendars"/>'
-          }
-        }
-      })
       .state('calendar.event', {
         url: '/:calendarHomeId/event/:eventId?recurrenceId',
         abstract: true,
