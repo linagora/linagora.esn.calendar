@@ -53,7 +53,7 @@
     }
 
     function listCalendars() {
-      return calendarService.listCalendars(session.user._id).then(function(calendars) {
+      return calendarService.listPersonalAndAcceptedDelegationCalendars(session.user._id).then(function(calendars) {
         self.calendars = _.clone(calendars);
 
         refreshCalendarsList();

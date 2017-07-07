@@ -117,7 +117,7 @@
       }
 
       function activate() {
-        calendarService.listCalendars($scope.calendarHomeId)
+        calendarService.listPersonalAndAcceptedDelegationCalendars($scope.calendarHomeId)
           .then(function(calendars) {
             $scope.calendars = calendars || [];
             $scope.calendars.forEach(function(calendar) {

@@ -66,7 +66,7 @@
 
     function getAll() {
       return calendarHomeService.getUserCalendarHomeId().then(function(calendarHomeId) {
-        return calendarService.listCalendars(calendarHomeId);
+        return calendarService.listPersonalAndAcceptedDelegationCalendars(calendarHomeId);
       }).then(function(calendars) {
         return calendars.map(buildProvider);
       }, function(error) {

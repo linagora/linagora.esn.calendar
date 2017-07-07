@@ -77,7 +77,7 @@ describe('The calSearchEventProviderService service', function() {
         };
       });
 
-      $httpBackend.expectGET('/dav/api/calendars/' + calendarHomeId + '.json?withRights=true').respond(200, {
+      $httpBackend.expectGET('/dav/api/calendars/' + calendarHomeId + '.json?personal=true&sharedDelegationStatus=accepted&sharedPublicSubscription=true&withRights=true').respond(200, {
         _embedded: {
           'dav:calendar': davCalendars
         }
@@ -122,7 +122,7 @@ describe('The calSearchEventProviderService service', function() {
     });
 
     it('should prevent error when sabre is down', function(done) {
-      calendarService.listCalendars = function() {
+      calendarService.listPersonalAndAcceptedDelegationCalendars = function() {
         return $q.reject();
       };
 
