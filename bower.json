@@ -22,7 +22,7 @@
     "tests"
   ],
   "dependencies": {
-    "material-admin": "https://ci.open-paas.org/stash/scm/or/material-admin.git#1.5.1.5"
+    "material-admin": "https://github.com/linagora/material-admin.git#1.5.1.5"
   },
   "devDependencies": {
     "Autolinker.js": "^0.24.1",
@@ -64,7 +64,7 @@
     "angular-uuid4": "~0.3.0",
     "angular-web-notification": "1.0.19",
     "angular-xeditable": "0.1.9",
-    "angularjs-naturalsort": "https://ci.open-paas.org/stash/scm/olibs/angularjs-naturalsort.git",
+    "angularjs-naturalsort": "https://github.com/linagora/angularjs-naturalsort.git",
     "animate.css": "~3.1.1",
     "arrive": "~2.2.0",
     "autosize": "3.0.13",
@@ -73,7 +73,7 @@
     "bootstrap": "~3.3.5",
     "bootstrap-additions": "~0.2.3",
     "bootstrap-switch": "~3.3.2",
-    "char-api": "https://ci.open-paas.org/stash/scm/olibs/char-api.git",
+    "char-api": "https://github.com/linagora/char-api.git",
     "dynamic-directive": "3.0.0",
     "fullcalendar": "3.0.1",
     "ical.js": "linagora/ical.js#v1.0.4-2",
