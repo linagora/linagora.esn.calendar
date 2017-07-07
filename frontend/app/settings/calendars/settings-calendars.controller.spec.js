@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('The CalSettingsCalendarsController controller', function() {
-  var $rootScope, $controller, $scope, $log, session, calendarService, $modal, $q, calendar, otherCalendar, calendars, userAndExternalCalendars;
+  var $rootScope, $controller, $scope, $log, session, calendarService, $q, calendar, otherCalendar, calendars, userAndExternalCalendars, calCalendarDeleteConfirmationModalService;
 
   beforeEach(function() {
     session = {
@@ -15,7 +15,7 @@ describe('The CalSettingsCalendarsController controller', function() {
       }
     };
     calendarService = {};
-    $modal = sinon.spy();
+    calCalendarDeleteConfirmationModalService = sinon.spy();
     calendar = {uniqueId: 1, calendarHomeId: 'MyId', name: 'MyName'};
     otherCalendar = {uniqueId: 2, calendarHomeId: 'MyOtherId', name: 'MyOtherName'};
     calendars = [calendar, otherCalendar];
@@ -31,7 +31,7 @@ describe('The CalSettingsCalendarsController controller', function() {
       $provide.value('session', session);
       $provide.value('calendarService', calendarService);
       $provide.value('userAndExternalCalendars', userAndExternalCalendars);
-      $provide.value('$modal', $modal);
+      $provide.value('calCalendarDeleteConfirmationModalService', calCalendarDeleteConfirmationModalService);
     });
   });
 
@@ -74,7 +74,7 @@ describe('The CalSettingsCalendarsController controller', function() {
       controller.calendars = [];
       controller.remove(calendar);
 
-      expect($modal).to.have.been.calledOnce;
+      expect(calCalendarDeleteConfirmationModalService).to.have.been.calledOnce;
     });
 
     it('should remove the calendar', function() {
@@ -87,13 +87,9 @@ describe('The CalSettingsCalendarsController controller', function() {
       controller.calendars = [calendar, otherCalendar];
       controller.remove(calendar);
 
-      var modalController = $modal.firstCall.args[0].controller;
-      var modalScope = {};
+      var removeCalendar = calCalendarDeleteConfirmationModalService.firstCall.args[1];
 
-      modalController(modalScope);
-      expect(modalScope.calendarName).to.equal(calendar.name);
-
-      modalScope.delete();
+      removeCalendar();
       expect(calendarService.removeCalendar).to.have.been.calledWith(calendar.calendarHomeId, calendar);
       $rootScope.$digest();
 
@@ -112,13 +108,10 @@ describe('The CalSettingsCalendarsController controller', function() {
       controller.calendars = [calendar, otherCalendar];
       controller.remove(calendar);
 
-      var modalController = $modal.firstCall.args[0].controller;
-      var modalScope = {};
+      var removeCalendar = calCalendarDeleteConfirmationModalService.firstCall.args[1];
 
-      modalController(modalScope);
-      expect(modalScope.calendarName).to.equal(calendar.name);
+      removeCalendar();
 
-      modalScope.delete();
       expect(calendarService.removeCalendar).to.have.been.calledWith(calendar.calendarHomeId, calendar);
       $rootScope.$digest();
 

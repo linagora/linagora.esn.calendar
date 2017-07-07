@@ -16,6 +16,7 @@ describe('The calendar configuration tab delegation controller', function() {
     userUtils,
     session,
     CalendarConfigurationTabMainController,
+    calCalendarDeleteConfirmationModalService,
     CAL_CALENDAR_PUBLIC_RIGHT,
     CAL_CALENDAR_SHARED_RIGHT,
     calendar;
@@ -42,8 +43,11 @@ describe('The calendar configuration tab delegation controller', function() {
       isSubscription: sinon.stub().returns(false)
     };
 
+    calCalendarDeleteConfirmationModalService = sinon.spy();
+
     angular.mock.module('esn.calendar', function($provide) {
       $provide.value('calendarService', calendarService);
+      $provide.value('calCalendarDeleteConfirmationModalService', calCalendarDeleteConfirmationModalService);
     });
 
     angular.mock.inject(function(_$rootScope_, _$controller_, _$state_, _$q_, ___, _session_, _userUtils_, _CAL_CALENDAR_PUBLIC_RIGHT_, _CAL_CALENDAR_SHARED_RIGHT_, _calUIAuthorizationService_) {
@@ -94,12 +98,10 @@ describe('The calendar configuration tab delegation controller', function() {
   });
 
   describe('the openDeleteConfirmationDialog function', function() {
-    it('should initialize self.modal', function() {
-      expect(CalendarConfigurationTabMainController.modal).to.be.undefined;
-
+    it('should call the modal confirmation service', function() {
       CalendarConfigurationTabMainController.openDeleteConfirmationDialog();
 
-      expect(CalendarConfigurationTabMainController.modal).to.not.be.undefined;
+      expect(calCalendarDeleteConfirmationModalService).to.have.been.calledWith(CalendarConfigurationTabMainController.calendar, CalendarConfigurationTabMainController.removeCalendar);
     });
   });
 
