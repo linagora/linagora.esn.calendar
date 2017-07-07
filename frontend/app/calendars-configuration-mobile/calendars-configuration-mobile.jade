@@ -6,17 +6,6 @@
   .card-body
     .listview
       .lv-body.no-padding
-        a.lv-item(href="", ui-sref='calendar.add')
-          .media
-            .pull-left
-              i.mdi.mdi-plus
-              span #{__('Add a new calendar')}
-        a.lv-item(href="" esn-modal-launcher='/calendar/app/calendar-shared-configuration/calendar-shared-configuration.html', controller-as='$ctrl', controller='CalCalendarSharedConfigurationController')
-          .media
-            .pull-left
-              i.mdi.mdi-plus
-              span #{__('Add a shared calendar')}
-        hr
         .lv-item
           .media
             .pull-left.calendars-configuration-title
@@ -37,3 +26,5 @@
             .pull-left
               i.mdi.mdi-label(ng-style="{'color': calendar.color}")
               span {{::calendar.name}}
+
+  dynamic-fab-dropup(anchor='cal-add-calendar')
