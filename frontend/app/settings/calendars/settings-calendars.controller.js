@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .controller('CalSettingsCalendarsController', CalSettingsCalendarsController);
 
-  function CalSettingsCalendarsController($log, $modal, _, session, calendarService, userAndExternalCalendars) {
+  function CalSettingsCalendarsController($log, _, session, calendarService, calCalendarDeleteConfirmationModalService, userAndExternalCalendars) {
     var self = this;
 
     self.$onInit = $onInit;
@@ -34,15 +34,7 @@
         });
       }
 
-      self.modal = $modal({
-        templateUrl: '/calendar/app/calendar-configuration/calendar-configuration-delete-confirmation/calendar-configuration-delete-confirmation.html',
-        controller: function($scope) {
-          $scope.calendarName = calendar.name;
-          $scope.delete = removeCalendar;
-        },
-        backdrop: 'static',
-        placement: 'center'
-      });
+      self.modal = calCalendarDeleteConfirmationModalService(calendar, removeCalendar);
     }
 
     function handleCalendarRemove(calendar) {
