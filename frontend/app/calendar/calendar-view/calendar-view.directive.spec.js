@@ -10,7 +10,7 @@ describe('calendarView directive', function() {
     var self = this;
 
     this.calendarService = {
-      listCalendars: function() {
+      listPersonalAndAcceptedDelegationCalendars: function() {
         return $q.when([]);
       }
     };

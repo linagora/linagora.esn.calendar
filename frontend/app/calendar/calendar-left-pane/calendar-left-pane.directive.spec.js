@@ -10,7 +10,7 @@ describe('calendarLeftPane directive', function() {
 
   beforeEach(function() {
     calendarServiceMock = {
-      listCalendars: function() {
+      listPersonalAndAcceptedDelegationCalendars: function() {
         return $q.when([]);
       }
     };

@@ -16,7 +16,7 @@ describe('The CalCalendarsConfigurationMobileController controller', function() 
     };
 
     calendarService = {
-      listCalendars: sinon.stub().returns(
+      listPersonalAndAcceptedDelegationCalendars: sinon.stub().returns(
         []
       )
     };
@@ -54,7 +54,7 @@ describe('The CalCalendarsConfigurationMobileController controller', function() 
 
       userAndExternalCalendarsMock = function() {
         expect(calendarHomeService.getUserCalendarHomeId).to.have.been.called;
-        expect(calendarService.listCalendars).to.have.been.calledWith('123');
+        expect(calendarService.listPersonalAndAcceptedDelegationCalendars).to.have.been.calledWith('123');
 
         done();
       };

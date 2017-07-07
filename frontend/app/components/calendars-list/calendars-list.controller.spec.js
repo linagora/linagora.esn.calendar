@@ -14,7 +14,7 @@ describe('The calendarsList controller', function() {
 
   beforeEach(function() {
     calendarServiceMock = {
-      listCalendars: sinon.spy(function() {
+      listPersonalAndAcceptedDelegationCalendars: sinon.spy(function() {
         return $q.when(calendars);
       })
     };
@@ -386,9 +386,9 @@ describe('The calendarsList controller', function() {
       });
     });
 
-    describe('the listCalendars function', function() {
+    describe('the listPersonalAndAcceptedDelegationCalendars function', function() {
 
-      it('should initialize calendars with all the calendars from calendarService.listCalendars', function() {
+      it('should initialize calendars with all the calendars from calendarService.listPersonalAndAcceptedDelegationCalendars', function() {
         CalendarsListController.$onInit();
 
         CalendarsListController.arrangeCalendars = sinon.spy();
@@ -398,10 +398,10 @@ describe('The calendarsList controller', function() {
         expect(CalendarsListController.calendars).to.deep.equal(calendars);
       });
 
-      it('should call calendarService.listCalendars with the two params', function() {
+      it('should call calendarService.listPersonalAndAcceptedDelegationCalendars with the two params', function() {
         CalendarsListController.$onInit();
 
-        expect(calendarServiceMock.listCalendars).to.be.called;
+        expect(calendarServiceMock.listPersonalAndAcceptedDelegationCalendars).to.be.called;
       });
     });
 
