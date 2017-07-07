@@ -121,6 +121,11 @@
       INVITE_INVALID: 'invalid'
     })
 
+    .constant('CAL_CALENDAR_SHARED_TYPE', {
+      DELEGATION: 'delegation',
+      PUBLIC: 'public'
+    })
+
     .constant('CAL_CALENDAR_PUBLIC_RIGHT_HUMAN_READABLE', {
       unknown: 'unknown',
       '': 'none',

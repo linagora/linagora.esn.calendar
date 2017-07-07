@@ -17,7 +17,8 @@
     calendarHomeService,
     CalendarCollectionShell,
     userAndExternalCalendars,
-    CAL_CALENDAR_SHARED_INVITE_STATUS
+    CAL_CALENDAR_SHARED_INVITE_STATUS,
+    CAL_CALENDAR_SHARED_TYPE
   ) {
 
     var self = this;
@@ -77,7 +78,7 @@
             return {
               user: user,
               calendar: calendar,
-              type: 'public'
+              type: CAL_CALENDAR_SHARED_TYPE.PUBLIC
             };
           });
         });
@@ -89,7 +90,7 @@
           return delegationCalendars.map(function(delegationCalendar) {
             return {
               calendar: delegationCalendar,
-              type: 'delegation'
+              type: CAL_CALENDAR_SHARED_TYPE.DELEGATION
             };
           });
         })
@@ -154,9 +155,9 @@
     function acceptInvitation(calendars) {
       return calendarHomeService.getUserCalendarHomeId().then(function(calendarHomeId) {
         return $q.all(calendars.map(function(calendar) {
-          var inviteStatus = { invitestatus: CAL_CALENDAR_SHARED_INVITE_STATUS.INVITE_ACCEPTED };
-
-          return calendarService.updateInviteStatus(calendarHomeId, calendar, inviteStatus);
+          return calendarService.updateInviteStatus(calendarHomeId, calendar, {
+            invitestatus: CAL_CALENDAR_SHARED_INVITE_STATUS.INVITE_ACCEPTED
+          });
         }));
       });
     }

@@ -841,47 +841,50 @@ describe('The calendarService service', function() {
   });
 
   describe('The updateInviteStatus function', function() {
-    var calendarHomeId, calendar, inviteStatus;
+    var calendarHomeId, calendar, inviteStatus, modifySharesValue;
 
     beforeEach(function() {
+      sinon.spy(this.$rootScope, '$broadcast');
+      sinon.stub(this.calendarAPI, 'modifyShares', function() {
+        return modifySharesValue;
+      });
+
       calendarHomeId = '1';
       calendar = {};
       inviteStatus = { invitestatus: this.CAL_CALENDAR_SHARED_INVITE_STATUS.INVITE_ACCEPTED };
     });
 
     it('should call calendar api service with right parameters', function(done) {
-      var modifySharesStub = sinon.stub(this.calendarAPI, 'modifyShares', function() {
-        return $q.when();
-      });
+      modifySharesValue = $q.when();
 
-      this.$rootScope.$broadcast = sinon.stub().returns({});
+      this.calendarService
+        .updateInviteStatus(calendarHomeId, calendar, inviteStatus)
+        .then(function() {
+          expect(self.calendarAPI.modifyShares).to.have.been.calledOnce;
+          expect(self.$rootScope.$broadcast).to.have.been.calledWith(self.CAL_EVENTS.CALENDARS.ADD, calendar);
 
-      this.calendarService.updateInviteStatus(calendarHomeId, calendar, inviteStatus)
-      .then(function() {
-        expect(modifySharesStub).to.have.been.calledOnce;
-        expect(self.$rootScope.$broadcast).to.have.been.calledWith(self.CAL_EVENTS.CALENDARS.ADD, calendar);
-        done();
-      }, done);
+          done();
+        }, done);
 
       this.$rootScope.$digest();
     });
 
     it('should reject when calendar api rejects', function(done) {
       var error = new Error('I failed');
-      var modifySharesStub = sinon.stub(this.calendarAPI, 'modifyShares', function() {
-        return $q.reject(error);
-      });
 
-      this.$rootScope.$broadcast = sinon.stub().returns({});
+      modifySharesValue = $q.reject(error);
+
       CalendarCollectionShellMock.toDavCalendar = sinon.spy(angular.identity);
 
-      this.calendarService.updateInviteStatus(calendarHomeId, calendar, inviteStatus)
-      .then(done, function(err) {
-        expect(err.message).to.equal(error.message);
-        expect(modifySharesStub).to.have.been.calledOnce;
-        expect(self.$rootScope.$broadcast).to.not.have.been.called;
-        done();
-      }, done);
+      this.calendarService
+        .updateInviteStatus(calendarHomeId, calendar, inviteStatus)
+        .then(done, function(err) {
+          expect(err.message).to.equal(error.message);
+          expect(self.calendarAPI.modifyShares).to.have.been.calledOnce;
+          expect(self.$rootScope.$broadcast).to.not.have.been.called;
+
+          done();
+        }, done);
 
       this.$rootScope.$digest();
     });

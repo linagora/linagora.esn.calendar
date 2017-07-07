@@ -5,7 +5,7 @@
         button.close(type="button", ng-click="$hide()") &times;
         h4.modal-title #{__('Add shared calendars')}
       .modal-body
-        .calendar-shared-configuration
+        .cal-calendar-shared-configuration
           .user-search.form-group
             .autocomplete
               users-autocomplete-input(mutable-users='$ctrl.users', on-user-added='$ctrl.onUserAdded', on-user-removed='$ctrl.onUserRemoved', add-from-autocomplete-only='true')
