@@ -5,6 +5,7 @@
     .component('calSettingsCalendarsItem', {
       bindings: {
         calendar: '<',
+        displayOwner: '<',
         onRemove: '='
       },
       controllerAs: 'ctrl',

@@ -1,7 +1,12 @@
 .cal-settings-calendars-item
-  .calendar-info
+  .calendar-icon
+    i.mdi.mdi-circle(ng-style="{'color': ctrl.calendar.color}")
+  .calendar-info(ui-sref="calendar.edit({calendarUniqueId: 'ctrl.calendar.calendarUniqueId'})")
     .name 
-      a(ui-sref="calendar.edit({calendarUniqueId: 'ctrl.calendar.calendarUniqueId'})") {{:: ctrl.calendar.name }}
-    .description {{:: ctrl.calendar.description }}
+      span {{:: ctrl.calendar.name }}
+    .description
+      span {{ ::ctrl.ownerDisplayName }}
+      span.separator(ng-if="ctrl.ownerDisplayName && ctrl.calendar.description") -
+      span {{:: ctrl.calendar.description }}
   .calendar-actions
     a.clickable(ng-if='ctrl.canDeleteCalendar()', ng-click="ctrl.remove()") #{__('Remove')}
