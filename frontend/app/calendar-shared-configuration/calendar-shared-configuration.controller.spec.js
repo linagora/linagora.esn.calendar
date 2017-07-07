@@ -4,7 +4,7 @@
 
 var expect = chai.expect;
 
-describe('The CalCalendarPublicConfigurationController controller', function() {
+describe('The CalCalendarSharedConfigurationController controller', function() {
   var $rootScope,
     $controller,
     $q,
@@ -19,7 +19,8 @@ describe('The CalCalendarPublicConfigurationController controller', function() {
     calendarHomeId,
     CalendarCollectionShell,
     userAndExternalCalendars,
-    publicCalendars;
+    publicCalendars,
+    session;
 
   beforeEach(function() {
     CalendarCollectionShell = {};
@@ -44,7 +45,7 @@ describe('The CalCalendarPublicConfigurationController controller', function() {
     anotherUser = {_id: 2};
     calendar = {_id: 3};
     anotherCalendar = {_id: 4};
-    angular.mock.inject(function(_$rootScope_, _$controller_, _$q_, _$log_, _calendarService_, _calendarHomeService_, _notificationFactory_) {
+    angular.mock.inject(function(_$rootScope_, _$controller_, _$q_, _$log_, _calendarService_, _calendarHomeService_, _notificationFactory_, _session_) {
       $rootScope = _$rootScope_;
       $controller = _$controller_;
       $q = _$q_;
@@ -52,11 +53,12 @@ describe('The CalCalendarPublicConfigurationController controller', function() {
       calendarService = _calendarService_;
       notificationFactory = _notificationFactory_;
       calendarHomeService = _calendarHomeService_;
+      session = _session_;
     });
   });
 
   function initController() {
-    return $controller('CalCalendarPublicConfigurationController');
+    return $controller('CalCalendarSharedConfigurationController');
   }
 
   describe('The getSelectedCalendars function', function() {
@@ -71,9 +73,9 @@ describe('The CalCalendarPublicConfigurationController controller', function() {
     it('should return only calendars which have been selected', function() {
       var controller = initController();
 
-      controller.calendarsPerUser.push({user: user, calendar: calendar, isSelected: true});
+      controller.calendarsPerUser.push({user: user, calendar: calendar, isSelected: true}, {user: user, calendar: anotherCalendar});
 
-      expect(controller.getSelectedCalendars()).to.deep.equal([calendar]);
+      expect(controller.getSelectedCalendars(controller.calendarsPerUser)).to.deep.equal([calendar]);
     });
   });
 
@@ -100,6 +102,9 @@ describe('The CalCalendarPublicConfigurationController controller', function() {
       var listCalendarsStub = sinon.stub(calendarService, 'listCalendars', function() {
         return $q.when([]);
       });
+      var listDelegationCalendarsStub = sinon.stub(calendarService, 'listDelegationCalendars', function() {
+        return $q.when([]);
+      });
       var controller = initController();
 
       controller.onUserAdded(user);
@@ -107,7 +112,8 @@ describe('The CalCalendarPublicConfigurationController controller', function() {
 
       expect(listPublicCalendarsStub).to.have.been.calledWith(user._id);
       expect(listCalendarsStub).to.have.been.calledWith(calendarHomeId);
-      expect(controller.calendarsPerUser).to.deep.equal([{user: user, calendar: calendar}]);
+      expect(listDelegationCalendarsStub).to.have.been.calledWith(session.user._id, 'noresponse');
+      expect(controller.calendarsPerUser).to.shallowDeepEqual([{user: user, calendar: calendar}]);
     });
 
     it('should not fill calendarsPerUser with a calendar which has already been subscribed', function() {
@@ -123,7 +129,9 @@ describe('The CalCalendarPublicConfigurationController controller', function() {
       var listCalendarsStub = sinon.stub(calendarService, 'listCalendars', function() {
         return $q.when([subscribed]);
       });
-
+      var listDelegationCalendarsStub = sinon.stub(calendarService, 'listDelegationCalendars', function() {
+        return $q.when([]);
+      });
       var controller = initController();
 
       controller.calendarsPerUser.push({calendar: calendar, user: user});
@@ -134,12 +142,16 @@ describe('The CalCalendarPublicConfigurationController controller', function() {
       expect(listPublicCalendarsStub).to.have.been.calledWith(user._id);
       expect(listCalendarsStub).to.have.been.calledWith(calendarHomeId);
       expect(userAndExternalCalendars).to.have.been.calledWith([subscribed]);
+      expect(listDelegationCalendarsStub).to.have.been.calledWith(session.user._id, 'noresponse');
       expect(controller.calendarsPerUser).to.have.lengthOf(2);
     });
 
     it('should log error when public calendars fetch fails', function() {
       var listPublicCalendarsStub = sinon.stub(calendarService, 'listPublicCalendars', function() {
         return $q.reject(new Error('I failed'));
+      });
+      var listDelegationCalendarsStub = sinon.stub(calendarService, 'listDelegationCalendars', function() {
+        return $q.when([]);
       });
       var logSpy = sinon.spy($log, 'error');
       var controller = initController();
@@ -148,6 +160,7 @@ describe('The CalCalendarPublicConfigurationController controller', function() {
       $rootScope.$digest();
 
       expect(listPublicCalendarsStub).to.have.been.calledWith(user._id);
+      expect(listDelegationCalendarsStub).to.have.been.calledWith(session.user._id, 'noresponse');
       expect(logSpy).to.have.been.calledOnce;
       expect(controller.calendarsPerUser).to.be.empty;
     });
@@ -155,6 +168,9 @@ describe('The CalCalendarPublicConfigurationController controller', function() {
 
   describe('The onUserRemoved function', function() {
     it('should not change the controller calendars when user is not defined', function() {
+      var listDelegationCalendarsStub = sinon.stub(calendarService, 'listDelegationCalendars', function() {
+        return $q.when([]);
+      });
       var controller = initController();
 
       controller.calendarsPerUser.push({calendar: calendar, user: user});
@@ -162,9 +178,13 @@ describe('The CalCalendarPublicConfigurationController controller', function() {
       $rootScope.$digest();
 
       expect(controller.calendarsPerUser).to.have.lengthOf(1);
+      expect(listDelegationCalendarsStub).to.have.been.calledWith(session.user._id, 'noresponse');
     });
 
     it('should remove all the calendars of the given user', function() {
+      var listDelegationCalendarsStub = sinon.stub(calendarService, 'listDelegationCalendars', function() {
+        return $q.when([]);
+      });
       var controller = initController();
 
       controller.calendarsPerUser.push({calendar: calendar, user: user});
@@ -173,16 +193,27 @@ describe('The CalCalendarPublicConfigurationController controller', function() {
       controller.onUserRemoved(user);
       $rootScope.$digest();
 
+      expect(listDelegationCalendarsStub).to.have.been.calledWith(session.user._id, 'noresponse');
       expect(controller.calendarsPerUser).to.deep.equal([{calendar: anotherCalendar, user: anotherUser}]);
     });
   });
 
   describe('The subscribeToSelectedCalendars function', function() {
-    var weakInfoSpy, weakErrorSpy;
+    var weakInfoSpy, weakErrorSpy, updateInviteStatusStub, subscribeStub, getUserCalendarHomeIdStub, listDelegationCalendarsStub;
 
     beforeEach(function() {
-      sinon.stub(calendarHomeService, 'getUserCalendarHomeId', function() {
+      getUserCalendarHomeIdStub = sinon.stub(calendarHomeService, 'getUserCalendarHomeId', function() {
         return $q.when(calendarHomeId);
+      });
+
+      listDelegationCalendarsStub = sinon.stub(calendarService, 'listDelegationCalendars', function() {
+        return $q.when([]);
+      });
+      subscribeStub = sinon.stub(calendarService, 'subscribe', function() {
+        return $q.when([]);
+      });
+      updateInviteStatusStub = sinon.stub(calendarService, 'updateInviteStatus', function() {
+        return $q.when([]);
       });
 
       weakInfoSpy = sinon.spy(notificationFactory, 'weakInfo');
@@ -191,24 +222,22 @@ describe('The CalCalendarPublicConfigurationController controller', function() {
 
     it('should not call subscribe service when no calendar has been selected', function() {
       var controller = initController();
-      var subscribeSpy = sinon.spy(calendarService, 'subscribe');
 
       controller.calendarsPerUser.push({calendar: calendar, user: user});
       controller.calendarsPerUser.push({calendar: anotherCalendar, user: anotherUser});
 
-      controller.subscribeToSelectedCalendars();
+      controller.addSharedCalendars();
       $rootScope.$digest();
 
-      expect(subscribeSpy).to.not.have.been.called;
-      expect(weakInfoSpy).to.not.have.been.called;
+      expect(getUserCalendarHomeIdStub).to.not.have.been.called;
+      expect(subscribeStub).to.not.have.been.called;
+      expect(listDelegationCalendarsStub).to.have.been.calledWith(session.user._id, 'noresponse');
+      expect(weakInfoSpy).to.have.been.calledOnce;
       expect(weakErrorSpy).to.not.have.been.called;
     });
 
     it('should subscribe to all the selected calendars', function() {
       var controller = initController();
-      var subscribeStub = sinon.stub(calendarService, 'subscribe', function() {
-        return $q.when();
-      });
       var shell = {foo: 'bar'};
 
       CalendarCollectionShell.from = sinon.spy(function() {
@@ -218,11 +247,11 @@ describe('The CalCalendarPublicConfigurationController controller', function() {
         return home + id;
       });
 
-      controller.calendarsPerUser.push({calendar: calendar, user: user, isSelected: true});
-      controller.calendarsPerUser.push({calendar: anotherCalendar, user: anotherUser, isSelected: true});
-      controller.calendarsPerUser.push({calendar: anotherCalendar, user: anotherUser, isSelected: false});
+      controller.calendarsPerUser.push({calendar: calendar, user: user, isSelected: true, type: 'public'});
+      controller.calendarsPerUser.push({calendar: anotherCalendar, user: anotherUser, isSelected: true, type: 'public'});
+      controller.calendarsPerUser.push({calendar: anotherCalendar, user: anotherUser, isSelected: false, type: 'public'});
 
-      controller.subscribeToSelectedCalendars();
+      controller.addSharedCalendars();
       $rootScope.$digest();
 
       expect(CalendarCollectionShell.from).to.have.been.calledFourth;
@@ -231,12 +260,8 @@ describe('The CalCalendarPublicConfigurationController controller', function() {
       expect(weakErrorSpy).to.not.have.been.called;
     });
 
-    it('should reject when one subscription fails', function() {
+    it('should update invite status to all the selected calendars', function() {
       var controller = initController();
-      var error = new Error('I failed to subscribe');
-      var subscribeStub = sinon.stub(calendarService, 'subscribe', function() {
-        return $q.reject(error);
-      });
       var shell = {foo: 'bar'};
 
       CalendarCollectionShell.from = sinon.spy(function() {
@@ -246,10 +271,41 @@ describe('The CalCalendarPublicConfigurationController controller', function() {
         return home + id;
       });
 
-      controller.calendarsPerUser.push({calendar: calendar, user: user, isSelected: true});
-      controller.calendarsPerUser.push({calendar: anotherCalendar, user: anotherUser, isSelected: true});
+      controller.calendarsPerUser.push({calendar: calendar, user: user, isSelected: true, type: 'delegation'});
+      controller.calendarsPerUser.push({calendar: anotherCalendar, user: anotherUser, isSelected: true, type: 'delegation'});
+      controller.calendarsPerUser.push({calendar: anotherCalendar, user: anotherUser, isSelected: false, type: 'delegation'});
 
-      controller.subscribeToSelectedCalendars();
+      controller.addSharedCalendars();
+      $rootScope.$digest();
+
+      expect(CalendarCollectionShell.from).to.have.been.calledFourth;
+      expect(subscribeStub).to.not.have.been.called;
+      expect(updateInviteStatusStub).to.have.been.calledTwice;
+      expect(weakInfoSpy).to.have.been.calledOnce;
+      expect(weakErrorSpy).to.not.have.been.called;
+    });
+
+    it('should reject when one subscription fails', function() {
+      var controller = initController();
+      var error = new Error('I failed to subscribe');
+      var shell = {foo: 'bar'};
+
+      subscribeStub.restore();
+      subscribeStub = sinon.stub(calendarService, 'subscribe', function() {
+        return $q.reject(error);
+      });
+
+      CalendarCollectionShell.from = sinon.spy(function() {
+        return shell;
+      });
+      CalendarCollectionShell.buildHref = sinon.spy(function(home, id) {
+        return home + id;
+      });
+
+      controller.calendarsPerUser.push({calendar: calendar, user: user, isSelected: true, type: 'public'});
+      controller.calendarsPerUser.push({calendar: anotherCalendar, user: anotherUser, isSelected: true, type: 'public'});
+
+      controller.addSharedCalendars();
       $rootScope.$digest();
 
       expect(CalendarCollectionShell.from).to.have.been.calledFourth;

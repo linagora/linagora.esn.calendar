@@ -33,7 +33,7 @@ describe('The calendarService service', function() {
     });
   });
 
-  beforeEach(angular.mock.inject(function(calendarService, $httpBackend, $rootScope, calendarAPI, calCalendarSubscriptionApiService, CAL_EVENTS, CAL_DEFAULT_CALENDAR_ID) {
+  beforeEach(angular.mock.inject(function(calendarService, $httpBackend, $rootScope, calendarAPI, calCalendarSubscriptionApiService, CAL_EVENTS, CAL_DEFAULT_CALENDAR_ID, CAL_CALENDAR_SHARED_INVITE_STATUS) {
     this.$httpBackend = $httpBackend;
     this.$rootScope = $rootScope;
     this.calendarService = calendarService;
@@ -41,6 +41,7 @@ describe('The calendarService service', function() {
     this.calCalendarSubscriptionApiService = calCalendarSubscriptionApiService;
     this.CAL_EVENTS = CAL_EVENTS;
     this.CAL_DEFAULT_CALENDAR_ID = CAL_DEFAULT_CALENDAR_ID;
+    this.CAL_CALENDAR_SHARED_INVITE_STATUS = CAL_CALENDAR_SHARED_INVITE_STATUS;
   }));
 
   describe('The removeAndEmit function', function() {
@@ -398,7 +399,7 @@ describe('The calendarService service', function() {
     });
   });
 
-  describe('The listPersonalAnAcceptedDelegationCalendars fn', function() {
+  describe('The listPersonalAndAcceptedDelegationCalendars fn', function() {
     var homeId;
 
     beforeEach(function() {
@@ -410,7 +411,7 @@ describe('The calendarService service', function() {
         return $q.when();
       });
 
-      this.calendarService.listPersonalAnAcceptedDelegationCalendars(homeId);
+      this.calendarService.listPersonalAndAcceptedDelegationCalendars(homeId);
 
       expect(self.calendarAPI.listCalendars).to.be.calledWith(homeId, {
         withRights: true,
@@ -445,7 +446,7 @@ describe('The calendarService service', function() {
         return $q.when(calendars);
       });
 
-      this.calendarService.listPersonalAnAcceptedDelegationCalendars(homeId).then(function(result) {
+      this.calendarService.listPersonalAndAcceptedDelegationCalendars(homeId).then(function(result) {
         expect(result).to.be.an('array').to.have.lengthOf(calendars.length);
         expect(result[0]).to.deep.equals(calendarCollection);
         expect(CalendarCollectionShellFuncMock).to.have.been.calledOnce;
@@ -836,6 +837,53 @@ describe('The calendarService service', function() {
 
         this.$rootScope.$digest();
       });
+    });
+  });
+
+  describe('The updateInviteStatus function', function() {
+    var calendarHomeId, calendar, inviteStatus;
+
+    beforeEach(function() {
+      calendarHomeId = '1';
+      calendar = {};
+      inviteStatus = { invitestatus: this.CAL_CALENDAR_SHARED_INVITE_STATUS.INVITE_ACCEPTED };
+    });
+
+    it('should call calendar api service with right parameters', function(done) {
+      var modifySharesStub = sinon.stub(this.calendarAPI, 'modifyShares', function() {
+        return $q.when();
+      });
+
+      this.$rootScope.$broadcast = sinon.stub().returns({});
+
+      this.calendarService.updateInviteStatus(calendarHomeId, calendar, inviteStatus)
+      .then(function() {
+        expect(modifySharesStub).to.have.been.calledOnce;
+        expect(self.$rootScope.$broadcast).to.have.been.calledWith(self.CAL_EVENTS.CALENDARS.ADD, calendar);
+        done();
+      }, done);
+
+      this.$rootScope.$digest();
+    });
+
+    it('should reject when calendar api rejects', function(done) {
+      var error = new Error('I failed');
+      var modifySharesStub = sinon.stub(this.calendarAPI, 'modifyShares', function() {
+        return $q.reject(error);
+      });
+
+      this.$rootScope.$broadcast = sinon.stub().returns({});
+      CalendarCollectionShellMock.toDavCalendar = sinon.spy(angular.identity);
+
+      this.calendarService.updateInviteStatus(calendarHomeId, calendar, inviteStatus)
+      .then(done, function(err) {
+        expect(err.message).to.equal(error.message);
+        expect(modifySharesStub).to.have.been.calledOnce;
+        expect(self.$rootScope.$broadcast).to.not.have.been.called;
+        done();
+      }, done);
+
+      this.$rootScope.$digest();
     });
   });
 });
