@@ -1,4 +1,4 @@
-.calendar-public-configuration-item
+.cal-calendar-shared-configuration-item
   .meta
     .avatar
       img(src='/images/user.png', ng-src='/api/users/{{::$ctrl.item.user._id}}/profile/avatar', alt='#{__("User Avatar")}')
@@ -8,6 +8,7 @@
       .owner
         span {{::$ctrl.item.user.displayName}}
   .rights
-    cal-public-rights-display(right="$ctrl.item.calendar.rights.getPublicRight()")
+    cal-shared-rights-display(ng-if="$ctrl.item.type === 'public'", public="$ctrl.item.calendar.rights.getPublicRight()")
+    cal-shared-rights-display(ng-if="$ctrl.item.type === 'delegation'", delegation="$ctrl.item.calendar.rights.getShareeRight($ctrl.user._id)")
   .actions
     toggle-switch(ng-model='$ctrl.item.isSelected')

@@ -2,11 +2,12 @@
   'use strict';
 
   angular.module('esn.calendar')
-    .component('calPublicRightsDisplay', {
+    .component('calSharedRightsDisplay', {
       bindings: {
-        right: '<'
+        public: '<',
+        delegation: '<'
       },
-      controller: 'CalPublicRightsDisplayController',
+      controller: 'CalSharedRightsDisplayController',
       template: '<span>{{::$ctrl.humanReadable}}</span>'
     });
 })();

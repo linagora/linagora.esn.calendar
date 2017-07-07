@@ -246,10 +246,10 @@
      * @param  {Object} rights
      * @return {Object} the http response.
      */
-    function modifyShares(calendarHomeId, calendarId, rights) {
+    function modifyShares(calendarHomeId, calendarId, body) {
       var path = calPathBuilder.forCalendarId(calendarHomeId, calendarId);
 
-      return calDavRequest('post', path, null, rights).then(calHttpResponseHandler(200));
+      return calDavRequest('post', path, null, body).then(calHttpResponseHandler(200));
     }
 
     /**
