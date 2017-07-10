@@ -53,7 +53,7 @@ describe('The CalSettingsCalendarsController controller', function() {
     it('should get the calendars from the calendarService', function() {
       var calendars = [calendar, otherCalendar];
 
-      calendarService.listCalendars = sinon.spy(function() {
+      calendarService.listPersonalAndAcceptedDelegationCalendars = sinon.spy(function() {
         return $q.when(calendars);
       });
 
@@ -62,7 +62,7 @@ describe('The CalSettingsCalendarsController controller', function() {
       controller.$onInit();
       $rootScope.$digest();
 
-      expect(calendarService.listCalendars).to.have.been.calledWith(session.user._id);
+      expect(calendarService.listPersonalAndAcceptedDelegationCalendars).to.have.been.calledWith(session.user._id);
       expect(controller.calendars).to.deep.equal(calendars);
     });
   });
