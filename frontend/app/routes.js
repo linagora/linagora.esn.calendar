@@ -79,7 +79,7 @@
       .state('calendar.settings.calendars', {
         url: '/calendars',
         views: {
-          'settings@calendar.settings': {
+          settings: {
             template: '<cal-settings-calendars />'
           }
         }
