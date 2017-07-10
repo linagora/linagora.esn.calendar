@@ -8,10 +8,11 @@
     return function(calendar, onConfirm) {
       return $modal({
         templateUrl: '/calendar/app/components/modals/calendar-delete-confirmation/calendar-delete-confirmation-modal.html',
-        controller: function($scope) {
-          $scope.calendarName = calendar.name;
-          $scope.delete = onConfirm;
+        controller: function() {
+          this.calendarName = calendar.name;
+          this.delete = onConfirm;
         },
+        controllerAs: 'ctrl',
         backdrop: 'static',
         placement: 'center'
       });
