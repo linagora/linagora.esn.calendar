@@ -1,10 +1,4 @@
 .listview.calendars-list
-  .configuration-container.visible-xs
-    .lv-item.clickable.configuration-button(href="", ui-sref="calendar.list")
-      i.mdi.mdi-settings
-      | #{__('Manage calendars')}
-    hr
-
   cal-user-calendars-list(
     user-calendars="$ctrl.userCalendars",
     toggle-calendar="$ctrl.toggleCalendar",

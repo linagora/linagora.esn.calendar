@@ -6,14 +6,14 @@
 
   function CalendarConfigurationTabMainController(
     $q,
-    $modal,
     $state,
     calendarService,
     session,
     userUtils,
     CAL_CALENDAR_PUBLIC_RIGHT,
     CAL_CALENDAR_SHARED_RIGHT,
-    calUIAuthorizationService
+    calUIAuthorizationService,
+    calCalendarDeleteConfirmationModalService
   ) {
     var self = this;
     var rightLabels = {};
@@ -58,16 +58,7 @@
     }
 
     function openDeleteConfirmationDialog() {
-      self.modal = $modal({
-        templateUrl: '/calendar/app/calendar-configuration/calendar-configuration-delete-confirmation/calendar-configuration-delete-confirmation.html',
-        controller: function($scope) {
-          $scope.calendarName = self.calendar.name;
-          $scope.delete = removeCalendar;
-          $scope.unsubscribe = unsubscribe;
-        },
-        backdrop: 'static',
-        placement: 'center'
-      });
+      calCalendarDeleteConfirmationModalService(self.calendar, removeCalendar);
     }
 
     function unsubscribe() {

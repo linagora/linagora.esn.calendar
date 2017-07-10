@@ -148,7 +148,7 @@
 
         if (!rightChanged && !calendarChanged && !publicRightChanged) {
           if (matchmedia.is(SM_XS_MEDIA_QUERY)) {
-            $state.go('calendar.list');
+            $state.go('calendar.settings');
           } else {
             $state.go('calendar.main');
           }

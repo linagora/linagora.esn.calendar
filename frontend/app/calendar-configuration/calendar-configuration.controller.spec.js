@@ -528,10 +528,10 @@ describe('The calendar configuration controller', function() {
     });
 
     describe('when newCalendar is false', function() {
-      it('should return to calendar.list if the calendar, his right and his public rights have not been modified and if screensize is xs or sm', function() {
+      it('should return to calendar.settings if the calendar, his right and his public rights have not been modified and if screensize is xs or sm', function() {
         matchmedia.is = sinon.stub().returns(true);
         stateMock.go = sinon.spy(function(path) {
-          expect(path).to.equal('calendar.list');
+          expect(path).to.equal('calendar.settings');
         });
         calendarService.modifyCalendar = sinon.spy();
 
