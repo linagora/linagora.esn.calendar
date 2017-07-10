@@ -128,10 +128,10 @@
 
     .constant('CAL_CALENDAR_PUBLIC_RIGHT_HUMAN_READABLE', {
       unknown: 'unknown',
-      '': 'none',
-      '{DAV:}read': 'read',
-      '{DAV:}write': 'read/write',
-      '{urn:ietf:params:xml:ns:caldav}read-free-busy': 'free/busy'
+      '': 'None',
+      '{DAV:}read': 'Read',
+      '{DAV:}write': 'Read and Write',
+      '{urn:ietf:params:xml:ns:caldav}read-free-busy': 'Free/Busy'
     })
 
     .constant('CAL_CALENDAR_DELEGATION_RIGHT_HUMAN_READABLE', {
