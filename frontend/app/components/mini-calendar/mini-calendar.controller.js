@@ -128,7 +128,7 @@
       }
 
       function getOwnCalendars() {
-        return calendarService.listCalendars($scope.calendarHomeId).then(function(calendars) {
+        return calendarService.listPersonalAndAcceptedDelegationCalendars($scope.calendarHomeId).then(function(calendars) {
           return userAndExternalCalendars(calendars).userCalendars || [];
         });
       }

@@ -82,7 +82,7 @@
         $scope.isOrganizer = calEventUtils.isOrganizer($scope.editedEvent);
         $scope.canModifyEventAttendees = calUIAuthorizationService.canModifyEventAttendees($scope.editedEvent);
 
-        calendarService.listCalendars($scope.calendarHomeId)
+        calendarService.listPersonalAndAcceptedDelegationCalendars($scope.calendarHomeId)
           .then(function(calendars) {
             $scope.calendars = calendars;
             $scope.calendar = calEventUtils.isNew($scope.editedEvent) ? _.find(calendars, 'selected') : _.find(calendars, function(calendar) {

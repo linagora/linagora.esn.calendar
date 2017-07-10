@@ -23,7 +23,7 @@
     this.getRight = getRight;
     this.listCalendars = listCalendars;
     this.listDelegationCalendars = listDelegationCalendars;
-    this.listPersonalAnAcceptedDelegationCalendars = listPersonalAnAcceptedDelegationCalendars;
+    this.listPersonalAndAcceptedDelegationCalendars = listPersonalAndAcceptedDelegationCalendars;
     this.listPublicCalendars = listPublicCalendars;
     this.listSubscriptionCalendars = listSubscriptionCalendars;
     this.modifyCalendar = modifyCalendar;
@@ -33,11 +33,13 @@
     this.subscribe = subscribe;
     this.unsubscribe = unsubscribe;
     this.updateAndEmit = updateAndEmit;
+    this.updateInviteStatus = updateInviteStatus;
     this.updateSubscription = updateSubscription;
     ////////////
 
     /**
      * List all calendars in the calendar home.
+     * This version uses basic cache to store sabre call results
      * @param  {String} calendarHomeId      The calendar home id we fetch the calendars in
      * @param  {Object} options             Specific options that override default options
      * @return {[CalendarCollectionShell]}  an array of CalendarCollectionShell
@@ -58,7 +60,10 @@
         return calendarsCache[calendarHomeId];
       }
 
-      calendarsCache[calendarHomeId] = calendarsCache[calendarHomeId] || calendarAPI.listCalendars(calendarHomeId, options || defaultCalendarApiOptions).then(createCalendarsShell);
+      calendarsCache[calendarHomeId] = calendarsCache[calendarHomeId] ||
+        calendarAPI
+          .listCalendars(calendarHomeId, options || defaultCalendarApiOptions)
+          .then(createCalendarsShell);
 
       return $q.when(calendarsCache[calendarHomeId]);
     }
@@ -116,7 +121,7 @@
      * @param  {String}     calendarHomeId  The calendar home id of the user
      * @return {[CalendarCollectionShell]}  an array of CalendarCollectionShell
      */
-    function listPersonalAnAcceptedDelegationCalendars(calendarHomeId) {
+    function listPersonalAndAcceptedDelegationCalendars(calendarHomeId) {
       return listCalendarsAsCollectionShell(calendarHomeId, {
         withRights: true,
         personal: true,
@@ -141,7 +146,7 @@
     /**
      * Delete a calendar
      * @param  {String}     calendarHomeId  The calendar home id
-     * @param  {String}     calendarId      The calendar id
+     * @param  {String}     calendar      The calendar to be removed
      */
     function removeCalendar(calendarHomeId, calendar) {
       return calendarAPI.removeCalendar(calendarHomeId, calendar.id)
@@ -234,6 +239,8 @@
      * Modify the rights for a calendar in the specified calendar home.
      * @param {String}                  calendarHomeId  the id of the calendar home in which we will create a new calendar
      * @param {CalendarCollectionShell} calendar        the calendar to modify
+     * @param {CalendarRightShell} rightShell modified version of the rights to be persisted
+     * @param {CalendarRightShell} oldRightShell rights of the calendar
      */
     function modifyRights(calendarHomeId, calendar, rightShell, oldRightShell) {
       return calendarAPI.modifyShares(calendarHomeId, calendar.id, rightShell.toDAVShareRightsUpdate(oldRightShell)).then(function() {
@@ -241,6 +248,7 @@
           calendar: calendar,
           rights: rightShell
         });
+
         return calendar;
       });
     }
@@ -269,6 +277,15 @@
           updateAndEmit(calendarHomeId, subscription);
 
           return subscription;
+        });
+    }
+
+    function updateInviteStatus(calendarHomeId, calendar, inviteStatus) {
+      return calendarAPI.modifyShares(calendarHomeId, calendar.id, { 'invite-reply': inviteStatus })
+        .then(function() {
+          addAndEmit(calendarHomeId, calendar);
+
+          return calendar;
         });
     }
   }

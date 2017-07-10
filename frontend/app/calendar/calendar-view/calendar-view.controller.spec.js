@@ -102,7 +102,7 @@ describe('The calendarViewController', function() {
 
     this.calendarServiceMock = {
       calendarUniqueId: '1234',
-      listCalendars: function() {
+      listPersonalAndAcceptedDelegationCalendars: function() {
         return $q.when(self.calendars);
       },
       createCalendar: function() {

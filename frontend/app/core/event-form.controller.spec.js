@@ -91,7 +91,7 @@ describe('The event-form module controllers', function() {
 
     this.calendarServiceMock = {
       calendarId: '1234',
-      listCalendars: sinon.spy(function() {
+      listPersonalAndAcceptedDelegationCalendars: sinon.spy(function() {
         return $q.when(self.calendars);
       })
     };
@@ -294,14 +294,14 @@ describe('The event-form module controllers', function() {
         }]);
       });
 
-      it('should select the selected calendar from calendarService.listCalendars if new event', function() {
+      it('should select the selected calendar from calendarService.listPersonalAndAcceptedDelegationCalendars if new event', function() {
         this.scope.event = this.CalendarShell.fromIncompleteShell({});
         this.initController();
 
         expect(this.scope.calendar).to.equal(calendarTest);
       });
 
-      it('should select the calendar of the event from calendarService.listCalendars if not new event', function() {
+      it('should select the calendar of the event from calendarService.listPersonalAndAcceptedDelegationCalendars if not new event', function() {
         this.scope.event = this.CalendarShell.fromIncompleteShell({
           etag: 'i am not a new event'
         });
@@ -322,15 +322,15 @@ describe('The event-form module controllers', function() {
         expect(this.scope.calendar).to.equal(this.calendars[2]);
       });
 
-      it('should call calendarService.listCalendars with options object', function() {
+      it('should call calendarService.listPersonalAndAcceptedDelegationCalendars with options object', function() {
         this.scope.event = this.CalendarShell.fromIncompleteShell({});
 
         this.initController();
 
-        expect(this.calendarServiceMock.listCalendars).to.be.calledWith(this.calendarHomeId);
+        expect(this.calendarServiceMock.listPersonalAndAcceptedDelegationCalendars).to.be.calledWith(this.calendarHomeId);
       });
 
-      it('should initialize calendars with calendars returned from the calendarService.listCalendars', function() {
+      it('should initialize calendars with calendars returned from the calendarService.listPersonalAndAcceptedDelegationCalendars', function() {
         this.scope.event = this.CalendarShell.fromIncompleteShell({});
 
         this.initController();

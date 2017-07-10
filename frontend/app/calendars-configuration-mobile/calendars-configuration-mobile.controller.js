@@ -15,7 +15,7 @@
     function $onInit() {
       calendarHomeService.getUserCalendarHomeId()
         .then(function(calendarHomeId) {
-          return calendarService.listCalendars(calendarHomeId);
+          return calendarService.listPersonalAndAcceptedDelegationCalendars(calendarHomeId);
         })
         .then(function(calendars) {
           var sortedCalendars = userAndExternalCalendars(calendars);

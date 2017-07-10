@@ -46,7 +46,7 @@ describe('The miniCalendarController controller', function() {
     });
 
     calendarServiceMock = {
-      listCalendars: function(userId) {
+      listPersonalAndAcceptedDelegationCalendars: function(userId) {
         expect(userId).to.equals($scope.calendarHomeId);
         var deferred = $q.defer();
 
