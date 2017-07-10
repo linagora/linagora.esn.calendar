@@ -6,7 +6,7 @@
       bindings: {
         calendar: '<',
         displayOwner: '<',
-        onRemove: '=',
+        onRemove: '<',
         stateToGo: '<'
       },
       controllerAs: 'ctrl',
