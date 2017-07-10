@@ -5,11 +5,11 @@
 var expect = chai.expect;
 
 describe('The CalSettingsCalendarsItemController controller', function() {
-  var $rootScope, $controller, $scope, $q, calUIAuthorizationService, calendar, session, userUtils, owner;
+  var $rootScope, $controller, $scope, $q, $state, calUIAuthorizationService, calendar, session, userUtils, owner;
 
   beforeEach(function() {
     calUIAuthorizationService = {};
-    calendar = {id: 1};
+    calendar = {id: 1, uniqueId: 123};
     session = {
       ready: {
         then: angular.noop
@@ -30,10 +30,11 @@ describe('The CalSettingsCalendarsItemController controller', function() {
   });
 
   beforeEach(function() {
-    angular.mock.inject(function(_$rootScope_, _$controller_, _$q_) {
+    angular.mock.inject(function(_$rootScope_, _$controller_, _$q_, _$state_) {
       $rootScope = _$rootScope_;
       $controller = _$controller_;
       $q = _$q_;
+      $state = _$state_;
       $scope = $rootScope.$new();
     });
   });
@@ -92,6 +93,18 @@ describe('The CalSettingsCalendarsItemController controller', function() {
       controller.remove();
 
       expect(onRemove).to.have.been.calledWith(calendar);
+    });
+  });
+
+  describe('The goTo function', function() {
+    it('should call $state.go with calendarUniqueId', function() {
+      var stateSpy = sinon.spy($state, 'go');
+      var controller = initController({calendar: calendar});
+
+      controller.stateToGo = 'calendar.edit';
+      controller.goTo();
+
+      expect(stateSpy).to.have.been.calledWith(controller.stateToGo, { calendarUniqueId: calendar.uniqueId });
     });
   });
 });

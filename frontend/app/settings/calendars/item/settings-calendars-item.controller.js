@@ -4,10 +4,11 @@
   angular.module('esn.calendar')
     .controller('CalSettingsCalendarsItemController', CalSettingsCalendarsItemController);
 
-  function CalSettingsCalendarsItemController(session, userUtils, calUIAuthorizationService) {
+  function CalSettingsCalendarsItemController($state, session, userUtils, calUIAuthorizationService) {
     var self = this;
 
     self.canDeleteCalendar = canDeleteCalendar;
+    self.goTo = goTo;
     self.remove = remove;
     self.$onInit = $onInit;
 
@@ -25,6 +26,10 @@
 
     function getOwnerDisplayName() {
       return self.calendar.getOwner().then(userUtils.displayNameOf);
+    }
+
+    function goTo() {
+      $state.go(self.stateToGo, { calendarUniqueId: self.calendar.uniqueId });
     }
 
     function remove() {
