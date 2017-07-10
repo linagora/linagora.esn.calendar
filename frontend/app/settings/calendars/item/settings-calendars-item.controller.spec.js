@@ -69,7 +69,7 @@ describe('The CalSettingsCalendarsItemController controller', function() {
       $rootScope.$digest();
 
       expect(calendar.getOwner).to.have.been.called;
-      expect(userUtils.displayNameOf).to.have.been.calledWith();
+      expect(userUtils.displayNameOf).to.have.been.calledWith(owner);
     });
   });
 
