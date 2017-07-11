@@ -10,7 +10,7 @@ sub-header
 
   .calendar-list
     .title
-      h3 #{__('External calendars')}
+      h3 #{__('Shared calendars')}
     .list
       cal-settings-calendars-item(ng-repeat="calendar in ctrl.sharedCalendars", calendar="calendar", on-remove="ctrl.remove", display-owner="true", state-to-go="'calendar.external.shared'")
       cal-settings-calendars-item(ng-repeat="calendar in ctrl.publicCalendars", calendar="calendar", on-remove="ctrl.remove", display-owner="true", state-to-go="'calendar.external.public'")
