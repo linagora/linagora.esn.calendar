@@ -1,4 +1,16 @@
 .calendar-left-pane
+  .heading
+    .title
+      span #{__('Calendar')}
+    .actions
+      li.dropdown
+        a(href='', data-toggle='dropdown', aria-expanded='true', title="#{__('Add new calendar')}")
+          i.mdi.mdi-plus
+        ul.dropdown-menu.dropdown-menu-right(dynamic-directive='calendar-add-anchorpoint')
+          li
+            a(ui-sref='calendar.add') #{__('New calendar')}
+          li
+            a(href="", esn-modal-launcher='/calendar/app/calendar-shared-configuration/calendar-shared-configuration.html', controller-as='$ctrl', controller='CalCalendarSharedConfigurationController') #{__('Shared calendar')}
   mini-calendar(calendar-home-id="calendarHomeId")
   calendars-list
   .cal-manage-sidebar
