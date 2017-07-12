@@ -3,7 +3,7 @@
 /* global chai: false */
 var expect = chai.expect;
 
-describe('calendarLeftPane directive', function() {
+describe('The calSidebar directive', function() {
   var CAL_LEFT_PANEL_BOTTOM_MARGIN;
   var CAL_EVENTS;
   var calendarServiceMock;
@@ -27,7 +27,7 @@ describe('calendarLeftPane directive', function() {
     this.$q = $q;
 
     this.initDirective = function(scope) {
-      var element = this.$compile('<calendar-left-pane/>')(scope);
+      var element = this.$compile('<cal-sidebar/>')(scope);
 
       element = this.$compile(element)(scope);
       scope.$digest();
