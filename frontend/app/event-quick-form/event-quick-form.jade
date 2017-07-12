@@ -10,7 +10,7 @@ form.event-quick-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !
         h4.modal-title(ng-if='canModifyEvent && isNew(editedEvent)') #{__('Create a new event')}
         h4.modal-title(ng-if='canModifyEvent && !isNew(editedEvent)') #{__('Edit event')}
         h4.modal-title(ng-if='!canModifyEvent') #{__('Consult')}
-      .modal-body.overflow-none
+      .modal-body
         .row
           .col-xs-12
             .form-group
