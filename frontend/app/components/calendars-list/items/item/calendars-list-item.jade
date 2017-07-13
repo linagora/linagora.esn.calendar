@@ -1,16 +1,16 @@
-.calendars-list-item
+.calendars-list-item(ng-mouseenter="$ctrl.isHover = true;" ng-mouseleave="$ctrl.isHover = false;")
   a.lv-item
     .media.row
-      .col-md-10
+      .col-md-12
         .media(ng-click="$ctrl.onShowHideToggle()")
           .pull-left(ng-if="$ctrl.selected", title="#{__('Hide calendar')}")
-            i.mdi.mdi-checkbox-marked-outline(ng-style="{'color': $ctrl.calendar.color}")
+            i.mdi.mdi-checkbox-blank-circle(ng-style="{'color': $ctrl.calendar.color}")
           .pull-left(ng-if="!$ctrl.selected", title="#{__('Show calendar')}")
-            i.mdi.mdi-checkbox-blank-outline
+            i.mdi.mdi-checkbox-blank-circle-outline(ng-style="{'color': ($ctrl.isHover ? $ctrl.calendar.color : '') }")
           .media-body(title="{{ $ctrl.calendar.name }}")
             .lv-title
               span {{ $ctrl.calendar.name }}
             .owner-name(ng-if="$ctrl.ownerDisplayName")
               span {{ ::$ctrl.ownerDisplayName }}
-      .col-md-2.hidden-xs(title="#{__('Configuration')}", ng-click="$ctrl.onOptionClick()")
+      .settings.hidden-xs(ng-click="$ctrl.onOptionClick()")
         i.mdi.mdi-settings

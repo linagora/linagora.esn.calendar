@@ -1,4 +1,4 @@
-.calendar-left-pane {
+.calendar-sidebar {
   .flex-column;
 
   bottom: 0;
@@ -8,6 +8,11 @@
   overflow-y: auto;
   overflow-x: hidden;
 
+  hr {
+    margin: 0;
+    border-top: 1px solid rgba(0,0,0,0.08);
+  }
+
   .fc-event .fc-title {
     text-align: center;
   }
@@ -16,30 +21,47 @@
     padding: 0;
   }
 
+  .calendars {
+    .esn-flex-noshrink;
+    .flex-column;
+    .flex-grow;
+  }
+
   .cal-manage-sidebar {
-    margin-bottom: 5px;
+    .esn-flex-noshrink;
+    .flex-column;
+    .flex-grow;
+    .flex-end;
+
+    .cal-manage-left-menu {
+      .listview {
+        padding-bottom: 0;
+      } 
+    }
 
     .lv-item {
       .flex-vertical-centered;
 
-      margin-top: 5px;
+      font-weight: 500;
+      color: @secondaryTextColor;
 
       i.mdi {
+        color: @primaryColor;
         margin-right: 15px;
-        font-size: 1.5em;
+        font-size: 1.8em;
       }
     }
   }
 }
 
 @media (min-width: @screen-md-min) {
-  .calendar-left-pane {
+  .calendar-sidebar {
     top: ~"calc(@{header-height-md} + @{sub-header-height-md})";
   }
 }
 
 @media (min-width: @screen-xl-min) {
-  .calendar-left-pane {
+  .calendar-sidebar {
     top: ~"calc(@{header-height-xl} + @{sub-header-height-xl})";
   }
 }

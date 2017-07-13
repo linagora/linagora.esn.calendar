@@ -14,13 +14,6 @@
         i.mdi.mdi-calendar
       .media-body
         .lv-title #{__('External calendars')}
-  .calendar-item-right.actions
-    .dropdown
-      a(href='', data-toggle='dropdown', aria-expanded='true')
-        i.mdi.mdi-plus
-      ul.not-toggled.dropdown-menu.dropdown-menu-right
-        li
-          a(href="", esn-modal-launcher='/calendar/app/calendar-shared-configuration/calendar-shared-configuration.html', controller-as='$ctrl', controller='CalCalendarSharedConfigurationController') #{__('Shared calendar')}
 
   ul.no-padding
     calendars-list-items(

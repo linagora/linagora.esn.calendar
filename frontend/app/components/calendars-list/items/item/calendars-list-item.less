@@ -1,11 +1,7 @@
 .calendars-list-item {
   .clickable;
 
-  .mdi.mdi-settings {
-    color: lighten(@secondaryTextColor, 20%);
-  }
-
-  .mdi.mdi-checkbox-blank-outline {
+  .mdi.mdi-checkbox-blank-circle-outline {
     color: @secondaryTextColor;
   }
 
@@ -14,5 +10,40 @@
 
     color: @secondaryTextColor;
     font-size: 12px;
+  }
+
+  &:hover {
+    .settings {
+      .mdi {
+        opacity: 0.5;
+      }
+    }
+  }
+
+  .settings {
+    .all-centered;
+
+    .mdi.mdi-settings {
+      font-size: 1.8em;
+    }
+
+    position: absolute;
+    top: 0;
+    height: 100%;
+    right: 0;
+    background-color: inherit;
+    padding-right: 5px;
+
+    .mdi {
+      opacity: 0;
+    }
+
+    &:hover {
+      background-color: @darkenBgColor;
+
+      .mdi {
+        opacity: 1;
+      }
+    }
   }
 }
