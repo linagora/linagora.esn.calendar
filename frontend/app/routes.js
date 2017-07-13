@@ -124,14 +124,6 @@
           }
         }
       })
-      .state('calendar.external.public', {
-        url: '/public/:calendarUniqueId',
-        views: {
-          'content@calendar': {
-            template: '<calendar-configuration/>'
-          }
-        }
-      })
       .state('calendar.external.shared', {
         url: '/shared/:calendarUniqueId',
         views: {
