@@ -42,9 +42,15 @@
                   span.col-xs-12.col-md-6.text-center #{__('Will you attend?')}
                   .col-xs-12.col-md-6.text-center
                     .btn-group(role="group")
-                      button.btn.btn-link.accepted(type='button', ng-click='changeParticipation("ACCEPTED")', ng-class='{ "active": userAsAttendee.partstat === "ACCEPTED" }') #{__('Yes')}
-                      button.btn.btn-link.undecided(type='button', ng-click='changeParticipation("TENTATIVE")', ng-class='{ "active": userAsAttendee.partstat === "TENTATIVE" }') #{__('Maybe')}
-                      button.btn.btn-link.declined(type='button', ng-click='changeParticipation("DECLINED")', ng-class='{ "active": userAsAttendee.partstat === "DECLINED" }') #{__('No')}
+                      button.btn.btn-link.accepted(type='button', ng-click='changeParticipation("ACCEPTED")', ng-class='{ "active": userAsAttendee.partstat === "ACCEPTED" }')
+                        i.mdi.mdi-check
+                        #{__('Going')}
+                      button.btn.btn-link.undecided(type='button', ng-click='changeParticipation("TENTATIVE")', ng-class='{ "active": userAsAttendee.partstat === "TENTATIVE" }')
+                        i.mdi.mdi-help
+                        #{__('Maybe')}
+                      button.btn.btn-link.declined(type='button', ng-click='changeParticipation("DECLINED")', ng-class='{ "active": userAsAttendee.partstat === "DECLINED" }')
+                        i.mdi.mdi-close
+                        #{__("Can't go")}
 
               .row.visible-xs
                 .col-xs-12
