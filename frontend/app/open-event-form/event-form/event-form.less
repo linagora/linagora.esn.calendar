@@ -1,4 +1,4 @@
-.event-quick-form {
+.event-form {
 
   .calendar-event-form();
 
@@ -33,6 +33,14 @@
   .form-group {
     margin-bottom: 10px;
     font-size: 13px;
+
+    .select {
+      z-index: 1;
+    }
+
+    textarea.form-control {
+      z-index: 0;
+    }
   }
 
   .attendees-list, .cal-mail-to-attendees {
@@ -70,7 +78,7 @@
       }
 
       &.undecided {
-        margin: 0 -1px !important;
+        margin: 0 -1px;
       }
 
       &.active {
@@ -102,7 +110,7 @@
 }
 
 @media (min-width: @screen-md-min) {
-  .event-quick-form {
+  .event-form {
     .attendee-list-item {
       .attendee-avatar {
         .checkbox {
@@ -114,8 +122,7 @@
 }
 
 @media (min-width: @screen-sm-min) {
-  .event-quick-form {
-
+  .event-form {
     .modal-footer {
       .form-group {
         .fg-line {
@@ -132,7 +139,7 @@
 }
 
 @media (max-width: @screen-xs-max) {
-  .event-quick-form {
+  .event-form {
     .btn-default {
       .PrimaryColor();
     }

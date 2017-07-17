@@ -5,7 +5,7 @@
 
 var expect = chai.expect;
 
-describe('The cal-event-quick-form Angular module directives', function() {
+describe('The cal-event-form Angular module directives', function() {
   beforeEach(function() {
     module('jadeTemplates');
     angular.mock.module('esn.calendar');
@@ -18,6 +18,7 @@ describe('The cal-event-quick-form Angular module directives', function() {
     angular.mock.module(function($provide, $controllerProvider) {
       $controllerProvider.register('CalEventFormController', self.calEventFormControllerMock);
       $provide.value('calEventUtils', self.calEventUtilsMock);
+      $provide.factory('eventRecurrenceEditionDirective', function() { return {}; });
     });
   });
 
@@ -36,7 +37,7 @@ describe('The cal-event-quick-form Angular module directives', function() {
     };
 
     this.initDirective = function(scope) {
-      var html = '<cal-event-quick-form/>';
+      var html = '<cal-event-form/>';
       var element = this.$compile(html)(scope);
 
       scope.$digest();

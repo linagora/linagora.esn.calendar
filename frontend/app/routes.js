@@ -170,18 +170,6 @@
           }
         }
       })
-      .state('calendar.event.form', {
-        url: '/form',
-        views: {
-          content: {
-            template: '<cal-event-full-form event="event" calendar-home-id="calendarHomeId"/>',
-            controller: function($scope, calendarHomeId, event) {
-              $scope.calendarHomeId = calendarHomeId;
-              $scope.event = event;
-            }
-          }
-        }
-      })
       .state('calendar.event.consult', {
         url: '/consult',
         views: {

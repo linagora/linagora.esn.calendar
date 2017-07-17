@@ -867,16 +867,6 @@ describe('The event-form module controllers', function() {
         expect(this.calEventServiceMock.changeParticipation).to.have.been.called;
       });
 
-      it('should go to the calendar view if user is attendee and view is full form', function() {
-        this.$state.is = function(state) {
-          return state === 'calendar.event.form';
-        };
-        this.scope.changeParticipation('ACCEPTED');
-        this.scope.$digest();
-
-        expect(this.$state.go).to.have.been.calledWith('calendar.main');
-      });
-
       it('should go to the calendar view if user is attendee and view is consult form', function() {
         this.$state.is = function(state) {
           return state === 'calendar.event.consult';
@@ -1178,6 +1168,11 @@ describe('The event-form module controllers', function() {
 
       it('should return true if the event has attendees and it is not in the grace periode and it is an old event', function() {
         this.scope.event = this.CalendarShell.fromIncompleteShell({
+          organizer: {
+            name: 'organiser',
+            email: 'organiser@openpaas.org',
+            partstart: 'ACCEPTED'
+          },
           attendees: [{
             name: 'organiser',
             email: 'organiser@openpaas.org',
@@ -1208,6 +1203,11 @@ describe('The event-form module controllers', function() {
 
       it('should return false if the event is in the grace periode', function() {
         this.scope.event = this.CalendarShell.fromIncompleteShell({
+          organizer: {
+            name: 'organiser',
+            email: 'organiser@openpaas.org',
+            partstart: 'ACCEPTED'
+          },
           attendees: [{
             name: 'organiser',
             email: 'organiser@openpaas.org',
@@ -1229,6 +1229,11 @@ describe('The event-form module controllers', function() {
 
       it('should return false if the event is a new event(not yet in the calendar)', function() {
         this.scope.event = this.CalendarShell.fromIncompleteShell({
+          organizer: {
+            name: 'organiser',
+            email: 'organiser@openpaas.org',
+            partstart: 'ACCEPTED'
+          },
           attendees: [{
             name: 'organiser',
             email: 'organiser@openpaas.org',
@@ -1239,6 +1244,26 @@ describe('The event-form module controllers', function() {
               email: 'attendee1@openpaas.org',
               partstart: 'ACCEPTED'
             }],
+          gracePeriodTaskId: '0000'
+        });
+
+        this.initController();
+
+        expect(this.scope.displayCalMailToAttendeesButton()).to.be.false;
+      });
+
+      it('should return false if we have the organizer as the only attendee', function() {
+        this.scope.event = this.CalendarShell.fromIncompleteShell({
+          organizer: {
+            name: 'organiser',
+            email: 'organiser@openpaas.org',
+            partstart: 'ACCEPTED'
+          },
+          attendees: [{
+            name: 'organiser',
+            email: 'organiser@openpaas.org',
+            partstart: 'ACCEPTED'
+          }],
           gracePeriodTaskId: '0000'
         });
 
