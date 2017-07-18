@@ -2,9 +2,8 @@
   'use strict';
 
   /**
-   * There are 3 types of form in the module:
-   *   * The quick form: this is a desktop only view of an edition form for events.
-   *   * The full form: this is a desktop and mobile view of an complete edition form for events.
+   * There are 2 types of form in the module:
+   *   * The event form: this is a desktop and mobile view of an complete edition form for events.
    *   * The consult form: this is a desktop and mobile view of an consult form for events.
    * Note that mobile devices have only access to the full form and the consult form.
    * This service will open the correct form corresponding to the event and the screen size.
@@ -33,16 +32,12 @@
 
     function _openForm(calendar, event, recurrenceId) {
       calEventUtils.setEditedEvent(event);
-      if (matchmedia.is(SM_XS_MEDIA_QUERY)) {
-        if (calUIAuthorizationService.canModifyEvent(calendar, event, session.user._id)) {
-          $state.go('calendar.event.form', {calendarHomeId: calendar.calendarHomeId, eventId: event.uid, recurrenceId: recurrenceId});
-        } else {
-          $state.go('calendar.event.consult', {calendarHomeId: calendar.calendarHomeId, eventId: event.uid, recurrenceId: recurrenceId});
-        }
+      if (!calUIAuthorizationService.canModifyEvent(calendar, event, session.user._id)) {
+        $state.go('calendar.event.consult', {calendarHomeId: calendar.calendarHomeId, eventId: event.uid, recurrenceId: recurrenceId});
       } else if (modalIsOpen === false) {
         modalIsOpen = true;
         $modal({
-          templateUrl: '/calendar/app/components/open-event-form/event-quick-form-view',
+          templateUrl: '/calendar/app/open-event-form/event-form-view',
           resolve: {
             event: function(calEventUtils) {
               return calEventUtils.getEditedEvent();
@@ -77,7 +72,7 @@
 
     function _openRecurringModal(calendar, event) {
       $modal({
-        templateUrl: '/calendar/app/components/open-event-form/edit-instance-or-series',
+        templateUrl: '/calendar/app/open-event-form/edit-instance-or-series',
         resolve: {
           calendar: function() {
             return calendar;

@@ -6,13 +6,12 @@
 var expect = chai.expect;
 
 describe('The calOpenEventForm service', function() {
-  var $modal, $q, $rootScope, $state, calEventUtils, calOpenEventForm, calendarService, calUIAuthorizationService, notificationFactory, matchmedia, CAL_DEFAULT_CALENDAR_ID, CAL_EVENTS, SM_XS_MEDIA_QUERY;
+  var $modal, $q, $rootScope, $state, calEventUtils, calOpenEventForm, calendarService, calUIAuthorizationService, notificationFactory, CAL_DEFAULT_CALENDAR_ID, CAL_EVENTS;
   var calendar, calendarHomeId, instance, master, regularEvent;
 
   beforeEach(function() {
     calendarHomeId = '123';
     calendar = {id: 1, calendarHomeId: calendarHomeId};
-    matchmedia = {};
     calEventUtils = {
       setEditedEvent: sinon.spy()
     };
@@ -42,7 +41,6 @@ describe('The calOpenEventForm service', function() {
 
     angular.mock.module('linagora.esn.graceperiod', 'esn.calendar');
     angular.mock.module(function($provide) {
-      $provide.value('matchmedia', matchmedia);
       $provide.value('calEventUtils', calEventUtils);
       $provide.value('$modal', $modal);
       $provide.value('$state', $state);
@@ -50,7 +48,7 @@ describe('The calOpenEventForm service', function() {
     });
   });
 
-  beforeEach(angular.mock.inject(function(_$q_, _$rootScope_, _calOpenEventForm_, _calUIAuthorizationService_, _notificationFactory_, _CAL_DEFAULT_CALENDAR_ID_, _CAL_EVENTS_, _SM_XS_MEDIA_QUERY_) {
+  beforeEach(angular.mock.inject(function(_$q_, _$rootScope_, _calOpenEventForm_, _calUIAuthorizationService_, _notificationFactory_, _CAL_DEFAULT_CALENDAR_ID_, _CAL_EVENTS_) {
     $rootScope = _$rootScope_;
     $q = _$q_;
     calOpenEventForm = _calOpenEventForm_;
@@ -58,7 +56,6 @@ describe('The calOpenEventForm service', function() {
     notificationFactory = _notificationFactory_;
     CAL_DEFAULT_CALENDAR_ID = _CAL_DEFAULT_CALENDAR_ID_;
     CAL_EVENTS = _CAL_EVENTS_;
-    SM_XS_MEDIA_QUERY = _SM_XS_MEDIA_QUERY_;
   }));
 
   describe('calOpenEventForm', function() {
@@ -106,26 +103,21 @@ describe('The calOpenEventForm service', function() {
       $rootScope.$digest();
     });
 
-    it('should call $modal if matchmedia is md', function() {
-      matchmedia.is = sinon.stub().returns(false);
-
+    it('should call $modal', function() {
       calOpenEventForm(calendarHomeId, regularEvent);
 
       $rootScope.$digest();
 
-      expect(matchmedia.is).to.have.been.calledWith(SM_XS_MEDIA_QUERY);
       expect($modal).to.have.been.called;
       expect($state.go).to.not.have.been;
       expect($modal).to.have.been.calledWith(sinon.match({
-        templateUrl: '/calendar/app/components/open-event-form/event-quick-form-view',
+        templateUrl: '/calendar/app/open-event-form/event-form-view',
         backdrop: 'static',
         placement: 'center'
       }));
     });
 
     it('should call $modal only once even if clicking several times', function() {
-      matchmedia.is = sinon.stub().returns(false);
-
       calOpenEventForm(calendarHomeId, regularEvent);
       calOpenEventForm(calendarHomeId, regularEvent);
 
@@ -135,8 +127,6 @@ describe('The calOpenEventForm service', function() {
     });
 
     it('should recall $modal if closed before', function() {
-      matchmedia.is = sinon.stub().returns(false);
-
       calOpenEventForm(calendarHomeId, regularEvent);
 
       $rootScope.$digest();
@@ -168,7 +158,6 @@ describe('The calOpenEventForm service', function() {
       var calendarUnselectListenerSpy = sinon.spy();
 
       $rootScope.$on(CAL_EVENTS.CALENDAR_UNSELECT, calendarUnselectListenerSpy);
-      matchmedia.is = sinon.stub().returns(false);
 
       calOpenEventForm(calendarHomeId, regularEvent);
 
@@ -200,8 +189,6 @@ describe('The calOpenEventForm service', function() {
     it('should unregister the listener of CAL_EVENTS.MODAL.hide after hiding the modal', function(done) {
       var calendarUnselectListenerSpy = sinon.spy();
 
-      matchmedia.is = sinon.stub().returns(false);
-
       $rootScope.$on(CAL_EVENTS.CALENDAR_UNSELECT, calendarUnselectListenerSpy);
 
       calOpenEventForm(calendarHomeId, regularEvent);
@@ -232,28 +219,13 @@ describe('The calOpenEventForm service', function() {
       }));
     });
 
-    it('should call $state to calendar.event.form if matchmedia is xs or sm and user can modify event', function() {
-      matchmedia.is = sinon.stub().returns(true);
-      canModifyEvent = true;
-
-      calOpenEventForm(calendarHomeId, regularEvent);
-
-      $rootScope.$digest();
-
-      expect(matchmedia.is).to.have.been.calledWith(SM_XS_MEDIA_QUERY);
-      expect($modal).to.have.not.been.called;
-      expect($state.go).to.have.been.calledWith('calendar.event.form', {calendarHomeId: calendarHomeId, eventId: regularEvent.uid, recurrenceId: regularEvent.recurrenceIdAsString});
-    });
-
-    it('should call $state to calendar.event.consult if matchmedia is xs or sm and user cannot modify event', function() {
-      matchmedia.is = sinon.stub().returns(true);
+    it('should call $state to calendar.event.consult if user cannot modify event', function() {
       canModifyEvent = false;
 
       calOpenEventForm(calendarHomeId, regularEvent);
 
       $rootScope.$digest();
 
-      expect(matchmedia.is).to.have.been.calledWith(SM_XS_MEDIA_QUERY);
       expect($modal).to.have.not.been.called;
       expect($state.go).to.have.been.calledWith('calendar.event.consult', {calendarHomeId: calendarHomeId, eventId: regularEvent.uid, recurrenceId: regularEvent.recurrenceIdAsString});
     });
@@ -264,7 +236,7 @@ describe('The calOpenEventForm service', function() {
       $rootScope.$digest();
 
       expect($modal).to.have.been.calledWith(sinon.match({
-        templateUrl: '/calendar/app/components/open-event-form/edit-instance-or-series',
+        templateUrl: '/calendar/app/open-event-form/edit-instance-or-series',
         resolve: {
           event: sinon.match.func.and(sinon.match(function(eventGetter) {
             return eventGetter() === instance;

@@ -1,4 +1,4 @@
-.event-quick-form {
+.event-form {
 
   .calendar-event-form();
 
@@ -7,7 +7,7 @@
   }
 
   .input-group-addon .mdi {
-    font-size: 2.5em;
+    font-size: 1.9em;
     vertical-align: middle;
   }
 
@@ -33,18 +33,18 @@
   .form-group {
     margin-bottom: 10px;
     font-size: 13px;
+
+    .select {
+      z-index: 1;
+    }
+
+    textarea.form-control {
+      z-index: 0;
+    }
   }
 
-  .accepted  {
-    color: @m-green;
-  }
-
-  .undecided {
-    color: @m-blue;
-  }
-
-  .declined {
-    color: @m-red;
+  .attendees-list, .cal-mail-to-attendees {
+    .FormMargin();
   }
 
   .status span {
@@ -54,17 +54,51 @@
   }
 
   .status {
-     margin-top: 10px;
+    margin-top: 10px;
 
-     .btn {
-       font-size: 13px;
-     }
+    .btn {
+      font-size: 13px;
+      border-left: 1px solid;
+      border-right: 1px solid;
+      border-color: @darkenBgColor;
+      text-transform: none;
+      padding: 6px;
 
-     .active {
-       background-color: @darkenBgColor;
-       z-index: 0;
-     }
-   }
+      i.mdi {
+        margin-right: 4px;
+        font-size: 18px;
+        bottom: 2px;
+        position: relative;
+        vertical-align: middle;
+
+        &.mdi-help {
+          font-size: 15px;
+          bottom: 1px;
+        }
+      }
+
+      &.undecided {
+        margin: 0 -1px;
+      }
+
+      &.active {
+        background-color: @darkenBgColor;
+        z-index: 0;
+
+        &.accepted  {
+          color: @m-green;
+        }
+
+        &.undecided {
+          color: @m-blue;
+        }
+
+        &.declined {
+          color: @m-red;
+        }
+      }
+    }
+  }
 
   .attendee-list-item {
     .attendee-avatar {
@@ -76,7 +110,7 @@
 }
 
 @media (min-width: @screen-md-min) {
-  .event-quick-form {
+  .event-form {
     .attendee-list-item {
       .attendee-avatar {
         .checkbox {
@@ -88,8 +122,7 @@
 }
 
 @media (min-width: @screen-sm-min) {
-  .event-quick-form {
-
+  .event-form {
     .modal-footer {
       .form-group {
         .fg-line {
@@ -106,7 +139,7 @@
 }
 
 @media (max-width: @screen-xs-max) {
-  .event-quick-form {
+  .event-form {
     .btn-default {
       .PrimaryColor();
     }
@@ -123,9 +156,6 @@
     }
 
     .modal-header {
-      .modal-title, .close {
-        color: @textPrimaryColor;
-      }
 
       .form-group {
         margin-bottom: 0;
@@ -146,9 +176,15 @@
         margin-bottom: 0;
         padding: 5px;
 
-        .btn.active {
-          .AccentColor();
+        .btn {
+          padding:6px;
+
+          &.active {
+            .AccentColor();
+          }
         }
+
+
       }
     }
 

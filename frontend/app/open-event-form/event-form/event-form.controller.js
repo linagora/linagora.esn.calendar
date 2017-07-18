@@ -37,7 +37,6 @@
       $scope.submit = submit;
       $scope.canPerformCall = canPerformCall;
       $scope.goToCalendar = goToCalendar;
-      $scope.goToFullForm = goToFullForm;
 
       // Initialize the scope of the form. It creates a scope.editedEvent which allows us to
       // rollback to scope.event in case of a Cancel.
@@ -46,11 +45,24 @@
       ////////////
 
       function displayCalMailToAttendeesButton() {
-        if ($scope.calendar && $scope.calendar.readOnly) {
-          return calEventUtils.hasAttendees($scope.editedEvent) && !calEventUtils.isInvolvedInATask($scope.editedEvent) && !calEventUtils.isNew($scope.editedEvent) && !$scope.calendar.readOnly;
+        function organizerIsNotTheOnlyAttendeeInEvent() {
+          return _.some($scope.editedEvent.attendees, function(attendee) {
+            return $scope.editedEvent.organizer && $scope.editedEvent.organizer.email !== attendee.email;
+          });
         }
 
-        return calEventUtils.hasAttendees($scope.editedEvent) && !calEventUtils.isInvolvedInATask($scope.editedEvent) && !calEventUtils.isNew($scope.editedEvent);
+        if ($scope.calendar && $scope.calendar.readOnly) {
+          return calEventUtils.hasAttendees($scope.editedEvent) &&
+          !calEventUtils.isInvolvedInATask($scope.editedEvent) &&
+          !calEventUtils.isNew($scope.editedEvent) &&
+          !$scope.calendar.readOnly &&
+          organizerIsNotTheOnlyAttendeeInEvent();
+        }
+
+        return calEventUtils.hasAttendees($scope.editedEvent) &&
+        !calEventUtils.isInvolvedInATask($scope.editedEvent) &&
+        !calEventUtils.isNew($scope.editedEvent) &&
+        organizerIsNotTheOnlyAttendeeInEvent();
       }
 
       function _displayError(err) {
@@ -312,7 +324,7 @@
           _changeParticipationAsAttendee();
 
           if (!$scope.canModifyEvent) {
-            if ($state.is('calendar.event.form') || $state.is('calendar.event.consult')) {
+            if ($state.is('calendar.event.consult')) {
               $state.go('calendar.main');
             } else {
               _hideModal();
@@ -328,13 +340,6 @@
       function goToCalendar(callback) {
         (callback || angular.noop)();
         $state.go('calendar.main');
-      }
-
-      function goToFullForm() {
-        calEventUtils.setEditedEvent($scope.editedEvent);
-        calEventUtils.setNewAttendees($scope.newAttendees);
-        _hideModal();
-        $state.go('calendar.event.form', {calendarId: $scope.calendarHomeId, eventId: $scope.editedEvent.id});
       }
   }
 })();
