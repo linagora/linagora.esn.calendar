@@ -8,7 +8,6 @@
     $alert,
     $scope,
     $state,
-    $q,
     _,
     calendarService,
     userUtils,
@@ -18,7 +17,6 @@
     calOpenEventForm,
     calUIAuthorizationService,
     session,
-    calendarUsersCache,
     calPathBuilder,
     esnI18nService,
     CAL_EVENTS,
@@ -92,7 +90,6 @@
         $scope.editedEvent = $scope.event.clone();
         $scope.newAttendees = calEventUtils.getNewAttendees();
         $scope.isOrganizer = calEventUtils.isOrganizer($scope.editedEvent);
-        $scope.canModifyEventAttendees = calUIAuthorizationService.canModifyEventAttendees($scope.editedEvent);
 
         calendarService.listPersonalAndAcceptedDelegationCalendars($scope.calendarHomeId)
           .then(function(calendars) {
@@ -104,16 +101,8 @@
 
               return calendar.id === $scope.editedEvent.calendarId;
             });
-
-            $scope.canModifyEvent = _canModifyEvent();
           })
           .then(function() {
-            if ($scope.canModifyEvent) {
-              setOrganizer();
-            } else {
-              $scope.editedEvent.organizer && $scope.editedEvent.attendees.push($scope.editedEvent.organizer);
-            }
-
             $scope.userAsAttendee = null;
 
             $scope.editedEvent.attendees.forEach(function(attendee) {
@@ -125,32 +114,24 @@
             if (!$scope.editedEvent.class) {
               $scope.editedEvent.class = CAL_EVENT_FORM.class.default;
             }
-          })
-          .then(function() {
+
+            $scope.canModifyEvent = _canModifyEvent();
             $scope.displayParticipationButton = displayParticipationButton();
             $scope.displayCalMailToAttendeesButton = displayCalMailToAttendeesButton;
+            $scope.canModifyEventAttendees = calUIAuthorizationService.canModifyEventAttendees($scope.editedEvent);
             $scope.canModifyEventRecurrence = calUIAuthorizationService.canModifyEventRecurrence($scope.calendar, $scope.editedEvent, session.user._id);
           });
       }
 
       function setOrganizer() {
-        var displayName;
+        return $scope.calendar.getOwner()
+          .then(function(owner) {
+            $scope.editedEvent.organizer = { displayName: userUtils.displayNameOf(owner), emails: owner.emails };
+            $scope.editedEvent.attendees.push($scope.editedEvent.organizer);
+            $scope.editedEvent.setOrganizerPartStat();
 
-        if ($scope.calendar.isShared(session.user._id)) {
-          return calendarUsersCache.getUser($scope.calendar.rights.getOwnerId()).then(function(user) {
-            displayName = userUtils.displayNameOf(user);
-
-            $scope.editedEvent.organizer = { displayName: displayName, emails: user.emails };
-            $scope.editedEvent.setOrganizerPartStat($scope.editedEvent.getOrganizerPartStat());
+            return owner;
           });
-        } else {
-          displayName = session.user.displayName || userUtils.displayNameOf(session.user);
-
-          $scope.editedEvent.organizer = { displayName: displayName, emails: session.user.emails };
-          $scope.editedEvent.setOrganizerPartStat($scope.editedEvent.getOrganizerPartStat());
-
-          return $q.when();
-        }
       }
 
       function _canModifyEvent() {
@@ -158,11 +139,7 @@
       }
 
       function displayParticipationButton() {
-        if ($scope.calendar && $scope.calendar.readOnly) {
-          return ($scope.editedEvent.attendees.length > 1 || $scope.newAttendees.length > 0) && !$scope.calendar.readOnly;
-        }
-
-        return $scope.editedEvent.attendees.length > 1 || $scope.newAttendees.length > 0;
+        return !!$scope.userAsAttendee;
       }
 
       function canPerformCall() {
