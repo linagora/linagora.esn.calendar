@@ -5,13 +5,27 @@
 var expect = chai.expect;
 
 describe('The event-form module controllers', function() {
-  var calendarTest, eventTest, canModifyEventResult, Cache;
+  var Cache, calendarTest, canModifyEventResult, eventTest, owner, user;
 
   beforeEach(function() {
     eventTest = {};
     var self = this;
 
     canModifyEventResult = true;
+
+    owner = {
+      firstname: 'owner',
+      lastname: 'OWNER',
+      emails: ['owner@test.com'],
+      emailMap: { 'owner@test.com': true }
+    };
+
+    user = {
+      firstname: 'first',
+      lastname: 'last',
+      emails: ['user@test.com'],
+      emailMap: { 'user@test.com': true }
+    };
 
     var calendarUtilsMock = {
       getNewStartDate: function() {
@@ -28,9 +42,8 @@ describe('The event-form module controllers', function() {
       color: 'color',
       selected: true,
       readOnly: true,
-      isShared: sinon.stub().returns(false),
-      rights: {
-        getOwnerId: sinon.stub().returns('ownerId')
+      getOwner: function() {
+        return $q.when(owner);
       },
       isSubscription: function() { return false; },
       isWritable: angular.noop
@@ -43,17 +56,18 @@ describe('The event-form module controllers', function() {
         id: 'id2',
         color: 'color2',
         isWritable: angular.noop,
-        isShared: sinon.stub().returns(false),
-        isSubscription: function() { return false; }
+        isSubscription: function() { return false; },
+        getOwner: function() {
+          return $q.when(owner);
+        }
       }, {
         href: 'href3',
         id: 'id3',
         color: 'color',
         selected: true,
         readOnly: true,
-        isShared: sinon.stub().returns(false),
-        rights: {
-          getOwnerId: sinon.stub().returns('ownerId')
+        getOwner: function() {
+          return $q.when(owner);
         },
         isSubscription: function() { return true; },
         isWritable: angular.noop,
@@ -63,10 +77,6 @@ describe('The event-form module controllers', function() {
           color: 'color',
           selected: true,
           readOnly: true,
-          isShared: sinon.stub().returns(false),
-          rights: {
-            getOwnerId: sinon.stub().returns('ownerId')
-          },
           isSubscription: function() { return false; },
           isWritable: angular.noop
         }
@@ -97,12 +107,7 @@ describe('The event-form module controllers', function() {
     };
 
     var sessionMock = {
-      user: {
-        firstname: 'first',
-        lastname: 'last',
-        emails: ['user@test.com'],
-        emailMap: { 'user@test.com': true }
-      },
+      user: user,
       ready: {
         then: function() {}
       }
@@ -131,10 +136,6 @@ describe('The event-form module controllers', function() {
       });
     };
 
-    self.userUtilsMock = {
-      displayNameOf: sinon.spy()
-    };
-
     angular.mock.module('esn.calendar');
     angular.mock.module(function($provide) {
       $provide.decorator('calendarUtils', function($delegate) {
@@ -147,7 +148,6 @@ describe('The event-form module controllers', function() {
       $provide.value('notificationFactory', self.notificationFactory);
       $provide.value('calOpenEventForm', self.calOpenEventForm);
       $provide.value('$state', self.$state);
-      $provide.value('userUtils', self.userUtilsMock);
       $provide.factory('calEventsProviders', function() {
         return {
           setUpSearchProviders: function() {}
@@ -273,25 +273,6 @@ describe('The event-form module controllers', function() {
         });
         this.initController();
         expect(this.scope.editedEvent).to.equal(clone);
-      });
-
-      it('should initialize the organizer and add him to the attendees', function() {
-        this.userUtilsMock.displayNameOf = sinon.stub().returns('first last');
-        this.scope.event = this.CalendarShell.fromIncompleteShell({});
-        this.initController();
-        expect(this.scope.editedEvent.organizer).to.deep.equal({
-          fullmail: 'first last <user@test.com>',
-          email: 'user@test.com',
-          name: 'first last',
-          displayName: 'first last'
-        });
-        expect(this.scope.editedEvent.attendees).to.deep.equal([{
-          fullmail: 'user@test.com',
-          email: 'user@test.com',
-          name: 'user@test.com',
-          partstat: 'ACCEPTED',
-          displayName: 'user@test.com'
-        }]);
       });
 
       it('should select the selected calendar from calendarService.listPersonalAndAcceptedDelegationCalendars if new event', function() {
@@ -837,6 +818,9 @@ describe('The event-form module controllers', function() {
           organizer: {
             email: 'user@test.com'
           },
+          attendees: [{
+            email: 'user@test.com'
+          }],
           otherProperty: 'aString'
         });
         canModifyEventResult = false;
@@ -893,12 +877,8 @@ describe('The event-form module controllers', function() {
           _id: '123456',
           start: this.moment('2013-02-08 12:30'),
           end: this.moment('2013-02-08 13:30'),
-          organizer: {
-            email: 'user@test.com'
-          },
           otherProperty: 'aString'
         });
-        this.userUtilsMock.displayNameOf = sinon.stub().returns('first last');
         this.initController();
       });
 
@@ -940,6 +920,9 @@ describe('The event-form module controllers', function() {
 
         this.scope.newAttendees = newAttendees;
         this.scope.createEvent();
+
+        this.rootScope.$digest();
+
         expect(this.scope.editedEvent).to.shallowDeepEqual({
           title: 'No title',
           attendees: [{
@@ -948,8 +931,8 @@ describe('The event-form module controllers', function() {
             email: 'user2@test.com'
           }],
           organizer: {
-            displayName: 'first last',
-            email: 'user@test.com'
+            displayName: 'owner OWNER',
+            email: 'owner@test.com'
           }
         });
       });
@@ -986,18 +969,15 @@ describe('The event-form module controllers', function() {
 
       it('should call calEventService.createEvent with calendar owner as organizer when creating event on shared calendar', function() {
         calendarTest.isShared = sinon.stub().returns(true);
-        this.userUtilsMock.displayNameOf = sinon.stub().returns('owner owner');
         this.scope.createEvent();
         this.scope.$digest();
 
         expect(this.$state.is).to.have.been.called;
-        expect(calendarTest.isShared).to.have.been.called;
-        expect(calendarTest.rights.getOwnerId).to.have.been.calledWith;
         expect(this.scope.editedEvent.organizer).to.deep.equal({
-          fullmail: 'owner owner <owner@open-paas.org>',
-          email: 'owner@open-paas.org',
-          name: 'owner owner',
-          displayName: 'owner owner'
+          fullmail: 'owner OWNER <owner@test.com>',
+          email: 'owner@test.com',
+          name: 'owner OWNER',
+          displayName: 'owner OWNER'
         });
         expect(this.calEventServiceMock.createEvent).to.have.been.calledWith(calendarTest, this.scope.editedEvent, {
           graceperiod: true,
@@ -1027,7 +1007,12 @@ describe('The event-form module controllers', function() {
       beforeEach(function() {
         this.scope.event = this.scope.event = this.CalendarShell.fromIncompleteShell({
           start: this.moment('2013-02-08 12:30'),
-          attendees: []
+          organizer: {
+            email: 'owner@test.com'
+          },
+          attendees: [{
+            email: 'owner@test.com'
+          }]
         });
         this.initController();
         this.scope.editedEvent.setOrganizerPartStat('DECLINED');
@@ -1058,24 +1043,26 @@ describe('The event-form module controllers', function() {
 
       describe('when isOrganizer is true', function() {
         beforeEach(function() {
+          this.session.user = owner;
+
           this.scope.isOrganizer = true;
         });
 
         it('should modify attendees list and broadcast on CAL_EVENTS.EVENT_ATTENDEES_UPDATE', function(done) {
           this.scope.$on(this.CAL_EVENTS.EVENT_ATTENDEES_UPDATE, function(event, attendees) { // eslint-disable-line
             expect(attendees).to.shallowDeepEqual([{
-              email: 'user@test.com',
+              email: 'owner@test.com',
               partstat: 'ACCEPTED'
             }]);
             expect(this.scope.userAsAttendee).shallowDeepEqual({
-              email: 'user@test.com',
+              email: 'owner@test.com',
               partstat: 'ACCEPTED'
             });
             done();
           }.bind(this));
 
           this.scope.userAsAttendee = {
-            email: 'user@test.com'
+            email: 'owner@test.com'
           };
           this.scope.changeParticipation('ACCEPTED');
         });
