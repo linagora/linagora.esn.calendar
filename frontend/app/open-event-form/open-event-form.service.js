@@ -11,7 +11,7 @@
   angular.module('esn.calendar')
     .factory('calOpenEventForm', calOpenEventForm);
 
-  function calOpenEventForm($rootScope, $modal, $state, calendarService, calEventUtils, calUIAuthorizationService, matchmedia, notificationFactory, session, SM_XS_MEDIA_QUERY, CAL_DEFAULT_CALENDAR_ID, CAL_EVENTS) {
+  function calOpenEventForm($rootScope, $modal, calendarService, calEventUtils, calUIAuthorizationService, notificationFactory, session, CAL_DEFAULT_CALENDAR_ID, CAL_EVENTS) {
     var modalIsOpen = false;
 
     return function calOpenEventForm(calendarHomeId, event) {
@@ -30,11 +30,9 @@
 
     ////////////
 
-    function _openForm(calendar, event, recurrenceId) {
+    function _openForm(calendar, event) {
       calEventUtils.setEditedEvent(event);
-      if (!calUIAuthorizationService.canModifyEvent(calendar, event, session.user._id)) {
-        $state.go('calendar.event.consult', {calendarHomeId: calendar.calendarHomeId, eventId: event.uid, recurrenceId: recurrenceId});
-      } else if (modalIsOpen === false) {
+      if (modalIsOpen === false) {
         modalIsOpen = true;
         $modal({
           templateUrl: '/calendar/app/open-event-form/event-form-view',

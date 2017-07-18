@@ -219,17 +219,6 @@ describe('The calOpenEventForm service', function() {
       }));
     });
 
-    it('should call $state to calendar.event.consult if user cannot modify event', function() {
-      canModifyEvent = false;
-
-      calOpenEventForm(calendarHomeId, regularEvent);
-
-      $rootScope.$digest();
-
-      expect($modal).to.have.not.been.called;
-      expect($state.go).to.have.been.calledWith('calendar.event.consult', {calendarHomeId: calendarHomeId, eventId: regularEvent.uid, recurrenceId: regularEvent.recurrenceIdAsString});
-    });
-
     it('if event is a recurring event, it should ask for editing master or instance', function() {
       calOpenEventForm(calendarHomeId, instance);
 

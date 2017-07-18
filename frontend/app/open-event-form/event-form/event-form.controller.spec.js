@@ -867,16 +867,6 @@ describe('The event-form module controllers', function() {
         expect(this.calEventServiceMock.changeParticipation).to.have.been.called;
       });
 
-      it('should go to the calendar view if user is attendee and view is consult form', function() {
-        this.$state.is = function(state) {
-          return state === 'calendar.event.consult';
-        };
-        this.scope.changeParticipation('ACCEPTED');
-        this.scope.$digest();
-
-        expect(this.$state.go).to.have.been.calledWith('calendar.main');
-      });
-
       it('should hide the modal if user is attendee and view is quick form', function() {
         this.$state.is = sinon.stub().returns(false);
         this.scope.changeParticipation('ACCEPTED');

@@ -324,11 +324,7 @@
           _changeParticipationAsAttendee();
 
           if (!$scope.canModifyEvent) {
-            if ($state.is('calendar.event.consult')) {
-              $state.go('calendar.main');
-            } else {
-              _hideModal();
-            }
+            _hideModal();
           }
         }
       }
