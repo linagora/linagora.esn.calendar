@@ -719,9 +719,8 @@ describe('The calendar configuration controller', function() {
           expect(calendarService.modifyRights).to.not.have.been.calledWith;
         });
 
-        //This test must be changed when we affect the correct right to none option.
-        it('should call modifyPublicRights with write argument when public right is changed to none', function() {
-          calendarConfigurationController.publicSelection = CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE;
+        it('should call modifyPublicRights with none argument when public right is changed to none', function() {
+          calendarConfigurationController.publicSelection = CAL_CALENDAR_PUBLIC_RIGHT.NONE;
 
           calendarConfigurationController.submit();
           $rootScope.$digest();
@@ -731,7 +730,7 @@ describe('The calendar configuration controller', function() {
           expect(calendarAPI.modifyPublicRights).to.have.been.calledWith(
             calendarConfigurationController.calendarHomeId,
             calendarConfigurationController.calendar.id,
-            { public_right: CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE }
+            { public_right: CAL_CALENDAR_PUBLIC_RIGHT.NONE }
           );
           expect(calendarService.modifyCalendar).to.not.have.been.calledWith;
           expect(calendarService.modifyRights).to.not.have.been.calledWith;

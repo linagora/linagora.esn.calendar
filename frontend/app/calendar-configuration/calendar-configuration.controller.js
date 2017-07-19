@@ -165,12 +165,7 @@
         }
 
         if (publicRightChanged) {
-          switch (self.publicSelection) {
-            case CAL_CALENDAR_PUBLIC_RIGHT.READ:
-            case CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE:
-            case CAL_CALENDAR_PUBLIC_RIGHT.FREE_BUSY:
-              updateActions.push(calendarAPI.modifyPublicRights(self.calendarHomeId, self.calendar.id, { public_right: self.publicSelection }));
-          }
+          updateActions.push(calendarAPI.modifyPublicRights(self.calendarHomeId, self.calendar.id, { public_right: self.publicSelection }));
         }
 
         $q.all(updateActions).then(function() {
