@@ -4,18 +4,20 @@
   angular.module('esn.calendar')
     .factory('CalCalendarRightsUtilsService', CalCalendarRightsUtilsService);
 
-  function CalCalendarRightsUtilsService(CAL_CALENDAR_PUBLIC_RIGHT_HUMAN_READABLE, CAL_CALENDAR_DELEGATION_RIGHT_HUMAN_READABLE) {
+  function CalCalendarRightsUtilsService(_, CAL_CALENDAR_PUBLIC_RIGHT, CAL_CALENDAR_SHARED_RIGHT) {
     return {
-      publicAsHumanReadable: publicAsHumanReadable,
-      delegationAsHumanReadable: delegationAsHumanReadable
+      publicAsHumanReadable: _rightAsHumanReadable.bind(null, CAL_CALENDAR_PUBLIC_RIGHT),
+      delegationAsHumanReadable: _rightAsHumanReadable.bind(null, CAL_CALENDAR_SHARED_RIGHT)
     };
 
-    function publicAsHumanReadable(right) {
-      return angular.isString(right) ? CAL_CALENDAR_PUBLIC_RIGHT_HUMAN_READABLE[right] || CAL_CALENDAR_PUBLIC_RIGHT_HUMAN_READABLE.unknown : CAL_CALENDAR_PUBLIC_RIGHT_HUMAN_READABLE.unknown;
-    }
+    function _rightAsHumanReadable(calendarRightCollection, currentRight) {
+      if (!angular.isString(currentRight)) {
+        return calendarRightCollection.unknown;
+      }
 
-    function delegationAsHumanReadable(right) {
-      return angular.isString(right) ? CAL_CALENDAR_DELEGATION_RIGHT_HUMAN_READABLE[right] || CAL_CALENDAR_DELEGATION_RIGHT_HUMAN_READABLE.unknown : CAL_CALENDAR_DELEGATION_RIGHT_HUMAN_READABLE.unknown;
+      var key = _.findKey(calendarRightCollection, _.partial(_.isEqual, currentRight));
+
+      return key ? calendarRightCollection[key + '_LABEL'] : calendarRightCollection.unknown;
     }
   }
 })();

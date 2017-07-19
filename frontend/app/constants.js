@@ -100,18 +100,40 @@
 
     .constant('CAL_CALENDAR_SHARED_RIGHT', {
       NONE: '0',
+      NONE_LABEL: 'None',
+
       SHAREE_OWNER: '1',
+      SHAREE_OWNER_LABEL: 'Owner',
+
       SHAREE_READ: '2',
+      SHAREE_READ_LABEL: 'Read',
+
       SHAREE_READ_WRITE: '3',
+      SHAREE_READ_WRITE_LABEL: 'Read/Write',
+
       SHAREE_ADMIN: '5',
-      SHAREE_FREE_BUSY: '6'
+      SHAREE_ADMIN_LABEL: 'Administration',
+
+      SHAREE_FREE_BUSY: '6',
+      SHAREE_FREE_BUSY_LABEL: 'Free/Busy',
+
+      unknown: 'unknown'
     })
 
     .constant('CAL_CALENDAR_PUBLIC_RIGHT', {
       NONE: '',
+      NONE_LABEL: 'Private',
+
       READ: '{DAV:}read',
+      READ_LABEL: 'Read',
+
       READ_WRITE: '{DAV:}write',
-      FREE_BUSY: '{urn:ietf:params:xml:ns:caldav}read-free-busy'
+      READ_WRITE_LABEL: 'Read/Write',
+
+      FREE_BUSY: '{urn:ietf:params:xml:ns:caldav}read-free-busy',
+      FREE_BUSY_LABEL: 'Free/Busy',
+
+      unknown: 'unknown'
     })
 
     .constant('CAL_CALENDAR_SHARED_INVITE_STATUS', {
@@ -124,24 +146,6 @@
     .constant('CAL_CALENDAR_SHARED_TYPE', {
       DELEGATION: 'delegation',
       PUBLIC: 'public'
-    })
-
-    .constant('CAL_CALENDAR_PUBLIC_RIGHT_HUMAN_READABLE', {
-      unknown: 'unknown',
-      '': 'None',
-      '{DAV:}read': 'Read',
-      '{DAV:}write': 'Read and Write',
-      '{urn:ietf:params:xml:ns:caldav}read-free-busy': 'Free/Busy'
-    })
-
-    .constant('CAL_CALENDAR_DELEGATION_RIGHT_HUMAN_READABLE', {
-      unknown: 'unknown',
-      0: 'None',
-      1: 'Owner',
-      2: 'Read',
-      3: 'Read and Write',
-      5: 'Administration',
-      6: 'Free/Busy'
     })
 
     .constant('CAL_EVENT_CLASS', {
