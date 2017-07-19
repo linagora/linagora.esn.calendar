@@ -10,9 +10,9 @@ describe('The calendar configuration tab delegation controller', function() {
     $scope,
     $state,
     $q,
-    _,
     calendarService,
     calUIAuthorizationService,
+    CalCalendarRightsUtilsService,
     userUtils,
     session,
     CalendarConfigurationTabMainController,
@@ -50,18 +50,18 @@ describe('The calendar configuration tab delegation controller', function() {
       $provide.value('calCalendarDeleteConfirmationModalService', calCalendarDeleteConfirmationModalService);
     });
 
-    angular.mock.inject(function(_$rootScope_, _$controller_, _$state_, _$q_, ___, _session_, _userUtils_, _CAL_CALENDAR_PUBLIC_RIGHT_, _CAL_CALENDAR_SHARED_RIGHT_, _calUIAuthorizationService_) {
+    angular.mock.inject(function(_$rootScope_, _$controller_, _$state_, _$q_, _session_, _userUtils_, _CalCalendarRightsUtilsService_, _CAL_CALENDAR_PUBLIC_RIGHT_, _CAL_CALENDAR_SHARED_RIGHT_, _calUIAuthorizationService_) {
       $rootScope = _$rootScope_;
       $scope = $rootScope.$new();
       $controller = _$controller_;
       $state = _$state_;
       $q = _$q_;
-      _ = ___;
       userUtils = _userUtils_;
       session = _session_;
       calUIAuthorizationService = _calUIAuthorizationService_;
       CAL_CALENDAR_PUBLIC_RIGHT = _CAL_CALENDAR_PUBLIC_RIGHT_;
       CAL_CALENDAR_SHARED_RIGHT = _CAL_CALENDAR_SHARED_RIGHT_;
+      CalCalendarRightsUtilsService = _CalCalendarRightsUtilsService_;
     });
   });
 
@@ -75,17 +75,17 @@ describe('The calendar configuration tab delegation controller', function() {
       var publicRightsExpected = [
         {
           value: CAL_CALENDAR_PUBLIC_RIGHT.READ,
-          name: 'Read'
+          name: CAL_CALENDAR_PUBLIC_RIGHT.READ_LABEL
         },
         {
           value: CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE,
-          name: 'Write'
+          name: CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE_LABEL
         }, {
           value: CAL_CALENDAR_PUBLIC_RIGHT.FREE_BUSY,
-          name: 'Private'
+          name: CAL_CALENDAR_PUBLIC_RIGHT.FREE_BUSY_LABEL
         }, {
           value: CAL_CALENDAR_PUBLIC_RIGHT.NONE,
-          name: 'None'
+          name: CAL_CALENDAR_PUBLIC_RIGHT.NONE_LABEL
         }
       ];
 
@@ -300,21 +300,19 @@ describe('The calendar configuration tab delegation controller', function() {
     });
 
     it('should set "shareeRight" depending on "calendar.rights.getShareeRight"', function() {
-      var rightLabels = {};
-
-      rightLabels[CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ] = 'Read only';
-      rightLabels[CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ_WRITE] = 'Read and Write';
-      rightLabels[CAL_CALENDAR_SHARED_RIGHT.SHAREE_ADMIN] = 'Administration';
-      rightLabels[CAL_CALENDAR_SHARED_RIGHT.SHAREE_FREE_BUSY] = 'Free/Busy';
-
-      _.keys(rightLabels).forEach(function(sharedRight) {
+      [
+        CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ,
+        CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ_WRITE,
+        CAL_CALENDAR_SHARED_RIGHT.SHAREE_ADMIN,
+        CAL_CALENDAR_SHARED_RIGHT.SHAREE_FREE_BUSY
+      ].forEach(function(sharedRight) {
         getShareeRightResult = sharedRight;
         CalendarConfigurationTabMainController.$onInit();
 
         $rootScope.$digest();
 
         expect(CalendarConfigurationTabMainController.calendar.rights.getShareeRight).to.have.been.calledWith(session.user._id);
-        expect(CalendarConfigurationTabMainController.shareeRight).to.equal(rightLabels[sharedRight]);
+        expect(CalendarConfigurationTabMainController.shareeRight).to.equal(CalCalendarRightsUtilsService.delegationAsHumanReadable(sharedRight));
       });
     });
 

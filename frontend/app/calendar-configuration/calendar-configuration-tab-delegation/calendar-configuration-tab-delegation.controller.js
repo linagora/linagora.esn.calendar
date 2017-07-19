@@ -20,16 +20,16 @@
       self.delegationTypes = [
         {
           value: CAL_CALENDAR_SHARED_RIGHT.SHAREE_ADMIN,
-          name: 'Administration'
+          name: CAL_CALENDAR_SHARED_RIGHT.SHAREE_ADMIN_LABEL
         }, {
           value: CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ_WRITE,
-          name: 'Read and Write'
+          name: CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ_WRITE_LABEL
         }, {
           value: CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ,
-          name: 'Read only'
+          name: CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ_LABEL
         }, {
           value: CAL_CALENDAR_SHARED_RIGHT.SHAREE_FREE_BUSY,
-          name: 'Free/Busy'
+          name: CAL_CALENDAR_SHARED_RIGHT.SHAREE_FREE_BUSY_LABEL
         }];
     }
 

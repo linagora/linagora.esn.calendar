@@ -10,13 +10,13 @@
     calendarService,
     session,
     userUtils,
+    CalCalendarRightsUtilsService,
     CAL_CALENDAR_PUBLIC_RIGHT,
     CAL_CALENDAR_SHARED_RIGHT,
     calUIAuthorizationService,
     calCalendarDeleteConfirmationModalService
   ) {
     var self = this;
-    var rightLabels = {};
 
     self.$onInit = $onInit;
     self.openDeleteConfirmationDialog = openDeleteConfirmationDialog;
@@ -29,24 +29,19 @@
       self.publicRights = [
         {
           value: CAL_CALENDAR_PUBLIC_RIGHT.READ,
-          name: 'Read'
+          name: CAL_CALENDAR_PUBLIC_RIGHT.READ_LABEL
         },
         {
           value: CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE,
-          name: 'Write'
+          name: CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE_LABEL
         }, {
           value: CAL_CALENDAR_PUBLIC_RIGHT.FREE_BUSY,
-          name: 'Private'
+          name: CAL_CALENDAR_PUBLIC_RIGHT.FREE_BUSY_LABEL
         }, {
           value: CAL_CALENDAR_PUBLIC_RIGHT.NONE,
-          name: 'None'
+          name: CAL_CALENDAR_PUBLIC_RIGHT.NONE_LABEL
         }
       ];
-
-      rightLabels[CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ] = 'Read only';
-      rightLabels[CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ_WRITE] = 'Read and Write';
-      rightLabels[CAL_CALENDAR_SHARED_RIGHT.SHAREE_ADMIN] = 'Administration';
-      rightLabels[CAL_CALENDAR_SHARED_RIGHT.SHAREE_FREE_BUSY] = 'Free/Busy';
 
       !self.newCalendar && performExternalCalendarOperations(isExternalCalendar());
 
@@ -89,7 +84,7 @@
           }
           var shareeRightRaw = self.calendar.rights.getShareeRight(session.user._id);
 
-          self.shareeRight = rightLabels[shareeRightRaw];
+          self.shareeRight = shareeRightRaw && CalCalendarRightsUtilsService.delegationAsHumanReadable(shareeRightRaw);
 
           return self.calendar.getOwner();
         })
