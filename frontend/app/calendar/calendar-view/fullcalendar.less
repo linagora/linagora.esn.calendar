@@ -1,11 +1,12 @@
-@event-border-color: rgba(255,255,255,0.5);
-@event-fade: 0.7;
-@remainingSpaceToAllowDnD: 7px;
+@cal-event-border-color: rgba(255,255,255,0.5);
+@cal-event-fade: 0.7;
+@cal-remaining-space-to-allow-dnd: 7px;
+@cal-table-today-cell-color: #fcf8e3;
 
 .fc-event {
   min-height: 1.5em;
   min-width: 0.5em;
-  border: solid 1px @event-border-color;
+  border: solid 1px @cal-event-border-color;
 }
 
 .fc-view:not(.fc-month-view) {
@@ -52,7 +53,7 @@
   }
 
   .fc-event {
-    margin-right: @remainingSpaceToAllowDnD;
+    margin-right: @cal-remaining-space-to-allow-dnd;
   }
 
   .fc-agendaWeek-view, .fc-agendaThreeDays-view, .fc-agendaDay-view {
@@ -71,8 +72,8 @@
 }
 
 .event-needs-action {
-  opacity: @event-fade;
-  border: dashed 1px @event-border-color;
+  opacity: @cal-event-fade;
+  border: dashed 1px @cal-event-border-color;
 }
 
 .event-tentative {
@@ -101,7 +102,7 @@
 }
 
 .event-declined {
-  opacity: @event-fade;
+  opacity: @cal-event-fade;
   .fc-title {
     text-decoration: line-through;
   }
@@ -113,3 +114,25 @@
   width: 5px;
   height: 5px;
 }
+
+.fc-agendaWeek-view, .fc-agendaDay-view {
+  .ui-widget-header {
+    border-bottom: 1px solid @table-border-color;
+  }
+
+  .fc-day-grid {
+    .fc-row.fc-week.ui-widget-content {
+      border-right: 1px solid @table-border-color;
+    }
+  }
+}
+
+.fc .fc-row {
+  border-style: none;
+}
+
+.fc-day.ui-widget-content.fc-today {
+  background: @cal-table-today-cell-color;
+}
+
+
