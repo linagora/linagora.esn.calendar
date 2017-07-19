@@ -24,7 +24,6 @@
     calendarUtils,
     calEventUtils,
     calPathParser,
-    calWebsocketListenerService,
     gracePeriodService,
     calOpenEventForm,
     elementScrollService,
@@ -106,8 +105,6 @@
         $rootScope.$on(CAL_EVENTS.MINI_CALENDAR.TOGGLE, _toggleMiniCalendar),
         $rootScope.$on(CAL_EVENTS.VIEW_TRANSLATION, _changeView)
       ];
-
-      var websocketListener = calWebsocketListenerService.listenEvents();
 
       activate();
 
@@ -307,7 +304,6 @@
       }
 
       $scope.$on('$destroy', function() {
-        websocketListener.clean();
         rootScopeListeners.forEach(function(unregisterFunction) {
           unregisterFunction();
         });
