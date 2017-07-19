@@ -94,6 +94,7 @@
       }
 
       function _liveNotificationHandlerOnCreateRequestandUpdate(msg) {
+        $log.debug('Calendar Event created/updated', msg);
         var event = CalendarShell.from(msg.event, {etag: msg.etag, path: msg.eventPath});
 
         calCachedEventSource.registerUpdate(event);
@@ -102,6 +103,7 @@
       }
 
       function _liveNotificationHandlerOnReply(msg) {
+        $log.debug('Calendar Event reply', msg);
         var replyEvent = CalendarShell.from(msg.event, {etag: msg.etag, path: msg.eventPath});
         var event = calMasterEventCache.get(replyEvent.path);
 
@@ -115,6 +117,7 @@
       }
 
       function _liveNotificationHandlerOnDelete(msg) {
+        $log.debug('Calendar Event deleted/canceled', msg);
         var event = CalendarShell.from(msg.event, {etag: msg.etag, path: msg.eventPath});
 
         calCachedEventSource.registerDelete(event);
