@@ -27,14 +27,6 @@ describe('The calendarViewController', function() {
       }
     };
 
-    this.calWebsocketListenerServiceMock = {
-      listenEvents: sinon.spy(function() {
-        return {
-          clean: sinon.spy()
-        };
-      })
-    };
-
     this.elementScrollServiceMock = {
       scrollToTop: sinon.spy()
     };
@@ -163,7 +155,6 @@ describe('The calendarViewController', function() {
       $provide.value('CalendarShell', self.CalendarShellMock);
       $provide.value('calMasterEventCache', self.calMasterEventCacheMock);
       $provide.value('calendarVisibilityService', self.calendarVisibilityServiceMock);
-      $provide.value('calWebsocketListenerService', self.calWebsocketListenerServiceMock);
       $provide.value('usSpinnerService', self.usSpinnerServiceMock);
       $provide.value('calCachedEventCache', self.calCachedEventSourceMock);
       $provide.factory('calendarEventSource', function() {
@@ -233,29 +224,6 @@ describe('The calendarViewController', function() {
     this.scope.$destroy();
 
     expect(this.elementScrollService.scrollToTop).to.have.been.called;
-  });
-
-  it('should call calWebsocketListenerService.listenEvents', function() {
-    this.controller('calendarViewController', {$scope: this.scope});
-    this.scope.$digest();
-
-    expect(this.calWebsocketListenerServiceMock.listenEvents).to.have.been.calledOnce;
-  });
-
-  it('should clean calWebsocketListenerService listeners $on(\'$destroy\')', function() {
-    var cleanSpy = sinon.spy();
-
-    this.gracePeriodService.flushAllTasks = sinon.spy();
-    this.calWebsocketListenerServiceMock.listenEvents = function() {
-      return {
-        clean: cleanSpy
-      };
-    };
-    this.controller('calendarViewController', {$scope: this.scope});
-    this.scope.$digest();
-    this.scope.$destroy();
-
-    expect(cleanSpy).to.have.been.calledOnce;
   });
 
   it('should gracePeriodService.flushAllTasks $on(\'$destroy\')', function() {

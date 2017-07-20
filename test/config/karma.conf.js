@@ -101,7 +101,8 @@ module.exports = function(config) {
     exclude: [
       'node_modules/linagora-rse/frontend/js/**/*.spec.js',
       'node_modules/linagora-rse/frontend/js/**/*.run.js',
-      'frontend/app/search/search.run.js'
+      'frontend/app/search/search.run.js',
+      'frontend/app/services/websocket/listener.run.js'
     ],
     frameworks: ['mocha'],
     colors: true,
