@@ -7,3 +7,4 @@ config/db.json
 .floo
 .flooignore
 application.log
+package-lock.json
