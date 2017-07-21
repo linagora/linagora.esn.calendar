@@ -18,7 +18,7 @@
     })
     .controller('esnCalendarController', esnCalendarController);
 
-  function esnCalendarController($window, $element, $log, _, CAL_RESIZE_DEBOUNCE_DELAY) {
+  function esnCalendarController($window, $element, $log, $tooltip, esnI18nService, _, CAL_RESIZE_DEBOUNCE_DELAY) {
     var self = this;
     var div = $element.children();
 
@@ -55,6 +55,18 @@
       };
 
       div.fullCalendar(config);
+
+      _.forEach({
+        Day: '.fc-agendaDay-button',
+        Week: '.fc-agendaWeek-button',
+        Month: '.fc-month-button',
+        Next: '.fc-next-button',
+        Previous: '.fc-prev-button'
+      }, function(selector, title) {
+        var element = div.find(selector);
+
+        element.length && $tooltip(element, { title: esnI18nService.translate(title).toString() });
+      });
     };
   }
 })();

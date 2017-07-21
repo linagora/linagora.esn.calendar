@@ -27,7 +27,8 @@ describe('The esnCalendar component controller', function() {
 
     calElement = {
       fullCalendar: sinon.spy(),
-      offset: sinon.spy()
+      offset: sinon.spy(),
+      find: function() { return []; }
     };
 
     element = {children: sinon.spy(function() {
