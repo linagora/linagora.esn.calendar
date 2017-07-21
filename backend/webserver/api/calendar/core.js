@@ -264,22 +264,22 @@ module.exports = dependencies => {
               if (event.sequence > 0) {
                 subject = _i18nHelper('Event {{summary}} from {{userDisplayName}} updated', true, true);
                 template = 'event.update';
-                inviteMessage = _i18nHelper('has updated a meeting!');
+                inviteMessage = _i18nHelper('has updated a meeting');
               } else {
                 subject = _i18nHelper('New event from {{userDisplayName}}: {{summary}}', true, true);
                 template = 'event.invitation';
-                inviteMessage = _i18nHelper('has invited you to a meeting!');
+                inviteMessage = _i18nHelper('has invited you to a meeting');
               }
               break;
             case 'REPLY':
               subject = _i18nHelper('Participation updated: {{summary}}', true);
               template = 'event.reply';
-              inviteMessage = _i18nHelper('has changed his participation!');
+              inviteMessage = _i18nHelper('has changed his participation');
               break;
             case 'CANCEL':
               subject = _i18nHelper('Event {{summary}} from {{userDisplayName}} canceled', true, true);
               template = 'event.cancel';
-              inviteMessage = _i18nHelper('has canceled a meeting!');
+              inviteMessage = _i18nHelper('has canceled a meeting');
               break;
           }
 
