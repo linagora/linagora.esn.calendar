@@ -166,13 +166,6 @@ describe('The calWebsocketListenerService service', function() {
 
     it('should return a valid hash', function() {
       expect(listener.sio).to.exist;
-      expect(listener.clean).to.be.a.function;
-    });
-
-    it('should remove all liveNotification listeners when calling clean', function() {
-      listener.clean();
-
-      expect(listener.sio.removeListener.getCalls().length).to.equal(12);
     });
 
     it('should update event on calCachedEventSource and emit an event for a modification on EVENT_CREATED', function() {
