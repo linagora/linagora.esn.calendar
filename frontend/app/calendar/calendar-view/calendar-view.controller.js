@@ -296,11 +296,12 @@
         // Removing then adding the event source costs nothing and does not 'tilt'
         if (calendar.color && calendar.color !== $scope.eventSourcesMap[calendar.uniqueId].backgroundColor) {
           $scope.eventSourcesMap[calendar.uniqueId].backgroundColor = calendar.color;
-          calendarPromise.then(function(cal) {
-            cal.fullCalendar('removeEventSource', $scope.eventSourcesMap[calendar.uniqueId]);
-            cal.fullCalendar('addEventSource', $scope.eventSourcesMap[calendar.uniqueId]);
-          });
         }
+
+        calendarPromise.then(function(cal) {
+          cal.fullCalendar('removeEventSource', $scope.eventSourcesMap[calendar.uniqueId]);
+          cal.fullCalendar('addEventSource', $scope.eventSourcesMap[calendar.uniqueId]);
+        });
       }
 
       function _viewToday(event, calendar) {
