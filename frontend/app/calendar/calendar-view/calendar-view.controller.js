@@ -24,6 +24,8 @@
     calendarUtils,
     calEventUtils,
     calPathParser,
+    calFullCalendarRenderEventService,
+    calWebsocketListenerService,
     gracePeriodService,
     calOpenEventForm,
     elementScrollService,
@@ -47,7 +49,7 @@
       $scope.$state = $state;
       $scope.eventClick = eventClick;
       $scope.eventDropAndResize = eventDropAndResize;
-      $scope.uiConfig.calendar.eventRender = calEventUtils.render;
+      $scope.uiConfig.calendar.eventRender = render;
       $scope.displayCalendarError = displayCalendarError;
       $scope.resizeCalendarHeight = withCalendar(function(calendar) {
         var height = windowJQuery.height() - calendar.offset().top;
@@ -133,6 +135,10 @@
 
         windowJQuery.resize($scope.resizeCalendarHeight);
         $window.addEventListener('beforeunload', gracePeriodService.flushAllTasks);
+      }
+
+      function render(event, element, view) {
+        return calFullCalendarRenderEventService(_.find($scope.calendars, {uniqueId: event.calendarUniqueId}))(event, element, view);
       }
 
       function buildEventSourceForCalendar(calendar) {

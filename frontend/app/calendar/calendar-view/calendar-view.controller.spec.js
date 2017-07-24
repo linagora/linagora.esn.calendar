@@ -71,6 +71,11 @@ describe('The calendarViewController', function() {
 
     this.CalendarShellMock.fromIncompleteShell = sinon.spy();
 
+    this.renderSpy = sinon.spy();
+    this.calFullCalendarRenderEventService = sinon.spy(function() {
+      return self.renderSpy;
+    });
+
     this.calendars = [{
       href: 'href',
       uniqueId: 'id',
@@ -163,6 +168,7 @@ describe('The calendarViewController', function() {
       $provide.value('calendarVisibilityService', self.calendarVisibilityServiceMock);
       $provide.value('usSpinnerService', self.usSpinnerServiceMock);
       $provide.value('calCachedEventCache', self.calCachedEventSourceMock);
+      $provide.value('calFullCalendarRenderEventService', self.calFullCalendarRenderEventService);
       $provide.factory('calendarEventSource', function() {
         return function() {
           return [{
@@ -264,8 +270,22 @@ describe('The calendarViewController', function() {
   it('should be created and its scope initialized', function() {
     this.controller('calendarViewController', {$scope: this.scope});
 
-    expect(this.scope.uiConfig.calendar.eventRender).to.equal(this.calEventUtils.render);
+    expect(this.scope.uiConfig.calendar.eventRender).to.be.a.function;
     expect(this.scope.uiConfig.calendar.eventAfterAllRender).to.equal(this.scope.resizeCalendarHeight);
+  });
+
+  describe('The uiConfig.calendar.eventRender function', function() {
+    it('should call calFullCalendarRenderEventService with the event calendar', function() {
+      var event = {calendarUniqueId: this.calendars[0].uniqueId};
+      var element = {};
+      var view = {};
+
+      this.controller('calendarViewController', {$scope: this.scope});
+      this.scope.$digest();
+      this.scope.uiConfig.calendar.eventRender(event, element, view);
+
+      expect(this.calFullCalendarRenderEventService).to.have.been.calledWith(this.calendars[0]);
+    });
   });
 
   function testRefetchEvent(nameOfTheTest, calendar_events, calendarSpyCalledWith) {
