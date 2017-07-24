@@ -32,8 +32,10 @@ module.exports = dependencies => {
     delete msg.shareeIds;
 
     userIds.forEach(userId => {
+      logger.debug(`Looking for websockets for user ${userId} for calendar event and type ${topic}`);
       const clientSockets = ioHelper.getUserSocketsFromNamespace(userId, io.of(WEBSOCKET.NAMESPACE).sockets) || [];
 
+      logger.debug(`Sending calendar event of type ${topic} to ${clientSockets.length} websockets`);
       _.invokeMap(clientSockets, 'emit', topic, msg);
     });
   }

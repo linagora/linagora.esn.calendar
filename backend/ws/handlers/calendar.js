@@ -25,8 +25,10 @@ module.exports = dependencies => {
       return;
     }
 
+    logger.debug(`Looking for websockets for user ${calendarHomeId} for calendar and type ${topic}`);
     const clientSockets = ioHelper.getUserSocketsFromNamespace(calendarHomeId, io.of(WEBSOCKET.NAMESPACE).sockets) || [];
 
+    logger.debug(`Sending calendar event of type ${topic} to ${clientSockets.length} websockets`);
     _.invokeMap(clientSockets, 'emit', topic, message);
   }
 
