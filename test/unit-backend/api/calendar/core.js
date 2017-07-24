@@ -792,7 +792,7 @@ describe('The calendar core module', function() {
           return {
             sendHTML: function(email, template) {
               expect(template).to.equal('event.reply');
-              expect(email.subject).to.equal('Participation updated: Démo OPENPAAS');
+              expect(email.subject).to.equal('Accepted: Démo OPENPAAS (organizerFirstname organizerLastname)');
 
               return q();
             }
