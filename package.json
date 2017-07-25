@@ -40,7 +40,7 @@
     "eslint-plugin-import": "1.16.0",
     "eslint-plugin-jsx-a11y": "2.2.1",
     "eslint-plugin-react": "6.2.0",
-    "esn-calendar-client": "git+https://ci.linagora.com/linagora/lgs/openpaas/esn-calendar-client.git",
+    "esn-calendar-client": "openpaas/esn-calendar-client",
     "extend": "3.0.0",
     "fs-extra": "0.30.0",
     "grunt": "0.4.5",
