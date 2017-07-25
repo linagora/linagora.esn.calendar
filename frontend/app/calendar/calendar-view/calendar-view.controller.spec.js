@@ -71,6 +71,11 @@ describe('The calendarViewController', function() {
 
     this.CalendarShellMock.fromIncompleteShell = sinon.spy();
 
+    this.renderSpy = sinon.spy();
+    this.calFullCalendarRenderEventService = sinon.spy(function() {
+      return self.renderSpy;
+    });
+
     this.calendars = [{
       href: 'href',
       uniqueId: 'id',
@@ -163,6 +168,7 @@ describe('The calendarViewController', function() {
       $provide.value('calendarVisibilityService', self.calendarVisibilityServiceMock);
       $provide.value('usSpinnerService', self.usSpinnerServiceMock);
       $provide.value('calCachedEventCache', self.calCachedEventSourceMock);
+      $provide.value('calFullCalendarRenderEventService', self.calFullCalendarRenderEventService);
       $provide.factory('calendarEventSource', function() {
         return function() {
           return [{
@@ -264,8 +270,22 @@ describe('The calendarViewController', function() {
   it('should be created and its scope initialized', function() {
     this.controller('calendarViewController', {$scope: this.scope});
 
-    expect(this.scope.uiConfig.calendar.eventRender).to.equal(this.calEventUtils.render);
+    expect(this.scope.uiConfig.calendar.eventRender).to.be.a.function;
     expect(this.scope.uiConfig.calendar.eventAfterAllRender).to.equal(this.scope.resizeCalendarHeight);
+  });
+
+  describe('The uiConfig.calendar.eventRender function', function() {
+    it('should call calFullCalendarRenderEventService with the event calendar', function() {
+      var event = {calendarUniqueId: this.calendars[0].getUniqueId()};
+      var element = {};
+      var view = {};
+
+      this.controller('calendarViewController', {$scope: this.scope});
+      this.scope.$digest();
+      this.scope.uiConfig.calendar.eventRender(event, element, view);
+
+      expect(this.calFullCalendarRenderEventService).to.have.been.calledWith(this.calendars[0]);
+    });
   });
 
   function testRefetchEvent(nameOfTheTest, calendar_events, calendarSpyCalledWith) {
@@ -306,21 +326,26 @@ describe('The calendarViewController', function() {
 
   describe('The CAL_EVENTS.CALENDARS.UPDATE listener', function() {
     it('should update $scope.calendars correctly', function() {
+      var id1 = 1;
+      var id2 = 2;
+      var data = 'data';
+
       this.controller('calendarViewController', {$scope: this.scope});
-      this.scope.calendars = [{uniqueId: 1}, {uniqueId: 2}];
-      var newCal = {uniqueId: 2, data: 'data'};
+      this.scope.calendars = [{uniqueId: id1, getUniqueId: function() {return id1;}}, {uniqueId: id2, getUniqueId: function() {return id2;}}];
+      var newCal = {uniqueId: id2, data: data, getUniqueId: function() {return id2;}};
 
       this.rootScope.$broadcast(this.CAL_EVENTS.CALENDARS.UPDATE, newCal);
-      expect(this.scope.calendars).to.be.deep.equal([{uniqueId: 1}, newCal]);
+      expect(this.scope.calendars).to.shallowDeepEqual([{uniqueId: id1}, {uniqueId: id2, data: data}]);
     });
 
     it('should force redraw the events if calendar color is defined and changed', function() {
+      var uniqueId = this.calendars[1].getUniqueId();
       var updatedCalendar = {
         uniqueId: this.calendars[1].uniqueId,
         data: 'data',
         color: this.calendars[1].color + 'anothercolor',
         getUniqueId: function() {
-          return 'uniqueId';
+          return uniqueId;
         }
       };
 
@@ -328,13 +353,13 @@ describe('The calendarViewController', function() {
       this.scope.calendarReady(this.calendar);
       this.scope.calendars = this.calendars;
       this.scope.eventSourcesMap = {};
-      this.scope.eventSourcesMap[this.calendars[0].uniqueId] = this.calendars[0];
-      this.scope.eventSourcesMap[this.calendars[1].uniqueId] = this.calendars[1];
+      this.scope.eventSourcesMap[this.calendars[0].getUniqueId()] = this.calendars[0];
+      this.scope.eventSourcesMap[this.calendars[1].getUniqueId()] = this.calendars[1];
       this.rootScope.$broadcast(this.CAL_EVENTS.CALENDARS.UPDATE, updatedCalendar);
       this.scope.$digest();
 
-      expect(this.scope.calendars).to.be.deep.equal([this.calendars[0], updatedCalendar]);
-      expect(this.scope.eventSourcesMap[updatedCalendar.uniqueId].backgroundColor).to.equal(updatedCalendar.color);
+      expect(this.scope.calendars).to.shallowDeepEqual([this.calendars[0], {uniqueId: updatedCalendar.uniqueId, color: updatedCalendar.color}]);
+      expect(this.scope.eventSourcesMap[updatedCalendar.getUniqueId()].backgroundColor).to.equal(updatedCalendar.color);
       expect(fullCalendarSpy).to.have.been.calledWith('removeEventSource', sinon.match.has('uniqueId', updatedCalendar.uniqueId));
       expect(fullCalendarSpy).to.have.been.calledWith('addEventSource', sinon.match.has('uniqueId', updatedCalendar.uniqueId));
     });
@@ -347,12 +372,13 @@ describe('The calendarViewController', function() {
   describe('The CAL_EVENTS.CALENDARS.REMOVE listener', function() {
     it('should remove the calendar on $scope.calendars correctly', function() {
       this.controller('calendarViewController', {$scope: this.scope});
-      this.scope.calendars = [{uniqueId: 1}, {uniqueId: 2}];
-      this.rootScope.$broadcast(this.CAL_EVENTS.CALENDARS.REMOVE, {uniqueId: 2});
-      expect(this.scope.calendars).to.be.deep.equal([{uniqueId: 1}]);
+      this.scope.calendars = [{uniqueId: 1, getUniqueId: function() {return 1;}}, {uniqueId: 2, getUniqueId: function() {return 2;}}];
+      this.rootScope.$broadcast(this.CAL_EVENTS.CALENDARS.REMOVE, {uniqueId: 2, getUniqueId: function() {return 2;}});
+      expect(this.scope.calendars).to.shallowDeepEqual([{uniqueId: 1}]);
     });
 
     it('should remove the corresponding source map correctly', function() {
+      var id = 'calendarUniqueId';
       var source = {
         backgroundColor: 'black',
         events: function() {
@@ -364,7 +390,7 @@ describe('The calendarViewController', function() {
       this.scope.calendarReady(this.calendar);
       this.scope.$digest();
       this.scope.eventSourcesMap = {calendarUniqueId: source};
-      this.rootScope.$broadcast(this.CAL_EVENTS.CALENDARS.REMOVE, {uniqueId: 'calendarUniqueId'});
+      this.rootScope.$broadcast(this.CAL_EVENTS.CALENDARS.REMOVE, {uniqueId: id, getUniqueId: function() {return id;}});
       this.scope.calendarReady(this.calendar);
       this.scope.$digest();
 
@@ -375,12 +401,13 @@ describe('The calendarViewController', function() {
 
   describe('The CAL_EVENTS.CALENDARS.ADD listener', function() {
     it('should add an event source for this calendar in fullcalendar', function() {
+      var id = 'uniqueId';
       var calendar = {
         href: 'href',
         uniqueId: 'id',
         color: 'color',
         getUniqueId: function() {
-          return 'uniqueId';
+          return id;
         }
       };
       var source = 'source';
@@ -396,13 +423,13 @@ describe('The calendarViewController', function() {
       this.scope.$digest();
       this.rootScope.$broadcast(this.CAL_EVENTS.CALENDARS.ADD, calendar);
       expect(calendarEventSourceMock).to.have.been.calledWith(calendar, this.scope.displayCalendarError);
-      expect(this.calCachedEventSourceMock.wrapEventSource).to.have.been.calledWith('uniqueId', source);
-      expect(this.scope.eventSourcesMap.id).to.deep.equals({
+      expect(this.calCachedEventSourceMock.wrapEventSource).to.have.been.calledWith(id, source);
+      expect(this.scope.eventSourcesMap[id]).to.deep.equals({
         events: wrappedSource,
         backgroundColor: 'color'
       });
 
-      expect(fullCalendarSpy).to.have.been.calledWith('addEventSource', this.scope.eventSourcesMap.id);
+      expect(fullCalendarSpy).to.have.been.calledWith('addEventSource', this.scope.eventSourcesMap[id]);
     });
   });
 
@@ -453,10 +480,10 @@ describe('The calendarViewController', function() {
     expect(this.scope.calendars[0].color).to.equal('color');
     expect(this.scope.calendars[1].href).to.equal('href2');
     expect(this.scope.calendars[1].color).to.equal('color2');
-    expect(this.scope.eventSourcesMap.id.backgroundColor).to.equal('color');
-    expect(this.scope.eventSourcesMap.id2.backgroundColor).to.equal('color2');
-    expect(this.scope.eventSourcesMap.id.events).to.be.a('Array');
-    expect(this.scope.eventSourcesMap.id2.events).to.be.a('Array');
+    expect(this.scope.eventSourcesMap.uniqueId1.backgroundColor).to.equal('color');
+    expect(this.scope.eventSourcesMap.uniqueId2.backgroundColor).to.equal('color2');
+    expect(this.scope.eventSourcesMap.uniqueId1.events).to.be.a('Array');
+    expect(this.scope.eventSourcesMap.uniqueId2.events).to.be.a('Array');
   });
 
   it('should add source for each calendar which is not hidden', function() {
@@ -471,8 +498,8 @@ describe('The calendarViewController', function() {
 
     this.scope.calendarReady(this.calendar);
     this.scope.$digest();
-    expect(fullCalendarSpy).to.have.been.calledWith('addEventSource', this.scope.eventSourcesMap[this.calendars[0].uniqueId]);
-    expect(fullCalendarSpy).to.not.have.been.calledWith('addEventSource', this.scope.eventSourcesMap[this.calendars[1].uniqueId]);
+    expect(fullCalendarSpy).to.have.been.calledWith('addEventSource', this.scope.eventSourcesMap[this.calendars[0].getUniqueId()]);
+    expect(fullCalendarSpy).to.not.have.been.calledWith('addEventSource', this.scope.eventSourcesMap[this.calendars[1].getUniqueId()]);
     expect(fullCalendarSpy).to.have.been.calledOnce;
   });
 

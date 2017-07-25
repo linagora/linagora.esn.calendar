@@ -24,6 +24,8 @@
     calendarUtils,
     calEventUtils,
     calPathParser,
+    calFullCalendarRenderEventService,
+    calWebsocketListenerService,
     gracePeriodService,
     calOpenEventForm,
     elementScrollService,
@@ -47,7 +49,7 @@
       $scope.$state = $state;
       $scope.eventClick = eventClick;
       $scope.eventDropAndResize = eventDropAndResize;
-      $scope.uiConfig.calendar.eventRender = calEventUtils.render;
+      $scope.uiConfig.calendar.eventRender = render;
       $scope.displayCalendarError = displayCalendarError;
       $scope.resizeCalendarHeight = withCalendar(function(calendar) {
         var height = windowJQuery.height() - calendar.offset().top;
@@ -118,12 +120,13 @@
           .then(function(calendars) {
             $scope.calendars = calendars || [];
             $scope.calendars.forEach(function(calendar) {
-              $scope.eventSourcesMap[calendar.uniqueId] = buildEventSourceForCalendar(calendar);
+              var calId = calendar.getUniqueId();
 
+              $scope.eventSourcesMap[calId] = buildEventSourceForCalendar(calendar);
               calendarVisibilityService.isHidden(calendar).then(function(calIsHidden) {
                 if (!calIsHidden) {
                   calendarPromise.then(function(cal) {
-                    cal.fullCalendar('addEventSource', $scope.eventSourcesMap[calendar.uniqueId]);
+                    cal.fullCalendar('addEventSource', $scope.eventSourcesMap[calId]);
                   });
                 }
               });
@@ -133,6 +136,14 @@
 
         windowJQuery.resize($scope.resizeCalendarHeight);
         $window.addEventListener('beforeunload', gracePeriodService.flushAllTasks);
+      }
+
+      function render(event, element, view) {
+        var eventCalendar = _.find($scope.calendars, function(calendar) {
+          return calendar.getUniqueId() === event.calendarUniqueId;
+        });
+
+        return calFullCalendarRenderEventService(eventCalendar)(event, element, view);
       }
 
       function buildEventSourceForCalendar(calendar) {
@@ -209,10 +220,10 @@
       }
 
       function _addCalendar(event, calendar) {
-        $scope.eventSourcesMap[calendar.uniqueId] = buildEventSourceForCalendar(calendar);
+        $scope.eventSourcesMap[calendar.getUniqueId()] = buildEventSourceForCalendar(calendar);
 
         calendarPromise.then(function(cal) {
-          cal.fullCalendar('addEventSource', $scope.eventSourcesMap[calendar.uniqueId]);
+          cal.fullCalendar('addEventSource', $scope.eventSourcesMap[calendar.getUniqueId()]);
         });
       }
 
@@ -233,10 +244,10 @@
       }
 
       function _removeCalendar(event, calendar) {
-        _.remove($scope.calendars, {uniqueId: calendar.uniqueId});
-        var removedEventSource = $scope.eventSourcesMap[calendar.uniqueId];
+        _.remove($scope.calendars, {uniqueId: calendar.getUniqueId()});
+        var removedEventSource = $scope.eventSourcesMap[calendar.getUniqueId()];
 
-        delete $scope.eventSourcesMap[calendar.uniqueId];
+        delete $scope.eventSourcesMap[calendar.getUniqueId()];
 
         calendarPromise.then(function(cal) {
           cal.fullCalendar('removeEventSource', removedEventSource);
@@ -277,7 +288,7 @@
 
       function _updateCalendar(event, calendar) {
         $scope.calendars.forEach(function(cal, index) {
-          if (calendar.uniqueId === cal.uniqueId) {
+          if (calendar.getUniqueId() === cal.getUniqueId()) {
             $scope.calendars[index] = calendar;
             _forceEventsRedraw(calendar);
           }
@@ -288,13 +299,16 @@
         // For now we force redraw when calendar color changes.
         // There is no other way to do this in fullcalendar but 'hopefuly' we have the event cache:
         // Removing then adding the event source costs nothing and does not 'tilt'
-        if (calendar.color && calendar.color !== $scope.eventSourcesMap[calendar.uniqueId].backgroundColor) {
-          $scope.eventSourcesMap[calendar.uniqueId].backgroundColor = calendar.color;
-          calendarPromise.then(function(cal) {
-            cal.fullCalendar('removeEventSource', $scope.eventSourcesMap[calendar.uniqueId]);
-            cal.fullCalendar('addEventSource', $scope.eventSourcesMap[calendar.uniqueId]);
-          });
+        var calId = calendar.getUniqueId();
+
+        if ($scope.eventSourcesMap[calId] && calendar.color && calendar.color !== $scope.eventSourcesMap[calId].backgroundColor) {
+          $scope.eventSourcesMap[calId].backgroundColor = calendar.color;
         }
+
+        calendarPromise.then(function(cal) {
+          cal.fullCalendar('removeEventSource', $scope.eventSourcesMap[calId]);
+          cal.fullCalendar('addEventSource', $scope.eventSourcesMap[calId]);
+        });
       }
 
       function _viewToday(event, calendar) {
