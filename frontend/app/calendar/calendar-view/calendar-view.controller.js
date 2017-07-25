@@ -138,7 +138,11 @@
       }
 
       function render(event, element, view) {
-        return calFullCalendarRenderEventService(_.find($scope.calendars, {uniqueId: event.calendarUniqueId}))(event, element, view);
+        var eventCalendar = _.find($scope.calendars, function(calendar) {
+          return calendar.getUniqueId() === event.calendarUniqueId;
+        });
+
+        return calFullCalendarRenderEventService(eventCalendar)(event, element, view);
       }
 
       function buildEventSourceForCalendar(calendar) {

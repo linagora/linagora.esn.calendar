@@ -276,7 +276,7 @@ describe('The calendarViewController', function() {
 
   describe('The uiConfig.calendar.eventRender function', function() {
     it('should call calFullCalendarRenderEventService with the event calendar', function() {
-      var event = {calendarUniqueId: this.calendars[0].uniqueId};
+      var event = {calendarUniqueId: this.calendars[0].getUniqueId()};
       var element = {};
       var view = {};
 
