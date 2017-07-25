@@ -7,7 +7,7 @@ var expect = chai.expect;
 
 describe('The calOpenEventForm service', function() {
   var $modal, $q, $rootScope, $state, calEventUtils, calOpenEventForm, calendarService, calUIAuthorizationService, notificationFactory, CAL_DEFAULT_CALENDAR_ID, CAL_EVENTS;
-  var calendar, calendarHomeId, instance, master, regularEvent;
+  var calendar, calendarHomeId, instance, master, regularEvent, session;
 
   beforeEach(function() {
     calendarHomeId = '123';
@@ -48,12 +48,13 @@ describe('The calOpenEventForm service', function() {
     });
   });
 
-  beforeEach(angular.mock.inject(function(_$q_, _$rootScope_, _calOpenEventForm_, _calUIAuthorizationService_, _notificationFactory_, _CAL_DEFAULT_CALENDAR_ID_, _CAL_EVENTS_) {
+  beforeEach(angular.mock.inject(function(_$q_, _$rootScope_, _calOpenEventForm_, _calUIAuthorizationService_, _notificationFactory_, _session_, _CAL_DEFAULT_CALENDAR_ID_, _CAL_EVENTS_) {
     $rootScope = _$rootScope_;
     $q = _$q_;
     calOpenEventForm = _calOpenEventForm_;
     calUIAuthorizationService = _calUIAuthorizationService_;
     notificationFactory = _notificationFactory_;
+    session = _session_;
     CAL_DEFAULT_CALENDAR_ID = _CAL_DEFAULT_CALENDAR_ID_;
     CAL_EVENTS = _CAL_EVENTS_;
   }));
@@ -64,6 +65,7 @@ describe('The calOpenEventForm service', function() {
     beforeEach(function() {
       canAccessEventDetail = true;
       canModifyEvent = true;
+      session.user._id = '_id';
 
       sinon.stub(calUIAuthorizationService, 'canAccessEventDetails', function() {
         return canAccessEventDetail;
@@ -177,6 +179,7 @@ describe('The calOpenEventForm service', function() {
           $rootScope.$broadcast(CAL_EVENTS.MODAL + '.hide');
 
           expect($hide).to.have.been.called;
+          expect($scope.calendarHomeId).to.equal(session.user._id);
           expect(calendarUnselectListenerSpy).to.have.been.called;
 
           done();
@@ -210,6 +213,7 @@ describe('The calOpenEventForm service', function() {
           $rootScope.$broadcast(CAL_EVENTS.MODAL + '.hide');
 
           expect($hide).to.have.been.calledOnce;
+          expect($scope.calendarHomeId).to.equal(session.user._id);
           expect(calendarUnselectListenerSpy).to.have.been.calledOnce;
 
           done();

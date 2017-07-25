@@ -39,12 +39,9 @@
           resolve: {
             event: function(calEventUtils) {
               return calEventUtils.getEditedEvent();
-            },
-            calendar: function() {
-              return calendar;
             }
           },
-          controller: function($scope, event, calendar) {
+          controller: function($scope, event) {
             var _$hide = $scope.$hide;
 
             var unregister = $rootScope.$on(CAL_EVENTS.MODAL + '.hide', function() {
@@ -59,7 +56,7 @@
             };
 
             $scope.event = event;
-            $scope.calendarHomeId = calendar.calendarHomeId;
+            $scope.calendarHomeId = session.user._id;
           },
           backdrop: 'static',
           placement: 'center',

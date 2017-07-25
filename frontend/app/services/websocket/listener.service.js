@@ -79,7 +79,7 @@
 
       function _liveNotificationHandlerOnCreateRequestandUpdate(type, msg) {
         $log.debug('Calendar Event created/updated', type, msg);
-        var event = CalendarShell.from(msg.event, {etag: msg.etag, path: msg.eventPath});
+        var event = CalendarShell.from(msg.event, {etag: msg.etag, path: msg.eventSourcePath ? msg.eventSourcePath : msg.eventPath});
 
         calCachedEventSource.registerUpdate(event);
         calMasterEventCache.save(event);
