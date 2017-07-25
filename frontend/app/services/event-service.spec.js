@@ -311,7 +311,10 @@ describe('The calEventService service', function() {
     beforeEach(function() {
       calendar = {
         calendarHomeId: calendarHomeId,
-        id: calendarId
+        id: calendarId,
+        isSubscription: function() {
+          return false;
+        }
       };
     });
 
@@ -397,6 +400,7 @@ describe('The calEventService service', function() {
     });
 
     it('should send request to the source calendar if calendar.source is defined', function() {
+      calendar.isSubscription = function() { return true; };
       var sourceHomeId = 'thesourcehomeid';
       var sourceId = 'thesourceid';
       var vcalendar = new ICAL.Component('vcalendar');

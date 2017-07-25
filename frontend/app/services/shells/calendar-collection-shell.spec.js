@@ -223,8 +223,7 @@ describe('CalendarCollectionShell factory', function() {
     });
   });
 
-    describe('isSubscription fn', function() {
-
+  describe('isSubscription fn', function() {
     it('Should return false if the calendar does not have source property', function() {
       var calendarCollectionShell = new CalendarCollectionShell({
         'calendarserver:source': undefined,
@@ -249,6 +248,34 @@ describe('CalendarCollectionShell factory', function() {
       });
 
       expect(calendarCollectionShell.isSubscription()).to.be.true;
+    });
+  });
+
+  describe('getUniqueId fn', function() {
+    it('Should return the calendar uniqueId for non-subscription calendars', function() {
+      var calendarCollectionShell = new CalendarCollectionShell({
+        'calendarserver:source': undefined,
+        _links: {
+          self: {
+            href: '/calendars/' + calendarHomeId + '/' + id + '.json'
+          }
+        }
+      });
+
+      expect(calendarCollectionShell.getUniqueId()).to.equal('/calendars/' + calendarHomeId + '/' + id + '.json');
+    });
+
+    it('Should return the source uniqueId for subscription calendars ', function() {
+      var calendarCollectionShell = new CalendarCollectionShell({
+        'calendarserver:source': calendarSource,
+        _links: {
+          self: {
+            href: '/calendars/' + calendarHomeId + '/' + id + '.json'
+          }
+        }
+      });
+
+      expect(calendarCollectionShell.getUniqueId()).to.equal('/calendars/' + publicCalendarOwnerId + '/' + subscriptionId + '.json');
     });
   });
 

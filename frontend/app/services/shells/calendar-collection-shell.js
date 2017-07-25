@@ -66,6 +66,7 @@
     CalendarCollectionShell.prototype.isPublic = isPublic;
     CalendarCollectionShell.prototype.isSubscription = isSubscription;
     CalendarCollectionShell.prototype.isWritable = isWritable;
+    CalendarCollectionShell.prototype.getUniqueId = getUniqueId;
 
     CalendarCollectionShell.toDavCalendar = toDavCalendar;
     CalendarCollectionShell.from = from;
@@ -183,6 +184,14 @@
      */
     function isSubscription() {
       return !!this.source;
+    }
+
+    /**
+     * Get the uniqueId of the calendar
+     * @returns {String} return the source uniqueId for subscriptions, otherwise it returns the calendar uniqueId
+     */
+    function getUniqueId() {
+      return this.isSubscription() ? this.source.uniqueId : this.uniqueId;
     }
 
     /**

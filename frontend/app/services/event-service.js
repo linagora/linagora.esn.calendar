@@ -165,19 +165,15 @@
         }
 
         var taskId = null;
-        var eventPath = buildICSPath(calPathBuilder.forCalendarPath(calendar.calendarHomeId, calendar.id));
+        var eventPath;
 
-        // WARN: This is required to be set so that the event calendarUniqueId getter sends back the right value and so the event
-        // is stored at the right place in store, cache, sources, ...
-        // This means that the event.path we set here is the one which is really computed in the backend when we fetch events
-        event.path = eventPath;
-
-        // if we create an event in a subscription (ie in a public calendar we have rights to),
-        // we must create it in the public calendar itself.
-        // Note that event.path MUST NOT change due to the comment above
-        if (calendar.source) {
+        if (calendar.isSubscription()) {
           eventPath = buildICSPath(calPathBuilder.forCalendarPath(calendar.source.calendarHomeId, calendar.source.id));
+        } else {
+          eventPath = buildICSPath(calPathBuilder.forCalendarPath(calendar.calendarHomeId, calendar.id));
         }
+
+        event.path = eventPath;
 
         function onTaskCancel() {
           calCachedEventSource.deleteRegistration(event);
@@ -196,7 +192,7 @@
             event.gracePeriodTaskId = taskId = response;
             event.isRecurring() && calMasterEventCache.save(event);
             calCachedEventSource.registerAdd(event);
-            calendarEventEmitter.emitCreatedEvent(event);
+            calendarEventEmitter.emitCreatedEvent();
 
             return gracePeriodService.grace({
               id: taskId,

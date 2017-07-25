@@ -137,7 +137,7 @@
 
       function buildEventSourceForCalendar(calendar) {
         return {
-          events: calCachedEventSource.wrapEventSource(calendar.uniqueId, calendarEventSource(calendar, $scope.displayCalendarError)),
+          events: calCachedEventSource.wrapEventSource(calendar.getUniqueId(), calendarEventSource(calendar, $scope.displayCalendarError)),
           backgroundColor: calendar.color
         };
       }
