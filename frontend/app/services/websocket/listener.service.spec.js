@@ -134,13 +134,13 @@ describe('The calWebsocketListenerService service', function() {
         };
       };
 
-      testUpdateCalCachedEventSourceAndFcEmit = function(wsCallback, expectedCacheMethod, expectedEmitMethod) {
+      testUpdateCalCachedEventSourceAndFcEmit = function(wsCallback, expectedCacheMethod, expectedEmitMethod, eventSourcePath) {
         var event = {id: 'id', calendarId: 'calId'};
-        var path = 'path';
+        var path = eventSourcePath || 'path';
         var etag = 'etag';
         var resultingEvent = CalendarShellMock.from(event, {etag: etag, path: path});
 
-        wsCallback({event: event, eventPath: path, etag: etag});
+        wsCallback({event: event, eventPath: path, eventSourcePath: eventSourcePath, etag: etag});
         scope.$digest();
 
         expect(CalendarShellMock.from).to.have.been.calledWith(event, {path: path, etag: etag});
@@ -172,12 +172,24 @@ describe('The calWebsocketListenerService service', function() {
       testUpdateCalCachedEventSourceAndFcEmit(wsEventCreateListener, 'registerUpdate', 'emitModifiedEvent');
     });
 
+    it('should consider eventSourcePath for EVENT_CREATED events', function() {
+      testUpdateCalCachedEventSourceAndFcEmit(wsEventCreateListener, 'registerUpdate', 'emitModifiedEvent', 'eventSourcePath');
+    });
+
     it('should update event on calCachedEventSource and broadcast emit an event for a modification on EVENT_REQUEST', function() {
       testUpdateCalCachedEventSourceAndFcEmit(wsEventRequestListener, 'registerUpdate', 'emitModifiedEvent');
     });
 
+    it('should consider eventSourcePath for EVENT_REQUEST events', function() {
+      testUpdateCalCachedEventSourceAndFcEmit(wsEventRequestListener, 'registerUpdate', 'emitModifiedEvent', 'eventSourcePath');
+    });
+
     it('should update event on calCachedEventSource and broadcast emit an event for a modification on EVENT_UPDATED', function() {
       testUpdateCalCachedEventSourceAndFcEmit(wsEventModifyListener, 'registerUpdate', 'emitModifiedEvent');
+    });
+
+    it('should consider eventSourcePath for EVENT_UPDATED events', function() {
+      testUpdateCalCachedEventSourceAndFcEmit(wsEventModifyListener, 'registerUpdate', 'emitModifiedEvent', 'eventSourcePath');
     });
 
     it('should remove event on calCachedEventSource and broadcast emit an event for a deletion on EVENT_DELETED', function() {
