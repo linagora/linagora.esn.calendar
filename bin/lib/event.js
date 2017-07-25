@@ -25,8 +25,8 @@ function asICAL({location, summary, start, duration = 1}) {
   return vCalendar;
 }
 
-function generateFakeEvents({nb, weeks = 0}) {
-  const events = Array(nb).fill(0).map(() => Object.assign({}, db.events[_.random(0, db.events.length - 1)]));
+function generateFakeEvents({length, weeks = 0}) {
+  const events = Array(length).fill(0).map(() => Object.assign({}, db.events[_.random(0, db.events.length - 1)]));
 
   events.forEach(event => {
     const start = moment().startOf('isoweek');

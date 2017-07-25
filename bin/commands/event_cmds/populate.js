@@ -16,7 +16,7 @@ module.exports = {
       describe: 'The number of weeks to spread events over (starting at current one)',
       default: 0
     },
-    nb: {
+    length: {
       describe: 'Number of events to create',
       default: 20
     },
@@ -24,8 +24,8 @@ module.exports = {
     password
   },
   handler: argv => {
-    const {name, weeks, nb, username, password, url} = argv;
-    const events = event.generateFakeEvents({nb, weeks});
+    const {name, weeks, length, username, password, url} = argv;
+    const events = event.generateFakeEvents({length, weeks});
 
     Promise.all(events.map(create)).then(() => {
       commons.logInfo('Events created');
