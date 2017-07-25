@@ -29,6 +29,14 @@ module.exports = dependencies => {
     searchEvents
   };
 
+  function _getParticipationStatus(event, attendeeEmail) {
+    if (!event.attendees || !event.attendees[attendeeEmail] || !event.attendees[attendeeEmail].partstat) {
+      return;
+    }
+
+    return event.attendees[attendeeEmail].partstat;
+  }
+
   /**
    * Check if the user has the right to create an eventmessage in that
    * collaboration and create the event message and the timeline entry. The
@@ -259,27 +267,50 @@ module.exports = dependencies => {
             return i18n.__({phrase: phrase, locale: i18nConf.locale}, option);
           }
 
+          function _getReplyContents() {
+            const response = [];
+
+            switch (_getParticipationStatus(event, editorEmail)) {
+              case 'ACCEPTED':
+                response.push(_i18nHelper('Accepted: {{summary}} ({{userDisplayName}})', true, true));
+                response.push(_i18nHelper('has accepted this invitation'));
+                break;
+              case 'DECLINED':
+                response.push(_i18nHelper('Declined: {{summary}} ({{userDisplayName}})', true, true));
+                response.push(_i18nHelper('has declined this invitation'));
+                break;
+              case 'TENTATIVE':
+                response.push(_i18nHelper('Tentatively accepted: {{summary}} ({{userDisplayName}})', true, true));
+                response.push(_i18nHelper('has replied "Maybe" to this invitation'));
+                break;
+              default:
+                response.push(_i18nHelper('Participation updated: {{summary}}', true));
+                response.push(_i18nHelper('has changed his participation'));
+            }
+
+            return response;
+          }
+
           switch (method) {
             case 'REQUEST':
               if (event.sequence > 0) {
                 subject = _i18nHelper('Event {{summary}} from {{userDisplayName}} updated', true, true);
                 template = 'event.update';
-                inviteMessage = _i18nHelper('has updated a meeting!');
+                inviteMessage = _i18nHelper('has updated a meeting');
               } else {
                 subject = _i18nHelper('New event from {{userDisplayName}}: {{summary}}', true, true);
                 template = 'event.invitation';
-                inviteMessage = _i18nHelper('has invited you to a meeting!');
+                inviteMessage = _i18nHelper('has invited you to a meeting');
               }
               break;
             case 'REPLY':
-              subject = _i18nHelper('Participation updated: {{summary}}', true);
               template = 'event.reply';
-              inviteMessage = _i18nHelper('has changed his participation!');
+              [subject, inviteMessage] = _getReplyContents();
               break;
             case 'CANCEL':
               subject = _i18nHelper('Event {{summary}} from {{userDisplayName}} canceled', true, true);
               template = 'event.cancel';
-              inviteMessage = _i18nHelper('has canceled a meeting!');
+              inviteMessage = _i18nHelper('has canceled a meeting');
               break;
           }
 
