@@ -168,91 +168,107 @@ describe('The calWebsocketListenerService service', function() {
       expect(listener.sio).to.exist;
     });
 
-    it('should update event on calCachedEventSource and emit an event for a modification on EVENT_CREATED', function() {
-      testUpdateCalCachedEventSourceAndFcEmit(wsEventCreateListener, 'registerUpdate', 'emitModifiedEvent');
+    describe('on EVENT.CREATED event', function() {
+      it('should update event on calCachedEventSource and emit an event for a modification', function() {
+        testUpdateCalCachedEventSourceAndFcEmit(wsEventCreateListener, 'registerUpdate', 'emitModifiedEvent');
+      });
+
+      it('should consider eventSourcePath', function() {
+        testUpdateCalCachedEventSourceAndFcEmit(wsEventCreateListener, 'registerUpdate', 'emitModifiedEvent', 'eventSourcePath');
+      });
+
+      it('should update event on calMasterEventCache or a modification', function() {
+        testUpdateCalMasterEventCache(wsEventCreateListener, 'save');
+      });
     });
 
-    it('should consider eventSourcePath for EVENT_CREATED events', function() {
-      testUpdateCalCachedEventSourceAndFcEmit(wsEventCreateListener, 'registerUpdate', 'emitModifiedEvent', 'eventSourcePath');
+    describe('on EVENT.REQUEST event', function() {
+      it('should update event on calCachedEventSource and broadcast emit an event for a modification', function() {
+        testUpdateCalCachedEventSourceAndFcEmit(wsEventRequestListener, 'registerUpdate', 'emitModifiedEvent');
+      });
+
+      it('should consider eventSourcePath', function() {
+        testUpdateCalCachedEventSourceAndFcEmit(wsEventRequestListener, 'registerUpdate', 'emitModifiedEvent', 'eventSourcePath');
+      });
+
+      it('should update event on calMasterEventCache for a modification', function() {
+        testUpdateCalMasterEventCache(wsEventRequestListener, 'save');
+      });
     });
 
-    it('should update event on calCachedEventSource and broadcast emit an event for a modification on EVENT_REQUEST', function() {
-      testUpdateCalCachedEventSourceAndFcEmit(wsEventRequestListener, 'registerUpdate', 'emitModifiedEvent');
+    describe('on EVENT.UPDATED event', function() {
+      it('should update event on calCachedEventSource and broadcast emit an event for a modification', function() {
+        testUpdateCalCachedEventSourceAndFcEmit(wsEventModifyListener, 'registerUpdate', 'emitModifiedEvent');
+      });
+
+      it('should consider eventSourcePath', function() {
+        testUpdateCalCachedEventSourceAndFcEmit(wsEventModifyListener, 'registerUpdate', 'emitModifiedEvent', 'eventSourcePath');
+      });
+
+      it('should update event on calMasterEventCache for a modification', function() {
+        testUpdateCalMasterEventCache(wsEventModifyListener, 'save');
+      });
     });
 
-    it('should consider eventSourcePath for EVENT_REQUEST events', function() {
-      testUpdateCalCachedEventSourceAndFcEmit(wsEventRequestListener, 'registerUpdate', 'emitModifiedEvent', 'eventSourcePath');
+    describe('on EVENT.DELETED', function() {
+      it('should remove event on calCachedEventSource and broadcast emit an event for a deletion', function() {
+        testUpdateCalCachedEventSourceAndFcEmit(wsEventDeleteListener, 'registerDelete', 'emitRemovedEvent');
+      });
+
+      it('should consider eventSourcePath', function() {
+        testUpdateCalCachedEventSourceAndFcEmit(wsEventDeleteListener, 'registerDelete', 'emitRemovedEvent', 'eventSourcePath');
+      });
+
+      it('should remove event on calMasterEventCache for a deletion', function() {
+        testUpdateCalMasterEventCache(wsEventDeleteListener, 'remove');
+      });
     });
 
-    it('should update event on calCachedEventSource and broadcast emit an event for a modification on EVENT_UPDATED', function() {
-      testUpdateCalCachedEventSourceAndFcEmit(wsEventModifyListener, 'registerUpdate', 'emitModifiedEvent');
+    describe('on EVENT.CANCEL', function() {
+      it('should remove event on calCachedEventSource and broadcast emit an event for a deletion on EVENT_CANCEL', function() {
+        testUpdateCalCachedEventSourceAndFcEmit(wsEventCancelListener, 'registerDelete', 'emitRemovedEvent');
+      });
+
+      it('should remove event on calMasterEventCache for a deletion', function() {
+        testUpdateCalMasterEventCache(wsEventCancelListener, 'remove');
+      });
     });
 
-    it('should consider eventSourcePath for EVENT_UPDATED events', function() {
-      testUpdateCalCachedEventSourceAndFcEmit(wsEventModifyListener, 'registerUpdate', 'emitModifiedEvent', 'eventSourcePath');
-    });
+    describe('on EVENT.REPLY event', function() {
+      it('should compute new event and update cache if on cache', function() {
+        var event = {id: 'id', calendarId: 'calId'};
+        var path = 'path';
+        var etag = 'etag';
+        var resultingEvent = CalendarShellMock.from(event, {etag: etag, path: path});
+        var originalEvent = {applyReply: sinon.spy()};
 
-    it('should remove event on calCachedEventSource and broadcast emit an event for a deletion on EVENT_DELETED', function() {
-      testUpdateCalCachedEventSourceAndFcEmit(wsEventDeleteListener, 'registerDelete', 'emitRemovedEvent');
-    });
+        calMasterEventCacheMock.get = sinon.stub().returns(originalEvent);
+        wsEventReplyListener({event: event, eventPath: path, etag: etag});
+        scope.$digest();
 
-    it('should remove event on calCachedEventSource and broadcast emit an event for a deletion on EVENT_CANCEL', function() {
-      testUpdateCalCachedEventSourceAndFcEmit(wsEventCancelListener, 'registerDelete', 'emitRemovedEvent');
-    });
+        expect(CalendarShellMock.from).to.have.been.calledWith(event, {path: path, etag: etag});
+        expect(calMasterEventCacheMock.get).to.have.been.calledWith(path);
+        expect(originalEvent.applyReply).to.have.been.calledWith(resultingEvent);
+        expect(calendarEventEmitterMock.emitModifiedEvent).to.have.been.calledWith(originalEvent);
+        expect(calCachedEventSourceMock.registerUpdate).to.have.been.calledWith(originalEvent);
+      });
 
-    it('should update event on calMasterEventCache or a modification on EVENT_CREATED', function() {
-      testUpdateCalMasterEventCache(wsEventCreateListener, 'save');
-    });
+      it('should fetch new event master if not already on catch', function() {
+        var event = {id: 'id', calendarId: 'calId'};
+        var path = 'path';
+        var etag = 'etag';
+        var originalEvent = {};
 
-    it('should update event on calMasterEventCache for a modification on EVENT_REQUEST', function() {
-      testUpdateCalMasterEventCache(wsEventRequestListener, 'save');
-    });
+        calEventServiceMock.getEvent = sinon.stub().returns($q.when(originalEvent));
+        wsEventReplyListener({event: event, eventPath: path, etag: etag});
+        scope.$digest();
 
-    it('should update event on calMasterEventCache for a modification on EVENT_UPDATED', function() {
-      testUpdateCalMasterEventCache(wsEventModifyListener, 'save');
-    });
-
-    it('should compute new event and update cache if on cache on EVENT_REPLY', function() {
-      var event = {id: 'id', calendarId: 'calId'};
-      var path = 'path';
-      var etag = 'etag';
-      var resultingEvent = CalendarShellMock.from(event, {etag: etag, path: path});
-      var originalEvent = {applyReply: sinon.spy()};
-
-      calMasterEventCacheMock.get = sinon.stub().returns(originalEvent);
-      wsEventReplyListener({event: event, eventPath: path, etag: etag});
-      scope.$digest();
-
-      expect(CalendarShellMock.from).to.have.been.calledWith(event, {path: path, etag: etag});
-      expect(calMasterEventCacheMock.get).to.have.been.calledWith(path);
-      expect(originalEvent.applyReply).to.have.been.calledWith(resultingEvent);
-      expect(calendarEventEmitterMock.emitModifiedEvent).to.have.been.calledWith(originalEvent);
-      expect(calCachedEventSourceMock.registerUpdate).to.have.been.calledWith(originalEvent);
-    });
-
-    it('should fetch new event master if not already on catch on EVENT_REPLY', function() {
-      var event = {id: 'id', calendarId: 'calId'};
-      var path = 'path';
-      var etag = 'etag';
-      var originalEvent = {};
-
-      calEventServiceMock.getEvent = sinon.stub().returns($q.when(originalEvent));
-      wsEventReplyListener({event: event, eventPath: path, etag: etag});
-      scope.$digest();
-
-      expect(calMasterEventCacheMock.get).to.have.been.calledWith(path);
-      expect(calEventServiceMock.getEvent).to.have.been.calledWith(path);
-      expect(calendarEventEmitterMock.emitModifiedEvent).to.have.been.calledWith(sinon.match(originalEvent));
-      expect(calCachedEventSourceMock.registerUpdate).to.have.been.calledWith(sinon.match(originalEvent));
-      expect(calMasterEventCacheMock.save).to.have.been.calledWith(sinon.match(originalEvent));
-    });
-
-    it('should remove event on calMasterEventCache for a deletion on EVENT_DELETED', function() {
-      testUpdateCalMasterEventCache(wsEventDeleteListener, 'remove');
-    });
-
-    it('should remove event on calMasterEventCache for a deletion on EVENT_CANCEL', function() {
-      testUpdateCalMasterEventCache(wsEventCancelListener, 'remove');
+        expect(calMasterEventCacheMock.get).to.have.been.calledWith(path);
+        expect(calEventServiceMock.getEvent).to.have.been.calledWith(path);
+        expect(calendarEventEmitterMock.emitModifiedEvent).to.have.been.calledWith(sinon.match(originalEvent));
+        expect(calCachedEventSourceMock.registerUpdate).to.have.been.calledWith(sinon.match(originalEvent));
+        expect(calMasterEventCacheMock.save).to.have.been.calledWith(sinon.match(originalEvent));
+      });
     });
 
     describe('on SUBSCRIPTION.CREATED event', function() {

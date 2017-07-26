@@ -25,12 +25,12 @@
     function listenEvents() {
       var sio = livenotification(CAL_WEBSOCKET.NAMESPACE);
 
-      sio.on(CAL_WEBSOCKET.EVENT.CREATED, _liveNotificationHandlerOnCreateRequestandUpdate.bind(null, CAL_WEBSOCKET.EVENT.CREATED));
-      sio.on(CAL_WEBSOCKET.EVENT.REQUEST, _liveNotificationHandlerOnCreateRequestandUpdate.bind(null, CAL_WEBSOCKET.EVENT.REQUEST));
-      sio.on(CAL_WEBSOCKET.EVENT.CANCEL, _liveNotificationHandlerOnDelete.bind(null, CAL_WEBSOCKET.EVENT.CANCEL));
-      sio.on(CAL_WEBSOCKET.EVENT.UPDATED, _liveNotificationHandlerOnCreateRequestandUpdate.bind(null, CAL_WEBSOCKET.EVENT.UPDATED));
-      sio.on(CAL_WEBSOCKET.EVENT.DELETED, _liveNotificationHandlerOnDelete.bind(null, CAL_WEBSOCKET.EVENT.DELETED));
-      sio.on(CAL_WEBSOCKET.EVENT.REPLY, _liveNotificationHandlerOnReply.bind(null, CAL_WEBSOCKET.EVENT.REPLY));
+      sio.on(CAL_WEBSOCKET.EVENT.CREATED, _onEventCreateRequestOrUpdate.bind(null, CAL_WEBSOCKET.EVENT.CREATED));
+      sio.on(CAL_WEBSOCKET.EVENT.REQUEST, _onEventCreateRequestOrUpdate.bind(null, CAL_WEBSOCKET.EVENT.REQUEST));
+      sio.on(CAL_WEBSOCKET.EVENT.CANCEL, _onEventDeleted.bind(null, CAL_WEBSOCKET.EVENT.CANCEL));
+      sio.on(CAL_WEBSOCKET.EVENT.UPDATED, _onEventCreateRequestOrUpdate.bind(null, CAL_WEBSOCKET.EVENT.UPDATED));
+      sio.on(CAL_WEBSOCKET.EVENT.DELETED, _onEventDeleted.bind(null, CAL_WEBSOCKET.EVENT.DELETED));
+      sio.on(CAL_WEBSOCKET.EVENT.REPLY, _onEventReply.bind(null, CAL_WEBSOCKET.EVENT.REPLY));
       sio.on(CAL_WEBSOCKET.CALENDAR.CREATED, _onCalendarCreated.bind(null, CAL_WEBSOCKET.CALENDAR.CREATED));
       sio.on(CAL_WEBSOCKET.CALENDAR.UPDATED, _onCalendarUpdated.bind(null, CAL_WEBSOCKET.CALENDAR.UPDATED));
       sio.on(CAL_WEBSOCKET.CALENDAR.DELETED, _onCalendarDeleted.bind(null, CAL_WEBSOCKET.CALENDAR.DELETED));
@@ -41,6 +41,10 @@
       return {
         sio: sio
       };
+
+      function getEventPath(msg) {
+        return msg.eventSourcePath ? msg.eventSourcePath : msg.eventPath;
+      }
 
       function _onCalendarCreated(type, msg) {
         $log.debug('Received a new calendar', type, msg);
@@ -77,16 +81,16 @@
         });
       }
 
-      function _liveNotificationHandlerOnCreateRequestandUpdate(type, msg) {
+      function _onEventCreateRequestOrUpdate(type, msg) {
         $log.debug('Calendar Event created/updated', type, msg);
-        var event = CalendarShell.from(msg.event, {etag: msg.etag, path: msg.eventSourcePath ? msg.eventSourcePath : msg.eventPath});
+        var event = CalendarShell.from(msg.event, {etag: msg.etag, path: getEventPath(msg)});
 
         calCachedEventSource.registerUpdate(event);
         calMasterEventCache.save(event);
         calendarEventEmitter.emitModifiedEvent(event);
       }
 
-      function _liveNotificationHandlerOnReply(type, msg) {
+      function _onEventReply(type, msg) {
         $log.debug('Calendar Event reply', type, msg);
         var replyEvent = CalendarShell.from(msg.event, {etag: msg.etag, path: msg.eventPath});
         var event = calMasterEventCache.get(replyEvent.path);
@@ -100,9 +104,9 @@
         });
       }
 
-      function _liveNotificationHandlerOnDelete(type, msg) {
+      function _onEventDeleted(type, msg) {
         $log.debug('Calendar Event deleted/canceled', type, msg);
-        var event = CalendarShell.from(msg.event, {etag: msg.etag, path: msg.eventPath});
+        var event = CalendarShell.from(msg.event, {etag: msg.etag, path: getEventPath(msg)});
 
         calCachedEventSource.registerDelete(event);
         calMasterEventCache.remove(event);
