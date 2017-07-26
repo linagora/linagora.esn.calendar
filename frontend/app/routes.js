@@ -38,8 +38,8 @@
           calendarHomeId: function(calendarHomeService) {
             return calendarHomeService.getUserCalendarHomeId();
           },
-          businessHours: function(calendarHomeService) {
-            return calendarHomeService.getUserBusinessHours();
+          businessHours: function(calBusinessHoursService) {
+            return calBusinessHoursService.getUserBusinessHours();
           }
         },
         controller: function($scope, calendarHomeId) {
