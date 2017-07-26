@@ -7,7 +7,6 @@
   function CalCalendarSharedConfigurationController(
     $log,
     $q,
-    $state,
     _,
     session,
     notificationFactory,
@@ -197,9 +196,9 @@
         acceptInvitationToSelectedCalendars()
       ])
       .then(function() {
-        notificationFactory.weakInfo('Shared calendars', 'Successfully add shared calendar' + (getSelectedCalendars(self.calendarsPerUser).length ? 's' : ''));
+        notificationFactory.weakInfo('Shared calendars', 'Successfully added shared calendar' + (getSelectedCalendars(self.calendarsPerUser).length > 1 ? 's' : ''));
       }, function() {
-        notificationFactory.weakError('Shared calendars', 'Can not add shared calendar' + (getSelectedCalendars(self.calendarsPerUser).length ? 's' : ''));
+        notificationFactory.weakError('Shared calendars', 'Can not add shared calendar' + (getSelectedCalendars(self.calendarsPerUser).length > 1 ? 's' : ''));
       });
     }
   }
