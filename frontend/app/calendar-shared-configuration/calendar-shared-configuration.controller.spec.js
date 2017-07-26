@@ -239,7 +239,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
 
       expect(calendarHomeService.getUserCalendarHomeId).to.not.have.been.called;
       expect(calendarService.subscribe).to.not.have.been.called;
-      expect(notificationFactory.weakInfo).to.have.been.calledOnce;
+      expect(notificationFactory.weakInfo).to.have.been.calledWith('Shared calendars', 'Successfully added shared calendar');
       expect(notificationFactory.weakError).to.not.have.been.called;
     });
 
@@ -263,7 +263,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
 
       expect(CalendarCollectionShell.from).to.have.been.calledFourth;
       expect(calendarService.subscribe).to.have.been.calledTwice;
-      expect(notificationFactory.weakInfo).to.have.been.calledOnce;
+      expect(notificationFactory.weakInfo).to.have.been.calledWith('Shared calendars', 'Successfully added shared calendars');
       expect(notificationFactory.weakError).to.not.have.been.called;
     });
 
@@ -288,7 +288,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       expect(CalendarCollectionShell.from).to.have.been.calledFourth;
       expect(calendarService.subscribe).to.not.have.been.called;
       expect(calendarService.updateInviteStatus).to.have.been.calledTwice;
-      expect(notificationFactory.weakInfo).to.have.been.calledOnce;
+      expect(notificationFactory.weakInfo).to.have.been.calledWith('Shared calendars', 'Successfully added shared calendars');
       expect(notificationFactory.weakError).to.not.have.been.called;
     });
 
@@ -319,7 +319,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       expect(CalendarCollectionShell.from).to.have.been.calledFourth;
       expect(calendarService.subscribe).to.have.been.calledTwice;
       expect(notificationFactory.weakInfo).to.not.have.been.called;
-      expect(notificationFactory.weakError).to.have.been.called;
+      expect(notificationFactory.weakError).to.have.been.calledWith('Shared calendars', 'Can not add shared calendars');
     });
 
     it('should reject when one acceptInvitation fails', function() {
@@ -349,7 +349,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       expect(CalendarCollectionShell.from).to.have.been.calledFourth;
       expect(calendarService.updateInviteStatus).to.have.been.calledTwice;
       expect(notificationFactory.weakInfo).to.not.have.been.called;
-      expect(notificationFactory.weakError).to.have.been.called;
+      expect(notificationFactory.weakError).to.have.been.calledWith('Shared calendars', 'Can not add shared calendars');
     });
   });
 });
