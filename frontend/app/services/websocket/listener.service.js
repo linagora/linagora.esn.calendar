@@ -42,6 +42,10 @@
         sio: sio
       };
 
+      function getEventPath(msg) {
+        return msg.eventSourcePath ? msg.eventSourcePath : msg.eventPath;
+      }
+
       function _onCalendarCreated(type, msg) {
         $log.debug('Received a new calendar', type, msg);
         var calendarPath = calPathParser.parseCalendarPath(msg.calendarPath);
@@ -79,7 +83,7 @@
 
       function _liveNotificationHandlerOnCreateRequestandUpdate(type, msg) {
         $log.debug('Calendar Event created/updated', type, msg);
-        var event = CalendarShell.from(msg.event, {etag: msg.etag, path: msg.eventSourcePath ? msg.eventSourcePath : msg.eventPath});
+        var event = CalendarShell.from(msg.event, {etag: msg.etag, path: getEventPath(msg)});
 
         calCachedEventSource.registerUpdate(event);
         calMasterEventCache.save(event);
@@ -102,7 +106,7 @@
 
       function _liveNotificationHandlerOnDelete(type, msg) {
         $log.debug('Calendar Event deleted/canceled', type, msg);
-        var event = CalendarShell.from(msg.event, {etag: msg.etag, path: msg.eventPath});
+        var event = CalendarShell.from(msg.event, {etag: msg.etag, path: getEventPath(msg)});
 
         calCachedEventSource.registerDelete(event);
         calMasterEventCache.remove(event);
