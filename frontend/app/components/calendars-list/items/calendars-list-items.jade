@@ -3,6 +3,6 @@
     calendar="calendar",
     on-option-click="$ctrl.goTo(calendar.uniqueId)",
     on-show-hide-toggle="$ctrl.toggleCalendar(calendar)",
-    selected="!$ctrl.hiddenCalendars[calendar.uniqueId]",
+    selected="!$ctrl.hiddenCalendars[calendar.getUniqueId()]",
     show-details="$ctrl.showDetails"
   )

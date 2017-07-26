@@ -16,17 +16,19 @@
     ////////////
 
     function isHidden(calendar) {
-      return storage.getItem(calendar.uniqueId).then(function(value) {
+      return storage.getItem(calendar.getUniqueId()).then(function(value) {
         return Boolean(value);
       });
     }
 
     function toggle(calendar) {
-      storage.getItem(calendar.uniqueId).then(function(hiddenBefore) {
-        return storage.setItem(calendar.uniqueId, !hiddenBefore);
+      var calId = calendar.getUniqueId();
+
+      storage.getItem(calId).then(function(hiddenBefore) {
+        return storage.setItem(calId, !hiddenBefore);
       }).then(function(hidden) {
         $rootScope.$broadcast(CAL_EVENTS.CALENDARS.TOGGLE_VIEW, {
-          calendarUniqueId: calendar.uniqueId,
+          calendarUniqueId: calId,
           hidden: hidden
         });
 
@@ -36,6 +38,7 @@
 
     function getHiddenCalendars() {
       var result = [];
+
       return storage.iterate(function(hidden, id) {
         if (hidden) {
           result.push(id);
@@ -43,7 +46,6 @@
       }).then(function() {
         return result;
       });
-
     }
   }
 })();

@@ -31,6 +31,10 @@ describe('The calendarVisibilityService', function() {
       getOrCreateInstance: sinon.stub().returns(this.storage)
     };
 
+    this.getCalendar = function(id) {
+      return {uniqueId: id, getUniqueId: function() { return id; }};
+    };
+
     angular.mock.module('esn.calendar', function($provide) {
       $provide.value('localStorageService', self.localStorageServiceMock);
     });
@@ -56,7 +60,9 @@ describe('The calendarVisibilityService', function() {
     });
 
     it('should not return unhidden calendar', function() {
-      var hiddenCalendars = [{uniqueId: '1'}, {uniqueId: '2'}];
+      var id = '2';
+      var hiddenCalendars = [this.getCalendar('1'), this.getCalendar(id)];
+
       hiddenCalendars.map(this.calendarVisibilityService.toggle);
       this.$rootScope.$digest();
 
@@ -67,13 +73,13 @@ describe('The calendarVisibilityService', function() {
 
       this.calendarVisibilityService.getHiddenCalendars().then(thenSpy);
       this.$rootScope.$digest();
-      expect(thenSpy).to.have.been.calledWith(['2']);
+      expect(thenSpy).to.have.been.calledWith([id]);
     });
   });
 
   describe('the toggle function', function() {
     it('should broadcast the calendar and it new display status', function() {
-      var cal = {uniqueId: 42};
+      var cal = this.getCalendar(42);
 
       this.$rootScope.$broadcast = sinon.spy(this.$rootScope.$broadcast);
 
@@ -95,21 +101,23 @@ describe('The calendarVisibilityService', function() {
     });
 
     it('should correctly record hidden calendar in localforage', function() {
-      var hiddenCalendars = [{uniqueId: '1'}, {uniqueId: '2'}];
+      var id1 = '1';
+      var id2 = '2';
+      var hiddenCalendars = [this.getCalendar(id1), this.getCalendar(id2)];
+      var thenSpy = sinon.spy();
 
       hiddenCalendars.map(this.calendarVisibilityService.toggle);
       this.$rootScope.$digest();
-      var thenSpy = sinon.spy();
       this.calendarVisibilityService.getHiddenCalendars().then(thenSpy);
       this.$rootScope.$digest();
 
-      expect(thenSpy).to.have.been.calledWith(['1', '2']);
+      expect(thenSpy).to.have.been.calledWith([id1, id2]);
     });
   });
 
   describe('The isHidden function', function() {
     it('should return true if and only if the calendar is hidden', function() {
-      var cal = {uniqueId: 42};
+      var cal = this.getCalendar(42);
       var thenSpy = sinon.spy();
 
       this.calendarVisibilityService.isHidden(cal).then(thenSpy);
