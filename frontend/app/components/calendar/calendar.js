@@ -65,7 +65,11 @@
       }, function(selector, title) {
         var element = div.find(selector);
 
-        element.length && $tooltip(element, { title: esnI18nService.translate(title).toString() });
+        element.length && $tooltip(element, {
+          title: esnI18nService.translate(title).toString(),
+          placement: 'bottom',
+          container: 'body'
+        });
       });
     };
   }
