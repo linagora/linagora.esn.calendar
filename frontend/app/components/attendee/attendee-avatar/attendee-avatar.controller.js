@@ -7,9 +7,9 @@
   function CalAttendeeAvatarController(esnAvatarUrlService) {
     var self = this;
 
-    self.$onInit = $onInit;
+    self.$onChanges = $onChanges;
 
-    function $onInit() {
+    function $onChanges() {
       self.avatarUrl = esnAvatarUrlService.generateUrlByUserEmail(self.attendee.email);
     }
   }

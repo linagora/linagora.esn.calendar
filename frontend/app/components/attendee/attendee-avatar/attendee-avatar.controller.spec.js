@@ -35,20 +35,19 @@ describe('The CalAttendeeAvatarController controller', function() {
     return $controller('CalAttendeeAvatarController', {$scope: $scope}, context);
   }
 
-  describe('The $onInit function', function() {
+  describe('The $onChanges function', function() {
     var ctrl;
 
     beforeEach(function() {
       ctrl = initController();
     });
-
     it('should set the controller avatarUrl from esnAvatarUrlService service', function() {
       var result = 'The Avatar URL result';
 
       esnAvatarUrlService.generateUrlByUserEmail = sinon.spy(function() {
         return result;
       });
-      ctrl.$onInit();
+      ctrl.$onChanges();
 
       expect(ctrl.avatarUrl).to.equal(result);
       expect(esnAvatarUrlService.generateUrlByUserEmail).to.have.been.calledWith(attendee.email);
