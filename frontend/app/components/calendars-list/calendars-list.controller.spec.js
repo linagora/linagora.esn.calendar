@@ -204,8 +204,12 @@ describe('The calendarsList controller', function() {
         });
 
         it('should refresh calendars list', function() {
+          var id = '4';
           var newCalendar = {
-            uniqueId: '4',
+            uniqueId: id,
+            getUniqueId: function() {
+              return id;
+            },
             href: '/calendars/12345/4.json',
             name: 'name4',
             color: 'color4',
@@ -230,8 +234,12 @@ describe('The calendarsList controller', function() {
         });
 
         it('should refresh calendars list and not consider the new calendar as shared once it is classified as personal', function() {
+          var id = '4';
           var newCalendar = {
-            uniqueId: '4',
+            uniqueId: id,
+            getUniqueId: function() {
+              return id;
+            },
             href: '/calendars/12345/4.json',
             name: 'name4',
             color: 'color4',
@@ -273,6 +281,9 @@ describe('The calendarsList controller', function() {
       it('refresh calendars list', function() {
         calendars = [{
           uniqueId: '1',
+          getUniqueId: function() {
+            return '1';
+          },
           href: 'href',
           name: 'name',
           color: 'color',
@@ -285,6 +296,9 @@ describe('The calendarsList controller', function() {
           }
         }, {
           uniqueId: '2',
+          getUniqueId: function() {
+            return '2';
+          },
           href: 'href2',
           name: 'name2',
           color: 'color2',
