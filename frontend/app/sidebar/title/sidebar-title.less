@@ -17,7 +17,17 @@
   }
 
   .actions {
-    margin-right: 10px;
+    margin-right: 15px;
+
+    i.mdi {
+      vertical-align: sub;
+      font-size: 25px;
+      color: lighten(@secondaryTextColor, 10%);
+
+      &:hover {
+        color: darken(@secondaryTextColor, 20%);
+      }
+    }
   }
 }
 
