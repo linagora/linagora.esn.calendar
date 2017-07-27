@@ -104,18 +104,23 @@
 
       SHAREE_OWNER: '1',
       SHAREE_OWNER_LABEL: 'Owner',
+      SHAREE_OWNER_LABEL_LONG: 'Owner',
 
       SHAREE_READ: '2',
       SHAREE_READ_LABEL: 'Read',
+      SHAREE_READ_LABEL_LONG: 'See all event details',
 
       SHAREE_READ_WRITE: '3',
       SHAREE_READ_WRITE_LABEL: 'Read/Write',
+      SHAREE_READ_WRITE_LABEL_LONG: 'Edit the events',
 
       SHAREE_ADMIN: '5',
       SHAREE_ADMIN_LABEL: 'Administration',
+      SHAREE_ADMIN_LABEL_LONG: 'Edit events and manage sharing',
 
       SHAREE_FREE_BUSY: '6',
       SHAREE_FREE_BUSY_LABEL: 'Free/Busy',
+      SHAREE_FREE_BUSY_LABEL_LONG: 'Free/Busy',
 
       unknown: 'unknown'
     })
@@ -123,15 +128,19 @@
     .constant('CAL_CALENDAR_PUBLIC_RIGHT', {
       NONE: '',
       NONE_LABEL: 'Private',
+      NONE_LABEL_LONG: 'Hide calendar',
 
       READ: '{DAV:}read',
       READ_LABEL: 'Read',
+      READ_LABEL_LONG: 'See all event details',
 
       READ_WRITE: '{DAV:}write',
       READ_WRITE_LABEL: 'Read/Write',
+      READ_WRITE_LABEL_LONG: 'Edit the events',
 
       FREE_BUSY: '{urn:ietf:params:xml:ns:caldav}read-free-busy',
       FREE_BUSY_LABEL: 'Free/Busy',
+      FREE_BUSY_LABEL_LONG: 'Free/Busy',
 
       unknown: 'unknown'
     })

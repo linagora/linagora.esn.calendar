@@ -35,16 +35,13 @@ describe('The calendar configuration tab delegation controller', function() {
       var delegationTypesExpected = [
         {
           value: CAL_CALENDAR_SHARED_RIGHT.SHAREE_ADMIN,
-          name: CAL_CALENDAR_SHARED_RIGHT.SHAREE_ADMIN_LABEL
+          name: CAL_CALENDAR_SHARED_RIGHT.SHAREE_ADMIN_LABEL_LONG
         }, {
           value: CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ_WRITE,
-          name: CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ_WRITE_LABEL
+          name: CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ_WRITE_LABEL_LONG
         }, {
           value: CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ,
-          name: CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ_LABEL
-        }, {
-          value: CAL_CALENDAR_SHARED_RIGHT.SHAREE_FREE_BUSY,
-          name: CAL_CALENDAR_SHARED_RIGHT.SHAREE_FREE_BUSY_LABEL
+          name: CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ_LABEL_LONG
         }];
 
       CalendarConfigurationTabDelegationController.$onInit();
