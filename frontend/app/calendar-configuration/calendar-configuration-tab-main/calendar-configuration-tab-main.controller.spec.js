@@ -74,18 +74,14 @@ describe('The calendar configuration tab delegation controller', function() {
     it('should initialize self.publicRights with an array contains the different rights', function() {
       var publicRightsExpected = [
         {
-          value: CAL_CALENDAR_PUBLIC_RIGHT.READ,
-          name: CAL_CALENDAR_PUBLIC_RIGHT.READ_LABEL
-        },
-        {
           value: CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE,
-          name: CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE_LABEL
+          name: CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE_LABEL_LONG
         }, {
-          value: CAL_CALENDAR_PUBLIC_RIGHT.FREE_BUSY,
-          name: CAL_CALENDAR_PUBLIC_RIGHT.FREE_BUSY_LABEL
+          value: CAL_CALENDAR_PUBLIC_RIGHT.READ,
+          name: CAL_CALENDAR_PUBLIC_RIGHT.READ_LABEL_LONG
         }, {
           value: CAL_CALENDAR_PUBLIC_RIGHT.NONE,
-          name: CAL_CALENDAR_PUBLIC_RIGHT.NONE_LABEL
+          name: CAL_CALENDAR_PUBLIC_RIGHT.NONE_LABEL_LONG
         }
       ];
 
@@ -296,7 +292,7 @@ describe('The calendar configuration tab delegation controller', function() {
       $rootScope.$digest();
 
       expect(CalendarConfigurationTabMainController.calendar.rights.getShareeRight).to.have.been.calledWith(session.user._id);
-      expect(CalendarConfigurationTabMainController.shareeRight).to.equal('Administration');
+      expect(CalendarConfigurationTabMainController.shareeRight).to.equal(CAL_CALENDAR_SHARED_RIGHT.SHAREE_ADMIN_LABEL);
     });
 
     it('should set "shareeRight" depending on "calendar.rights.getShareeRight"', function() {

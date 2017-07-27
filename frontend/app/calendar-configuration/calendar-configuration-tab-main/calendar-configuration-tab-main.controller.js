@@ -28,18 +28,16 @@
     function $onInit() {
       self.publicRights = [
         {
-          value: CAL_CALENDAR_PUBLIC_RIGHT.READ,
-          name: CAL_CALENDAR_PUBLIC_RIGHT.READ_LABEL
+          value: CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE,
+          name: CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE_LABEL_LONG
         },
         {
-          value: CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE,
-          name: CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE_LABEL
-        }, {
-          value: CAL_CALENDAR_PUBLIC_RIGHT.FREE_BUSY,
-          name: CAL_CALENDAR_PUBLIC_RIGHT.FREE_BUSY_LABEL
-        }, {
+          value: CAL_CALENDAR_PUBLIC_RIGHT.READ,
+          name: CAL_CALENDAR_PUBLIC_RIGHT.READ_LABEL_LONG
+        },
+        {
           value: CAL_CALENDAR_PUBLIC_RIGHT.NONE,
-          name: CAL_CALENDAR_PUBLIC_RIGHT.NONE_LABEL
+          name: CAL_CALENDAR_PUBLIC_RIGHT.NONE_LABEL_LONG
         }
       ];
 

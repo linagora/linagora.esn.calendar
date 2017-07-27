@@ -24,7 +24,7 @@ describe('The CalCalendarRightsUtilsService service', function() {
     });
 
     it('should return unknown when right is not known', function() {
-      expect(this.CalCalendarRightsUtilsService.publicAsHumanReadable(this.CAL_CALENDAR_PUBLIC_RIGHT.READ + 'you do not know me right???')).to.equal(this.CAL_CALENDAR_PUBLIC_RIGHT.unknown);
+      expect(this.CalCalendarRightsUtilsService.publicAsHumanReadable(this.CAL_CALENDAR_PUBLIC_RIGHT.READ_LABEL + 'you do not know me right???')).to.equal(this.CAL_CALENDAR_PUBLIC_RIGHT.unknown);
     });
 
     it('should return human readable value', function() {
