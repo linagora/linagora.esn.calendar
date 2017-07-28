@@ -8,6 +8,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
   var $rootScope,
     $controller,
     $q,
+    $state,
     $log,
     calendarService,
     calendarHomeService,
@@ -46,10 +47,11 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
     anotherUser = {_id: 2};
     calendar = {_id: 3};
     anotherCalendar = {_id: 4};
-    angular.mock.inject(function(_$rootScope_, _$controller_, _$q_, _$log_, _calendarService_, _calendarHomeService_, _notificationFactory_, _session_, _CAL_CALENDAR_SHARED_TYPE_) {
+    angular.mock.inject(function(_$rootScope_, _$controller_, _$q_, _$log_, _$state_, _calendarService_, _calendarHomeService_, _notificationFactory_, _session_, _CAL_CALENDAR_SHARED_TYPE_) {
       $rootScope = _$rootScope_;
       $controller = _$controller_;
       $q = _$q_;
+      $state = _$state_;
       $log = _$log_;
       calendarService = _calendarService_;
       notificationFactory = _notificationFactory_;
@@ -63,6 +65,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
     sinon.stub(calendarService, 'listDelegationCalendars', function() {
       return $q.when([]);
     });
+    sinon.spy($state, 'go');
   });
 
   function initController() {
@@ -264,6 +267,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       expect(CalendarCollectionShell.from).to.have.been.calledFourth;
       expect(calendarService.subscribe).to.have.been.calledTwice;
       expect(notificationFactory.weakInfo).to.have.been.calledWith('Shared calendars', 'Successfully added shared calendars');
+      expect($state.go).to.have.been.calledWith('calendar.main', {}, { reload: true });
       expect(notificationFactory.weakError).to.not.have.been.called;
     });
 
