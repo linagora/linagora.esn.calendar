@@ -7,6 +7,7 @@
   function CalCalendarSharedConfigurationController(
     $log,
     $q,
+    $state,
     _,
     session,
     notificationFactory,
@@ -134,21 +135,26 @@
     }
 
     function subscribe(calendars) {
-      return calendarHomeService.getUserCalendarHomeId().then(function(calendarHomeId) {
-        return $q.all(calendars.map(function(calendar) {
-          var id = uuid4.generate();
-          var subscription = CalendarCollectionShell.from({
-            color: calendar.color,
-            description: calendar.description,
-            href: CalendarCollectionShell.buildHref(calendarHomeId, id),
-            id: id,
-            name: calendar.name,
-            source: CalendarCollectionShell.from(calendar)
-          });
+      return calendarHomeService
+        .getUserCalendarHomeId()
+        .then(function(calendarHomeId) {
+          return $q.all(calendars.map(function(calendar) {
+            var id = uuid4.generate();
+            var subscription = CalendarCollectionShell.from({
+              color: calendar.color,
+              description: calendar.description,
+              href: CalendarCollectionShell.buildHref(calendarHomeId, id),
+              id: id,
+              name: calendar.name,
+              source: CalendarCollectionShell.from(calendar)
+            });
 
-          return calendarService.subscribe(calendarHomeId, subscription);
-        }));
-      });
+            return calendarService.subscribe(calendarHomeId, subscription);
+          }));
+        })
+        .then(function() {
+          $state.go('calendar.main', {}, { reload: true });
+        });
     }
 
     function acceptInvitation(calendars) {
