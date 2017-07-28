@@ -4,10 +4,12 @@ module.exports = {
     default: 'http://localhost:8080'
   },
   username: {
+    alias: 'u',
     describe: 'Username to login',
     demand: true
   },
   password: {
+    alias: 'p',
     describe: 'Password to login',
     demand: true
   },

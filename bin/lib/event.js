@@ -1,5 +1,6 @@
 const ICAL = require('ical.js');
 const _ = require('lodash');
+const Chance = require('chance');
 const moment = require('moment');
 const uuid = require('node-uuid');
 const {db} = require('./constants');
@@ -25,8 +26,9 @@ function asICAL({location, summary, start, duration = 1}) {
   return vCalendar;
 }
 
-function generateFakeEvents({length, weeks = 0}) {
-  const events = Array(length).fill(0).map(() => Object.assign({}, db.events[_.random(0, db.events.length - 1)]));
+function generateFakeEvents({size, weeks = 0}) {
+  const chance = new Chance();
+  const events = Array(size).fill(0).map(() => Object.assign({}, db.events[_.random(0, db.events.length - 1)]));
 
   events.forEach(event => {
     const start = moment().startOf('isoweek');
@@ -36,7 +38,7 @@ function generateFakeEvents({length, weeks = 0}) {
     start.hour(event.start ? event.start + _.random(1) : _.random(8, 20));
     event.start = start.startOf('hour');
     event.duration = event.duration || _.random(1, 2);
-    event.summary = event.title;
+    event.summary = _.random(1) ? event.title : `${event.title} with ${chance.name()}`;
   });
 
   return events;

@@ -9,14 +9,18 @@ module.exports = {
   builder: {
     url,
     name: {
+      alias: 'n',
       describe: 'Name of the calendar',
+      default: 'events',
       demand: true
     },
     weeks: {
+      alias: 'w',
       describe: 'The number of weeks to spread events over (starting at current one)',
       default: 0
     },
-    length: {
+    size: {
+      alias: 's',
       describe: 'Number of events to create',
       default: 20
     },
@@ -24,8 +28,8 @@ module.exports = {
     password
   },
   handler: argv => {
-    const {name, weeks, length, username, password, url} = argv;
-    const events = event.generateFakeEvents({length, weeks});
+    const {name, weeks, size, username, password, url} = argv;
+    const events = event.generateFakeEvents({size, weeks});
 
     Promise.all(events.map(create)).then(() => {
       commons.logInfo('Events created');

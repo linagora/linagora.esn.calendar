@@ -34,6 +34,7 @@
     "chai": "3.5.0",
     "chai-as-promised": "5.3.0",
     "chai-shallow-deep-equal": "1.4.0",
+    "chance": "1.0.10",
     "eslint": "3.6.0",
     "eslint-config-airbnb-base": "8.0.0",
     "eslint-config-linagora-esn": "1.0.0",
