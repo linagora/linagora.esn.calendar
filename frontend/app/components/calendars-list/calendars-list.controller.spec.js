@@ -60,17 +60,29 @@ describe('The calendarsList controller', function() {
   });
 
   beforeEach(function() {
-    calendars = [CalendarCollectionShell.from({
-      href: '/calendars/12345/1.json',
-      name: 'name',
-      color: 'color',
-      description: 'description'
-    }), CalendarCollectionShell.from({
-      href: '/calendars/12345/2.json',
-      name: 'name2',
-      color: 'color2',
-      description: 'description2'
-    })];
+    calendars = [
+      CalendarCollectionShell.from({
+        href: '/calendars/12345/1.json',
+        name: 'name',
+        color: 'color',
+        description: 'description'
+      }),
+      CalendarCollectionShell.from({
+        href: '/calendars/12345/2.json',
+        name: 'name2',
+        color: 'color2',
+        description: 'description2'
+      }),
+      CalendarCollectionShell.from({
+        href: '/calendars/12345/3.json',
+        name: 'name3',
+        color: 'color3',
+        description: 'description3',
+        source: {
+          _links: {self: {href: '/calendars/12345/3_source.json'}}
+        }
+      })
+    ];
 
     CalendarsListController = initController();
   });
@@ -110,10 +122,10 @@ describe('The calendarsList controller', function() {
 
       it('should add calendar to self.calendars if it does not exist yet', function() {
         var newCalendar = CalendarCollectionShell.from({
-          href: '/calendars/12345/3.json',
-          name: 'name3',
-          color: 'color3',
-          description: 'description3'
+          href: '/calendars/12345/4.json',
+          name: 'name4',
+          color: 'color4',
+          description: 'description4'
         });
         var expectedResult = calendars.concat(newCalendar);
 
@@ -274,6 +286,22 @@ describe('The calendarsList controller', function() {
         $rootScope.$apply();
 
         $rootScope.$broadcast(CAL_EVENTS.CALENDARS.REMOVE, calendars[0]);
+
+        expect(CalendarsListController.calendars).to.deep.equal(expectedResult);
+      });
+
+      it('remove calendar subscription', function() {
+        var expectedResult = calendars.slice(0, 2);
+
+        CalendarsListController.$onInit();
+        $rootScope.$apply();
+
+        $rootScope.$broadcast(CAL_EVENTS.CALENDARS.REMOVE, CalendarCollectionShell.from({
+          href: '/calendars/12345/3_source.json',
+          name: 'name3',
+          color: 'color3',
+          description: 'description3'
+        }));
 
         expect(CalendarsListController.calendars).to.deep.equal(expectedResult);
       });

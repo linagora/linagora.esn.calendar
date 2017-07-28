@@ -243,11 +243,11 @@
         })(event, calendar);
       }
 
-      function _removeCalendar(event, calendar) {
-        _.remove($scope.calendars, {uniqueId: calendar.getUniqueId()});
-        var removedEventSource = $scope.eventSourcesMap[calendar.getUniqueId()];
+      function _removeCalendar(event, calendarWrapperUniqueId) {
+        _.remove($scope.calendars, {uniqueId: calendarWrapperUniqueId.uniqueId});
+        var removedEventSource = $scope.eventSourcesMap[calendarWrapperUniqueId.uniqueId];
 
-        delete $scope.eventSourcesMap[calendar.getUniqueId()];
+        delete $scope.eventSourcesMap[calendarWrapperUniqueId.uniqueId];
 
         calendarPromise.then(function(cal) {
           cal.fullCalendar('removeEventSource', removedEventSource);

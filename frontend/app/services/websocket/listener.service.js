@@ -46,9 +46,13 @@
         return msg.eventSourcePath ? msg.eventSourcePath : msg.eventPath;
       }
 
+      function getCalendarPath(msg) {
+        return msg.calendarSourcePath ? msg.calendarSourcePath : msg.calendarPath;
+      }
+
       function _onCalendarCreated(type, msg) {
         $log.debug('Received a new calendar', type, msg);
-        var calendarPath = calPathParser.parseCalendarPath(msg.calendarPath);
+        var calendarPath = calPathParser.parseCalendarPath(getCalendarPath(msg));
 
         calendarService.getCalendar(calendarPath.calendarHomeId, calendarPath.calendarId).then(function(calendarCollectionShell) {
           if (calendarCollectionShell) {
@@ -62,14 +66,14 @@
 
       function _onCalendarDeleted(type, msg) {
         $log.debug('Calendar deleted', type, msg);
-        var calendarPath = calPathParser.parseCalendarPath(msg.calendarPath);
+        var calendarPath = calPathParser.parseCalendarPath(getCalendarPath(msg));
 
         calendarService.removeAndEmit(calendarPath.calendarHomeId, {id: calendarPath.calendarId});
       }
 
       function _onCalendarUpdated(type, msg) {
         $log.debug('Calendar updated', type, msg);
-        var calendarPath = calPathParser.parseCalendarPath(msg.calendarPath);
+        var calendarPath = calPathParser.parseCalendarPath(getCalendarPath(msg));
 
         calendarService.getCalendar(calendarPath.calendarHomeId, calendarPath.calendarId).then(function(calendarCollectionShell) {
           if (calendarCollectionShell) {
