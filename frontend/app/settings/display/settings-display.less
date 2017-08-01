@@ -1,0 +1,43 @@
+.cal-settings-display-block{
+  padding: 5px 25px;
+
+  p {
+    margin-bottom: 10px;
+
+    span {
+      color: @text-color;
+      font-size: 13px;
+    }
+
+    &.cal-setting-switch {
+      span {
+        color: lighten(@text-color, 50%);
+        padding: 5px;
+      }
+    }
+
+    .toggle-switch {
+      transform: scale3d(.8, .8, 1);
+
+      .ts-helper {
+        margin: 0 10px 0 10px;
+      }
+    }
+
+    
+
+    .toggle-active {
+        &.working-days-enabled {
+          color: @m-blue;
+        }
+
+        &.working-days-disabled {
+          color: @secondaryTextColor;
+        }
+      }
+  }
+
+  span.mdi {
+    padding-right: 15px;
+  }
+}

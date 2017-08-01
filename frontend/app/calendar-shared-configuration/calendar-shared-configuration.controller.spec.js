@@ -19,6 +19,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
     notificationFactory,
     calendarHomeId,
     CalendarCollectionShell,
+    calFullUiConfiguration,
     userAndExternalCalendars,
     publicCalendars,
     session,
@@ -32,12 +33,18 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
         publicCalendars: publicCalendars
       };
     });
+    calFullUiConfiguration = {
+      get: sinon.spy(function() {
+        return $q.when();
+      })
+    };
   });
 
   beforeEach(function() {
     angular.mock.module('esn.calendar', function($provide) {
       $provide.value('CalendarCollectionShell', CalendarCollectionShell);
       $provide.value('userAndExternalCalendars', userAndExternalCalendars);
+      $provide.value('calFullUiConfiguration', calFullUiConfiguration);
     });
   });
 

@@ -40,9 +40,6 @@
           },
           businessHours: function(calBusinessHoursService) {
             return calBusinessHoursService.getUserBusinessHours();
-          },
-          calendarUiConfiguration: function(calFullUiConfiguration) {
-            return calFullUiConfiguration.get();
           }
         },
         controller: function($scope, calendarHomeId) {
@@ -55,6 +52,11 @@
         views: {
           content: {
             templateUrl: '/calendar/app/calendar/calendar-main',
+            resolve: {
+              calendarUiConfiguration: function(calFullUiConfiguration) {
+                return calFullUiConfiguration.get();
+              }
+            },
             controller: function($scope, calendarHomeId, businessHours, calendarUiConfiguration) {
               $scope.calendarHomeId = calendarHomeId;
               $scope.uiConfig = angular.copy(calendarUiConfiguration);
