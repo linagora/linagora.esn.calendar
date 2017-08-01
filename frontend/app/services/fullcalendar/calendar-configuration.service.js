@@ -13,7 +13,11 @@
     CAL_USER_CONFIGURATION
   ) {
     var handler = {
+<<<<<<< 2ed8e605b18ecab73601e1fb051529d97c374b13
       workingDays: _showWorkingDays
+=======
+      onlyWorkingDays: _setOnlyWorkingDays
+>>>>>>> linagora/lgs/openpaas/openpaas-roadmap#15 calFullUiConfiguration services
     };
 
     var service = {
