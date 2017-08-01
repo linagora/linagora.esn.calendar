@@ -1,6 +1,6 @@
 'use strict';
 
-/* global chai, sinon */
+/* global chai, sinon: false */
 
 var expect = chai.expect;
 
@@ -10,6 +10,7 @@ describe('The calFullUiConfiguration service', function() {
   calFullUiConfiguration,
   esnConfig,
   esnUserConfigurationService,
+
   moduleName,
   moduleConfiguration,
   businessHours,
@@ -17,6 +18,9 @@ describe('The calFullUiConfiguration service', function() {
 
   beforeEach(function() {
     angular.mock.module('esn.calendar');
+    moduleName = 'linagora.esn.calendar';
+    moduleConfiguration = ['onlyWorkingDays', 'hideRefusedEvents'];
+
     businessHours = [{
       daysOfWeek: [1, 5, 6],
       start: '00:00',
@@ -24,6 +28,7 @@ describe('The calFullUiConfiguration service', function() {
     }];
     moduleName = 'linagora.esn.calendar';
     moduleConfiguration = ['workingDays', 'hideDeclinedEvents'];
+
     esnConfig = sinon.spy(function() {
       return $q.when(businessHours);
     });
@@ -79,6 +84,7 @@ describe('The calFullUiConfiguration service', function() {
 
       $httpBackend.flush();
     });
+
     describe('The _setOnlyWorkingDays function', function() {
       it('should get default hiddenDays if business hours is not defined', function(done) {
         var expectedResult = [0, 6];
@@ -140,6 +146,69 @@ describe('The calFullUiConfiguration service', function() {
 
         $httpBackend.flush();
       });
+    });
+  });
+
+  describe('The isDeclinedEventsHidden function', function() {
+    it('should be false if no status is set', function() {
+      expect(calFullUiConfiguration.isDeclinedEventsHidden()).to.be.false;
+    });
+
+    it('should be false if configuration return no value', function(done) {
+      var payload = [
+          {
+            name: moduleName,
+            keys: moduleConfiguration
+          }
+        ];
+        var httpResponse = [
+          {
+            name: moduleName,
+            configurations: [{
+              name: 'hideRefusedEvents'
+            }]
+          }
+        ];
+
+        sinon.spy(esnUserConfigurationService, 'get');
+        $httpBackend.expectPOST('/api/configurations?scope=user', payload).respond(httpResponse);
+        calFullUiConfiguration.get()
+          .then(function() {
+            expect(calFullUiConfiguration.isDeclinedEventsHidden()).to.be.false;
+
+            done();
+          });
+
+        $httpBackend.flush();
+    });
+
+    it('should be true if configuration return true', function(done) {
+      var payload = [
+          {
+            name: moduleName,
+            keys: moduleConfiguration
+          }
+        ];
+        var httpResponse = [
+          {
+            name: moduleName,
+            configurations: [{
+              name: 'hideDeclinedEvents',
+              value: true
+            }]
+          }
+        ];
+
+        sinon.spy(esnUserConfigurationService, 'get');
+        $httpBackend.expectPOST('/api/configurations?scope=user', payload).respond(httpResponse);
+        calFullUiConfiguration.get()
+          .then(function() {
+            expect(calFullUiConfiguration.isDeclinedEventsHidden()).to.be.true;
+
+            done();
+          });
+
+        $httpBackend.flush();
     });
   });
 });

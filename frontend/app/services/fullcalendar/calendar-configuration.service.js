@@ -6,18 +6,23 @@
 
   function calFullUiConfiguration(
     $q,
-    esnUserConfigurationService,
     calBusinessHoursService,
+    esnUserConfigurationService,
     _,
     CAL_UI_CONFIG,
     CAL_USER_CONFIGURATION
   ) {
+    var _isDeclinedEventsHidden = false;
+
     var handler = {
-      workingDays: _showWorkingDays
+      workingDays: _workingDays,
+      hideDeclinedEvents: _hideDeclinedEvents
     };
 
     var service = {
-      get: get
+      get: get,
+      isDeclinedEventsHidden: isDeclinedEventsHidden,
+      setHiddenDeclinedEvents: setHiddenDeclinedEvents
     };
 
     return service;
@@ -28,8 +33,8 @@
       return esnUserConfigurationService.get(CAL_USER_CONFIGURATION.keys, CAL_USER_CONFIGURATION.moduleName)
         .then(function(configurations) {
           var setConfigurations = configurations.map(function(configuration) {
-            if (!configuration.value || !handler[configuration.name]) {
-              return $q.when({});
+            if (!handler[configuration.name] || !configuration.value) {
+              return {};
             }
 
             return handler[configuration.name]();
@@ -47,9 +52,9 @@
         });
     }
 
-    function _showWorkingDays() {
-      function hasDowKey(businessHour) {
-        return _.has(businessHour, 'dow');
+    function _workingDays() {
+      function hasDowKey(element) {
+        return _.has(element, 'dow');
       }
 
       return calBusinessHoursService.getUserBusinessHours().then(function(userBusinessHours) {
@@ -58,6 +63,19 @@
         return { hiddenDays: _.difference(CAL_UI_CONFIG.calendarDaysValue, workingDays) };
       });
     }
-  }
 
+    function _hideDeclinedEvents() {
+      setHiddenDeclinedEvents(true);
+
+      return {};
+    }
+
+    function setHiddenDeclinedEvents(status) {
+      _isDeclinedEventsHidden = status;
+    }
+
+    function isDeclinedEventsHidden() {
+      return _isDeclinedEventsHidden;
+    }
+  }
 })();

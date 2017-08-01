@@ -5,8 +5,9 @@
     .controller('CalSettingsDisplayController', CalSettingsDisplayController);
 
   function CalSettingsDisplayController(
-    esnUserConfigurationService,
     asyncAction,
+    calFullUiConfiguration,
+    esnUserConfigurationService,
     _,
     session,
     CAL_USER_CONFIGURATION
@@ -46,7 +47,10 @@
         return { name: key, value: value };
       });
 
-      return esnUserConfigurationService.set(configurationsArray, CAL_USER_CONFIGURATION.moduleName);
+      return esnUserConfigurationService.set(configurationsArray, CAL_USER_CONFIGURATION.moduleName)
+        .then(function() {
+          calFullUiConfiguration.setHiddenDeclinedEvents(self.configurations.hideDeclinedEvents);
+        });
     }
   }
 })();

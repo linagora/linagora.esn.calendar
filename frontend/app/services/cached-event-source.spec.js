@@ -11,6 +11,7 @@ describe('The calCachedEventSource service', function() {
   beforeEach(function() {
     self.originalCallback = sinon.spy();
     self.calendarUniqueId = 'a/cal/id';
+    self.userEmail = 'aAttendee@open-paas.org';
 
     self.eventSource = function(start, end, timezone, callback) { // eslint-disable-line
       callback(self.events);
@@ -28,12 +29,35 @@ describe('The calCachedEventSource service', function() {
 
         return self.$timeout;
       });
+
+      var emailMap = {};
+
+      emailMap[self.userEmail] = true;
+
+      var asSession = {
+        user: {
+          _id: '123456',
+          emails: [self.userEmail],
+          emailMap: emailMap
+        },
+        domain: {
+          company_name: 'test'
+        }
+      };
+
+      $provide.factory('session', function($q) {
+        asSession.ready = $q.when(asSession);
+
+        return asSession;
+      });
     });
   });
 
-  beforeEach(angular.mock.inject(function($rootScope, calCachedEventSource, calMoment) {
+  beforeEach(angular.mock.inject(function($rootScope, calCachedEventSource, calFullUiConfiguration, calMoment, CAL_ICAL) {
     self.calCachedEventSource = calCachedEventSource;
+    self.calFullUiConfiguration = calFullUiConfiguration;
     self.calMoment = calMoment;
+    self.CAL_ICAL = CAL_ICAL;
     self.events = [{
       id: 1,
       calendarUniqueId: self.calendarUniqueId,
@@ -564,5 +588,162 @@ describe('The calCachedEventSource service', function() {
       });
     });
 
+  });
+
+    describe('The hideDeclinedEventsFilter function', function() {
+    beforeEach(function() {
+      self.eventsMock = [{
+        id: 1,
+        title: 'No attendees',
+        calendarUniqueId: self.calendarUniqueId,
+        uid: 1,
+        start: self.calMoment.utc('1984-01-01 08:00'),
+        end: self.calMoment.utc('1984-01-01 09:00'),
+        isRecurring: _.constant(false),
+        isInstance: _.constant(false)
+      }];
+      sinon.stub(self.calFullUiConfiguration, 'isDeclinedEventsHidden').returns(true);
+    });
+
+    function getWrapEventSource(events) {
+      var eventSource = sinon.spy(function(start, end, timezone, callback) {
+        expect([start, end, timezone]).to.be.deep.equals([self.start, self.end, self.timezone]);
+        callback(events);
+      });
+
+      return self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, eventSource)(self.start, self.end, self.timezone, self.originalCallback);
+    }
+
+    function newEvent(attrs) {
+      var events = {
+        calendarUniqueId: self.calendarUniqueId,
+        uid: 1,
+        start: self.calMoment.utc('1984-01-01 08:00'),
+        end: self.calMoment.utc('1984-01-01 09:00'),
+        isRecurring: _.constant(false),
+        isInstance: _.constant(false)
+      };
+
+      return angular.extend(events, attrs);
+    }
+
+    it('should return all event when event has no "attendees" property', function() {
+      getWrapEventSource(self.eventsMock);
+      self.$rootScope.$apply();
+
+      expect(self.originalCallback).to.have.been.calledWith(self.eventsMock);
+    });
+
+    it('should return all event when 0 attendee', function() {
+      var attrs = {
+        id: 2,
+        title: 'With attendees',
+        attendees: []
+      };
+      var anEvent = newEvent(attrs);
+
+      self.eventsMock.push(anEvent);
+
+      getWrapEventSource(self.eventsMock);
+      self.$rootScope.$apply();
+
+      expect(self.originalCallback).to.have.been.calledWith(self.eventsMock);
+    });
+
+    it('should return all event when user is not an attendee', function() {
+      var attrs = {
+        id: 2,
+        title: 'With attendees',
+        attendees: [
+          {
+            email: 'contact@domain.com',
+            partstat: self.CAL_ICAL.partstat.needsaction
+          }, {
+            email: 'contact1@domain1.com',
+            partstat: self.CAL_ICAL.partstat.tentative
+          }, {
+            email: 'contact2@domain2.com',
+            partstat: self.CAL_ICAL.partstat.accepted
+          }
+        ]
+      };
+      var anEvent = newEvent(attrs);
+
+      self.eventsMock.push(anEvent);
+
+      getWrapEventSource(self.eventsMock);
+      self.$rootScope.$apply();
+
+      expect(self.originalCallback).to.have.been.calledWith(self.eventsMock);
+    });
+
+    it('should return all event when user is an attendee and has not declined event', function() {
+      var attrs = {
+        id: 2,
+        title: 'With attendees',
+        attendees: [
+          {
+            email: 'contact@domain.com',
+            partstat: self.CAL_ICAL.partstat.needsaction
+          }, {
+            email: 'contact1@domain1.com',
+            partstat: self.CAL_ICAL.partstat.tentative
+          }, {
+            email: 'contact2@domain2.com',
+            partstat: self.CAL_ICAL.partstat.accepted
+          }
+        ]
+      };
+      var anEvent = newEvent(attrs);
+
+      self.eventsMock.push(anEvent);
+
+      function expectedEvents(partstat) {
+        var events = _.clone(self.eventsMock);
+        var userAsAttendee = {
+          email: self.userEmail,
+          partstat: partstat
+        };
+
+        events[1].attendees.push(userAsAttendee);
+
+        getWrapEventSource(self.eventsMock);
+        self.$rootScope.$apply();
+
+        expect(self.originalCallback).to.have.been.calledWith(events);
+      }
+
+      [
+        self.CAL_ICAL.partstat.accepted,
+        self.CAL_ICAL.partstat.needsaction,
+        self.CAL_ICAL.partstat.tentative
+      ].forEach(expectedEvents);
+    });
+
+    it('should not return event where user is attendee and declined the event', function() {
+      var attrs = {
+        id: 2,
+        title: 'With attendees',
+        attendees: [
+          {
+            email: 'contact@domain.com',
+            partstat: self.CAL_ICAL.partstat.needsaction
+          }, {
+            email: self.userEmail,
+            partstat: self.CAL_ICAL.partstat.declined
+          }
+        ]
+      };
+      var anEvent = newEvent(attrs);
+
+      self.eventsMock.push(anEvent);
+
+      var expectEvent = _.first(self.eventsMock);
+
+      getWrapEventSource(self.eventsMock);
+      self.$rootScope.$apply();
+
+      expect(self.originalCallback).to.have.been.calledWith([expectEvent]);
+    });
   });
 });
