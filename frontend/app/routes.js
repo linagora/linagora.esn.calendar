@@ -40,6 +40,9 @@
           },
           businessHours: function(calBusinessHoursService) {
             return calBusinessHoursService.getUserBusinessHours();
+          },
+          calendarUiConfiguration: function(calFullUiConfiguration) {
+            return calFullUiConfiguration.get();
           }
         },
         controller: function($scope, calendarHomeId) {
@@ -52,9 +55,9 @@
         views: {
           content: {
             templateUrl: '/calendar/app/calendar/calendar-main',
-            controller: function($scope, calendarHomeId, businessHours, CAL_UI_CONFIG) {
+            controller: function($scope, calendarHomeId, businessHours, calendarUiConfiguration) {
               $scope.calendarHomeId = calendarHomeId;
-              $scope.uiConfig = angular.copy(CAL_UI_CONFIG);
+              $scope.uiConfig = angular.copy(calendarUiConfiguration);
               $scope.uiConfig.calendar.businessHours = businessHours;
               $scope.uiConfig.calendar.scrollTime = businessHours[0].start;
             }
@@ -81,6 +84,14 @@
         views: {
           settings: {
             template: '<cal-settings-calendars />'
+          }
+        }
+      })
+      .state('calendar.settings.display', {
+        url: '/display',
+        views: {
+          settings: {
+            template: '<cal-settings-display />'
           }
         }
       })
