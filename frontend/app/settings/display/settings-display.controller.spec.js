@@ -20,7 +20,7 @@ describe('The CalSettingsDisplayController', function() {
     module('esn.calendar');
 
     moduleName = 'linagora.esn.calendar';
-    moduleConfiguration = ['workingDays'];
+    moduleConfiguration = ['workingDays', 'hideDeclinedEvents'];
     configResponse = [
       { name: 'key1', value: 'value1' },
       { name: 'key2', value: 'value2' }

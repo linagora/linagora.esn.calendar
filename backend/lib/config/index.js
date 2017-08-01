@@ -12,6 +12,13 @@ module.exports = dependencies => {
             admin: 'rw',
             user: 'rw'
           }
+      },
+      hideDeclinedEvents: {
+        rights: {
+            padmin: 'rw',
+            admin: 'rw',
+            user: 'rw'
+          }
       }
     }
   };

@@ -23,7 +23,7 @@ describe('The calFullUiConfiguration service', function() {
       end: '25:00'
     }];
     moduleName = 'linagora.esn.calendar';
-    moduleConfiguration = ['workingDays'];
+    moduleConfiguration = ['workingDays', 'hideDeclinedEvents'];
     esnConfig = sinon.spy(function() {
       return $q.when(businessHours);
     });

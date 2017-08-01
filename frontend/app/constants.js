@@ -402,6 +402,6 @@
     }])
     .constant('CAL_USER_CONFIGURATION', {
       moduleName: 'linagora.esn.calendar',
-      keys: ['workingDays']
+      keys: ['workingDays', 'hideDeclinedEvents']
     });
 })();
