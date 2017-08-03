@@ -1,7 +1,7 @@
 extends /modules/subheader/responsive-subheader.pug
 
 block left
-  button.btn.btn-link(esn-back-button="calendar.main")
+  button.btn.btn-link(ui-sref='{{ $ctrl.previousState }}')
     .flex-vertical-centered.flex-space-between
       i.mdi.mdi-close
       .hidden-xs.vertical-centered #{__('Cancel')}

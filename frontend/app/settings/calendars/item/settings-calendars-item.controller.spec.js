@@ -104,7 +104,7 @@ describe('The CalSettingsCalendarsItemController controller', function() {
       controller.stateToGo = 'calendar.edit';
       controller.goTo();
 
-      expect(stateSpy).to.have.been.calledWith(controller.stateToGo, { calendarUniqueId: calendar.uniqueId });
+      expect(stateSpy).to.have.been.calledWith(controller.stateToGo, { calendarUniqueId: calendar.uniqueId, previousState: 'calendar.settings.calendars' });
     });
   });
 });
