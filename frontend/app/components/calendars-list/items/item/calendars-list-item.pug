@@ -3,9 +3,9 @@
     .media.row
       .col-md-12
         .media(ng-click="$ctrl.onShowHideToggle()")
-          .pull-left(ng-if="$ctrl.selected", title="#{__('Hide calendar')}")
+          .pull-left(ng-if="$ctrl.selected", title=__('Hide calendar'))
             i.mdi.mdi-checkbox-blank-circle(ng-style="{'color': $ctrl.calendar.color}")
-          .pull-left(ng-if="!$ctrl.selected", title="#{__('Show calendar')}")
+          .pull-left(ng-if="!$ctrl.selected", title=__('Show calendar'))
             i.mdi.mdi-checkbox-blank-circle-outline(ng-style="{'color': ($ctrl.isHover ? $ctrl.calendar.color : '') }")
           .media-body(title="{{ $ctrl.calendar.name }}")
             .lv-title

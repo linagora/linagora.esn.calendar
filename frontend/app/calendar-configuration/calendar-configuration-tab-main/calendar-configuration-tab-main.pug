@@ -1,6 +1,6 @@
 .form-group.fg-line(ng-class='{"has-error": !$ctrl.calendar.name}')
   .field-name #{__('Name')}
-  input.form-control(type="text", placeholder="#{__('Enter a name')}", ng-model="$ctrl.calendar.name", maxlength="255")
+  input.form-control(type="text", placeholder=__('Enter a name'), ng-model="$ctrl.calendar.name", maxlength="255")
 
 .public-access-line.public-access-visibility-line
   i.mdi.mdi-account-multiple.big
