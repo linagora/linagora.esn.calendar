@@ -508,12 +508,24 @@ describe('The calendar configuration controller', function() {
         expect(calendarAPI.modifyPublicRights).to.not.have.been.called;
       });
 
-      it('should call createCalendar and calendarAPI.modifyPublicRights when providing a publicSelection', function() {
+      it('should call createCalendar and calendarAPI.modifyPublicRights when publicSelection is set to read', function() {
+        createCalendarWithPublicRightSetTo(CAL_CALENDAR_PUBLIC_RIGHT.READ);
+      });
+
+      it('should call createCalendar and calendarAPI.modifyPublicRights when publicSelection is set to read_write', function() {
+        createCalendarWithPublicRightSetTo(CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE);
+      });
+
+      it('should call createCalendar and calendarAPI.modifyPublicRights when publicSelection is set to private', function() {
+        createCalendarWithPublicRightSetTo(CAL_CALENDAR_PUBLIC_RIGHT.PRIVATE);
+      });
+
+      function createCalendarWithPublicRightSetTo(publicRight) {
         calendarConfigurationController.activate();
 
         calendarConfigurationController.calendar.color = 'aColor';
         calendarConfigurationController.calendar.name = 'N';
-        calendarConfigurationController.publicSelection = CAL_CALENDAR_PUBLIC_RIGHT.READ;
+        calendarConfigurationController.publicSelection = publicRight;
 
         calendarConfigurationController.submit();
 
@@ -522,9 +534,9 @@ describe('The calendar configuration controller', function() {
         expect(calendarAPI.modifyPublicRights).to.have.been.calledWith(
           calendarConfigurationController.calendarHomeId,
           calendarConfigurationController.calendar.id,
-          { public_right: calendarConfigurationController.publicSelection }
+          { public_right: publicRight }
           );
-      });
+      }
     });
 
     describe('when newCalendar is false', function() {
@@ -719,8 +731,8 @@ describe('The calendar configuration controller', function() {
           expect(calendarService.modifyRights).to.not.have.been.calledWith;
         });
 
-        it('should call modifyPublicRights with none argument when public right is changed to none', function() {
-          calendarConfigurationController.publicSelection = CAL_CALENDAR_PUBLIC_RIGHT.NONE;
+        it('should call modifyPublicRights with private argument when public right is changed to private', function() {
+          calendarConfigurationController.publicSelection = CAL_CALENDAR_PUBLIC_RIGHT.PRIVATE;
 
           calendarConfigurationController.submit();
           $rootScope.$digest();
@@ -730,13 +742,13 @@ describe('The calendar configuration controller', function() {
           expect(calendarAPI.modifyPublicRights).to.have.been.calledWith(
             calendarConfigurationController.calendarHomeId,
             calendarConfigurationController.calendar.id,
-            { public_right: CAL_CALENDAR_PUBLIC_RIGHT.NONE }
+            { public_right: CAL_CALENDAR_PUBLIC_RIGHT.PRIVATE }
           );
           expect(calendarService.modifyCalendar).to.not.have.been.calledWith;
           expect(calendarService.modifyRights).to.not.have.been.calledWith;
         });
 
-        it('should call modifyPublicRights with free-busy argument when public right is changed to something other than none or read', function() {
+        it('should call modifyPublicRights with free-busy argument when public right is changed to something other than private or read', function() {
           calendarConfigurationController.publicSelection = CAL_CALENDAR_PUBLIC_RIGHT.FREE_BUSY;
 
           calendarConfigurationController.submit();

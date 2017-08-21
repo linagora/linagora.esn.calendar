@@ -36,8 +36,8 @@
           name: CAL_CALENDAR_PUBLIC_RIGHT.READ_LABEL_LONG
         },
         {
-          value: CAL_CALENDAR_PUBLIC_RIGHT.NONE,
-          name: CAL_CALENDAR_PUBLIC_RIGHT.NONE_LABEL_LONG
+          value: CAL_CALENDAR_PUBLIC_RIGHT.PRIVATE,
+          name: CAL_CALENDAR_PUBLIC_RIGHT.PRIVATE_LABEL_LONG
         }
       ];
 
