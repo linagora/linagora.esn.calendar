@@ -81,7 +81,7 @@ module.exports = function(config) {
       'node_modules/linagora-rse/test/fixtures/**/*.js',
       'node_modules/linagora-rse/frontend/js/modules/**/*.module.js',
       'node_modules/linagora-rse/frontend/js/modules/**/*.js',
-      'node_modules/linagora-rse/frontend/views/modules/**/*.jade',
+      'node_modules/linagora-rse/frontend/views/modules/**/*.pug',
       'node_modules/linagora-rse/frontend/js/*.js',
 
       'node_modules/linagora-rse/modules/linagora.esn.graceperiod/frontend/js/*.js',
@@ -89,7 +89,7 @@ module.exports = function(config) {
       'test/config/mocks/*.js',
       'frontend/app/app.js',
       'frontend/app/**/*.js',
-      'frontend/app/**/*.jade',
+      'frontend/app/**/*.pug',
       'frontend/app/*.js',
 
       { pattern: 'node_modules/linagora-rse/frontend/js/modules/i18n/i18n.config.js', watched: false, included: false, served: true },
@@ -126,7 +126,7 @@ module.exports = function(config) {
 
     preprocessors: {
       'frontend/app/**/*.js': ['coverage'],
-      '**/*.jade': ['ng-jade2module'],
+      '**/*.pug': ['ng-jade2module'],
       'test/unit-frontend/fixtures/**': ['raw2js'],
       'frontend/app/fixtures/**': ['raw2js']
     },
@@ -149,7 +149,7 @@ module.exports = function(config) {
       prependPrefix: '/linagora.esn.calendar',
       cacheIdFromPath: function(filepath) {
         return filepath
-          .replace(/jade$/, 'html')
+          .replace(/pug$/, 'html')
           .replace(/^frontend/, '/calendar')
           .replace(/^node_modules\/linagora-rse\/frontend/, '');
       },

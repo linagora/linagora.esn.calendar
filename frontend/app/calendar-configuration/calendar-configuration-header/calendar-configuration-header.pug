@@ -1,4 +1,4 @@
-extends /modules/subheader/responsive-subheader
+extends /modules/subheader/responsive-subheader.pug
 
 block left
   button.btn.btn-link(esn-back-button="calendar.main")
@@ -13,4 +13,4 @@ block right
     .vertical-centered(ng-if='$ctrl.newCalendar') #{__('Create')}
     i.mdi.mdi-margin-left.mdi-check
   button.btn.btn-link.btn-icon.visible-xs(ng-click='$ctrl.submit()')
-      i.mdi.mdi-check
+    i.mdi.mdi-check

@@ -15,7 +15,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
           .col-xs-12
             .form-group
               .fg-line
-                input.input.title.form-control(type="text", ng-model='editedEvent.title', ng-model-options="{getterSetter: true}", maxlength="{{::CAL_EVENT_FORM.title.maxlength}}", placeholder="#{__('Title')}", ng-readonly="!canModifyEvent")
+                input.input.title.form-control(type="text", ng-model='editedEvent.title', ng-model-options="{getterSetter: true}", maxlength="{{::CAL_EVENT_FORM.title.maxlength}}", placeholder=__('Title'), ng-readonly="!canModifyEvent")
           .col-xs-12
             .form-group
               .input-group
@@ -30,7 +30,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
                 span.input-group-addon
                   i.mdi.mdi-map-marker
                 .fg-line
-                  input.input.location.form-control(type="text", ng-model='editedEvent.location', ng-model-options="{getterSetter: true}", maxlength="{{::CAL_EVENT_FORM.location.maxlength}}", placeholder="#{__('Location')}", ng-readonly="!canModifyEvent")
+                  input.input.location.form-control(type="text", ng-model='editedEvent.location', ng-model-options="{getterSetter: true}", maxlength="{{::CAL_EVENT_FORM.location.maxlength}}", placeholder=__('Location'), ng-readonly="!canModifyEvent")
           cal-attendees-autocomplete-input(ng-hide='!canModifyEventAttendees', original-attendees='editedEvent.attendees', mutable-attendees='newAttendees')
           .col-xs-12(ng-if='displayParticipationButton')
             .form-group.status.row
@@ -67,7 +67,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
                 span.input-group-addon.textarea-icon
                   i.mdi.mdi-calendar-text
                 .fg-line
-                  textarea.form-control(cal-auto-size-and-update, type="text", ng-model='editedEvent.description', placeholder="#{__('Notes...')}", ng-readonly="!canModifyEvent")
+                  textarea.form-control(cal-auto-size-and-update, type="text", ng-model='editedEvent.description', placeholder=__('Notes...'), ng-readonly="!canModifyEvent")
 
       .modal-footer.flex
         .flex-vertical-centered.flex-start
