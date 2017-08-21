@@ -33,6 +33,7 @@
     self.removeUserGroup = removeUserGroup;
     self.$onInit = $onInit;
     self.activate = activate;
+    self.previousState = $stateParams.previousState || 'calendar.main';
 
     ////////////
 

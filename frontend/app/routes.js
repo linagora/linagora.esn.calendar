@@ -87,7 +87,8 @@
       .state('calendar.edit', {
         url: '/edit/:calendarUniqueId',
         params: {
-          addUsersFromDelegationState: null
+          addUsersFromDelegationState: null,
+          previousState: null
         },
         views: {
           content: {
@@ -126,6 +127,9 @@
       })
       .state('calendar.external.shared', {
         url: '/shared/:calendarUniqueId',
+        params: {
+          previousState: null
+        },
         views: {
           'content@calendar': {
             template: '<calendar-configuration />'
