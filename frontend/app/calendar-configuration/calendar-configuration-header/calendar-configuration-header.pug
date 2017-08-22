@@ -1,10 +1,11 @@
 extends /modules/subheader/responsive-subheader.pug
 
 block left
-  button.btn.btn-link(ui-sref='{{ $ctrl.previousState }}')
-    .flex-vertical-centered.flex-space-between
-      i.mdi.mdi-close
-      .hidden-xs.vertical-centered #{__('Cancel')}
+  .btn-container
+    button.btn.btn-link(ui-sref='{{ $ctrl.previousState }}')
+      .flex-vertical-centered.flex-space-between
+        i.mdi.mdi-close
+        .hidden-xs.vertical-centered #{__('Cancel')}
   .title.ellipsis {{ ::$ctrl.calendar.name }}
 
 block right
