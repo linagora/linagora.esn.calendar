@@ -8,18 +8,19 @@
     var self = this;
 
     self.mutableAttendees = self.mutableAttendees || [];
+    self.originalAttendees = self.originalAttendees || [];
     self.onAddingAttendee = onAddingAttendee;
     self.getInvitableAttendees = getInvitableAttendees;
 
     ////////////
 
-    function onAddingAttendee(att) {
-      if (!att.id) {
-        att.id = att.displayName;
-        att.email = att.displayName;
+    function onAddingAttendee(attendee) {
+      if (!attendee.id) {
+        attendee.id = attendee.displayName;
+        attendee.email = attendee.displayName;
       }
 
-      return !_isDuplicateAttendee(att, _getAddedAttendeeIds());
+      return !_isDuplicateAttendee(attendee, _getAddedAttendeesEmails());
     }
 
     function getInvitableAttendees(query) {
@@ -36,26 +37,32 @@
     }
 
     function _fillNonDuplicateAttendees(attendees) {
-      var addedAttendeeIds = _getAddedAttendeeIds();
+      var addedAttendeesEmails = _getAddedAttendeesEmails();
 
-      return attendees.filter(function(att) {
-        return !_isDuplicateAttendee(att, addedAttendeeIds);
+      return attendees.filter(function(attendee) {
+        return !_isDuplicateAttendee(attendee, addedAttendeesEmails);
       });
     }
 
-    function _getAddedAttendeeIds() {
-      var addedAttendees = self.mutableAttendees.concat(self.originalAttendees || []);
-      var addedAttendeeIds = [];
+    function _getAddedAttendeesEmails() {
+      var addedAttendees = self.mutableAttendees.concat(self.originalAttendees);
+      var addedAttendeesEmails = [];
 
-      addedAttendees.forEach(function(att) {
-        addedAttendeeIds.push(att.id);
+      addedAttendees.forEach(function(attendee) {
+        if (attendee.emails) {
+          attendee.emails.forEach(function(email) {
+            addedAttendeesEmails.push(email);
+          });
+        } else {
+          addedAttendeesEmails.push(attendee.email);
+        }
       });
 
-      return addedAttendeeIds;
+      return addedAttendeesEmails;
     }
 
-    function _isDuplicateAttendee(att, addedAttendeeIds) {
-      return (att.email in session.user.emailMap) || addedAttendeeIds.indexOf(att.id) > -1;
+    function _isDuplicateAttendee(attendee, addedAttendeesEmails) {
+      return (attendee.email in session.user.emailMap) || addedAttendeesEmails.indexOf(attendee.email) > -1;
     }
   }
 

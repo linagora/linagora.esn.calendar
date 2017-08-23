@@ -29,30 +29,40 @@ describe('The calAttendeesAutocompleteInputController', function() {
       getAttendeeCandidates: function() {
         return $q.when([
           {
+            email: 'user1@test.com',
+            emails: ['user1@test.com'],
             id: '111111',
             firstname: 'first',
             lastname: 'last',
-            email: 'user1@test.com',
-            preferredEmail: 'user1@test.com',
-            partstat: 'NEEDS-ACTION'
+            partstat: 'NEEDS-ACTION',
+            preferredEmail: 'user1@test.com'
+          },
+          {
+            displayName: 'contact2',
+            email: 'user2@test.com',
+            emails: ['user2@test.com'],
+            id: '222222',
+            partstat: 'NEEDS-ACTION',
+            preferredEmail: 'user2@test.com'
           },
           {
             displayName: 'contact3',
-            id: '222222',
-            email: 'fist@last',
-            preferredEmail: 'fist@last',
-            partstat: 'NEEDS-ACTION'
+            email: 'user3@test.com',
+            emails: ['user3@test.com'],
+            firstname: 'john',
+            id: '333333',
+            lastname: 'doe',
+            partstat: 'NEEDS-ACTION',
+            preferredEmail: 'user3@test.com'
           },
           {
-            displayName: 'contact1',
-            id: '333333',
-            firstname: 'john',
-            lastname: 'doe',
-            email: 'johndoe@test.com',
-            preferredEmail: 'johndoe@test.com',
-            partstat: 'NEEDS-ACTION'
-          },
-          {displayName: 'contact20', id: '444444', email: '4@last', preferredEmail: '4@last', partstat: 'NEEDS-ACTION'}
+            displayName: 'contact4',
+            email: 'user4@test.com',
+            emails: ['user4@test.com'],
+            id: '444444',
+            partstat: 'NEEDS-ACTION',
+            preferredEmail: 'user4@test.com'
+          }
         ]);
       }
     };
@@ -93,7 +103,7 @@ describe('The calAttendeesAutocompleteInputController', function() {
   });
 
   it('should use the model, if one given', function() {
-    var bindings = {mutableAttendees: [{a: '1'}]};
+    var bindings = { mutableAttendees: [{ a: '1' }] };
     var ctrl = initController(bindings);
 
     expect(ctrl.mutableAttendees).to.deep.equal([{a: '1'}]);
@@ -101,59 +111,108 @@ describe('The calAttendeesAutocompleteInputController', function() {
 
   describe('getInvitableAttendees', function() {
     var query = 'aQuery';
+    var ctrl;
+    var expectedAtttendeesDuplication = [
+      {
+        displayName: 'contact3',
+        email: 'user3@test.com',
+        emails: ['user3@test.com'],
+        firstname: 'john',
+        id: '333333',
+        lastname: 'doe',
+        partstat: 'NEEDS-ACTION',
+        preferredEmail: 'user3@test.com'
+      },
+      {
+        displayName: 'contact4',
+        email: 'user4@test.com',
+        emails: ['user4@test.com'],
+        id: '444444',
+        partstat: 'NEEDS-ACTION',
+        preferredEmail: 'user4@test.com'
+      }
+    ];
+
+    var expectedAttendeesSorted = [
+      {
+        displayName: 'contact2',
+        email: 'user2@test.com',
+        emails: ['user2@test.com'],
+        id: '222222',
+        partstat: 'NEEDS-ACTION',
+        preferredEmail: 'user2@test.com'
+      },
+      {
+        displayName: 'contact3',
+        email: 'user3@test.com',
+        emails: ['user3@test.com'],
+        firstname: 'john',
+        id: '333333',
+        lastname: 'doe',
+        partstat: 'NEEDS-ACTION',
+        preferredEmail: 'user3@test.com'
+      },
+      {
+        displayName: 'contact4',
+        email: 'user4@test.com',
+        emails: ['user4@test.com'],
+        id: '444444',
+        partstat: 'NEEDS-ACTION',
+        preferredEmail: 'user4@test.com'
+      }
+    ];
+
+    beforeEach(function() {
+      ctrl = initController();
+    });
 
     it('should call calendarAttendeeService, remove session.user and sort the other users based on the displayName property ', function(done) {
-      var ctrl = initController();
-
       ctrl.getInvitableAttendees(query).then(function(response) {
-        expect(response).to.deep.equal([
-          {
-            displayName: 'contact1',
-            id: '333333',
-            firstname: 'john',
-            lastname: 'doe',
-            email: 'johndoe@test.com',
-            preferredEmail: 'johndoe@test.com',
-            partstat: 'NEEDS-ACTION'
-          },
-          {
-            displayName: 'contact3',
-            id: '222222',
-            email: 'fist@last',
-            preferredEmail: 'fist@last',
-            partstat: 'NEEDS-ACTION'
-          },
-          {displayName: 'contact20', id: '444444', email: '4@last', preferredEmail: '4@last', partstat: 'NEEDS-ACTION'}
-        ]);
+        expect(response).to.deep.equal(expectedAttendeesSorted);
+
         done();
       });
+
       $scope.$digest();
     });
 
-    it('should remove duplicate attendees based on ID comparing to added attendees', function(done) {
-      var ctrl = initController();
+    it('should remove duplicate attendees, based on primary email, comparing to added already attendees', function(done) {
+      ctrl.originalAttendees = [{ email: 'user2@test.com', emails: ['user2@test.com'] }];
 
-      ctrl.originalAttendees = [{
-        id: '222222',
-        email: 'fist@last'
-      }];
+      _checkDuplication(done);
+    });
+
+    it('should remove duplicate attendees, based on secondary email, comparing to added already attendees', function(done) {
+      ctrl.originalAttendees = [{ email: 'another@world.com', emails: ['another@world.com', 'user2@test.com'] }];
+
+      _checkDuplication(done);
+    });
+
+    it('should remove duplicate attendees, based on primary email, comparing to attendees being currently added', function(done) {
+      ctrl.mutableAttendees = [{ email: 'user2@test.com', emails: ['user2@test.com'] }];
+
+      _checkDuplication(done);
+    });
+
+    it('should remove duplicate attendees, based on secondary email, comparing to attendees being currently added', function(done) {
+      ctrl.mutableAttendees = [{ email: 'another@world.com', emails: ['another@world.com', 'user2@test.com'] }];
+
+      _checkDuplication(done);
+    });
+
+    function _checkDuplication(done) {
+      _getAndCheckInvitableAttendees(ctrl, query, expectedAtttendeesDuplication, done);
+    }
+
+    function _getAndCheckInvitableAttendees(ctrl, query, expectedAtttendeesDuplication, done) {
       ctrl.getInvitableAttendees(query).then(function(response) {
-        expect(response).to.eql([
-          {
-            displayName: 'contact1',
-            id: '333333',
-            firstname: 'john',
-            lastname: 'doe',
-            email: 'johndoe@test.com',
-            preferredEmail: 'johndoe@test.com',
-            partstat: 'NEEDS-ACTION'
-          },
-          {displayName: 'contact20', id: '444444', email: '4@last', preferredEmail: '4@last', partstat: 'NEEDS-ACTION'}
-        ]);
+        expect(response).to.deep.equal(expectedAtttendeesDuplication);
+
         done();
       });
+
       $scope.$digest();
-    });
+    }
 
     it('should call calendarAttendeeService and return a maximum of CAL_AUTOCOMPLETE_MAX_RESULTS results', function(done) {
       calendarAttendeeService.getAttendeeCandidates = function(q) {
@@ -167,44 +226,46 @@ describe('The calAttendeesAutocompleteInputController', function() {
         return $q.when(response);
       };
 
-      var ctrl = initController();
-
       ctrl.getInvitableAttendees(query).then(function(response) {
         expect(response.length).to.equal(CAL_AUTOCOMPLETE_MAX_RESULTS);
+
         done();
       });
+
       $scope.$digest();
     });
   });
 
   describe('onAddingAttendee', function() {
     it('should work with attendee having an email', function() {
-      var att, res;
+      var attendee, response;
       var ctrl = initController();
 
-      att = {id: 1, displayName: 'yolo', email: 'yolo@open-paas.org'};
-      res = ctrl.onAddingAttendee(att);
-      expect(res).to.be.true;
+      attendee = { id: 1, displayName: 'yolo', email: 'yolo@open-paas.org' };
+      response = ctrl.onAddingAttendee(attendee);
+
+      expect(response).to.be.true;
     });
 
     it('should work with attendee without an email', function() {
-      var att, res;
+      var attendee, response;
       var ctrl = initController();
 
-      att = {displayName: 'eric cartman'};
-      res = ctrl.onAddingAttendee(att);
-      expect(res).to.be.true;
-      expect(att.email).to.be.equal('eric cartman');
+      attendee = {displayName: 'eric cartman'};
+      response = ctrl.onAddingAttendee(attendee);
+
+      expect(response).to.be.true;
+      expect(attendee.email).to.be.equal('eric cartman');
     });
 
     describe('adding plain email attendee', function() {
       it('should use displayName as ID and email', function() {
         var displayName = 'plain@email.com';
-        var att = {displayName: displayName};
+        var attendee = { displayName: displayName };
         var ctrl = initController();
 
-        ctrl.onAddingAttendee(att);
-        expect(att).to.eql({
+        ctrl.onAddingAttendee(attendee);
+        expect(attendee).to.deep.equal({
           displayName: displayName,
           id: displayName,
           email: displayName
@@ -219,6 +280,7 @@ describe('The calAttendeesAutocompleteInputController', function() {
         var ctrl = initController();
 
         ctrl.originalAttendees = [duplicateContact];
+
         expect(ctrl.onAddingAttendee(duplicateContact)).to.be.false;
       });
 
@@ -229,6 +291,7 @@ describe('The calAttendeesAutocompleteInputController', function() {
         var ctrl = initController();
 
         ctrl.originalAttendees = [duplicateContact];
+
         expect(ctrl.onAddingAttendee(duplicateContact)).to.be.false;
       });
 
@@ -239,6 +302,7 @@ describe('The calAttendeesAutocompleteInputController', function() {
         var ctrl = initController();
 
         ctrl.originalAttendees = [duplicateContact];
+
         expect(ctrl.onAddingAttendee(duplicateContact)).to.be.false;
       });
     });
