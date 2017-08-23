@@ -126,9 +126,9 @@
     })
 
     .constant('CAL_CALENDAR_PUBLIC_RIGHT', {
-      NONE: '',
-      NONE_LABEL: 'Private',
-      NONE_LABEL_LONG: 'Hide calendar',
+      PRIVATE: '',
+      PRIVATE_LABEL: 'Private',
+      PRIVATE_LABEL_LONG: 'Hide calendar',
 
       READ: '{DAV:}read',
       READ_LABEL: 'Read',

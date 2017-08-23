@@ -43,13 +43,13 @@
      */
     function CalendarRightShell(acl, invite, ownerId) {
       this._userEmails = {};
-      this._public = CAL_CALENDAR_PUBLIC_RIGHT.NONE;
+      this._public = CAL_CALENDAR_PUBLIC_RIGHT.PRIVATE;
       this._sharee = {};
       this._ownerId = ownerId || session.user._id;
 
       function pickHighestPriorityRight(oldPublicRight, newPublicRight) {
         var CalendarRightShellValues = [
-          CAL_CALENDAR_PUBLIC_RIGHT.NONE,
+          CAL_CALENDAR_PUBLIC_RIGHT.PRIVATE,
           CAL_CALENDAR_PUBLIC_RIGHT.FREE_BUSY,
           CAL_CALENDAR_PUBLIC_RIGHT.READ,
           CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE
@@ -71,8 +71,7 @@
               this._public = pickHighestPriorityRight(this._public, aclItem.privilege);
               break;
             default:
-              $log.warn('Unknown public ACL privilege: ' + aclItem.privilege);
-              this._public = this._public || CAL_CALENDAR_PUBLIC_RIGHT.NONE;
+              this._public = this._public || CAL_CALENDAR_PUBLIC_RIGHT.PRIVATE;
           }
         }
       }, this);

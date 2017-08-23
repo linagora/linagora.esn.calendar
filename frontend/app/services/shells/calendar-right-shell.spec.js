@@ -38,6 +38,20 @@ describe('CalendarRightShell factory', function() {
       calendarRightShell = new CalendarRightShell([], [], publicOwnerId);
       expect(calendarRightShell.getOwnerId()).to.be.equal(publicOwnerId);
     });
+
+    it('should initialize public right to private with acl.privilege set to CAL_CALENDAR_PUBLIC_RIGHT.PRIVATE', function() {
+      var publicRight = CAL_CALENDAR_PUBLIC_RIGHT.PRIVATE;
+      var acl = [
+        {
+          privilege: publicRight,
+          principal: '{DAV:}authenticated',
+          protected: true
+        }
+      ];
+
+      calendarRightShell = new CalendarRightShell(acl, []);
+      expect(calendarRightShell.getPublicRight()).to.be.equal(publicRight);
+    });
   });
 
   describe('getOwnerId', function() {
