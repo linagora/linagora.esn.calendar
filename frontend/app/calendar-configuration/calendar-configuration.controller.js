@@ -118,7 +118,10 @@
       }
 
       if (self.newCalendar) {
-        calendarService.createCalendar(self.calendarHomeId, self.calendar)
+        $state.go('calendar.main')
+          .then(function() {
+            return calendarService.createCalendar(self.calendarHomeId, self.calendar);
+          })
           .then(function() {
             switch (self.publicSelection) {
               case CAL_CALENDAR_PUBLIC_RIGHT.READ:
@@ -131,7 +134,6 @@
           })
           .then(function() {
             notificationFactory.weakInfo('New calendar -', esnI18nService.translate('%s has been created', self.calendar.name));
-            $state.go('calendar.main');
           });
       } else {
         CaldelegationEditionHelperInstance.getAllRemovedUsersId().map(function(removedUserId) {
