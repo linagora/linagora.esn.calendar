@@ -53,8 +53,8 @@
     }
 
     function _workingDays() {
-      function hasDowKey(element) {
-        return _.has(element, 'dow');
+      function hasDowKey(businessHour) {
+        return _.has(businessHour, 'dow');
       }
 
       return calBusinessHoursService.getUserBusinessHours().then(function(userBusinessHours) {

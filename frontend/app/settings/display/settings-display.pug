@@ -2,7 +2,7 @@ mixin settingsSwitch(title, rightLabel, leftLabel)
   p
     span #{__(title)}
   p.cal-setting-switch
-    span.working-days-disabled(ng-class="{'toggle-active': " + !attributes.switchValue + "}")
+    span.working-days-disabled(ng-class="{'toggle-active': " + attributes.switchValue + "}")
       | #{__(rightLabel)}
     toggle-switch(ng-model=attributes.switchValue, color='blue', form="form")
     span.working-days-enabled(ng-class="{'toggle-active': " + attributes.switchValue + "}")

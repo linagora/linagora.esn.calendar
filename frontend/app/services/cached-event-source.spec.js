@@ -608,6 +608,7 @@ describe('The calCachedEventSource service', function() {
     function getWrapEventSource(events) {
       var eventSource = sinon.spy(function(start, end, timezone, callback) {
         expect([start, end, timezone]).to.be.deep.equals([self.start, self.end, self.timezone]);
+
         callback(events);
       });
 
@@ -629,7 +630,7 @@ describe('The calCachedEventSource service', function() {
 
     it('should return all event when event has no "attendees" property', function() {
       getWrapEventSource(self.eventsMock);
-      self.$rootScope.$apply();
+      self.$rootScope.$digest();
 
       expect(self.originalCallback).to.have.been.calledWith(self.eventsMock);
     });
@@ -645,7 +646,7 @@ describe('The calCachedEventSource service', function() {
       self.eventsMock.push(anEvent);
 
       getWrapEventSource(self.eventsMock);
-      self.$rootScope.$apply();
+      self.$rootScope.$digest();
 
       expect(self.originalCallback).to.have.been.calledWith(self.eventsMock);
     });
@@ -672,7 +673,7 @@ describe('The calCachedEventSource service', function() {
       self.eventsMock.push(anEvent);
 
       getWrapEventSource(self.eventsMock);
-      self.$rootScope.$apply();
+      self.$rootScope.$digest();
 
       expect(self.originalCallback).to.have.been.calledWith(self.eventsMock);
     });
@@ -708,7 +709,7 @@ describe('The calCachedEventSource service', function() {
         events[1].attendees.push(userAsAttendee);
 
         getWrapEventSource(self.eventsMock);
-        self.$rootScope.$apply();
+        self.$rootScope.$digest();
 
         expect(self.originalCallback).to.have.been.calledWith(events);
       }
@@ -741,7 +742,7 @@ describe('The calCachedEventSource service', function() {
       var expectEvent = _.first(self.eventsMock);
 
       getWrapEventSource(self.eventsMock);
-      self.$rootScope.$apply();
+      self.$rootScope.$digest();
 
       expect(self.originalCallback).to.have.been.calledWith([expectEvent]);
     });

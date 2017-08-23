@@ -13,6 +13,10 @@
       span {
         color: lighten(@text-color, 50%);
         padding: 5px;
+
+        &.working-days-disabled:not(.toggle-active) {
+          color: @m-black;
+        }
       }
     }
 
@@ -24,15 +28,9 @@
       }
     }
 
-    
-
     .toggle-active {
         &.working-days-enabled {
           color: @m-blue;
-        }
-
-        &.working-days-disabled {
-          color: @secondaryTextColor;
         }
       }
   }

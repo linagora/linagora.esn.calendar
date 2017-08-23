@@ -146,12 +146,12 @@
       return function(start, end, timezone, callback) {
         fetchEventOnlyIfNeeded(start, end, timezone, calendarUniqueId, calendarSource)
           .then(function(events) {
-            return callback(_hideDeclinedEventsFilter(applySavedChange(start, end, calendarUniqueId, events)));
+            return callback(_handleDeclinedEvents(applySavedChange(start, end, calendarUniqueId, events)));
           });
       };
     }
 
-    function _hideDeclinedEventsFilter(events) {
+    function _handleDeclinedEvents(events) {
       if (!calFullUiConfiguration.isDeclinedEventsHidden()) {
         return events;
       }
