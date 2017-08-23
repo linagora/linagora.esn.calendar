@@ -468,40 +468,37 @@ describe('The calendar configuration controller', function() {
 
     describe('when newCalendar is true (with name having only one char)', function() {
       beforeEach(function() {
+        calendarConfigurationController.newCalendar = true;
+        calendarConfigurationController.calendar = {
+          color: 'aColor',
+          name: 'N'
+        };
+
         notificationFactoryMock.weakInfo = sinon.spy();
+
         stateMock.go = sinon.spy(function(path) {
           expect(path).to.equal('calendar.main');
+
+          return $q.when();
         });
+
         calendarService.createCalendar = function(calendarHomeId, shell) {
           expect(calendarHomeId).to.equal('12345');
           expect(shell).to.shallowDeepEqual({
-            href: '/calendars/12345/00000000-0000-4000-a000-000000000000.json',
             name: 'N',
             color: 'aColor'
           });
 
-          return {
-            then: function(callback) {
-              callback();
-
-              return {
-                then: function(callback) {
-                  callback();
-                }
-              };
-            }
-          };
+          return $q.when();
         };
       });
 
       it('should call createCalendar', function() {
-        calendarConfigurationController.activate();
-
-        calendarConfigurationController.calendar.color = 'aColor';
-        calendarConfigurationController.calendar.name = 'N';
         calendarConfigurationController.publicSelection = undefined;
 
         calendarConfigurationController.submit();
+
+        $rootScope.$digest();
 
         expect(notificationFactoryMock.weakInfo).to.have.been.called;
         expect(stateMock.go).to.have.been.called;
@@ -521,16 +518,15 @@ describe('The calendar configuration controller', function() {
       });
 
       function createCalendarWithPublicRightSetTo(publicRight) {
-        calendarConfigurationController.activate();
-
-        calendarConfigurationController.calendar.color = 'aColor';
-        calendarConfigurationController.calendar.name = 'N';
         calendarConfigurationController.publicSelection = publicRight;
 
         calendarConfigurationController.submit();
 
+        $rootScope.$digest();
+
+        sinon.assert.callOrder(stateMock.go, calendarAPI.modifyPublicRights, notificationFactoryMock.weakInfo);
         expect(notificationFactoryMock.weakInfo).to.have.been.called;
-        expect(stateMock.go).to.have.been.called;
+        expect(stateMock.go).to.have.been.calledWith('calendar.main');
         expect(calendarAPI.modifyPublicRights).to.have.been.calledWith(
           calendarConfigurationController.calendarHomeId,
           calendarConfigurationController.calendar.id,

@@ -78,6 +78,12 @@ module.exports = function(config) {
       'frontend/components/angular-component/dist/angular-component.min.js',
       'frontend/components/waves/dist/waves.min.js',
 
+      // Karma now only use file from the first matcher
+      // https://github.com/karma-runner/karma/commit/74bfdf3
+      { pattern: 'node_modules/linagora-rse/frontend/js/modules/i18n/i18n.config.js', watched: false, included: false, served: true },
+      { pattern: 'frontend/images/*.*', watched: false, included: false, served: true },
+      { pattern: 'frontend/components/mdi/fonts/*.*', watched: false, included: false, served: true },
+
       'node_modules/linagora-rse/test/fixtures/**/*.js',
       'node_modules/linagora-rse/frontend/js/modules/**/*.module.js',
       'node_modules/linagora-rse/frontend/js/modules/**/*.js',
@@ -90,11 +96,7 @@ module.exports = function(config) {
       'frontend/app/app.js',
       'frontend/app/**/*.js',
       'frontend/app/**/*.pug',
-      'frontend/app/*.js',
 
-      { pattern: 'node_modules/linagora-rse/frontend/js/modules/i18n/i18n.config.js', watched: false, included: false, served: true },
-      { pattern: 'frontend/images/*.*', watched: false, included: false, served: true },
-      { pattern: 'frontend/components/mdi/fonts/*.*', watched: false, included: false, served: true },
       'test/unit-frontend/fixtures/**',
       'frontend/app/fixtures/**'
     ],
