@@ -50,7 +50,6 @@
       function pickHighestPriorityRight(oldPublicRight, newPublicRight) {
         var CalendarRightShellValues = [
           CAL_CALENDAR_PUBLIC_RIGHT.PRIVATE,
-          CAL_CALENDAR_PUBLIC_RIGHT.FREE_BUSY,
           CAL_CALENDAR_PUBLIC_RIGHT.READ,
           CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE
         ];
@@ -67,7 +66,6 @@
           switch (aclItem.privilege) {
             case CAL_CALENDAR_PUBLIC_RIGHT.READ:
             case CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE:
-            case CAL_CALENDAR_PUBLIC_RIGHT.FREE_BUSY:
               this._public = pickHighestPriorityRight(this._public, aclItem.privilege);
               break;
             default:

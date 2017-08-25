@@ -4,7 +4,19 @@
   angular.module('esn.calendar')
     .factory('calCachedEventSource', calCachedEventSource);
 
-  function calCachedEventSource($q, _, calendarExploredPeriodService, calEventStore, CAL_CACHED_EVENT_SOURCE_ADD, CAL_CACHED_EVENT_SOURCE_DELETE, CAL_CACHED_EVENT_SOURCE_UPDATE) {
+  function calCachedEventSource(
+    $q,
+    _,
+    calendarExploredPeriodService,
+    calFullUiConfiguration,
+    calEventStore,
+    calEventUtils,
+    esnUserConfigurationService,
+    CAL_CACHED_EVENT_SOURCE_ADD,
+    CAL_CACHED_EVENT_SOURCE_DELETE,
+    CAL_CACHED_EVENT_SOURCE_UPDATE,
+    CAL_ICAL
+  ) {
     var changes = {};
 
     var service = {
@@ -132,10 +144,27 @@
 
     function wrapEventSource(calendarUniqueId, calendarSource) {
       return function(start, end, timezone, callback) {
-        fetchEventOnlyIfNeeded(start, end, timezone, calendarUniqueId, calendarSource).then(function(events) {
-          callback(applySavedChange(start, end, calendarUniqueId, events));
-        });
+        fetchEventOnlyIfNeeded(start, end, timezone, calendarUniqueId, calendarSource)
+          .then(function(events) {
+            return callback(_handleDeclinedEvents(applySavedChange(start, end, calendarUniqueId, events)));
+          });
       };
+    }
+
+    function _handleDeclinedEvents(events) {
+      if (!calFullUiConfiguration.isDeclinedEventsHidden()) {
+        return events;
+      }
+
+      return events.filter(function(event) {
+        var userAsAttendee = calEventUtils.getUserAttendee(event);
+
+        if (!userAsAttendee) {
+          return true;
+        }
+
+        return userAsAttendee.partstat !== CAL_ICAL.partstat.declined;
+      });
     }
 
     function resetCache() {

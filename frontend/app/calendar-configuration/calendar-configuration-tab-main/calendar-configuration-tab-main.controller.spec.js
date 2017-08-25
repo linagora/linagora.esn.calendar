@@ -17,6 +17,7 @@ describe('The calendar configuration tab delegation controller', function() {
     session,
     CalendarConfigurationTabMainController,
     calCalendarDeleteConfirmationModalService,
+    calFullUiConfiguration,
     CAL_CALENDAR_PUBLIC_RIGHT,
     CAL_CALENDAR_SHARED_RIGHT,
     calendar;
@@ -34,7 +35,11 @@ describe('The calendar configuration tab delegation controller', function() {
         return $q.when();
       })
     };
-
+    calFullUiConfiguration = {
+      get: sinon.spy(function() {
+        return $q.when();
+      })
+    };
     calendar = {
       isShared: sinon.stub().returns(false),
       isAdmin: sinon.stub().returns(false),
@@ -48,6 +53,7 @@ describe('The calendar configuration tab delegation controller', function() {
     angular.mock.module('esn.calendar', function($provide) {
       $provide.value('calendarService', calendarService);
       $provide.value('calCalendarDeleteConfirmationModalService', calCalendarDeleteConfirmationModalService);
+      $provide.value('calFullUiConfiguration', calFullUiConfiguration);
     });
 
     angular.mock.inject(function(_$rootScope_, _$controller_, _$state_, _$q_, _session_, _userUtils_, _CalCalendarRightsUtilsService_, _CAL_CALENDAR_PUBLIC_RIGHT_, _CAL_CALENDAR_SHARED_RIGHT_, _calUIAuthorizationService_) {

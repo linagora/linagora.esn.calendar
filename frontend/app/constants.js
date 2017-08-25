@@ -60,6 +60,9 @@
           }
         }
       },
+      // (Sunday=0) and ranges from 0-6. See: https://fullcalendar.io/docs/display/hiddenDays/
+      calendarDaysValue: [0, 1, 2, 3, 4, 5, 6],
+      calendarDefaultDaysValue: [1, 2, 3, 4, 5],
       miniCalendar: {
         defaultView: 'month',
         height: 250,
@@ -396,5 +399,9 @@
     }, {
       value: '-P1W',
       label: '1 week'
-    }]);
+    }])
+    .constant('CAL_USER_CONFIGURATION', {
+      moduleName: 'linagora.esn.calendar',
+      keys: ['workingDays', 'hideDeclinedEvents']
+    });
 })();

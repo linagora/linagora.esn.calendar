@@ -338,7 +338,7 @@ describe('The calEventUtils service', function() {
       })).to.equal(undefined);
     });
 
-    it('should return null when user is not found in event attendees', function() {
+    it('should return user when user is found in event attendees', function() {
       var attendee = {
         email: 'aAttendee@open-paas.org'
       };
