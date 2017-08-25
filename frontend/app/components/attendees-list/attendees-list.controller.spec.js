@@ -82,6 +82,7 @@ describe('The CalAttendeesListController controller', function() {
         { email: 'other3@example.com', partstat: 'DECLINED', clicked: false },
         { email: 'other5@example.com', partstat: 'YOLO' }
       ]);
+      expect(ctrl.attendeeClickedCount).to.be.equal(0);
     });
   });
 

@@ -26,7 +26,8 @@
     }
 
     function deleteSelectedAttendees() {
-      self.attendees = self.attendees.filter(function(attendee) { return !attendee.clicked;});
+      self.attendees = self.attendees.filter(function(attendee) { return !attendee.clicked; });
+      self.attendeeClickedCount = 0;
     }
 
     function selectAttendee(attendee) {
