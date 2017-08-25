@@ -481,6 +481,7 @@ describe('The event-form module controllers', function() {
           var $alertMock = function(alertObject) {
             expect(alertObject.show).to.be.true;
             expect(alertObject.content).to.equal('You must define an event title');
+
             done();
           };
 
@@ -604,6 +605,7 @@ describe('The event-form module controllers', function() {
           this.scope.$hide = function() {
             expect(event.diff).to.equal(123123);
             expect(editedEvent.diff).to.equal(234234);
+
             done();
           };
           this.initController();
@@ -760,13 +762,6 @@ describe('The event-form module controllers', function() {
           var self = this;
 
           this.scope.event = this.CalendarShell.fromIncompleteShell({});
-
-          this.scope.$hide = function() {
-            expect(status).to.equal('ACCEPTED');
-            expect(self.notificationFactory.weakInfo).to.have.been.called;
-            done();
-          };
-
           this.calEventServiceMock.changeParticipation = function(path, event, emails, _status_) { // eslint-disable-line
             status = _status_;
 
@@ -779,6 +774,11 @@ describe('The event-form module controllers', function() {
           };
           this.scope.modifyEvent();
           this.scope.$digest();
+
+          expect(status).to.equal('ACCEPTED');
+          expect(self.notificationFactory.weakInfo).to.have.been.called;
+
+          done();
         });
 
         it('should no displayNotification if response is null', function(done) {
@@ -791,12 +791,6 @@ describe('The event-form module controllers', function() {
 
             return $q.when(null);
           };
-          this.scope.$hide = function() {
-            expect(status).to.equal('DECLINED');
-            expect(self.notificationFactory.weakInfo).to.have.not.been.called;
-            done();
-          };
-
           this.initController();
 
           this.scope.userAsAttendee = {
@@ -805,6 +799,11 @@ describe('The event-form module controllers', function() {
           this.scope.isOrganizer = false;
           this.scope.modifyEvent();
           this.scope.$digest();
+
+          expect(status).to.equal('DECLINED');
+          expect(self.notificationFactory.weakInfo).to.have.not.been.called;
+
+          done();
         });
       });
     });
@@ -843,22 +842,15 @@ describe('The event-form module controllers', function() {
         this.scope.$digest();
 
         expect(status).to.equal('ACCEPTED');
+        expect(this.scope.$hide).to.not.have.been.called;
       });
 
       it('should call calEventService.changeParticipation', function() {
         this.scope.changeParticipation('ACCEPTED');
 
         expect(this.calEventServiceMock.changeParticipation).to.have.been.called;
+        expect(this.scope.$hide).to.not.have.been.called;
       });
-
-      it('should hide the modal if user is attendee and view is quick form', function() {
-        this.$state.is = sinon.stub().returns(false);
-        this.scope.changeParticipation('ACCEPTED');
-        this.scope.$digest();
-
-        expect(this.scope.$hide).to.have.been.called;
-      });
-
     });
 
     describe('createEvent function', function() {
@@ -1020,6 +1012,7 @@ describe('The event-form module controllers', function() {
               partstat: 'ACCEPTED'
             });
             expect(this.scope.editedEvent.changeParticipation).to.have.been.calledWith('ACCEPTED', ['user@test.com']);
+
             done();
           }.bind(this));
 
@@ -1048,6 +1041,7 @@ describe('The event-form module controllers', function() {
               email: 'owner@test.com',
               partstat: 'ACCEPTED'
             });
+
             done();
           }.bind(this));
 
@@ -1070,6 +1064,7 @@ describe('The event-form module controllers', function() {
           this.scope.changeParticipation('DECLINED');
 
           expect(broadcastSpy).to.not.have.been.called;
+
           done();
         });
       });

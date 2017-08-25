@@ -83,7 +83,6 @@
 
       function _displayNotification(notificationFactoryFunction, title, content) {
         notificationFactoryFunction(title, content);
-        _hideModal();
       }
 
       function initFormData() {
@@ -198,7 +197,7 @@
         $scope.restActive = true;
         calEventService.changeParticipation($scope.editedEvent.path, $scope.event, session.user.emails, status).then(function(response) {
           if (!response) {
-            return _hideModal();
+            return;
           }
 
           if (!$scope.canModifyEvent) {
@@ -299,10 +298,6 @@
           $scope.$broadcast(CAL_EVENTS.EVENT_ATTENDEES_UPDATE, $scope.editedEvent.attendees);
 
           _changeParticipationAsAttendee();
-
-          if (!$scope.canModifyEvent) {
-            _hideModal();
-          }
         }
       }
 
