@@ -115,7 +115,7 @@
 
       SHAREE_READ_WRITE: '3',
       SHAREE_READ_WRITE_LABEL: 'Read/Write',
-      SHAREE_READ_WRITE_LABEL_LONG: 'Edit the events',
+      SHAREE_READ_WRITE_LABEL_LONG: 'Edit events',
 
       SHAREE_ADMIN: '5',
       SHAREE_ADMIN_LABEL: 'Administration',
@@ -139,7 +139,7 @@
 
       READ_WRITE: '{DAV:}write',
       READ_WRITE_LABEL: 'Read/Write',
-      READ_WRITE_LABEL_LONG: 'Edit the events',
+      READ_WRITE_LABEL_LONG: 'Edit events',
 
       FREE_BUSY: '{urn:ietf:params:xml:ns:caldav}read-free-busy',
       FREE_BUSY_LABEL: 'Free/Busy',
