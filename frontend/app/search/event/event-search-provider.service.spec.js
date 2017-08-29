@@ -62,6 +62,11 @@ describe('The calSearchEventProviderService service', function() {
         calSearchEventProviderService.setUpSearchProviders();
         expect($rootScope.$on).to.have.been.calledWith(CAL_EVENTS.CALENDARS.ADD, sinon.match.func);
       });
+
+      it('should listen to CAL_EVENTS.CALENDARS.UPDATE and add a provider for the calendar', function() {
+        calSearchEventProviderService.setUpSearchProviders();
+        expect($rootScope.$on).to.have.been.calledWith(CAL_EVENTS.CALENDARS.UPDATE, sinon.match.func);
+      });
     });
   });
 
@@ -98,7 +103,7 @@ describe('The calSearchEventProviderService service', function() {
           data: 'BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nEND:VEVENT\r\nEND:VCALENDAR'
         }];
 
-        $httpBackend.expectGET('/calendar/api/calendars/' + calendarIds[index] + '/events.json?limit=200&offset=0&query=abcd').respond(200, {
+        $httpBackend.expectGET('/calendar/api/calendars/' + calendarHomeId + '/' + calendarIds[index] + '/events.json?limit=200&offset=0&query=abcd').respond(200, {
           _links: {
             self: { href: '/prepath/path/to/calendar.json' }
           },

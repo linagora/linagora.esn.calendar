@@ -300,7 +300,7 @@ describe('The Calendar calendars API /api/calendars', function() {
     });
   });
 
-  describe('/api/calendars/:calendarId/events.json', function() {
+  describe('/api/calendars/:userId/:calendarId/events.json', function() {
     var localpubsub, message, counter = 1;
 
     var search = function(term, expectedSize, done) {
@@ -316,7 +316,7 @@ describe('The Calendar calendars API /api/calendars', function() {
           if (err) {
             return done(err);
           }
-          var req = requestAsMember(request(self.app).get('/api/calendars/' + message.calendarId + '/events.json'));
+          var req = requestAsMember(request(self.app).get('/api/calendars/' + message.userId + '/' + message.calendarId + '/events.json'));
           req.query({query: term}).expect(200).end(function(err, res) {
             expect(err).to.not.exist;
             expect(res.body).to.exist;

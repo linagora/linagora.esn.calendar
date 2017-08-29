@@ -72,11 +72,12 @@
     /**
      * Query a calendar, searching for indexed events depending on the query. The dav:calendar resources will include their dav:item resources.
      * @method searchEvents
+     * @param  {[type]} userId         The user id.
      * @param  {[type]} calendarId     The calendar id.
      * @param  {[type]} options        The query parameters {query: '', limit: 20, offset: 0}
      * @return {Object}                An array of dav:item items.
      */
-    function searchEvents(calendarId, options) {
+    function searchEvents(userId, calendarId, options) {
       var query = {
         query: options.query,
         limit: options.limit,
@@ -85,7 +86,7 @@
         sortOrder: options.sortOrder
       };
 
-      return calendarRestangular.one(calendarId).one('events.json').get(query).then(davResponseHandler('dav:item'));
+      return calendarRestangular.one(userId).one(calendarId).one('events.json').get(query).then(davResponseHandler('dav:item'));
     }
 
     /**

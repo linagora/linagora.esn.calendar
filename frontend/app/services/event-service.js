@@ -68,12 +68,13 @@
 
       /**
        * Search all events depending of the query parameter, in a calendar.
+       * @param  {[type]} userId         The user id.
        * @param  {[type]} calendarId     The calendar id.
        * @param  {[type]} options        The query parameters {query: '', limit: 20, offset: 0}
        * @return {[CalendarShell]}       an array of CalendarShell or an empty array if no events have been found
        */
-      function searchEvents(calendarId, options) {
-        return calendarAPI.searchEvents(calendarId, options)
+      function searchEvents(userId, calendarId, options) {
+        return calendarAPI.searchEvents(userId, calendarId, options)
           .then(function(events) {
             return events.reduce(function(shells, icaldata) {
               var vcalendar = ICAL.Component.fromString(icaldata.data);
