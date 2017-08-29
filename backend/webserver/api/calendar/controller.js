@@ -167,7 +167,7 @@ module.exports = function(dependencies) {
       offset: req.query.offset,
       sortKey: req.query.sortKey,
       sortOrder: req.query.sortOrder,
-      userId: req.user.id,
+      userId: req.params.userId,
       calendarId: req.params.calendarId
     };
 

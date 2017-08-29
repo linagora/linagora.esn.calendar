@@ -28,7 +28,7 @@ module.exports = dependencies => {
     davMiddleware.getDavEndpoint,
     controller.changeParticipation);
 
-  router.get('/:calendarId/events.json',
+  router.get('/:userId/:calendarId/events.json',
     authorizationMW.requiresAPILogin,
     controller.searchEvents);
 
