@@ -33,15 +33,19 @@ module.exports = dependencies => {
     }
 
     function added(msg) {
-      pubsub.local.topic(NOTIFICATIONS.EVENT_ADDED).publish(parse(msg));
+      canPublishMessage(msg) && pubsub.local.topic(NOTIFICATIONS.EVENT_ADDED).publish(parse(msg));
     }
 
     function updated(msg) {
-      pubsub.local.topic(NOTIFICATIONS.EVENT_UPDATED).publish(parse(msg));
+      canPublishMessage(msg) && pubsub.local.topic(NOTIFICATIONS.EVENT_UPDATED).publish(parse(msg));
     }
 
     function deleted(msg) {
-      pubsub.local.topic(NOTIFICATIONS.EVENT_DELETED).publish(parse(msg));
+      canPublishMessage(msg) && pubsub.local.topic(NOTIFICATIONS.EVENT_DELETED).publish(parse(msg));
+    }
+
+    function canPublishMessage(message) {
+      return !message.eventSourcePath;
     }
   }
 };
