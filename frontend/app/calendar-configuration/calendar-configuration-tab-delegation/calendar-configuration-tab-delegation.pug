@@ -20,7 +20,7 @@
     span
       .select
         select.form-control(ng-model='delegation.selection')
-          option(ng-repeat="delegationType in ::$ctrl.delegationTypes" value="{{delegationType.value}}" ng-selected="delegationType.value === delegation.selection") {{delegationType.name}}
+          option(ng-repeat="delegationType in ::$ctrl.delegationTypes" value="{{delegationType.value}}" ng-selected="delegationType.value === delegation.selection") {{delegationType.name | esnI18n}}
   .col-xs-1.margin-right-10
     a(href="", ng-click='$ctrl.removeUserGroup(delegation)')
       i.mdi.mdi-delete
