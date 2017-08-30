@@ -68,7 +68,7 @@
     }
 
     function onCalendarAdded(event, calendar) {
-      if (!_.find(self.calendars, { uniqueId: calendar.getUniqueId() })) {
+      if (!_.find(self.calendars, { uniqueId: calendar.uniqueId })) {
         self.calendars.push(calendar);
 
         refreshCalendarsList();
@@ -76,7 +76,7 @@
     }
 
     function onCalendarUpdated(event, calendar) {
-      var index = _.findIndex(self.calendars, { uniqueId: calendar.getUniqueId() });
+      var index = _.findIndex(self.calendars, { uniqueId: calendar.uniqueId });
 
       if (index > -1) {
         self.calendars[index] = calendar;
@@ -87,7 +87,7 @@
 
     function onCalendarRemoved(event, calendarUniqueIdWrapper) {
       _.remove(self.calendars, function(calendar) {
-        return calendar.getUniqueId() === calendarUniqueIdWrapper.uniqueId;
+        return calendar.uniqueId === calendarUniqueIdWrapper.uniqueId;
       });
 
       refreshCalendarsList();

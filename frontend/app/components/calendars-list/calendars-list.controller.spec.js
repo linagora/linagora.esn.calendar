@@ -46,7 +46,6 @@ describe('The calendarsList controller', function() {
       $provide.value('session', session);
       $provide.value('Cache', function() {});
     });
-
   });
 
   beforeEach(function() {
@@ -88,7 +87,6 @@ describe('The calendarsList controller', function() {
   });
 
   describe('the $onInit function', function() {
-
     it('should initialize the calendars with empty array', function() {
       CalendarsListController.$onInit();
 
@@ -117,9 +115,7 @@ describe('The calendarsList controller', function() {
   });
 
   describe('the activate function', function() {
-
     describe('CAL_EVENTS.CALENDARS.ADD listener', function() {
-
       it('should add calendar to self.calendars if it does not exist yet', function() {
         var newCalendar = CalendarCollectionShell.from({
           href: '/calendars/12345/4.json',
@@ -130,9 +126,7 @@ describe('The calendarsList controller', function() {
         var expectedResult = calendars.concat(newCalendar);
 
         CalendarsListController.$onInit();
-
-        $rootScope.$apply();
-
+        $rootScope.$digest();
         $rootScope.$broadcast(CAL_EVENTS.CALENDARS.ADD, newCalendar);
 
         expect(CalendarsListController.calendars).to.deep.equal(expectedResult);
@@ -147,9 +141,7 @@ describe('The calendarsList controller', function() {
         });
 
         CalendarsListController.$onInit();
-
-        $rootScope.$apply();
-
+        $rootScope.$digest();
         $rootScope.$broadcast(CAL_EVENTS.CALENDARS.ADD, newCalendar);
 
         expect(CalendarsListController.calendars).to.deep.equal(calendars);
@@ -219,9 +211,6 @@ describe('The calendarsList controller', function() {
           var id = '4';
           var newCalendar = {
             uniqueId: id,
-            getUniqueId: function() {
-              return id;
-            },
             href: '/calendars/12345/4.json',
             name: 'name4',
             color: 'color4',
@@ -236,8 +225,7 @@ describe('The calendarsList controller', function() {
           var expectedResult = calendars.concat(newCalendar);
 
           CalendarsListController.$onInit();
-          $rootScope.$apply();
-
+          $rootScope.$digest();
           $rootScope.$broadcast(CAL_EVENTS.CALENDARS.ADD, newCalendar);
 
           expect(CalendarsListController.userCalendars).to.deep.equal([expectedResult[0], expectedResult[3]]);
@@ -249,9 +237,6 @@ describe('The calendarsList controller', function() {
           var id = '4';
           var newCalendar = {
             uniqueId: id,
-            getUniqueId: function() {
-              return id;
-            },
             href: '/calendars/12345/4.json',
             name: 'name4',
             color: 'color4',
@@ -266,8 +251,7 @@ describe('The calendarsList controller', function() {
           var expectedResult = calendars.concat(newCalendar);
 
           CalendarsListController.$onInit();
-          $rootScope.$apply();
-
+          $rootScope.$digest();
           $rootScope.$broadcast(CAL_EVENTS.CALENDARS.ADD, newCalendar);
 
           expect(CalendarsListController.userCalendars).to.deep.equal([expectedResult[0], expectedResult[3]]);
@@ -278,13 +262,11 @@ describe('The calendarsList controller', function() {
     });
 
     describe('CAL_EVENTS.CALENDARS.REMOVE listener', function() {
-
       it('remove calendar to self.calendars', function() {
         var expectedResult = calendars.slice(1);
 
         CalendarsListController.$onInit();
-        $rootScope.$apply();
-
+        $rootScope.$digest();
         $rootScope.$broadcast(CAL_EVENTS.CALENDARS.REMOVE, calendars[0]);
 
         expect(CalendarsListController.calendars).to.deep.equal(expectedResult);
@@ -294,10 +276,9 @@ describe('The calendarsList controller', function() {
         var expectedResult = calendars.slice(0, 2);
 
         CalendarsListController.$onInit();
-        $rootScope.$apply();
-
+        $rootScope.$digest();
         $rootScope.$broadcast(CAL_EVENTS.CALENDARS.REMOVE, CalendarCollectionShell.from({
-          href: '/calendars/12345/3_source.json',
+          href: '/calendars/12345/3.json',
           name: 'name3',
           color: 'color3',
           description: 'description3'
@@ -309,9 +290,6 @@ describe('The calendarsList controller', function() {
       it('refresh calendars list', function() {
         calendars = [{
           uniqueId: '1',
-          getUniqueId: function() {
-            return '1';
-          },
           href: 'href',
           name: 'name',
           color: 'color',
@@ -356,8 +334,7 @@ describe('The calendarsList controller', function() {
         var expectedResult = calendars.slice(1);
 
         CalendarsListController.$onInit();
-        $rootScope.$apply();
-
+        $rootScope.$digest();
         $rootScope.$broadcast(CAL_EVENTS.CALENDARS.REMOVE, calendars[0]);
 
         expect(CalendarsListController.calendars).to.deep.equal(expectedResult);
@@ -368,7 +345,6 @@ describe('The calendarsList controller', function() {
     });
 
     describe('CAL_EVENTS.CALENDARS.UPDATE listener', function() {
-
       it('should update calendar in self.calendars if existed', function() {
         var updatedCalendar = CalendarCollectionShell.from({
           href: '/calendars/12345/1.json',
@@ -379,8 +355,7 @@ describe('The calendarsList controller', function() {
         var expectedResult = [updatedCalendar].concat(calendars.slice(1));
 
         CalendarsListController.$onInit();
-        $rootScope.$apply();
-
+        $rootScope.$digest();
         $rootScope.$broadcast(CAL_EVENTS.CALENDARS.UPDATE, updatedCalendar);
 
         expect(CalendarsListController.calendars).to.deep.equal(expectedResult);
@@ -396,8 +371,7 @@ describe('The calendarsList controller', function() {
         var expectedResult = calendars.slice(0);
 
         CalendarsListController.$onInit();
-        $rootScope.$apply();
-
+        $rootScope.$digest();
         $rootScope.$broadcast(CAL_EVENTS.CALENDARS.UPDATE, updatedCalendar);
 
         expect(CalendarsListController.calendars).to.deep.equal(expectedResult);
@@ -405,13 +379,10 @@ describe('The calendarsList controller', function() {
     });
 
     describe('CAL_EVENTS.CALENDARS.TOGGLE_VIEW listener', function() {
-
       it('should set the visibility of the calendar', function() {
         CalendarsListController.$onInit();
-        $rootScope.$apply();
-
+        $rootScope.$digest();
         CalendarsListController.arrangeCalendars = sinon.spy();
-
         $rootScope.$broadcast(CAL_EVENTS.CALENDARS.TOGGLE_VIEW, {
           calendarUniqueId: calendars[0].uniqueId,
           hidden: true
@@ -429,12 +400,9 @@ describe('The calendarsList controller', function() {
     });
 
     describe('the listPersonalAndAcceptedDelegationCalendars function', function() {
-
       it('should initialize calendars with all the calendars from calendarService.listPersonalAndAcceptedDelegationCalendars', function() {
         CalendarsListController.$onInit();
-
         CalendarsListController.arrangeCalendars = sinon.spy();
-
         $rootScope.$digest();
 
         expect(CalendarsListController.calendars).to.deep.equal(calendars);
@@ -448,7 +416,6 @@ describe('The calendarsList controller', function() {
     });
 
     describe('the getHiddenCalendars function', function() {
-
       it('should call calendarVisibilityService.getHiddenCalendars', function() {
         CalendarsListController.activate();
 
@@ -457,7 +424,6 @@ describe('The calendarsList controller', function() {
 
       it('should update hiddenCalendars and add all the hidden calendars returned by calendarVisibilityService.getHiddenCalendars', function() {
         CalendarsListController.$onInit();
-
         $rootScope.$digest();
 
         expect(CalendarsListController.hiddenCalendars[hiddenCalendar.uniqueId]).to.be.true;
@@ -466,10 +432,8 @@ describe('The calendarsList controller', function() {
   });
 
   describe('the toggleCalendar function', function() {
-
     it('should call calendarVisibilityService.toggle when we call the toggleCalendar function', function() {
       CalendarsListController.$onInit();
-
       CalendarsListController.toggleCalendar(calendars[0]);
 
       expect(calendarVisibilityServiceMock.toggle).to.have.been.calledWith(calendars[0]);
