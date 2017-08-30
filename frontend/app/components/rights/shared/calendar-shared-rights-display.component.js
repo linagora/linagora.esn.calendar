@@ -8,6 +8,6 @@
         delegation: '<'
       },
       controller: 'CalSharedRightsDisplayController',
-      template: '<span>{{::$ctrl.humanReadable}}</span>'
+      template: '<span>{{::$ctrl.humanReadable | esnI18n}}</span>'
     });
 })();
