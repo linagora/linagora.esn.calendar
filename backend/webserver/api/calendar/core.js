@@ -2,9 +2,11 @@
 
 const async = require('async');
 const q = require('q');
+const path = require('path');
 const urljoin = require('url-join');
 const extend = require('extend');
 const jcal2content = require('../../../lib/helpers/jcal').jcal2content;
+const TEMPLATES_PATH = path.resolve(__dirname, '../../../../templates/email');
 
 module.exports = dependencies => {
   const eventMessage = require('./../../../lib/message/eventmessage.core')(dependencies);
@@ -253,7 +255,7 @@ module.exports = dependencies => {
           const editorEmail = editor.email || editor.emails[0];
           const event = jcal2content(ics, baseUrl);
           let subject = 'Unknown method';
-          let template = 'event.invitation';
+          const template = { name: 'event.invitation', path: TEMPLATES_PATH };
           const i18n = i18nConf.i18n;
           let inviteMessage;
 
@@ -295,21 +297,21 @@ module.exports = dependencies => {
             case 'REQUEST':
               if (event.sequence > 0) {
                 subject = _i18nHelper('Event {{summary}} from {{userDisplayName}} updated', true, true);
-                template = 'event.update';
+                template.name = 'event.update';
                 inviteMessage = _i18nHelper('has updated a meeting');
               } else {
                 subject = _i18nHelper('New event from {{userDisplayName}}: {{summary}}', true, true);
-                template = 'event.invitation';
+                template.name = 'event.invitation';
                 inviteMessage = _i18nHelper('has invited you to a meeting');
               }
               break;
             case 'REPLY':
-              template = 'event.reply';
+              template.name = 'event.reply';
               [subject, inviteMessage] = _getReplyContents();
               break;
             case 'CANCEL':
               subject = _i18nHelper('Event {{summary}} from {{userDisplayName}} canceled', true, true);
-              template = 'event.cancel';
+              template.name = 'event.cancel';
               inviteMessage = _i18nHelper('has canceled a meeting');
               break;
           }

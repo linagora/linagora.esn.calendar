@@ -64,8 +64,7 @@ describe('alarm module', function() {
     expect(cron.submit).to.have.been.calledWith(
       sinon.match.string,
       sinon.match(function(date) {
-        var isSame = moment(date).isSame(moment('20150611'));
-        return isSame;
+        return moment(date).isSame(moment('20150611'));
       }),
       sinon.match(function(job) {
         job(function() {
@@ -74,7 +73,10 @@ describe('alarm module', function() {
               to: 'slemaistre@gmail.com',
               subject: 'Pending event! Event: Victor Sanders'
             }),
-            'event.alarm',
+            sinon.match({
+              name: 'event.alarm',
+              path: sinon.match(/templates\/email/)
+            }),
             sinon.match.has('content', sinon.match.has('alarm'))
           );
 

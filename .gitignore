@@ -8,3 +8,4 @@ config/db.json
 .flooignore
 application.log
 package-lock.json
+.DS_Store

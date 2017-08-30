@@ -2,12 +2,14 @@
 
 const DATE_FORMAT = 'MM-DD-YYYY';
 const CONSTANTS = require('../constants');
+const path = require('path');
 const q = require('q');
 const ICAL = require('ical.js');
 const _ = require('lodash');
 const moment = require('moment-timezone');
 const jcalHelper = require('../helpers/jcal');
 const parseEventPath = require('../helpers/event').parseEventPath;
+const template = { name: 'event.alarm', path: path.resolve(__dirname, '../../../templates/email') };
 
 module.exports = dependencies => {
   const helpers = dependencies('helpers');
@@ -43,7 +45,6 @@ module.exports = dependencies => {
           to: email,
           subject: event.alarm.summary
         };
-        const templateName = 'event.alarm';
         const dateEvent = (event.start.timezone ?
             moment(event.start.date, DATE_FORMAT).tz(event.start.timezone) :
             moment(event.start.date, DATE_FORMAT)).format(DATE_FORMAT);
@@ -58,7 +59,7 @@ module.exports = dependencies => {
           eventUid: eventPath.eventUid
         });
 
-        return emailModule.getMailer().sendHTML(message, templateName, {
+        return emailModule.getMailer().sendHTML(message, template, {
           content: {
             baseUrl: baseUrl,
             event: event,
