@@ -6,6 +6,7 @@ var expect = chai.expect;
 
 describe('The CalSettingsCalendarsController controller', function() {
   var $rootScope, $controller, $scope, $log, session, calendarService, $q, calendar, otherCalendar, calendars, userAndExternalCalendars, calCalendarDeleteConfirmationModalService;
+  var CAL_EVENTS, CalSettingsCalendarsController;
 
   beforeEach(function() {
     session = {
@@ -16,8 +17,16 @@ describe('The CalSettingsCalendarsController controller', function() {
     };
     calendarService = {};
     calCalendarDeleteConfirmationModalService = sinon.spy();
-    calendar = {uniqueId: 1, calendarHomeId: 'MyId', name: 'MyName'};
-    otherCalendar = {uniqueId: 2, calendarHomeId: 'MyOtherId', name: 'MyOtherName'};
+    calendar = {
+      uniqueId: 1,
+      calendarHomeId: 'MyId',
+      name: 'MyName'
+    };
+    otherCalendar = {
+      uniqueId: 2,
+      calendarHomeId: 'MyOtherId',
+      name: 'MyOtherName'
+    };
     calendars = [calendar, otherCalendar];
     userAndExternalCalendars = sinon.spy(function() {
       return {
@@ -36,13 +45,22 @@ describe('The CalSettingsCalendarsController controller', function() {
   });
 
   beforeEach(function() {
-    angular.mock.inject(function(_$rootScope_, _$controller_, _$q_, _$log_) {
+    angular.mock.inject(function(_$rootScope_, _$controller_, _$q_, _$log_, _CAL_EVENTS_) {
       $rootScope = _$rootScope_;
       $controller = _$controller_;
       $q = _$q_;
       $log = _$log_;
       $scope = $rootScope.$new();
+      CAL_EVENTS = _CAL_EVENTS_;
     });
+  });
+
+  beforeEach(function() {
+    calendarService.listPersonalAndAcceptedDelegationCalendars = sinon.spy(function() {
+      return $q.when(calendars);
+    });
+
+    CalSettingsCalendarsController = initController();
   });
 
   function initController() {
@@ -53,69 +71,151 @@ describe('The CalSettingsCalendarsController controller', function() {
     it('should get the calendars from the calendarService', function() {
       var calendars = [calendar, otherCalendar];
 
-      calendarService.listPersonalAndAcceptedDelegationCalendars = sinon.spy(function() {
-        return $q.when(calendars);
-      });
-
-      var controller = initController();
-
-      controller.$onInit();
+      CalSettingsCalendarsController.$onInit();
       $rootScope.$digest();
 
       expect(calendarService.listPersonalAndAcceptedDelegationCalendars).to.have.been.calledWith(session.user._id);
-      expect(controller.calendars).to.deep.equal(calendars);
+      expect(CalSettingsCalendarsController.calendars).to.deep.equal(calendars);
     });
+  });
+
+  describe('Calendar listeners', function() {
+    describe('CAL_EVENTS.CALENDARS.ADD listener', function() {
+      it('should add calendar to self.calendars if it does not exist yet', function() {
+        var newCalendar = {
+          uniqueId: 3,
+          calendarHomeId: 'NewId',
+          name: 'NewName'
+        };
+        var expectedResult = calendars.concat(newCalendar);
+
+        CalSettingsCalendarsController.$onInit();
+        $rootScope.$digest();
+        $rootScope.$broadcast(CAL_EVENTS.CALENDARS.ADD, newCalendar);
+
+        expect(CalSettingsCalendarsController.calendars).to.deep.equal(expectedResult);
+      });
+
+      it('should not add calendar to self.calendars if it already exists', function() {
+        var newCalendar = {
+          uniqueId: 1,
+          calendarHomeId: 'MyId',
+          name: 'MyName'
+        };
+
+        CalSettingsCalendarsController.$onInit();
+        $rootScope.$digest();
+        $rootScope.$broadcast(CAL_EVENTS.CALENDARS.ADD, newCalendar);
+
+        expect(CalSettingsCalendarsController.calendars).to.deep.equal(calendars);
+      });
+    });
+
+    describe('CAL_EVENTS.CALENDARS.REMOVE listener', function() {
+      it('should remove calendar from self.calendars', function() {
+        var expectedResult = calendars.slice(1);
+
+        CalSettingsCalendarsController.$onInit();
+        $rootScope.$digest();
+        $rootScope.$broadcast(CAL_EVENTS.CALENDARS.REMOVE, calendars[0]);
+
+        expect(CalSettingsCalendarsController.calendars).to.deep.equal(expectedResult);
+      });
+
+      it('should not remove non existing calendar from self.calendars', function() {
+        var expectedResult = calendars;
+        var newCalendar = {
+          uniqueId: 3,
+          calendarHomeId: 'NewId',
+          name: 'NewName'
+        };
+
+        CalSettingsCalendarsController.$onInit();
+        $rootScope.$digest();
+        $rootScope.$broadcast(CAL_EVENTS.CALENDARS.REMOVE, newCalendar);
+
+        expect(CalSettingsCalendarsController.calendars).to.deep.equal(expectedResult);
+      });
+
+    });
+
+    describe('CAL_EVENTS.CALENDARS.UPDATE listener', function() {
+      it('should update calendar in self.calendars if existed', function() {
+        var newCalendar = {
+          uniqueId: 1,
+          calendarHomeId: 'UpdatedID',
+          name: 'UpdatedName'
+        };
+        var expectedResult = [newCalendar].concat(calendars.slice(1));
+
+        CalSettingsCalendarsController.$onInit();
+        $rootScope.$digest();
+        $rootScope.$broadcast(CAL_EVENTS.CALENDARS.UPDATE, newCalendar);
+
+        expect(CalSettingsCalendarsController.calendars).to.deep.equal(expectedResult);
+        expect(CalSettingsCalendarsController.calendars[0].name).to.equal(newCalendar.name);
+        expect(CalSettingsCalendarsController.calendars[0].calendarHomeId).to.equal(newCalendar.calendarHomeId);
+      });
+
+      it('should do nothing if the updated calendar does not exist in self.calendars', function() {
+        var newCalendar = {
+          uniqueId: 3,
+          calendarHomeId: 'NewId',
+          name: 'NewName'
+        };
+        var expectedResult = calendars;
+
+        CalSettingsCalendarsController.$onInit();
+        $rootScope.$digest();
+        $rootScope.$broadcast(CAL_EVENTS.CALENDARS.UPDATE, newCalendar);
+
+        expect(CalSettingsCalendarsController.calendars).to.deep.equal(expectedResult);
+      });
+    });
+
   });
 
   describe('The remove function', function() {
     it('should show the confirmation dialog', function() {
-      var controller = initController();
-
-      controller.calendars = [];
-      controller.remove(calendar);
+      CalSettingsCalendarsController.calendars = [];
+      CalSettingsCalendarsController.remove(calendar);
 
       expect(calCalendarDeleteConfirmationModalService).to.have.been.calledOnce;
     });
 
     it('should remove the calendar', function() {
-      var controller = initController();
-
       calendarService.removeCalendar = sinon.spy(function() {
         return $q.when();
       });
-
-      controller.calendars = [calendar, otherCalendar];
-      controller.remove(calendar);
+      CalSettingsCalendarsController.calendars = [calendar, otherCalendar];
+      CalSettingsCalendarsController.remove(calendar);
 
       var removeCalendar = calCalendarDeleteConfirmationModalService.firstCall.args[1];
 
       removeCalendar();
-      expect(calendarService.removeCalendar).to.have.been.calledWith(calendar.calendarHomeId, calendar);
       $rootScope.$digest();
 
-      expect(controller.calendars).to.deep.equals([otherCalendar]);
+      expect(calendarService.removeCalendar).to.have.been.calledWith(calendar.calendarHomeId, calendar);
+      expect(CalSettingsCalendarsController.calendars).to.deep.equals([otherCalendar]);
     });
 
     it('should not remove calendar is calendarService failed', function() {
       var logSpy = sinon.spy($log, 'error');
-      var controller = initController();
       var error = new Error('I failed...');
 
       calendarService.removeCalendar = sinon.spy(function() {
         return $q.reject(error);
       });
-
-      controller.calendars = [calendar, otherCalendar];
-      controller.remove(calendar);
+      CalSettingsCalendarsController.calendars = [calendar, otherCalendar];
+      CalSettingsCalendarsController.remove(calendar);
 
       var removeCalendar = calCalendarDeleteConfirmationModalService.firstCall.args[1];
 
       removeCalendar();
-
-      expect(calendarService.removeCalendar).to.have.been.calledWith(calendar.calendarHomeId, calendar);
       $rootScope.$digest();
 
-      expect(controller.calendars.length).to.equals(2);
+      expect(calendarService.removeCalendar).to.have.been.calledWith(calendar.calendarHomeId, calendar);
+      expect(CalSettingsCalendarsController.calendars.length).to.equals(2);
       expect(logSpy).to.have.been.calledOnce;
     });
   });

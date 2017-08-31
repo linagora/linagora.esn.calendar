@@ -4,19 +4,61 @@
   angular.module('esn.calendar')
     .controller('CalSettingsCalendarsController', CalSettingsCalendarsController);
 
-  function CalSettingsCalendarsController($log, _, session, calendarService, calCalendarDeleteConfirmationModalService, userAndExternalCalendars) {
+  function CalSettingsCalendarsController(
+    $log,
+    $rootScope,
+    $scope,
+    $q,
+    _,
+    session,
+    calendarService,
+    calCalendarDeleteConfirmationModalService,
+    userAndExternalCalendars,
+    CAL_EVENTS
+  ) {
     var self = this;
 
     self.$onInit = $onInit;
     self.remove = remove;
 
     function $onInit() {
-      listCalendars();
+      listCalendars()
+      .then(function() {
+        $scope.$on(CAL_EVENTS.CALENDARS.ADD, onCalendarAdded);
+        $scope.$on(CAL_EVENTS.CALENDARS.REMOVE, onCalendarRemoved);
+        $scope.$on(CAL_EVENTS.CALENDARS.UPDATE, onCalendarUpdated);
+      });
+    }
+
+    function onCalendarAdded(event, calendar) {
+      if (!_.find(self.calendars, { uniqueId: calendar.uniqueId })) {
+        self.calendars.push(calendar);
+        refreshCalendarsList();
+      }
+    }
+
+    function onCalendarRemoved(event, calendarUniqueIdWrapper) {
+      _.remove(self.calendars, function(calendar) {
+        return calendar.uniqueId === calendarUniqueIdWrapper.uniqueId;
+      });
+
+      refreshCalendarsList();
+    }
+
+    function onCalendarUpdated(event, calendar) {
+      var index = _.findIndex(self.calendars, { uniqueId: calendar.uniqueId });
+
+      if (index > -1) {
+        self.calendars[index] = calendar;
+
+        refreshCalendarsList();
+      }
     }
 
     function listCalendars() {
       return calendarService.listPersonalAndAcceptedDelegationCalendars(session.user._id).then(function(calendars) {
         self.calendars = calendars;
+
         refreshCalendarsList();
       });
     }
