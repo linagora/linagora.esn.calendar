@@ -646,8 +646,8 @@ describe('The calendar core module', function() {
                   contentType: 'application/ics'
                 }]
               });
-
-              expect(template).to.equal('event.invitation');
+              expect(template.name).to.equal('event.invitation');
+              expect(template.path).to.match(/templates\/email/);
               expect(locals.filter).is.a.function;
               expect(locals.content.baseUrl).to.equal('http://localhost:8888');
               expect(locals.content.yes).to.equal('http://localhost:8888/calendar/api/calendars/event/participation?jwt=token');
@@ -701,7 +701,8 @@ describe('The calendar core module', function() {
                   contentType: 'application/ics'
                 }]
               });
-              expect(template).to.equal('event.invitation');
+              expect(template.name).to.equal('event.invitation');
+              expect(template.path).to.match(/templates\/email/);
               expect(locals).to.be.an('object');
               expect(locals.filter).is.a.function;
               expect(locals.content.baseUrl).to.equal('http://localhost:8888');
@@ -739,7 +740,8 @@ describe('The calendar core module', function() {
         emailMock.getMailer = function() {
           return {
             sendHTML: function(email, template) {
-              expect(template).to.equal('event.invitation');
+              expect(template.name).to.equal('event.invitation');
+              expect(template.path).to.match(/templates\/email/);
               expect(email.subject).to.equal('New event from ' + organizer.firstname + ' ' + organizer.lastname + ': Démo OPENPAAS');
 
               return q();
@@ -764,7 +766,8 @@ describe('The calendar core module', function() {
         emailMock.getMailer = function() {
           return {
             sendHTML: function(email, template) {
-              expect(template).to.equal('event.update');
+              expect(template.name).to.equal('event.update');
+              expect(template.path).to.match(/templates\/email/);
               expect(email.subject).to.equal('Event Démo OPENPAAS from ' + organizer.firstname + ' ' + organizer.lastname + ' updated');
 
               return q();
@@ -791,7 +794,8 @@ describe('The calendar core module', function() {
         emailMock.getMailer = function() {
           return {
             sendHTML: function(email, template) {
-              expect(template).to.equal('event.reply');
+              expect(template.name).to.equal('event.reply');
+              expect(template.path).to.match(/templates\/email/);
               expect(email.subject).to.equal('Accepted: Démo OPENPAAS (organizerFirstname organizerLastname)');
 
               return q();
@@ -823,7 +827,8 @@ describe('The calendar core module', function() {
         emailMock.getMailer = function() {
           return {
             sendHTML: function(email, template, locals) {
-              expect(template).to.equal('event.reply');
+              expect(template.name).to.equal('event.reply');
+              expect(template.path).to.match(/templates\/email/);
               expect(email.subject).to.equal('Participation updated: Démo OPENPAAS');
               expect(locals.content.editor).to.deep.equal(editor);
 
@@ -887,7 +892,8 @@ describe('The calendar core module', function() {
         emailMock.getMailer = function() {
           return {
             sendHTML: function(email, template) {
-              expect(template).to.equal('event.cancel');
+              expect(template.name).to.equal('event.cancel');
+              expect(template.path).to.match(/templates\/email/);
               expect(email.subject).to.equal('Event Démo OPENPAAS from ' + organizer.firstname + ' ' + organizer.lastname + ' canceled');
 
               return q();

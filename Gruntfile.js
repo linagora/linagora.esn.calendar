@@ -103,7 +103,8 @@ module.exports = function(grunt) {
           }
         },
         src: [
-          'frontend/**/*.pug'
+          'frontend/**/*.pug',
+          'templates/**/*.pug'
         ]
       }
     }
