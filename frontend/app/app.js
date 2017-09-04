@@ -36,6 +36,7 @@
     'ng.deviceDetector',
     'ngTouch',
     'op.dynamicDirective',
+    'pascalprecht.translate',
     'restangular',
     'uuid4'
   ]);

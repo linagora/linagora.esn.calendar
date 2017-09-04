@@ -6,11 +6,13 @@
 
   function calFullUiConfiguration(
     $q,
+    $translate,
     calBusinessHoursService,
     esnUserConfigurationService,
     _,
     CAL_UI_CONFIG,
-    CAL_USER_CONFIGURATION
+    CAL_USER_CONFIGURATION,
+    CAL_FULLCALENDAR_LOCALE
   ) {
     var _isDeclinedEventsHidden = false;
 
@@ -20,6 +22,7 @@
     };
 
     var service = {
+      configureLocaleForCalendar: configureLocaleForCalendar,
       get: get,
       isDeclinedEventsHidden: isDeclinedEventsHidden,
       setHiddenDeclinedEvents: setHiddenDeclinedEvents
@@ -49,7 +52,8 @@
           uiConfig.calendar = angular.extend.apply(null, configurationsSetted);
 
           return uiConfig;
-        });
+        })
+        .then(configureLocaleForCalendar);
     }
 
     function _workingDays() {
@@ -76,6 +80,34 @@
 
     function isDeclinedEventsHidden() {
       return _isDeclinedEventsHidden;
+    }
+
+    function configureLocaleForCalendar(config) {
+      var uiConfig = angular.extend({}, config);
+      var currentLocale = $translate.preferredLanguage() || CAL_FULLCALENDAR_LOCALE.default;
+      var calendarLocale = _findFullCalendarLocale(currentLocale);
+
+      uiConfig.calendar.locale = calendarLocale;
+
+      return uiConfig;
+    }
+
+    function _findFullCalendarLocale(locale) {
+      return locale.replace(/([a-zA-Z]+)([\W_]+)?([a-zA-Z]+)?/g, function(match, language, separator, country) {
+        var languageAndCountryLocale = language && country ? language.toLowerCase() + '-' + country.toLowerCase() : null;
+        var languageLocale = language ? language.toLowerCase() : null;
+        var localeAlternatives = [
+          CAL_FULLCALENDAR_LOCALE.support.indexOf(languageAndCountryLocale) > -1 ? languageAndCountryLocale : null,
+          CAL_FULLCALENDAR_LOCALE.support.indexOf(languageLocale) > -1 ? languageLocale : null,
+          CAL_FULLCALENDAR_LOCALE.default
+        ];
+
+        function firstLocaleSupported() {
+          return _.find(localeAlternatives, function(locale) { return !!locale; });
+        }
+
+        return firstLocaleSupported();
+      });
     }
   }
 })();

@@ -19,13 +19,15 @@
     calendarCurrentView,
     calCachedEventSource,
     userAndExternalCalendars,
+    calFullUiConfiguration,
     _) {
 
       var calendarDeffered = $q.defer();
       var calendarPromise = calendarDeffered.promise;
       var currentView = calendarCurrentView.get();
+      var calendarUiConfig = calFullUiConfiguration.configureLocaleForCalendar(CAL_UI_CONFIG);
 
-      $scope.miniCalendarConfig = angular.extend({}, CAL_UI_CONFIG.calendar, CAL_UI_CONFIG.miniCalendar);
+      $scope.miniCalendarConfig = angular.extend({}, calendarUiConfig.calendar, CAL_UI_CONFIG.miniCalendar);
       $scope.events = [];
       $scope.homeCalendarViewMode = currentView.name || CAL_UI_CONFIG.calendar.defaultView;
       $scope.calendarReady = calendarDeffered.resolve.bind(calendarDeffered);
