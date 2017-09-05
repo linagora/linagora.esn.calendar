@@ -4,7 +4,7 @@ const Q = require('q');
 const mockery = require('mockery');
 
 describe('The email alarm handler', function() {
-  let sendHTMLMock, attendee, alarm, eventPath, emailModule, helpers, userLib, esnConfigMock, baseURL, user;
+  let sendHTMLMock, linksHelper, attendee, alarm, eventPath, emailModule, helpers, userLib, esnConfigMock, baseURL, user;
 
   beforeEach(function() {
     user = {_id: 1};
@@ -47,11 +47,25 @@ describe('The email alarm handler', function() {
       };
     };
 
+    linksHelper = {
+      getEventDetails: function() {
+        return Q.when(`${baseURL}/details`);
+      },
+
+      getEventInCalendar: function() {
+        return Q.when(`${baseURL}/calendar`);
+      }
+    };
+
     this.moduleHelpers.addDep('helpers', helpers);
     this.moduleHelpers.addDep('email', emailModule);
     this.moduleHelpers.addDep('i18n', this.helpers.requireBackend('core/i18n'));
     this.moduleHelpers.addDep('user', userLib);
     this.moduleHelpers.addDep('esn-config', esnConfigMock);
+
+    mockery.registerMock('../../helpers/links', function() {
+      return linksHelper;
+    });
 
     this.calendarModulePath = this.moduleHelpers.modulePath;
     this.requireModule = function() {
@@ -132,6 +146,32 @@ describe('The email alarm handler', function() {
       }, function(err) {
         expect(err).to.equal(error);
         expect(getI18nForMailer).to.have.been.calledWith(user);
+        done();
+      });
+    });
+
+    it('should reject if linksHelper.getEventDetails rejects', function(done) {
+      const error = new Error('I failed to getEventDetails');
+      const stub = sinon.stub(linksHelper, 'getEventDetails').returns(Q.reject(error));
+
+      this.requireModule().handle(alarm).then(function() {
+        done(new Error('Should not occur'));
+      }, function(err) {
+        expect(err).to.equal(error);
+        expect(stub).to.have.been.called;
+        done();
+      });
+    });
+
+    it('should reject if linksHelper.getEventInCalendar rejects', function(done) {
+      const error = new Error('I failed to getEventInCalendar');
+      const stub = sinon.stub(linksHelper, 'getEventInCalendar').returns(Q.reject(error));
+
+      this.requireModule().handle(alarm).then(function() {
+        done(new Error('Should not occur'));
+      }, function(err) {
+        expect(err).to.equal(error);
+        expect(stub).to.have.been.called;
         done();
       });
     });
