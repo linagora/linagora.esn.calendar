@@ -3,42 +3,76 @@ cal-open-event-form-on-click {
 }
 
 .event-search-item {
+  padding: 0;
+  width: 100%;
+  min-height: 88px;
+  max-height: 88px;
+  transform: translateY(20%);
+
+  .event-search-icon {
+    .pull-left;
+
+    height: 40px;
+    margin-right: 5px;
+
+    .mdi-calendar {
+      font-size: 45px;
+    }
+  }
 
   .media-body {
-    .flex-start {
-      .ellipsis;
+    .event-search-line {
+      .flex-space-between;
 
-      .lv-title {
-        font-size: 1.1em;
+      .event-search-line-left {
+        .ellipsis;
+  
+        &.lv-title {
+          font-size: 1.1em;
+  
+          .mdi-checkbox-blank-circle {
+            margin-right: 5px;
+            font-size: 18px;
+          }
+
+          .event-organizer-displayname {
+            margin-right: 5px;
+          }
+        }
       }
-    }
-    .flex {
+
+      .event-search-line-right {
+        .esn-flex-noshrink;
+
+        .mdi:not(:last-child) {
+          margin-right: 5px;
+        }
+
+        .cal-event-date-consultation {
+          margin-bottom: 0;
+      
+          .mdi.mdi-clock {
+            display: none;
+          }
+        }
+      }
+
       .mdi {
-        font-size: 1.4em;
+        font-size: 20px;
+        vertical-align: middle;
       }
-      .mdi:not(:last-child) {
-        margin-right: 5px;
-      }
-    }
-  }
-
-  .pull-left {
-    .flex();
-    height: 40px;
-    margin-right: 10px;
-    .mdi-calendar {
-      font-size: 3em;
-    }
-  }
-
-  .cal-event-date-consultation {
-    margin-bottom: 0;
-    .mdi.mdi-clock {
-      display: none;
     }
   }
 
   .highlight {
     background: @m-yellow;
+  }
+
+  .event-search-description {
+    .ellipsis;
+
+    font-size: 12px;
+    color: @m-gray;
+    margin-top: 4px;
   }
 }

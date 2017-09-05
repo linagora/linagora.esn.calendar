@@ -35,8 +35,8 @@ describe('The calEventDateConsultationController', function() {
         };
         var ctrl = initController(bindings);
 
-        expect(ctrl.start).to.equal(ctrl.event.start.format('MMMM D'));
-        expect(ctrl.startVerbose).to.equal(ctrl.event.start.format('MMMM D'));
+        expect(ctrl.start).to.equal(ctrl.event.start.format('MMM D'));
+        expect(ctrl.startVerbose).to.equal(ctrl.event.start.format('MMM D'));
         expect(ctrl.end).to.be.undefined;
         expect(ctrl.endVerbose).to.be.undefined;
       });
@@ -54,10 +54,10 @@ describe('The calEventDateConsultationController', function() {
         };
         var ctrl = initController(bindings);
 
-        expect(ctrl.start).to.equal(ctrl.event.start.format('MMM D hh:mma'));
-        expect(ctrl.startVerbose).to.equal(ctrl.event.start.format('MMMM D hh:mma'));
-        expect(ctrl.end).to.equal(ctrl.event.end.format('hh:mma'));
-        expect(ctrl.endVerbose).to.equal(ctrl.event.end.format('hh:mma'));
+        expect(ctrl.start).to.equal(ctrl.event.start.format('MMM D HH:mm'));
+        expect(ctrl.startVerbose).to.equal(ctrl.event.start.format('MMM D HH:mm'));
+        expect(ctrl.end).to.equal(ctrl.event.end.format('HH:mm'));
+        expect(ctrl.endVerbose).to.equal(ctrl.event.end.format('HH:mm'));
       });
     });
   });
@@ -77,9 +77,9 @@ describe('The calEventDateConsultationController', function() {
         var ctrl = initController(bindings);
 
         expect(ctrl.start).to.equal(ctrl.event.start.format('MMM D'));
-        expect(ctrl.startVerbose).to.equal(ctrl.event.start.format('MMMM D'));
+        expect(ctrl.startVerbose).to.equal(ctrl.event.start.format('MMM D'));
         expect(ctrl.end).to.equal(ctrl.event.end.clone().subtract(1, 'day').format('MMM D'));
-        expect(ctrl.endVerbose).to.equal(ctrl.event.end.clone().subtract(1, 'day').format('MMMM D'));
+        expect(ctrl.endVerbose).to.equal(ctrl.event.end.clone().subtract(1, 'day').format('MMM D'));
       });
     });
 
@@ -96,9 +96,9 @@ describe('The calEventDateConsultationController', function() {
         var ctrl = initController(bindings);
 
         expect(ctrl.start).to.equal(ctrl.event.start.format('MMM D'));
-        expect(ctrl.startVerbose).to.equal(ctrl.event.start.format('MMMM D'));
+        expect(ctrl.startVerbose).to.equal(ctrl.event.start.format('MMM D'));
         expect(ctrl.end).to.equal(ctrl.event.end.format('MMM D'));
-        expect(ctrl.endVerbose).to.equal(ctrl.event.end.format('MMMM D'));
+        expect(ctrl.endVerbose).to.equal(ctrl.event.end.format('MMM D'));
       });
     });
   });
