@@ -45,5 +45,13 @@ module.exports = {
   },
   WEBSOCKET: {
     NAMESPACE: '/calendars'
+  },
+  ALARM: {
+    STATE: {
+      DONE: 'done',
+      ERROR: 'error',
+      RUNNING: 'running',
+      WAITING: 'waiting'
+    }
   }
 };

@@ -1,225 +1,149 @@
 'use strict';
 
-const DATE_FORMAT = 'MM-DD-YYYY';
-const CONSTANTS = require('../constants');
-const path = require('path');
-const q = require('q');
+const Q = require('q');
 const ICAL = require('ical.js');
-const _ = require('lodash');
 const moment = require('moment-timezone');
+const CONSTANTS = require('../constants');
 const jcalHelper = require('../helpers/jcal');
-const parseEventPath = require('../helpers/event').parseEventPath;
-const template = { name: 'event.alarm', path: path.resolve(__dirname, '../../../templates/email') };
 
 module.exports = dependencies => {
-  const helpers = dependencies('helpers');
-  const emailModule = dependencies('email');
   const pubsub = dependencies('pubsub');
-  const cron = dependencies('cron');
   const logger = dependencies('logger');
-  const userModule = dependencies('user');
-  const i18nLib = require('../i18n')(dependencies);
+  const Alarm = require('./db/alarm')(dependencies);
+  const handlers = require('./handlers')(dependencies);
+  const emailHandler = require('./handlers/email')(dependencies);
+  const job = require('./job')(dependencies, {
+    handlers,
+    registerNextAlarm
+  });
+
+  handlers.register(emailHandler.action, emailHandler.handle);
 
   return {
-    init
+    handlers,
+    init,
+    registerNewAlarm
   };
 
   function init() {
-    pubsub.local.topic(CONSTANTS.EVENTS.EVENT.CREATED).subscribe(_onCreate);
-    pubsub.local.topic(CONSTANTS.EVENTS.EVENT.UPDATED).subscribe(_onUpdate);
-    pubsub.local.topic(CONSTANTS.EVENTS.EVENT.DELETED).subscribe(_onDelete);
-    pubsub.local.topic('cron:job:revival').subscribe(_reviveAlarm);
+    job.start();
+
+    pubsub.local.topic(CONSTANTS.EVENTS.EVENT.CREATED).subscribe(onCreate);
+    pubsub.local.topic(CONSTANTS.EVENTS.EVENT.UPDATED).subscribe(onUpdate);
+    pubsub.local.topic(CONSTANTS.EVENTS.EVENT.DELETED).subscribe(onDelete);
   }
 
-  function _sendAlarmEmail(ics, email, eventPath) {
-    return q.nfbind(userModule.findByEmail)(email)
-      .then(user => q.all([
-          q.nfcall(helpers.config.getBaseUrl, null),
-          i18nLib.getI18nForMailer(user)
-        ])
-      )
-      .spread((baseUrl, i18nConf) => {
-        const event = jcalHelper.jcal2content(ics, baseUrl);
-        const alarm = event.alarm;
-        const message = {
-          to: email,
-          subject: event.alarm.summary
-        };
-        const dateEvent = (event.start.timezone ?
-            moment(event.start.date, DATE_FORMAT).tz(event.start.timezone) :
-            moment(event.start.date, DATE_FORMAT)).format(DATE_FORMAT);
-
-        const seeInCalendarLink = _.template('<%= baseUrl %>/#/calendar?start=<%= formatedDate %>')({
-          baseUrl: baseUrl,
-          formatedDate: dateEvent
-        });
-        const consultLink = _.template('<%= baseUrl %>/#/calendar/<%= calendarId %>/event/<%= eventUid %>/consult')({
-          baseUrl: baseUrl,
-          calendarId: eventPath.calendarId,
-          eventUid: eventPath.eventUid
-        });
-
-        return emailModule.getMailer().sendHTML(message, template, {
-          content: {
-            baseUrl: baseUrl,
-            event: event,
-            alarm: alarm,
-            seeInCalendarLink: seeInCalendarLink,
-            consultLink: consultLink
-          },
-          translate: i18nConf.translate
-        });
-      }).catch(err => {
-        logger.error('Could not send alarm email', err);
-      });
-  }
-
-  function _registerNewAlarm(context, dbStorage) {
-    const alarmDueDate = moment(context.alarmDueDate).toDate();
-
-    cron.submit('Will send an event alarm once at ' + alarmDueDate.toString() + ' to ' + context.email, alarmDueDate, job, context, {dbStorage: dbStorage}, (err, job) => {
-      if (err) {
-        logger.error('Error while submitting the job send alarm email', err);
-      } else {
-        logger.info('Job send alarm email has been submitted', job);
-      }
-    });
-
-    function job(callback) {
-      logger.info('Try sending event alarm email to', context.email);
-      _sendAlarmEmail(context.ics, context.email, context.eventPath).then(() => {
-        callback();
-      }, callback);
-    }
-  }
-
-  function _registerNewReccuringAlarm(context, dbStorage) {
-    const alarmDueDate = moment(context.alarmDueDate).toDate();
-
-    cron.submit('Will send an event alarm once at ' + alarmDueDate.toString() + ' to ' + context.email, alarmDueDate, job, context, {dbStorage: dbStorage}, function(err, job) {
-      if (err) {
-        logger.error('Error while submitting the job send alarm email', err);
-      } else {
-        logger.info('Job send alarm email has been submitted', job);
-      }
-    });
-
-    function job(callback) {
-      logger.info('Try sending event alarm email to', context.email);
-      _sendAlarmEmail(context.ics, context.email, context.eventPath).then(() => {
-        const vcalendar = ICAL.Component.fromString(context.ics);
-        const vevent = vcalendar.getFirstSubcomponent('vevent');
-        const valarm = vevent.getFirstSubcomponent('valarm');
-        const trigger = valarm.getFirstPropertyValue('trigger');
-        const triggerDuration = moment.duration(trigger);
-        let expandStart = moment().add(triggerDuration).format();
-
-        expandStart = new Date(expandStart);
-        expandStart = new Date(expandStart.getTime() + 60000);
-        expandStart = new ICAL.Time.fromDateTimeString(expandStart.toISOString());
-
-        const expand = new ICAL.RecurExpansion({
-          component: vevent,
-          dtstart: expandStart
-        });
-        const nextInstance = expand.next();
-
-        if (nextInstance) {
-          context.alarmDueDate = moment(nextInstance.clone()).add(triggerDuration).format();
-          _registerNewReccuringAlarm(context, dbStorage);
-        }
-
-        callback();
-      }, callback);
-    }
-  }
-
-  function _onCreate(msg) {
+  function onCreate(msg) {
+    const eventPath = msg.eventPath;
     const vcalendar = new ICAL.Component(msg.event);
     const vevent = vcalendar.getFirstSubcomponent('vevent');
     const valarm = vevent.getFirstSubcomponent('valarm');
 
+    logger.info(`calendar:alarm:create ${eventPath} - Creating new alarm for event ${eventPath}`);
+
     if (!valarm) {
-      logger.debug('No alarm: doing nothing for', msg);
-
-      return;
-    }
-
-    const action = valarm.getFirstPropertyValue('action');
-
-    if (action !== 'EMAIL') {
-      logger.warn('VALARM not supported: doing nothing for', msg, 'and action', action);
+      logger.debug(`calendar:alarm:create ${eventPath} - No alarm defined, skipping`);
 
       return;
     }
 
     const alarm = jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstPropertyValue('dtstart'));
     const context = {
-      module: 'calendar',
-      alarmDueDate: alarm.alarmDueDate.format(),
-      attendee: alarm.attendee,
+      action: valarm.getFirstPropertyValue('action'),
+      attendee: alarm.email || alarm.attendee,
+      eventPath,
       eventUid: vevent.getFirstPropertyValue('uid'),
-      action: alarm.action,
-      ics: vcalendar.toString(),
-      email: alarm.email,
-      eventPath: parseEventPath(msg.eventPath)
+      dueDate: moment(alarm.alarmDueDate.format()).toDate(),
+      ics: vcalendar.toString()
     };
 
-    logger.info('Register new event alarm email for', alarm.email, 'at', alarm.alarmDueDate.clone().local().format());
-    if (new ICAL.Event(vevent).isRecurring()) {
-      _registerNewReccuringAlarm(context, true);
-    } else {
-      _registerNewAlarm(context, true);
-    }
+    // TODO: do not create alarms for past alarms...
+
+    logger.info(`calendar:alarm:create ${eventPath} - Registering new event alarm email ${alarm.email} due at ${alarm.alarmDueDate.clone().local().format()}`);
+
+    return registerNewAlarm(context);
   }
 
-  function _onDelete(msg) {
-    const vcalendar = new ICAL.Component(msg.event);
-    const vevent = vcalendar.getFirstSubcomponent('vevent');
-    const eventUid = vevent.getFirstPropertyValue('uid');
+  function onDelete(msg) {
+    const eventPath = msg.eventPath;
 
-    cron.abortAll({
-      eventUid: eventUid
-    }, err => {
-      if (err) {
-        logger.error('Error while deleting all the job for event ' + eventUid, err);
-      } else {
-        logger.info('All jobs about event ' + eventUid + ' have been deleted.');
-      }
-    });
+    logger.info(`calendar:alarm:delete ${eventPath} - Deleting alarms for event ${eventPath}`);
+
+    // TODO: we also need to delete/abort all the jobs which are currently running alarms with this path
+    return Alarm.remove({eventPath}).exec();
   }
 
-  function _onUpdate(msg) {
+  function onUpdate(msg) {
+    const eventPath = msg.eventPath;
     const vcalendar = new ICAL.Component(msg.old_event);
     const vevent = vcalendar.getFirstSubcomponent('vevent');
-    const eventUid = vevent.getFirstPropertyValue('uid');
     const valarm = vevent.getFirstSubcomponent('valarm');
 
-    const abortFunction = valarm ? function(callback) {
+    logger.info(`calendar:alarm:update ${eventPath} - Updating alarms for event ${eventPath}`);
+
+    const abort = valarm ? () => {
+      logger.warning(`calendar:alarm:update ${eventPath} - Aborting old alarms`);
       const alarm = jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstPropertyValue('dtstart'));
 
-      cron.abortAll({
-        eventUid: eventUid,
-        attendee: alarm.attendee
-      }, callback);
-    } : function(callback) {
-      return callback();
-    };
+      return Alarm.remove({eventPath, attendee: alarm.attendee}).exec();
+    } : Q.when({});
 
-    abortFunction(err => {
-      if (err) {
-        return logger.error('Error while deleting all the job for event ' + eventUid, err);
-      }
+    return abort()
+      .then(
+        () => onCreate(msg),
+        err => {
+          logger.warning(`calendar:alarm:update ${eventPath} - Error while aborting old alarm, creating new one`, err);
 
-      _onCreate(msg);
-    });
+          return onCreate(msg);
+        }
+      );
   }
 
-  function _reviveAlarm(msg) {
-    const context = msg.context;
+  function registerNewAlarm(alarm) {
+    logger.debug(`calendar:alarm ${alarm.eventPath} - Register new alarm`, alarm);
 
-    if (context && context.module === 'calendar') {
-      _registerNewAlarm(context, false);
+    return new Alarm(alarm).save();
+  }
+
+  function registerNextAlarm(previousAlarm) {
+    logger.debug(`calendar:alarm ${previousAlarm.eventPath} - Register next alarm`);
+
+    const vcalendar = ICAL.Component.fromString(previousAlarm.ics);
+    const vevent = vcalendar.getFirstSubcomponent('vevent');
+
+    if (!new ICAL.Event(vevent).isRecurring()) {
+      logger.debug(`calendar:alarm ${previousAlarm.eventPath} - Event is not recurring, skipping`);
+
+      return Q.when({});
     }
+
+    const valarm = vevent.getFirstSubcomponent('valarm');
+    const trigger = valarm.getFirstPropertyValue('trigger');
+    const triggerDuration = moment.duration(trigger);
+    let expandStart = moment().add(triggerDuration).format();
+
+    expandStart = new Date(expandStart);
+    expandStart = new Date(expandStart.getTime() + 60000);
+    expandStart = new ICAL.Time.fromDateTimeString(expandStart.toISOString());
+
+    const expand = new ICAL.RecurExpansion({
+      component: vevent,
+      dtstart: expandStart
+    });
+    const nextInstance = expand.next();
+
+    if (!nextInstance) {
+      logger.debug(`calendar:alarm ${previousAlarm.eventPath} - Alarm is recurring but does not have next alarm to register`);
+
+      return Q.when({});
+    }
+
+    const nextAlarm = previousAlarm.toJSON();
+
+    delete nextAlarm._id;
+    delete nextAlarm.id;
+    nextAlarm.dueDate = moment(nextInstance.clone()).add(triggerDuration).format();
+
+    return registerNewAlarm(nextAlarm);
   }
 };
