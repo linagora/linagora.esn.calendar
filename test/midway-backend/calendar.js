@@ -312,7 +312,7 @@ describe('The Calendar calendars API /api/calendars', function() {
           return done(err);
         }
 
-        self.helpers.elasticsearch.checkDocumentsIndexed({index: 'events.idx', type: 'events', ids: [message.eventUid]}, function(err) {
+        self.helpers.elasticsearch.checkDocumentsIndexed({index: 'events.idx', type: 'events', ids: [`${message.userId}--${message.eventUid}`]}, function(err) {
           if (err) {
             return done(err);
           }

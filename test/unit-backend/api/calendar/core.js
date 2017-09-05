@@ -1059,7 +1059,7 @@ describe('The calendar core module', function() {
       };
       var esResult = {
         total_count: 3,
-        list: [{_id: 'event1'}, {_id: 'event2'}, {_id: 'event3'}]
+        list: [{_id: 'userId--event1'}, {_id: 'userId--event2'}, {_id: 'userId--event3'}]
       };
       searchLibMock.searchEvents = function(q, callback) {
         expect(q).to.deep.equal(query);
@@ -1073,8 +1073,8 @@ describe('The calendar core module', function() {
 
       this.module.searchEvents(query, function(err, results) {
         expect(err).to.not.exist;
-        [0, 1, 2].forEach(function(i) {expect(caldavClientMock.getEvent).to.have.been.calledWith(query.userId, query.calendarId, esResult.list[i]._id);});
-        [0, 2].forEach(function(i) {expect(caldavClientMock.getEventPath).to.have.been.calledWith(query.userId, query.calendarId, esResult.list[i]._id);});
+        [0, 1, 2].forEach(function(i) {expect(caldavClientMock.getEvent).to.have.been.calledWith(query.userId, query.calendarId, esResult.list[i]._id.split('--')[1]);});
+        [0, 2].forEach(function(i) {expect(caldavClientMock.getEventPath).to.have.been.calledWith(query.userId, query.calendarId, esResult.list[i]._id.split('--')[1]);});
         expect(results).to.deep.equal({
           total_count: esResult.total_count,
           results: [
