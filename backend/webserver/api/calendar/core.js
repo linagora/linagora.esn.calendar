@@ -6,6 +6,7 @@ const path = require('path');
 const urljoin = require('url-join');
 const extend = require('extend');
 const jcal2content = require('../../../lib/helpers/jcal').jcal2content;
+const getEventUidFromElasticsearchId = require('../../../lib/search/denormalize').getEventUidFromElasticsearchId;
 const TEMPLATES_PATH = path.resolve(__dirname, '../../../../templates/email');
 
 module.exports = dependencies => {
@@ -409,7 +410,7 @@ module.exports = dependencies => {
       }
 
       const eventPromises = esResult.list.map((esEvent, index) => {
-        const eventUid = esEvent._id;
+        const eventUid = getEventUidFromElasticsearchId(esEvent._id);
 
         return caldavClient.getEvent(query.userId, query.calendarId, eventUid).then(event => {
           output.results[index] = {

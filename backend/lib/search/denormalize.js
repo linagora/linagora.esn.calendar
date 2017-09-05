@@ -6,7 +6,8 @@ const _ = require('lodash');
 
 module.exports = {
   denormalize,
-  getId
+  getId,
+  getEventUidFromElasticsearchId
 };
 
 function denormalize(data) {
@@ -41,5 +42,18 @@ function denormalize(data) {
 }
 
 function getId(event) {
-  return event.eventUid;
+  return event.userId + '--' + event.eventUid;
+}
+
+function getEventUidFromElasticsearchId(elasticsearchId) {
+  // elasticsearchId = event.userId + '--' + event.eventUid;
+  const [, eventUid] = elasticsearchId.split('--');
+
+  if (eventUid) {
+    return eventUid;
+  }
+
+  // this is a hack to deal with old ducument indexed in ES with eventUid only
+  // once all events in events.idx is reindexed, this hack should be removed
+  return elasticsearchId;
 }
