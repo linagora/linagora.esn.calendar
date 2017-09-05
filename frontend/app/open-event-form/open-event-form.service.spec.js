@@ -113,7 +113,7 @@ describe('The calOpenEventForm service', function() {
       expect($modal).to.have.been.called;
       expect($state.go).to.not.have.been;
       expect($modal).to.have.been.calledWith(sinon.match({
-        templateUrl: '/calendar/app/open-event-form/event-form-view',
+        templateUrl: '/calendar/app/open-event-form/event-form-view.html',
         backdrop: 'static',
         placement: 'center'
       }));
@@ -223,41 +223,6 @@ describe('The calOpenEventForm service', function() {
       }));
     });
 
-    it('if event is a recurring event, it should ask for editing master or instance', function() {
-      calOpenEventForm(calendarHomeId, instance);
-
-      $rootScope.$digest();
-
-      expect($modal).to.have.been.calledWith(sinon.match({
-        templateUrl: '/calendar/app/open-event-form/edit-instance-or-series',
-        resolve: {
-          event: sinon.match.func.and(sinon.match(function(eventGetter) {
-            return eventGetter() === instance;
-          }))
-        },
-        controller: sinon.match.func.and(sinon.match(function(controller) {
-          var openForm = sinon.spy();
-          var $scope = {
-            $hide: sinon.spy()
-          };
-
-          controller($scope, calendar, instance, openForm);
-          instance.recurrenceIdAsString = '20170425T083000Z';
-
-          $scope.editInstance();
-          $scope.editAllInstances();
-          $rootScope.$digest();
-
-          expect(openForm.firstCall).to.have.been.calledWith(calendar, instance, instance.recurrenceIdAsString);
-          expect(openForm.secondCall).to.have.been.calledWith(calendar, master);
-          expect($scope.$hide).to.have.been.calledTwice;
-
-          return true;
-        })),
-        placement: 'center'
-      }));
-    });
-
     it('should prevent click action and display notification if event is private and current user is not the owner', function() {
       sinon.spy(notificationFactory, 'weakInfo');
       canAccessEventDetail = false;
@@ -269,6 +234,31 @@ describe('The calOpenEventForm service', function() {
       expect(regularEvent.isInstance).to.have.not.been.called;
       expect(notificationFactory.weakInfo).to.have.been.calledWith('Private event', 'Cannot access private event');
       expect(openEventForm).to.be.undefined;
+    });
+
+    describe('Recurrent event', function() {
+      it('should call $modal with master and instance of recurrent event passed as arguments', function(done) {
+        calOpenEventForm(calendarHomeId, instance);
+        $rootScope.$digest();
+
+        expect($modal).to.have.been.calledWith(sinon.match({
+          templateUrl: '/calendar/app/open-event-form/event-form-view.html',
+          controller: sinon.match.func.and(sinon.match(function(controller) {
+            var $scope = {
+              event: null
+            };
+
+            controller($scope, instance, master);
+            $rootScope.$digest();
+
+            expect($scope.eventInstanceRecurrent).to.equal(instance);
+            expect(calEventUtils.setEditedEvent).to.have.been.calledWith(master);
+
+            done();
+            return true;
+          }))
+        }));
+      });
     });
   });
 });

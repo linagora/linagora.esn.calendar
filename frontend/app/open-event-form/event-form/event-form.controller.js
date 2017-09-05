@@ -16,9 +16,11 @@
     notificationFactory,
     calOpenEventForm,
     calUIAuthorizationService,
+    eventRecurringModalService,
     session,
     calPathBuilder,
     esnI18nService,
+    calMoment,
     CAL_EVENTS,
     CAL_EVENT_FORM) {
 
@@ -51,16 +53,16 @@
 
         if ($scope.calendar && $scope.calendar.readOnly) {
           return calEventUtils.hasAttendees($scope.editedEvent) &&
-          !calEventUtils.isInvolvedInATask($scope.editedEvent) &&
-          !calEventUtils.isNew($scope.editedEvent) &&
-          !$scope.calendar.readOnly &&
-          organizerIsNotTheOnlyAttendeeInEvent();
+            !calEventUtils.isInvolvedInATask($scope.editedEvent) &&
+            !calEventUtils.isNew($scope.editedEvent) &&
+            !$scope.calendar.readOnly &&
+            organizerIsNotTheOnlyAttendeeInEvent();
         }
 
         return calEventUtils.hasAttendees($scope.editedEvent) &&
-        !calEventUtils.isInvolvedInATask($scope.editedEvent) &&
-        !calEventUtils.isNew($scope.editedEvent) &&
-        organizerIsNotTheOnlyAttendeeInEvent();
+          !calEventUtils.isInvolvedInATask($scope.editedEvent) &&
+          !calEventUtils.isNew($scope.editedEvent) &&
+          organizerIsNotTheOnlyAttendeeInEvent();
       }
 
       function _displayError(err) {
@@ -85,8 +87,36 @@
         notificationFactoryFunction(title, content);
       }
 
+      function _copyFieldsFromInstance(source, destination) {
+        _.keys(source).forEach(function(field) {
+          // Existence of each source field is checked to prevent creation of a broken event
+          if (source[field]) {
+            destination[field] = source[field];
+          }
+        });
+      }
+
       function initFormData() {
         $scope.editedEvent = $scope.event.clone();
+
+        // for case of recurrent events
+        // we work on the master but some fields are copied from the instance
+        // to be displayed in the view
+        var fieldsFromInstance;
+
+        if ($scope.eventInstanceRecurrent) {
+          fieldsFromInstance = {
+            title: $scope.eventInstanceRecurrent.title,
+            location: $scope.eventInstanceRecurrent.location,
+            attendees: $scope.eventInstanceRecurrent.attendees,
+            description: $scope.eventInstanceRecurrent.description,
+            alarm: $scope.eventInstanceRecurrent.alarm,
+            class: $scope.eventInstanceRecurrent.class
+          };
+
+          _copyFieldsFromInstance(fieldsFromInstance, $scope.editedEvent);
+        }
+
         $scope.newAttendees = calEventUtils.getNewAttendees();
         $scope.isOrganizer = calEventUtils.isOrganizer($scope.editedEvent);
 
@@ -103,7 +133,6 @@
           })
           .then(function() {
             $scope.userAsAttendee = null;
-
             $scope.editedEvent.attendees.forEach(function(attendee) {
               if (attendee.email in session.user.emailMap) {
                 $scope.userAsAttendee = attendee;
@@ -162,6 +191,7 @@
 
         if ($scope.calendar) {
           $scope.restActive = true;
+
           _hideModal();
           setOrganizer()
             .then(function() {
@@ -183,18 +213,10 @@
         }
       }
 
-      function deleteEvent() {
-        $scope.restActive = true;
-        _hideModal();
-        calEventService.removeEvent($scope.event.path, $scope.event, $scope.event.etag).finally(function() {
-          $scope.restActive = false;
-        });
-      }
-
       function _changeParticipationAsAttendee() {
         var status = $scope.userAsAttendee.partstat;
-
         $scope.restActive = true;
+
         calEventService.changeParticipation($scope.editedEvent.path, $scope.event, session.user.emails, status).then(function(response) {
           if (!response) {
             return;
@@ -215,7 +237,7 @@
         });
       }
 
-      function _modifyEvent() {
+      function _modifyEvent(isInstanceOfRecurrentEvent) {
         if (!$scope.editedEvent.title || $scope.editedEvent.title.trim().length === 0) {
           _displayError(new Error('You must define an event title'));
 
@@ -233,7 +255,11 @@
         }
 
         $scope.restActive = true;
-        _hideModal();
+
+        if (isInstanceOfRecurrentEvent) {
+          // editedEvent is overwritten by a copy of eventInstanceRecurrent + fields edited
+          _retrieveInstanceEvent();
+        }
 
         if ($scope.event.rrule && !$scope.event.rrule.equals($scope.editedEvent.rrule)) {
           $scope.editedEvent.deleteAllException();
@@ -247,6 +273,77 @@
           angular.noop,
           { graceperiod: true, notifyFullcalendar: $state.is('calendar.main') }
         ).finally(function() {
+          $scope.restActive = false;
+        });
+      }
+
+      // case of selected instance of recurrent event
+      function _retrieveInstanceEvent() {
+        var dayStart = calMoment($scope.eventInstanceRecurrent.start).day();
+        var dayEnd = calMoment($scope.eventInstanceRecurrent.end).day();
+        var start = $scope.editedEvent.start;
+        var end = $scope.editedEvent.end;
+
+        var fieldsFromInstance = {
+          etag: $scope.editedEvent.etag,
+          title: $scope.editedEvent.title,
+          location: $scope.editedEvent.location,
+          attendees: $scope.editedEvent.attendees,
+          description: $scope.editedEvent.description,
+          alarm: $scope.editedEvent.alarm,
+          class: $scope.editedEvent.class
+        };
+
+        $scope.event = $scope.eventInstanceRecurrent.clone();
+        $scope.editedEvent = $scope.eventInstanceRecurrent.clone();
+
+        _copyFieldsFromInstance(fieldsFromInstance, $scope.editedEvent);
+
+        $scope.editedEvent.start = calMoment(start).day(dayStart);
+        $scope.editedEvent.end = calMoment(end).day(dayEnd);
+      }
+
+      function modifyEvent() {
+        if ($scope.canModifyEvent) {
+          _hideModal();
+
+          if ($scope.eventInstanceRecurrent) {
+            eventRecurringModalService.openRecurringModal(
+              $scope.calendar,
+              '/calendar/app/open-event-form/event-recurring-modal/edit-instance-or-series.html',
+              _modifyEvent
+            );
+          } else {
+            _modifyEvent();
+          }
+        } else {
+          _changeParticipationAsAttendee();
+        }
+      }
+
+      function deleteEvent() {
+        $scope.restActive = true;
+
+        _hideModal();
+
+        if ($scope.eventInstanceRecurrent) {
+          eventRecurringModalService.openRecurringModal(
+            $scope.calendar,
+            '/calendar/app/open-event-form/event-recurring-modal/delete-instance-or-series.html',
+            _deleteEvent
+          );
+        } else {
+          _deleteEvent();
+        }
+      }
+
+      function _deleteEvent(isInstanceOfRecurrentEvent) {
+        if (isInstanceOfRecurrentEvent) {
+          $scope.event = $scope.eventInstanceRecurrent.clone();
+          $scope.editedEvent = $scope.eventInstanceRecurrent.clone();
+        }
+
+        calEventService.removeEvent($scope.event.path, $scope.event, $scope.event.etag).finally(function() {
           $scope.restActive = false;
         });
       }
@@ -276,14 +373,6 @@
         ).finally(function() {
           $scope.restActive = false;
         });
-      }
-
-      function modifyEvent() {
-        if ($scope.canModifyEvent) {
-          _modifyEvent();
-        } else {
-          _changeParticipationAsAttendee();
-        }
       }
 
       function changeParticipation(status) {
