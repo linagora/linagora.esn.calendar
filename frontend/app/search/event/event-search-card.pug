@@ -2,9 +2,7 @@
   i.mdi.mdi-clock
   .date
     span {{$ctrl.start}}
-  .to(ng-if='$ctrl.end')
-    | #{__('To')}
-  .separator(ng-if='$ctrl.event.allDay && !$ctrl.end')
+  .to
     | -
   .date
     span {{$ctrl.end}}

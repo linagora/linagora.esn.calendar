@@ -1,18 +1,30 @@
-cal-open-event-form-on-click.event-search-item(event="item", calendar-home-id="item.calendar.calendarHomeId")
-  .pull-left
-    i.mdi.mdi-calendar
-  .media-body
-    .flex-space-between
-      .flex-start
-        .lv-title
+cal-open-event-form-on-click(event="item", calendar-home-id="item.calendar.calendarHomeId")
+  .event-search-item
+    .event-search-icon
+      i.mdi.mdi-calendar
+
+    .media-body
+      .event-search-line
+        .lv-title.event-search-line-left
+          i.mdi.mdi-checkbox-blank-circle(ng-style="{'color': item.calendar.color}")
           span(ng-bind-html="::item.title | esnHighlight: query")
-          span(ng-if="item.location") &nbsp;-&nbsp;
-          span(ng-bind-html="::item.location | esnHighlight: query")
-      .flex
-        i.mdi.mdi-calendar(ng-if="item.allDay")
-        i.mdi.mdi-account-multiple-plus(ng-if="item.isMeeting()")
-        i.mdi.mdi-alarm(ng-if="item.alarm")
-        i.mdi.mdi-refresh(ng-if="item.isRecurring()")
-    .flex-space-between
-      .lv-title
-        cal-event-date-consultation(event="item")
+
+        .lv-title.event-search-line-right
+          cal-event-date-consultation(event="item")
+
+      .event-search-line
+        .lv-title.event-search-line-left
+          span(ng-if="item.organizer")
+            i.mdi.mdi-account
+            span.event-organizer-displayname {{item.organizer.displayName}}
+          span(ng-if="item.location")
+            i.mdi.mdi-map-marker
+            span(ng-bind-html="::item.location | esnHighlight: query")
+
+        .event-search-line-right
+          i.mdi.mdi-account-multiple-plus(ng-if="item.isMeeting()")
+          i.mdi.mdi-alarm(ng-if="item.alarm")
+          i.mdi.mdi-refresh(ng-if="item.isRecurring()")
+
+    .event-search-description
+      span {{item.description}}

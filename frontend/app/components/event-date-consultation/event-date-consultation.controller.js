@@ -22,25 +22,25 @@
 
     function formatStartDate() {
       if (!isAllDay && isOverOneDayOnly) {
-        self.start = eventStart.format('MMM D hh:mma');
-        self.startVerbose = eventStart.format('MMMM D hh:mma');
+        self.start = eventStart.format('MMM D HH:mm');
+        self.startVerbose = eventStart.format('MMM D HH:mm');
       } else if (isOverOneDayOnly) {
-        self.start = self.startVerbose = eventStart.format('MMMM D');
+        self.start = self.startVerbose = eventStart.format('MMM D');
       } else {
         self.start = eventStart.format('MMM D');
-        self.startVerbose = eventStart.format('MMMM D');
+        self.startVerbose = eventStart.format('MMM D');
       }
     }
 
     function formatEndDate() {
       if (!isAllDay && isOverOneDayOnly) {
-        self.end = self.endVerbose = eventEnd.format('hh:mma');
+        self.end = self.endVerbose = eventEnd.format('HH:mm');
       } else if (!isAllDay && !isOverOneDayOnly) {
         self.end = eventEnd.format('MMM D');
-        self.endVerbose = eventEnd.format('MMMM D');
+        self.endVerbose = eventEnd.format('MMM D');
       } else if (!isOverOneDayOnly) {
         self.end = eventEnd.clone().subtract(1, 'day').format('MMM D');
-        self.endVerbose = eventEnd.clone().subtract(1, 'day').format('MMMM D');
+        self.endVerbose = eventEnd.clone().subtract(1, 'day').format('MMM D');
       }
     }
   }
