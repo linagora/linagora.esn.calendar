@@ -1066,7 +1066,7 @@ describe('The calendar core module', function() {
         return callback(null, esResult);
       };
       caldavClientMock.getEvent = sinon.stub();
-      caldavClientMock.getEvent.onFirstCall().returns(q.when('event1')).onSecondCall().returns(q.reject('error2')).onThirdCall().returns(q.when('event3'));
+      caldavClientMock.getEvent.onFirstCall().returns(q.when({ ical: 'event1', etag: 'etag1' })).onSecondCall().returns(q.reject('error2')).onThirdCall().returns(q.when({ ical: 'event3', etag: 'etag3' }));
 
       caldavClientMock.getEventPath = sinon.stub();
       caldavClientMock.getEventPath.onFirstCall().returns('event1path').onSecondCall().returns('event3path');
@@ -1078,9 +1078,9 @@ describe('The calendar core module', function() {
         expect(results).to.deep.equal({
           total_count: esResult.total_count,
           results: [
-            { uid: 'event1', event: 'event1', path: 'event1path'},
+            { uid: 'event1', event: 'event1', path: 'event1path', etag: 'etag1'},
             { uid: 'event2', error: 'error2'},
-            { uid: 'event3', event: 'event3', path: 'event3path'}
+            { uid: 'event3', event: 'event3', path: 'event3path', etag: 'etag3'}
           ]
         });
         done();

@@ -27,6 +27,8 @@ describe('The calOpenEventForm service', function() {
     };
     regularEvent = {
       uid: '456',
+      calendarHomeId: 'eventCalendarHomeId',
+      calendarId: 'eventCalendarId',
       isInstance: sinon.stub().returns(false)
     };
     master = {};
@@ -77,10 +79,8 @@ describe('The calOpenEventForm service', function() {
     });
 
     it('should call calendarService with event calendar id', function(done) {
-      regularEvent.calendarId = 'Test';
-
       calendarService.getCalendar = sinon.spy(function(_calendarHomeId, _calendarId) {
-        expect(_calendarHomeId).to.equal(calendarHomeId);
+        expect(_calendarHomeId).to.equal(regularEvent.calendarHomeId);
         expect(_calendarId).to.equal(regularEvent.calendarId);
         done();
       });
@@ -90,7 +90,7 @@ describe('The calOpenEventForm service', function() {
       $rootScope.$digest();
     });
 
-    it('should call calendarService with default calendar if event is new', function(done) {
+    it('should call calendarService with default calendar and user calendarHomeId if event is new', function(done) {
       regularEvent = {
       };
 
