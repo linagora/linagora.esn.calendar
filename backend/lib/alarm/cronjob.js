@@ -1,10 +1,10 @@
 const Q = require('q');
 const CONSTANTS = require('../constants');
-const CRON_EXPRESSION = '*/10 * * * * *';
 
 module.exports = (dependencies, lib) => {
 
   const cron = dependencies('cron');
+  const esnConfig = dependencies('esn-config');
   const logger = dependencies('logger');
   const mongoose = dependencies('db').mongo.mongoose;
   const Alarm = mongoose.model('CalendarAlarm');
@@ -14,17 +14,11 @@ module.exports = (dependencies, lib) => {
   };
 
   function start() {
-    logger.info('calendar:alarm - Starting the alarm job');
-    cron.submit('Calendar Alarms', CRON_EXPRESSION, cronJob, () => {
-      logger.info('Job is complete');
-      },
-      (err, job) => {
-        if (err) {
-          logger.error('Error while submitting the alarm job', err);
-        }
-        logger.info('Alarm Job has been submitted', job);
-      }
-    );
+    logger.info('calendar:alarm:job - Starting the alarm job');
+
+    return getCronExpression()
+      .then(submitJob)
+      .catch(err => logger.error('calendar:alarm:run - Can not submit the alarm job', err));
   }
 
   function cronJob(callback) {
@@ -39,6 +33,16 @@ module.exports = (dependencies, lib) => {
       state: CONSTANTS.ALARM.STATE.WAITING,
       dueDate: { $lte: new Date() }
     }).exec();
+  }
+
+  function getCronExpression() {
+    return esnConfig('alarm-cron-expression').inModule('linagora.esn.calendar').get()
+      .then(value => value || CONSTANTS.ALARM.DEFAULT_CRON_EXPRESSION)
+      .catch(err => {
+        logger.warning(`calendar:alarm:run - Can not get cron expression from configuration, default to ${CONSTANTS.ALARM.DEFAULT_CRON_EXPRESSION}`, err);
+
+        return CONSTANTS.ALARM.DEFAULT_CRON_EXPRESSION;
+      });
   }
 
   function runAlarms(alarms) {
@@ -86,6 +90,19 @@ module.exports = (dependencies, lib) => {
           });
       }
     }
+  }
+
+  function submitJob(cronExpression) {
+    cron.submit('Calendar Alarms', cronExpression, cronJob, () => {
+      logger.info('calendar:alarm:job - Job is complete');
+      },
+      (err, job) => {
+        if (err) {
+          logger.error('calendar:alarm:job - Error while submitting the job', err);
+        }
+        logger.info('calendar:alarm:job - Job has been submitted', job);
+      }
+    );
   }
 
   function updateAlarmState(alarm, state, details) {

@@ -11,7 +11,7 @@ module.exports = dependencies => {
   const logger = dependencies('logger');
   const alarmDB = require('./db/alarm')(dependencies);
   const handlers = require('./handlers')(dependencies);
-  const job = require('./job')(dependencies, {
+  const cronjob = require('./cronjob')(dependencies, {
     handlers,
     registerNextAlarm
   });
@@ -32,7 +32,7 @@ module.exports = dependencies => {
     const emailHandler = require('./handlers/email')(dependencies);
 
     handlers.register(emailHandler.action, emailHandler.handle);
-    job.start();
+    cronjob.start();
 
     pubsub.local.topic(CONSTANTS.EVENTS.EVENT.CREATED).subscribe(onCreate);
     pubsub.local.topic(CONSTANTS.EVENTS.EVENT.UPDATED).subscribe(onUpdate);

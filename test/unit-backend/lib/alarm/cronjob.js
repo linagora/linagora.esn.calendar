@@ -38,7 +38,7 @@ describe('The Alarm job module', function() {
     this.moduleHelpers.addDep('db', db);
 
     this.requireModule = function(lib = {}) {
-      return require(this.calendarModulePath + '/backend/lib/alarm/job')(this.moduleHelpers.dependencies, lib);
+      return require(this.calendarModulePath + '/backend/lib/alarm/cronjob')(this.moduleHelpers.dependencies, lib);
     };
   });
 
