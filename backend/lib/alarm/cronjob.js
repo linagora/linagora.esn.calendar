@@ -18,7 +18,10 @@ module.exports = (dependencies, lib) => {
 
     return getCronExpression()
       .then(submitJob)
-      .catch(err => logger.error('calendar:alarm:run - Can not submit the alarm job', err));
+      .catch(err => {
+        logger.error('calendar:alarm:run - Can not submit the alarm job', err);
+        throw err;
+      });
   }
 
   function cronJob(callback) {
@@ -39,7 +42,7 @@ module.exports = (dependencies, lib) => {
     return esnConfig('alarm-cron-expression').inModule('linagora.esn.calendar').get()
       .then(value => value || CONSTANTS.ALARM.DEFAULT_CRON_EXPRESSION)
       .catch(err => {
-        logger.warning(`calendar:alarm:run - Can not get cron expression from configuration, default to ${CONSTANTS.ALARM.DEFAULT_CRON_EXPRESSION}`, err);
+        logger.warn(`calendar:alarm:run - Can not get cron expression from configuration, default to ${CONSTANTS.ALARM.DEFAULT_CRON_EXPRESSION}`, err);
 
         return CONSTANTS.ALARM.DEFAULT_CRON_EXPRESSION;
       });
@@ -93,16 +96,24 @@ module.exports = (dependencies, lib) => {
   }
 
   function submitJob(cronExpression) {
-    cron.submit('Calendar Alarms', cronExpression, cronJob, () => {
-      logger.info('calendar:alarm:job - Job is complete');
+    const defer = Q.defer();
+
+    cron.submit('Calendar Alarms', cronExpression, cronJob,
+      () => {
+        logger.info('calendar:alarm:job - Job is complete');
       },
       (err, job) => {
         if (err) {
           logger.error('calendar:alarm:job - Error while submitting the job', err);
+
+          return defer.reject(err);
         }
         logger.info('calendar:alarm:job - Job has been submitted', job);
+        defer.resolve(job);
       }
     );
+
+    return defer.promise;
   }
 
   function updateAlarmState(alarm, state, details) {
