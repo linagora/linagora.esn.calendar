@@ -101,7 +101,7 @@ describe('Caldav-client helper', function() {
       const requestMock = function(opts, callback) {
         expect(opts).to.deep.equal(request);
 
-        callback(null, { body: 'result' });
+        callback(null, { body: 'result', headers: { etag: 'etag' } });
       };
 
       mockery.registerMock('request', requestMock);
@@ -110,7 +110,7 @@ describe('Caldav-client helper', function() {
         .getEvent(userId, calendarId, eventId)
         .then(
           function(event) {
-            expect(event).to.deep.equal('result');
+            expect(event).to.deep.equal({ ical: 'result', etag: 'etag' });
             expect(authMock.token.getNewToken).to.have.been.calledWith({ user: userId });
             expect(davServerMock.utils.getDavEndpoint).to.have.been.called;
 
@@ -125,7 +125,7 @@ describe('Caldav-client helper', function() {
 
         expect(opts).to.deep.equal(request);
 
-        callback(null, { body: 'result' });
+        callback(null, { body: 'result', headers: { etag: 'etag' } });
       };
 
       mockery.registerMock('request', requestMock);
@@ -134,7 +134,7 @@ describe('Caldav-client helper', function() {
         .getEvent(userId, null, eventId)
         .then(
           function(event) {
-            expect(event).to.deep.equal('result');
+            expect(event).to.deep.equal({ ical: 'result', etag: 'etag' });
             expect(authMock.token.getNewToken).to.have.been.calledWith({ user: userId });
             expect(davServerMock.utils.getDavEndpoint).to.have.been.called;
 
@@ -149,7 +149,7 @@ describe('Caldav-client helper', function() {
 
         expect(opts).to.deep.equal(request);
 
-        callback(null, { body: 'result' });
+        callback(null, { body: 'result', headers: { etag: 'etag' }});
       };
 
       mockery.registerMock('request', requestMock);
@@ -158,7 +158,7 @@ describe('Caldav-client helper', function() {
         .getEvent(userId, calendarId)
         .then(
           function(event) {
-            expect(event).to.deep.equal('result');
+            expect(event).to.deep.equal({ ical: 'result', etag: 'etag' });
             expect(authMock.token.getNewToken).to.have.been.calledWith({ user: userId });
             expect(davServerMock.utils.getDavEndpoint).to.have.been.called;
 

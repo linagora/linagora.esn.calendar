@@ -182,7 +182,8 @@ module.exports = dependencies => {
           output.results[index] = {
             uid: eventUid,
             path: caldavClient.getEventPath(query.userId, query.calendarId, eventUid),
-            event: event
+            event: event.ical,
+            etag: event.etag
           };
         }, error => {
           output.results[index] = {

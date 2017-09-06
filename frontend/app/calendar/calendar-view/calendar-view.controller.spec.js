@@ -900,15 +900,12 @@ describe('The calendarViewController', function() {
       this.scope.calendarReady(this.calendar);
       this.scope.$digest();
     });
-
   });
 
   describe('the eventClick', function() {
-    it('should leverage event.path to get the calendarHomeId', function() {
-      var calendarHomeIdInEventPath = 'calendarHomeId';
+    it('should open form with the current calendarHomeId and clonedEvent', function() {
       var clonedEvent = {};
       var event = {
-        path: '/calendars/' + calendarHomeIdInEventPath + '/{{calendarId}}/{{eventId}}.ics',
         clone: sinon.spy(function() {
           return clonedEvent;
         })
@@ -918,7 +915,7 @@ describe('The calendarViewController', function() {
 
       this.scope.eventClick(event);
 
-      expect(this.calOpenEventFormMock).to.have.been.calledWith(calendarHomeIdInEventPath, clonedEvent);
+      expect(this.calOpenEventFormMock).to.have.been.calledWith(this.scope.calendarHomeId, clonedEvent);
       expect(event.clone).to.have.been.calledWith();
     });
   });

@@ -14,8 +14,11 @@
   function calOpenEventForm($rootScope, $modal, calendarService, calEventUtils, calUIAuthorizationService, notificationFactory, session, CAL_DEFAULT_CALENDAR_ID, CAL_EVENTS) {
     var modalIsOpen = false;
 
-    return function calOpenEventForm(calendarHomeId, event) {
-      calendarService.getCalendar(calendarHomeId, event.calendarId || CAL_DEFAULT_CALENDAR_ID).then(function(calendar) {
+    return function calOpenEventForm(fallbackCalendarHomeId, event) {
+      var calendarHomeId = _isNewEvent(event) ? fallbackCalendarHomeId : event.calendarHomeId;
+      var calendarId = _isNewEvent(event) ? CAL_DEFAULT_CALENDAR_ID : event.calendarId;
+
+      calendarService.getCalendar(calendarHomeId, calendarId).then(function(calendar) {
         if (calUIAuthorizationService.canAccessEventDetails(calendar, event, session.user._id)) {
           !event.isInstance() ?
           _openForm(calendar, event) :
@@ -29,6 +32,10 @@
     };
 
     ////////////
+
+    function _isNewEvent(event) {
+      return !event.calendarHomeId;
+    }
 
     function _openForm(calendar, event, eventInstanceRecurrent) {
       calEventUtils.setEditedEvent(event);
