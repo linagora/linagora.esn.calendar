@@ -1,6 +1,5 @@
 const expect = require('chai').expect;
 const sinon = require('sinon');
-const Q = require('q');
 const CONSTANTS = require('../../../../backend/lib/constants');
 
 describe('The Alarm job module', function() {
@@ -21,7 +20,7 @@ describe('The Alarm job module', function() {
     findSpy = sinon.spy(function() {
       return {
         exec: function() {
-          return Q.when(alarms);
+          return Promise.resolve(alarms);
         }
       };
     });
@@ -131,8 +130,8 @@ describe('The Alarm job module', function() {
     });
 
     it('should run each found alarm and register next alarms', function(done) {
-      const emailHandler = sinon.stub().returns(Q.when());
-      const notificationHandler = sinon.stub().returns(Q.when());
+      const emailHandler = sinon.stub().returns(Promise.resolve());
+      const notificationHandler = sinon.stub().returns(Promise.resolve());
       const getHandlers = {email: [emailHandler], notification: [notificationHandler]};
       const handlers = {
         get: sinon.spy(function(action) {
@@ -144,13 +143,13 @@ describe('The Alarm job module', function() {
       const emailAlarm = {
         action: 'email',
         set: sinon.spy(),
-        save: sinon.stub().returns(Q.when())
+        save: sinon.stub().returns(Promise.resolve())
       };
 
       const notificationAlarm = {
         action: 'notification',
         set: sinon.spy(),
-        save: sinon.stub().returns(Q.when())
+        save: sinon.stub().returns(Promise.resolve())
       };
 
       this.requireModule({handlers, registerNextAlarm}).start().then(test, done);
@@ -179,8 +178,8 @@ describe('The Alarm job module', function() {
 
     it('should not reject when a handler rejects and register next alarms', function(done) {
       const error = new Error('Notification failure');
-      const emailHandler = sinon.stub().returns(Q.when());
-      const notificationHandler = sinon.stub().returns(Q.reject(error));
+      const emailHandler = sinon.stub().returns(Promise.resolve());
+      const notificationHandler = sinon.stub().returns(Promise.reject(error));
       const getHandlers = {email: [emailHandler], notification: [notificationHandler]};
       const handlers = {
         get: function(action) {
@@ -192,13 +191,13 @@ describe('The Alarm job module', function() {
       const emailAlarm = {
         action: 'email',
         set: sinon.spy(),
-        save: sinon.stub().returns(Q.when())
+        save: sinon.stub().returns(Promise.resolve())
       };
 
       const notificationAlarm = {
         action: 'notification',
         set: sinon.spy(),
-        save: sinon.stub().returns(Q.when())
+        save: sinon.stub().returns(Promise.resolve())
       };
 
       this.requireModule({handlers, registerNextAlarm}).start().then(test, done);
@@ -227,18 +226,18 @@ describe('The Alarm job module', function() {
 
     it('should set state to error when next alarm can not be registered', function(done) {
       const error = new Error('Can not register the next alarm');
-      const emailHandler = sinon.stub().returns(Q.when());
+      const emailHandler = sinon.stub().returns(Promise.resolve());
       const getHandlers = {email: [emailHandler]};
       const handlers = {
         get: function(action) {
           return getHandlers[action];
         }
       };
-      const registerNextAlarm = sinon.stub().returns(Q.reject(error));
+      const registerNextAlarm = sinon.stub().returns(Promise.reject(error));
       const emailAlarm = {
         action: 'email',
         set: sinon.spy(),
-        save: sinon.stub().returns(Q.when())
+        save: sinon.stub().returns(Promise.resolve())
       };
 
       this.requireModule({handlers, registerNextAlarm}).start().then(test, done);
