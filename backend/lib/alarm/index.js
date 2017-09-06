@@ -1,31 +1,37 @@
 'use strict';
 
-const Q = require('q');
 const ICAL = require('ical.js');
 const moment = require('moment-timezone');
 const CONSTANTS = require('../constants');
 const jcalHelper = require('../helpers/jcal');
+let initialized = false;
 
 module.exports = dependencies => {
   const pubsub = dependencies('pubsub');
   const logger = dependencies('logger');
-  const Alarm = require('./db/alarm')(dependencies);
+  const alarmDB = require('./db/alarm')(dependencies);
   const handlers = require('./handlers')(dependencies);
-  const emailHandler = require('./handlers/email')(dependencies);
   const job = require('./job')(dependencies, {
     handlers,
     registerNextAlarm
   });
 
-  handlers.register(emailHandler.action, emailHandler.handle);
-
   return {
     handlers,
     init,
-    registerNewAlarm
+    registerNewAlarm,
+    registerNextAlarm
   };
 
   function init() {
+    if (initialized) {
+      throw new Error('Already initialized');
+    }
+    initialized = true;
+
+    const emailHandler = require('./handlers/email')(dependencies);
+
+    handlers.register(emailHandler.action, emailHandler.handle);
     job.start();
 
     pubsub.local.topic(CONSTANTS.EVENTS.EVENT.CREATED).subscribe(onCreate);
@@ -44,7 +50,7 @@ module.exports = dependencies => {
     if (!valarm) {
       logger.debug(`calendar:alarm:create ${eventPath} - No alarm defined, skipping`);
 
-      return;
+      return Promise.resolve({});
     }
 
     const alarm = jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstPropertyValue('dtstart'));
@@ -65,12 +71,12 @@ module.exports = dependencies => {
   }
 
   function onDelete(msg) {
-    const eventPath = msg.eventPath;
+    const {eventPath} = msg;
 
     logger.info(`calendar:alarm:delete ${eventPath} - Deleting alarms for event ${eventPath}`);
 
     // TODO: we also need to delete/abort all the jobs which are currently running alarms with this path
-    return Alarm.remove({eventPath}).exec();
+    return alarmDB.remove({eventPath});
   }
 
   function onUpdate(msg) {
@@ -82,27 +88,24 @@ module.exports = dependencies => {
     logger.info(`calendar:alarm:update ${eventPath} - Updating alarms for event ${eventPath}`);
 
     const abort = valarm ? () => {
-      logger.warning(`calendar:alarm:update ${eventPath} - Aborting old alarms`);
+      logger.warn(`calendar:alarm:update ${eventPath} - Aborting old alarms`);
       const alarm = jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstPropertyValue('dtstart'));
 
-      return Alarm.remove({eventPath, attendee: alarm.attendee}).exec();
-    } : Q.when({});
+      return alarmDB.remove({eventPath, attendee: alarm.attendee});
+    } : () => Promise.resolve({});
 
     return abort()
-      .then(
-        () => onCreate(msg),
-        err => {
-          logger.warning(`calendar:alarm:update ${eventPath} - Error while aborting old alarm, creating new one`, err);
-
-          return onCreate(msg);
-        }
-      );
+      .then(() => onCreate(msg))
+      .catch(err => {
+        logger.warn(`calendar:alarm:update ${eventPath} - Error while aborting old alarm, creating new one`, err);
+        throw err;
+      });
   }
 
   function registerNewAlarm(alarm) {
     logger.debug(`calendar:alarm ${alarm.eventPath} - Register new alarm`, alarm);
 
-    return new Alarm(alarm).save();
+    return alarmDB.create(alarm);
   }
 
   function registerNextAlarm(previousAlarm) {
@@ -114,7 +117,7 @@ module.exports = dependencies => {
     if (!new ICAL.Event(vevent).isRecurring()) {
       logger.debug(`calendar:alarm ${previousAlarm.eventPath} - Event is not recurring, skipping`);
 
-      return Q.when({});
+      return Promise.resolve({});
     }
 
     const valarm = vevent.getFirstSubcomponent('valarm');
@@ -135,7 +138,7 @@ module.exports = dependencies => {
     if (!nextInstance) {
       logger.debug(`calendar:alarm ${previousAlarm.eventPath} - Alarm is recurring but does not have next alarm to register`);
 
-      return Q.when({});
+      return Promise.resolve({});
     }
 
     const nextAlarm = previousAlarm.toJSON();

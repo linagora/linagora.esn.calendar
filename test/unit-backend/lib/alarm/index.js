@@ -1,305 +1,307 @@
 'use strict';
 
-const expect = require('chai').expect;
+const {expect} = require('chai');
+const mockery = require('mockery');
 const fs = require('fs');
 const sinon = require('sinon');
-const q = require('q');
 const ICAL = require('ical.js');
-const moment = require('moment');
 const CONSTANTS = require('../../../../backend/lib/constants');
 
-describe('alarm module', function() {
-  var emailModule, sendHTMLMock, helpers, localstub, cron, userLib, esnConfigMock;
+describe('The alarm module', function() {
+  let attendee, eventUid, attendeeEmail, eventPath, alarmDB, jobLib, localstub;
 
   beforeEach(function() {
     this.calendarModulePath = this.moduleHelpers.modulePath;
-    sendHTMLMock = sinon.stub().returns(q.when({}));
-    emailModule = {
-      getMailer: function() {
-        return { sendHTML: sendHTMLMock };
-      }
-    };
-    helpers = {
-      config: {
-        getBaseUrl: function(user, callback) {
-          callback(null, 'http://localhost:8080/');
-        }
-      }
-    };
+    attendeeEmail = 'slemaistre@gmail.com';
+    eventUid = 'f1514f44bf39311568d640721cbc555071ca90e08d3349ccae43e1787553988ae047feb2aab16e43439a608f28671ab7c10e754cec5324c4e4cd93f443dc3934f6c5d2e592a8112c';
+    attendee = `mailto:${attendeeEmail}`;
+    eventPath = '/calendars/USER/CAL_ID/EVENT_UID.ics';
     localstub = {};
-    cron = { submit: sinon.spy(), abortAll: sinon.spy() };
-    userLib = {
-      findByEmail: (email, cb) => {
-        cb();
-      }
+    alarmDB = {
+      create: sinon.stub().returns(Promise.resolve({})),
+      remove: sinon.stub().returns(Promise.resolve({}))
     };
-    esnConfigMock = function(configName) {
-      expect(configName).to.equal('locale');
+    mockery.registerMock('./db/alarm', function() {
+      return alarmDB;
+    });
 
-      return {
-        inModule: function(module) {
-          expect(module).to.equal('core');
-
-          return {
-            forUser: () => {}
-          };
-        }
-      };
+    jobLib = {
+      start: function() {}
     };
+    mockery.registerMock('./job', function() {
+      return jobLib;
+    });
 
-    this.moduleHelpers.addDep('email', emailModule);
-    this.moduleHelpers.addDep('helpers', helpers);
     this.moduleHelpers.addDep('pubsub', this.helpers.mock.pubsub('', localstub, {}));
-    this.moduleHelpers.addDep('cron', cron);
-    this.moduleHelpers.addDep('user', userLib);
-    this.moduleHelpers.addDep('i18n', this.helpers.requireBackend('core/i18n'));
-    this.moduleHelpers.addDep('esn-config', esnConfigMock);
+
+    mockery.registerMock('./handlers/email', function() {return {};});
 
     this.requireModule = function() {
       return require(this.calendarModulePath + '/backend/lib/alarm')(this.moduleHelpers.dependencies);
     };
+
+    this.getICSAsString = function(name) {
+      return fs.readFileSync(`${this.calendarModulePath}/test/unit-backend/fixtures/${name}.ics`).toString('utf8');
+    };
+
+    this.getEventAsJSON = function(name) {
+      return this.getEvent(name).toJSON();
+    };
+
+    this.getEvent = function(name) {
+      return ICAL.Component.fromString(this.getICSAsString(name));
+    };
   });
 
-  function checkAlarmSubmitted(done) {
-    expect(cron.submit).to.have.been.calledWith(
-      sinon.match.string,
-      sinon.match(function(date) {
-        return moment(date).isSame(moment('20150611'));
-      }),
-      sinon.match(function(job) {
-        job(function() {
-          expect(sendHTMLMock).to.have.been.calledWith(
-            sinon.match({
-              to: 'slemaistre@gmail.com',
-              subject: 'Pending event! Event: Victor Sanders'
-            }),
-            sinon.match({
-              name: 'event.alarm',
-              path: sinon.match(/templates\/email/)
-            }),
-            sinon.match.has('content', sinon.match.has('alarm'))
-          );
-
-          done && done();
-        });
-
-        return true;
-      }),
+  function checkAlarmCreated(done) {
+    expect(alarmDB.create).to.have.been.calledWith(
       sinon.match(function(context) {
         expect(context).to.shallowDeepEqual({
           action: 'EMAIL',
-          attendee: 'mailto:slemaistre@gmail.com',
-          eventUid: 'f1514f44bf39311568d640721cbc555071ca90e08d3349ccae43e1787553988ae047feb2aab16e43439a608f28671ab7c10e754cec5324c4e4cd93f443dc3934f6c5d2e592a8112c'
+          attendee: attendeeEmail,
+          eventUid
         });
+
         return true;
-      }),
-      sinon.match(function(opts) {
-        expect(opts).to.deep.equal({dbStorage: true});
-        return true;
-      }),
-      sinon.match.func);
+      }));
+
+    done && done();
   }
 
-  describe('on event pubsub event', function() {
+  describe('The init function', function() {
+    it('should be callable once', function() {
+      const module = this.requireModule();
 
+      module.init();
+
+      expect(module.init).to.throw(/Already initialized/);
+    });
+
+    it('should register email handler', function() {
+      const register = sinon.spy();
+
+      mockery.registerMock('./handlers', function() {
+        return { register };
+      });
+      this.requireModule().init();
+
+      expect(register).to.have.been.calledOnce;
+    });
+
+    it('should start the job', function() {
+      const spy = sinon.spy(jobLib, 'start');
+
+      this.requireModule().init();
+
+      expect(spy).to.have.been.calledOnce;
+    });
+  });
+
+  describe('on pubsub event', function() {
     describe('on EVENTS.EVENT.DELETED event', function() {
-      it('should abort all alarm with the right context', function() {
-        var ics = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/withVALARM.ics').toString('utf8');
+      it('should abort all alarms', function(done) {
+        this.requireModule().init();
+        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.DELETED].handler;
+
+        handleAlarm({eventPath})
+          .then(() => {
+            expect(alarmDB.remove).to.have.been.calledWith({eventPath});
+            done();
+          })
+          .catch(done);
+      });
+
+      it('should reject when abort rejects', function(done) {
+        const error = new Error('I failed to remove alarms');
+
+        alarmDB.remove = sinon.stub().returns(Promise.reject(error));
 
         this.requireModule().init();
-        var handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.DELETED].handler;
-        handleAlarm({
-          type: 'deleted',
-          event: ICAL.Component.fromString(ics).toJSON()
-        });
+        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.DELETED].handler;
 
-        expect(cron.abortAll).to.have.been.calledWith({
-          eventUid: 'f1514f44bf39311568d640721cbc555071ca90e08d3349ccae43e1787553988ae047feb2aab16e43439a608f28671ab7c10e754cec5324c4e4cd93f443dc3934f6c5d2e592a8112c'
-        }, sinon.match.func);
+        handleAlarm({eventPath})
+          .then(() => done(new Error('Should not occur')))
+          .catch(err => {
+            expect(err).to.equal(error);
+            expect(alarmDB.remove).to.have.been.calledWith({eventPath});
+            done();
+          });
       });
     });
 
     describe('on EVENTS.EVENT.CREATED event', function() {
-      it('should register a new alarm without recuring', function(done) {
-        var ics = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/withVALARM.ics').toString('utf8');
-
+      it('should register a new alarm without recurring', function(done) {
         this.requireModule().init();
-        var handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.CREATED].handler;
+
+        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.CREATED].handler;
+
         handleAlarm({
-          type: 'created',
+          eventPath,
+          event: this.getEventAsJSON('withVALARM')
+        })
+        .then(() => checkAlarmCreated(done))
+        .catch(done);
+      });
+
+      it('should do nothing if event has no valarm', function(done) {
+        this.requireModule().init();
+        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.CREATED].handler;
+
+        handleAlarm({
+          eventPath,
+          event: this.getEventAsJSON('allday')
+        })
+        .then(() => {
+          expect(alarmDB.create).to.not.have.been.called;
+          done();
+        })
+        .catch(done);
+      });
+
+      it('should register a new alarm with recurring', function(done) {
+        this.requireModule().init();
+        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.CREATED].handler;
+
+        handleAlarm({
           eventPath: '/calendars/USER/CAL_ID/EVENT_UID.ics',
-          event: ICAL.Component.fromString(ics).toJSON()
-        });
-
-        checkAlarmSubmitted(done);
-      });
-
-      it('should do nothing if action is not EMAIL', function() {
-        var ics = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/withNotEMAILValarm.ics').toString('utf8');
-
-        this.requireModule().init();
-        var handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.CREATED].handler;
-        handleAlarm({
-          type: 'created',
-          event: ICAL.Component.fromString(ics).toJSON()
-        });
-
-        expect(cron.submit).to.not.have.been.called;
-      });
-
-      it('should do nothing if vevent has no valarm', function() {
-        var ics = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/allday.ics').toString('utf8');
-
-        this.requireModule().init();
-        var handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.CREATED].handler;
-        handleAlarm({
-          type: 'created',
-          event: ICAL.Component.fromString(ics).toJSON()
-        });
-
-        expect(cron.submit).to.not.have.been.called;
-      });
-
-      it('should register a new alarm with recuring', function(done) {
-        var ics = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/withVALARMandRRULE.ics').toString('utf8');
-
-        this.requireModule().init();
-        var handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.CREATED].handler;
-        handleAlarm({
-          type: 'created',
-          eventPath: '/calendars/USER/CAL_ID/EVENT_UID.ics',
-          event: ICAL.Component.fromString(ics).toJSON()
-        });
-        expect(cron.submit).to.have.been.called.twice;
-        checkAlarmSubmitted(done);
+          event: this.getEventAsJSON('withVALARMandRRULE')
+        }).then(() => {
+          expect(alarmDB.create).to.have.been.called.twice;
+          checkAlarmCreated(done);
+        }).catch(done);
       });
     });
 
     describe('on EVENTS.EVENT.UPDATED event', function() {
-      it('should only register an alarm if there is no alarm for the previous version of event without recuring', function(done) {
-        var withAlarmICS = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/withVALARM.ics').toString('utf8');
-        var withoutAlarmICS = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/allday.ics').toString('utf8');
+      it('should not try to remove alarm for previous event if no alarm was defined and register a new one if defined', function(done) {
         this.requireModule().init();
-        var handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.UPDATED].handler;
-        handleAlarm({
-          type: 'updated',
-          eventPath: '/calendars/USER/CAL_ID/EVENT_UID.ics',
-          event: ICAL.Component.fromString(withAlarmICS).toJSON(),
-          old_event: ICAL.Component.fromString(withoutAlarmICS).toJSON()
-        });
+        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.UPDATED].handler;
 
-        expect(cron.abortAll).to.not.have.been.called;
-        checkAlarmSubmitted(done);
+        handleAlarm({
+          eventPath,
+          event: this.getEventAsJSON('withVALARM'),
+          old_event: this.getEventAsJSON('allday')
+        }).then(() => {
+          expect(alarmDB.remove).to.not.have.been.called;
+          checkAlarmCreated();
+          done();
+        }).catch(done);
       });
 
-      it('should fail if the deletion of previous alarms failed', function() {
-        var ics = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/withVALARM.ics').toString('utf8');
+      it('should fail if the deletion of previous alarm failed', function(done) {
+        const error = new Error('I failed to delete');
+        const ics = this.getEventAsJSON('withVALARM');
 
-        cron.abortAll = sinon.spy(function(context, callback) {
-          expect(context).to.deep.equal({
-            eventUid: 'f1514f44bf39311568d640721cbc555071ca90e08d3349ccae43e1787553988ae047feb2aab16e43439a608f28671ab7c10e754cec5324c4e4cd93f443dc3934f6c5d2e592a8112c',
-            attendee: 'mailto:slemaistre@gmail.com'
-          });
-          callback(new Error('deletion error'));
-        });
+        alarmDB.remove = sinon.stub().returns(Promise.reject(error));
 
         this.requireModule().init();
-        var handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.UPDATED].handler;
-        handleAlarm({
-          type: 'updated',
-          event: ICAL.Component.fromString(ics).toJSON(),
-          old_event: ICAL.Component.fromString(ics).toJSON()
-        });
+        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.UPDATED].handler;
 
-        expect(cron.abortAll).to.have.been.called;
-        expect(cron.submit).to.not.have.been.called;
+        handleAlarm({
+          eventPath,
+          event: ics,
+          old_event: ics
+        }).then(() => {
+          done(new Error('Should not occur'));
+        }).catch(err => {
+          expect(err).to.equal(error);
+          expect(alarmDB.remove).to.have.been.calledWith({
+            eventPath,
+            attendee
+          });
+          expect(alarmDB.create).to.not.have.been.called;
+          done();
+        });
       });
 
       it('should delete alarm for the event if any and register a new one', function(done) {
-        var ics = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/withVALARM.ics').toString('utf8');
-
-        cron.abortAll = sinon.spy(function(context, callback) {
-          expect(context).to.deep.equal({
-            eventUid: 'f1514f44bf39311568d640721cbc555071ca90e08d3349ccae43e1787553988ae047feb2aab16e43439a608f28671ab7c10e754cec5324c4e4cd93f443dc3934f6c5d2e592a8112c',
-            attendee: 'mailto:slemaistre@gmail.com'
-          });
-          callback();
-        });
+        const ics = this.getEventAsJSON('withVALARM');
 
         this.requireModule().init();
-        var handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.UPDATED].handler;
+        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.UPDATED].handler;
+
         handleAlarm({
-          type: 'updated',
-          eventPath: '/calendars/USER/CAL_ID/EVENT_UID.ics',
-          event: ICAL.Component.fromString(ics).toJSON(),
-          old_event: ICAL.Component.fromString(ics).toJSON()
-        });
-
-        expect(cron.abortAll).to.have.been.called;
-        checkAlarmSubmitted(done);
-      });
-    });
-
-    it('should only register an alarm if there is no alarm for the previous version of event with recuring', function(done) {
-      const withAlarmRRULEICS = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/withVALARMandRRULE.ics').toString('utf8');
-      const withoutAlarmICS = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/allday.ics').toString('utf8');
-
-      this.requireModule().init();
-
-      const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.UPDATED].handler;
-
-      handleAlarm({
-        type: 'updated',
-        eventPath: '/calendars/USER/CAL_ID/EVENT_UID.ics',
-        event: ICAL.Component.fromString(withAlarmRRULEICS).toJSON(),
-        old_event: ICAL.Component.fromString(withoutAlarmICS).toJSON()
+          eventPath,
+          event: ics,
+          old_event: ics
+        }).then(() => {
+          expect(alarmDB.remove).to.have.been.called;
+          checkAlarmCreated(done);
+        }).catch(done);
       });
 
-      expect(cron.abortAll).to.not.have.been.called;
-      checkAlarmSubmitted(done);
-    });
+      it('should only register an alarm if there is no alarm for the previous version of event with recurring', function(done) {
+        this.requireModule().init();
 
+        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.UPDATED].handler;
+
+        handleAlarm({
+          eventPath,
+          event: this.getEventAsJSON('withVALARMandRRULE'),
+          old_event: this.getEventAsJSON('allday')
+        }).then(() => {
+          expect(alarmDB.remove).to.not.have.been.called;
+          checkAlarmCreated(done);
+        }).catch(done);
+      });
+    });
   });
 
-  describe('on cron:job:revival', function() {
-    it('should do nothing if the job is not a calendar job', function() {
-      this.requireModule().init();
-      var handleAlarm = localstub.topics['cron:job:revival'].handler;
-      handleAlarm({
-        context: {
-          module: 'otherModule'
-        }
-      });
-      expect(cron.submit).to.not.have.been.called;
+  describe('The registerNextAlarm function', function() {
+    it('should not register alarm if the event is not recurring', function(done) {
+      const alarm = {
+        eventPath,
+        ics: this.getICSAsString('withVALARM')
+      };
+
+      const logger = this.moduleHelpers.dependencies('logger');
+      const loggerSpy = sinon.spy(logger, 'debug');
+
+      this.requireModule().registerNextAlarm(alarm)
+        .then(() => {
+          expect(alarmDB.create).to.not.have.been.called;
+          expect(loggerSpy).to.have.been.calledWithMatch(/Event is not recurring, skipping/);
+          done();
+        })
+        .catch(done);
     });
 
-    it('should register a new alarm', function() {
-      this.requireModule().init();
-      var handleAlarm = localstub.topics['cron:job:revival'].handler;
-      var context = {
-        module: 'calendar',
-        alarmDueDate: moment().add(1, 'hours').format(),
-        ics: fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/withVALARM.ics').toString('utf8')
+    it('should register the next alarm on recurring event', function(done) {
+      const alarm = {
+        eventPath,
+        ics: this.getICSAsString('withVALARMandRRULE'),
+        toJSON: sinon.spy(function() {
+          return alarm;
+        })
       };
-      handleAlarm({
-        context: context
-      });
-      expect(cron.submit).to.have.been.calledWith(
-        sinon.match.string,
-        sinon.match(function(date) {
-          var isSame = moment(date).isSame(moment(context.alarmDueDate));
-          return isSame;
-        }),
-        sinon.match.func,
-        sinon.match(function(context) {
-          expect(context).to.deep.equal(context);
-          return true;
-        }),
-        sinon.match(function(opts) {
-          expect(opts).to.deep.equal({dbStorage: false});
-          return true;
-        }),
-        sinon.match.func);
+
+      this.requireModule().registerNextAlarm(alarm)
+        .then(() => {
+          expect(alarmDB.create).to.have.been.called;
+          done();
+        })
+        .catch(done);
+    });
+
+    it('should reject if registering alarm fails', function(done) {
+      const error = new Error('I failed!');
+      const alarm = {
+        eventPath,
+        ics: this.getICSAsString('withVALARMandRRULE'),
+        toJSON: sinon.spy(function() {
+          return alarm;
+        })
+      };
+
+      alarmDB.create = sinon.stub().returns(Promise.reject(error));
+
+      this.requireModule().registerNextAlarm(alarm)
+        .then(() => done(new Error('Should not occur')))
+        .catch(err => {
+          expect(err).to.equal(error);
+          expect(alarmDB.create).to.have.been.called;
+          done();
+        });
     });
   });
 });
