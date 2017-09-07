@@ -7,6 +7,7 @@ var expect = chai.expect;
 describe('The calFullUiConfiguration service', function() {
   var $q,
   $httpBackend,
+  $translate,
   calFullUiConfiguration,
   esnConfig,
   esnUserConfigurationService,
@@ -14,7 +15,9 @@ describe('The calFullUiConfiguration service', function() {
   moduleName,
   moduleConfiguration,
   businessHours,
-  CAL_UI_CONFIG;
+  uiConfig,
+  CAL_UI_CONFIG,
+  CAL_FULLCALENDAR_LOCALE;
 
   beforeEach(function() {
     angular.mock.module('esn.calendar');
@@ -26,6 +29,9 @@ describe('The calFullUiConfiguration service', function() {
       start: '00:00',
       end: '25:00'
     }];
+    uiConfig = {
+      calendar: {}
+    };
     moduleName = 'linagora.esn.calendar';
     moduleConfiguration = ['workingDays', 'hideDeclinedEvents'];
 
@@ -42,15 +48,19 @@ describe('The calFullUiConfiguration service', function() {
     _$rootScope_,
     _$q_,
     _$httpBackend_,
+    _$translate_,
     _calFullUiConfiguration_,
     _esnUserConfigurationService_,
-    _CAL_UI_CONFIG_
+    _CAL_UI_CONFIG_,
+    _CAL_FULLCALENDAR_LOCALE_
   ) {
     calFullUiConfiguration = _calFullUiConfiguration_;
     esnUserConfigurationService = _esnUserConfigurationService_;
     $q = _$q_;
     $httpBackend = _$httpBackend_;
+    $translate = _$translate_;
     CAL_UI_CONFIG = _CAL_UI_CONFIG_;
+    CAL_FULLCALENDAR_LOCALE = _CAL_FULLCALENDAR_LOCALE_;
   }));
 
   describe('The get function', function() {
@@ -209,6 +219,83 @@ describe('The calFullUiConfiguration service', function() {
           });
 
         $httpBackend.flush();
+    });
+  });
+
+  describe('The configureLocaleForCalendar function', function() {
+    function _setPreferredLanguage(locale) {
+      $translate.preferredLanguage = sinon.spy(function() {
+        return locale;
+      });
+    }
+
+    it('should set calendar locale configuration with default value if no preferred locale', function() {
+      _setPreferredLanguage(null);
+
+      var config = calFullUiConfiguration.configureLocaleForCalendar(uiConfig);
+
+      expect(config.calendar.locale).to.be.equal(CAL_FULLCALENDAR_LOCALE.default);
+    });
+
+    it('should set calendar locale configuration with default value if preferred locale is not supported by fullcalendar', function() {
+      [
+        'key',
+        'key//local',
+        'l.i'
+      ].forEach(function(locale) {
+      _setPreferredLanguage(locale);
+
+      var config = calFullUiConfiguration.configureLocaleForCalendar(uiConfig);
+
+      expect(config.calendar.locale).to.be.equal(CAL_FULLCALENDAR_LOCALE.default);
+      });
+    });
+
+    it('should not care about case sensitive', function() {
+      [
+        'fr_ca',
+        'FR_CA',
+        'Fr_ca',
+        'fr_Ca',
+        'FR_ca'
+      ].forEach(function(locale) {
+      _setPreferredLanguage(locale);
+
+      var config = calFullUiConfiguration.configureLocaleForCalendar(uiConfig);
+
+      expect(config.calendar.locale).to.be.equal('fr-ca');
+      });
+    });
+
+    it('should not care about the separator', function() {
+      [
+        'fr_ca',
+        'fr-ca',
+        'fr*ca',
+        'fr/ca',
+        'fr_-/ca',
+        'fr:./ca'
+      ].forEach(function(locale) {
+      _setPreferredLanguage(locale);
+
+      var config = calFullUiConfiguration.configureLocaleForCalendar(uiConfig);
+
+      expect(config.calendar.locale).to.be.equal('fr-ca');
+      });
+    });
+
+    it('should set calendar locale configuration with closest value as possible', function() {
+      [
+        'fr_MMM',
+        'fR///local',
+        'FR.i'
+      ].forEach(function(locale) {
+      _setPreferredLanguage(locale);
+
+      var config = calFullUiConfiguration.configureLocaleForCalendar(uiConfig);
+
+      expect(config.calendar.locale).to.be.equal('fr');
+      });
     });
   });
 });
