@@ -47,7 +47,7 @@ module.exports = {
     NAMESPACE: '/calendars'
   },
   ALARM: {
-    DEFAULT_CRON_EXPRESSION: '*/10 * * * * *',
+    DEFAULT_CRON_EXPRESSION: '0 * * * * *',
     STATE: {
       DONE: 'done',
       ERROR: 'error',
