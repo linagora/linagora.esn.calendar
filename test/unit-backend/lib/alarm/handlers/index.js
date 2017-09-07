@@ -10,9 +10,7 @@ describe('The alarm handlers module', function() {
     handler = {action, handle, uniqueId};
 
     this.calendarModulePath = this.moduleHelpers.modulePath;
-    this.requireModule = function() {
-      return require(this.calendarModulePath + '/backend/lib/alarm/handlers')();
-    };
+    this.requireModule = () => require(this.calendarModulePath + '/backend/lib/alarm/handlers')();
   });
 
   describe('The get function', function() {

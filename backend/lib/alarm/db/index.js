@@ -1,10 +1,10 @@
 const CONSTANTS = require('../../constants');
 
 module.exports = dependencies => {
-  const Alarm = require('./alarm')(dependencies);
+  const CalendarAlarm = require('./alarm')(dependencies);
 
   return {
-    Alarm,
+    CalendarAlarm,
     create,
     getAlarmsToHandle,
     remove,
@@ -12,11 +12,11 @@ module.exports = dependencies => {
   };
 
   function create(alarm) {
-    return new Alarm(alarm).save();
+    return new CalendarAlarm(alarm).save();
   }
 
   function remove(query) {
-    return Alarm.remove(query).exec();
+    return CalendarAlarm.remove(query).exec();
   }
 
   function setState(alarm, state, details) {
@@ -29,7 +29,7 @@ module.exports = dependencies => {
   }
 
   function getAlarmsToHandle() {
-    return Alarm.find({
+    return CalendarAlarm.find({
       state: CONSTANTS.ALARM.STATE.WAITING,
       dueDate: { $lte: new Date() }
     }).exec();

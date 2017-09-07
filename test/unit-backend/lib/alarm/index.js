@@ -8,29 +8,36 @@ const ICAL = require('ical.js');
 const CONSTANTS = require('../../../../backend/lib/constants');
 
 describe('The alarm module', function() {
-  let attendee, eventUid, attendeeEmail, eventPath, alarmDB, jobLib, localstub;
+  let alarms, attendee, eventUid, attendeeEmail, eventPath, alarmDB, jobLib, jobQueue, localstub;
 
   beforeEach(function() {
     this.calendarModulePath = this.moduleHelpers.modulePath;
+    alarms = [];
     attendeeEmail = 'slemaistre@gmail.com';
     eventUid = 'f1514f44bf39311568d640721cbc555071ca90e08d3349ccae43e1787553988ae047feb2aab16e43439a608f28671ab7c10e754cec5324c4e4cd93f443dc3934f6c5d2e592a8112c';
     attendee = `mailto:${attendeeEmail}`;
     eventPath = '/calendars/USER/CAL_ID/EVENT_UID.ics';
     localstub = {};
-    alarmDB = {
-      create: sinon.stub().returns(Promise.resolve({})),
-      remove: sinon.stub().returns(Promise.resolve({}))
-    };
-    mockery.registerMock('./db/alarm', function() {
-      return alarmDB;
-    });
 
     jobLib = {
-      start: function() {}
+      start: () => {}
     };
-    mockery.registerMock('./cronjob', function() {
-      return jobLib;
-    });
+    mockery.registerMock('./cronjob', () => jobLib);
+
+    jobQueue = {
+      createWorker: sinon.spy(),
+      enqueue: sinon.stub().returns(Promise.resolve())
+    };
+    mockery.registerMock('./jobqueue', () => jobQueue);
+
+    alarmDB = {
+      getAlarmsToHandle: sinon.stub().returns(Promise.resolve(alarms)),
+      remove: sinon.stub().returns(Promise.resolve()),
+      save: sinon.stub().returns(Promise.resolve()),
+      create: sinon.stub().returns(Promise.resolve()),
+      setState: sinon.stub().returns(Promise.resolve())
+    };
+    mockery.registerMock('./db', () => alarmDB);
 
     this.moduleHelpers.addDep('pubsub', this.helpers.mock.pubsub('', localstub, {}));
 
@@ -55,7 +62,7 @@ describe('The alarm module', function() {
 
   function checkAlarmCreated(done) {
     expect(alarmDB.create).to.have.been.calledWith(
-      sinon.match(function(context) {
+      sinon.match(context => {
         expect(context).to.shallowDeepEqual({
           action: 'EMAIL',
           attendee: attendeeEmail,
@@ -63,7 +70,8 @@ describe('The alarm module', function() {
         });
 
         return true;
-      }));
+      })
+    );
 
     done && done();
   }
@@ -80,9 +88,7 @@ describe('The alarm module', function() {
     it('should register email handler', function() {
       const register = sinon.spy();
 
-      mockery.registerMock('./handlers', function() {
-        return { register };
-      });
+      mockery.registerMock('./handlers', () => ({register}));
       this.requireModule().init();
 
       expect(register).to.have.been.calledOnce;
@@ -99,7 +105,7 @@ describe('The alarm module', function() {
 
   describe('on pubsub event', function() {
     describe('on EVENTS.EVENT.DELETED event', function() {
-      it('should abort all alarms', function(done) {
+      it('should remove alarms at the given eventPath', function(done) {
         this.requireModule().init();
         const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.DELETED].handler;
 
@@ -270,9 +276,7 @@ describe('The alarm module', function() {
       const alarm = {
         eventPath,
         ics: this.getICSAsString('withVALARMandRRULE'),
-        toJSON: sinon.spy(function() {
-          return alarm;
-        })
+        toJSON: sinon.spy(() => alarm)
       };
 
       this.requireModule().registerNextAlarm(alarm)
@@ -288,9 +292,7 @@ describe('The alarm module', function() {
       const alarm = {
         eventPath,
         ics: this.getICSAsString('withVALARMandRRULE'),
-        toJSON: sinon.spy(function() {
-          return alarm;
-        })
+        toJSON: sinon.spy(() => alarm)
       };
 
       alarmDB.create = sinon.stub().returns(Promise.reject(error));
@@ -302,6 +304,66 @@ describe('The alarm module', function() {
           expect(alarmDB.create).to.have.been.called;
           done();
         });
+    });
+  });
+
+  describe('The registerAlarmHandler function', function() {
+    it('should register the handler and create a worker', function() {
+      const handler = 'The Handler';
+      const registerSpy = sinon.spy();
+
+      mockery.registerMock('./handlers', () => ({ register: registerSpy }));
+
+      this.requireModule().registerAlarmHandler(handler);
+
+      expect(registerSpy).to.have.been.calledWith(handler);
+      expect(jobQueue.createWorker).to.have.been.calledWith(handler);
+    });
+  });
+
+  describe('The processAlarms function', function() {
+    it('should get all the alarms to run', function(done) {
+      this.requireModule().processAlarms(err => {
+        expect(err).to.not.exists;
+        expect(alarmDB.getAlarmsToHandle).to.have.been.calledOnce;
+        done();
+      });
+    });
+
+    it('should enqueue each alarm', function(done) {
+      const emailHandler = {handle: sinon.stub().returns(Promise.resolve())};
+      const notificationHandler = {handle: sinon.stub().returns(Promise.resolve())};
+      const getHandlers = {email: [emailHandler], notification: [notificationHandler]};
+      const handlers = {
+        get: sinon.spy(function(action) {
+          return getHandlers[action];
+        })
+      };
+      const emailAlarm = {
+        action: 'email',
+        set: sinon.spy(),
+        save: sinon.stub().returns(Promise.resolve())
+      };
+      const notificationAlarm = {
+        action: 'notification',
+        set: sinon.spy(),
+        save: sinon.stub().returns(Promise.resolve())
+      };
+
+      mockery.registerMock('./handlers', () => handlers);
+
+      alarms.push(emailAlarm);
+      alarms.push(notificationAlarm);
+
+      this.requireModule().processAlarms(err => {
+        expect(err).to.not.exists;
+        expect(jobQueue.enqueue).to.have.been.calledWith(emailAlarm, emailHandler);
+        expect(jobQueue.enqueue).to.have.been.calledWith(notificationAlarm, notificationHandler);
+        expect(alarmDB.setState).to.have.been.calledTwice;
+        expect(alarmDB.setState).to.have.been.calledWith(emailAlarm, CONSTANTS.ALARM.STATE.RUNNING);
+        expect(alarmDB.setState).to.have.been.calledWith(notificationAlarm, CONSTANTS.ALARM.STATE.RUNNING);
+        done();
+      });
     });
   });
 });

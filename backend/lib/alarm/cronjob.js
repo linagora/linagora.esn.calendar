@@ -12,6 +12,10 @@ module.exports = dependencies => {
   function start(alarmJob) {
     logger.info('calendar:alarm:cronjob - Starting the alarm cronjob');
 
+    if (!alarmJob) {
+      return Promise.reject(new Error('Job must be defined'));
+    }
+
     return getCronExpression()
       .then(cronExpression => createCronJob(cronExpression, alarmJob))
       .catch(err => {

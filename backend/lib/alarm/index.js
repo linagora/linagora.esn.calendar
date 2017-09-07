@@ -17,6 +17,7 @@ module.exports = dependencies => {
 
   return {
     init,
+    processAlarms,
     registerNewAlarm,
     registerNextAlarm,
     registerAlarmHandler
