@@ -43,21 +43,11 @@ describe('The alarm module', function() {
 
     mockery.registerMock('./handlers/email', function() {return {handle: function() {}, uniqueId: 'foo.bar.baz', action: 'EMAIL'};});
 
-    this.requireModule = function() {
-      return require(this.calendarModulePath + '/backend/lib/alarm')(this.moduleHelpers.dependencies);
-    };
+    this.requireModule = () => require(this.calendarModulePath + '/backend/lib/alarm')(this.moduleHelpers.dependencies);
 
-    this.getICSAsString = function(name) {
-      return fs.readFileSync(`${this.calendarModulePath}/test/unit-backend/fixtures/${name}.ics`).toString('utf8');
-    };
-
-    this.getEventAsJSON = function(name) {
-      return this.getEvent(name).toJSON();
-    };
-
-    this.getEvent = function(name) {
-      return ICAL.Component.fromString(this.getICSAsString(name));
-    };
+    this.getICSAsString = name => fs.readFileSync(`${this.calendarModulePath}/test/unit-backend/fixtures/${name}.ics`).toString('utf8');
+    this.getEventAsJSON = name => this.getEvent(name).toJSON();
+    this.getEvent = name => ICAL.Component.fromString(this.getICSAsString(name));
   });
 
   function checkAlarmCreated(done) {
@@ -335,9 +325,7 @@ describe('The alarm module', function() {
       const notificationHandler = {handle: sinon.stub().returns(Promise.resolve())};
       const getHandlers = {email: [emailHandler], notification: [notificationHandler]};
       const handlers = {
-        get: sinon.spy(function(action) {
-          return getHandlers[action];
-        })
+        getHandlersForAction: sinon.spy(action => getHandlers[action])
       };
       const emailAlarm = {
         action: 'email',

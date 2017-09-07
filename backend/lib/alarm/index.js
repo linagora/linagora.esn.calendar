@@ -178,7 +178,7 @@ module.exports = dependencies => {
       });
 
     function submitJobs() {
-      const alarmHandlers = handlers.get(alarm.action);
+      const alarmHandlers = handlers.getHandlersForAction(alarm.action);
 
       return Q.allSettled(alarmHandlers.map(handler => jobqueue.enqueue(alarm, handler)))
         .then(() => logger.debug(`calendar:alarm ${alarm._id}::${alarm.eventPath} - Submitted jobs in job queue`))

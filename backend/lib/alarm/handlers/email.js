@@ -18,9 +18,7 @@ module.exports = dependencies => {
     handle
   };
 
-  function handle(alarm) {
-    const { ics, attendee, eventPath } = alarm;
-
+  function handle({ ics, attendee, eventPath }) {
     return Q.denodeify(userModule.findByEmail)(attendee)
       .then(user => {
         if (!user) {

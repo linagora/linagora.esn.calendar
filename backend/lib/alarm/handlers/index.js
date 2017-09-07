@@ -2,17 +2,17 @@ module.exports = () => {
   const handlers = {};
 
   return {
-    get,
     getHandlers,
+    getHandlersForAction,
     register
   };
 
-  function get(action) {
-    return handlers[action] || [];
-  }
-
   function getHandlers() {
     return handlers;
+  }
+
+  function getHandlersForAction(action) {
+    return handlers[action] || [];
   }
 
   function register(handler) {
