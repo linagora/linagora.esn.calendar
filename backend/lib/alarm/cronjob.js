@@ -1,4 +1,3 @@
-const Q = require('q');
 const CONSTANTS = require('../constants');
 
 module.exports = dependencies => {
@@ -32,9 +31,8 @@ module.exports = dependencies => {
   }
 
   function createCronJob(cronExpression, cronJob) {
-    const defer = Q.defer();
-
-    cron.submit('Calendar Alarms', cronExpression, cronJob,
+    return new Promise((resolve, reject) => {
+      cron.submit('Calendar Alarms', cronExpression, cronJob,
       () => {
         logger.info('calendar:alarm:cronjob - Job is complete');
       },
@@ -42,13 +40,11 @@ module.exports = dependencies => {
         if (err) {
           logger.error('calendar:alarm:cronjob - Error while submitting the job', err);
 
-          return defer.reject(err);
+          return reject(err);
         }
         logger.info('calendar:alarm:cronjob - Job has been submitted', job);
-        defer.resolve(job);
-      }
-    );
-
-    return defer.promise;
+        resolve(job);
+      });
+    });
   }
 };
