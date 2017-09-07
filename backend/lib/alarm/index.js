@@ -1,6 +1,7 @@
 'use strict';
 
 const ICAL = require('ical.js');
+const Q = require('q');
 const moment = require('moment-timezone');
 const CONSTANTS = require('../constants');
 const jcalHelper = require('../helpers/jcal');
@@ -9,18 +10,16 @@ let initialized = false;
 module.exports = dependencies => {
   const pubsub = dependencies('pubsub');
   const logger = dependencies('logger');
-  const alarmDB = require('./db/alarm')(dependencies);
+  const db = require('./db')(dependencies);
   const handlers = require('./handlers')(dependencies);
-  const cronjob = require('./cronjob')(dependencies, {
-    handlers,
-    registerNextAlarm
-  });
+  const cronjob = require('./cronjob')(dependencies);
+  const jobqueue = require('./jobqueue')(dependencies);
 
   return {
-    handlers,
     init,
     registerNewAlarm,
-    registerNextAlarm
+    registerNextAlarm,
+    registerAlarmHandler
   };
 
   function init() {
@@ -29,10 +28,8 @@ module.exports = dependencies => {
     }
     initialized = true;
 
-    const emailHandler = require('./handlers/email')(dependencies);
-
-    handlers.register(emailHandler);
-    cronjob.start();
+    registerAlarmHandler(require('./handlers/email')(dependencies));
+    cronjob.start(processAlarms);
 
     pubsub.local.topic(CONSTANTS.EVENTS.EVENT.CREATED).subscribe(onCreate);
     pubsub.local.topic(CONSTANTS.EVENTS.EVENT.UPDATED).subscribe(onUpdate);
@@ -43,6 +40,7 @@ module.exports = dependencies => {
     const eventPath = msg.eventPath;
     const vcalendar = new ICAL.Component(msg.event);
     const vevent = vcalendar.getFirstSubcomponent('vevent');
+    // TODO: Handle all alarms, not only the first one!
     const valarm = vevent.getFirstSubcomponent('valarm');
 
     logger.info(`calendar:alarm:create ${eventPath} - Creating new alarm for event ${eventPath}`);
@@ -63,8 +61,7 @@ module.exports = dependencies => {
       ics: vcalendar.toString()
     };
 
-    // TODO: do not create alarms for past alarms...
-
+    // TODO: do not create alarms for past alarms, or at least for alarms which are too old...
     logger.info(`calendar:alarm:create ${eventPath} - Registering new event alarm email ${alarm.email} due at ${alarm.alarmDueDate.clone().local().format()}`);
 
     return registerNewAlarm(context);
@@ -75,14 +72,14 @@ module.exports = dependencies => {
 
     logger.info(`calendar:alarm:delete ${eventPath} - Deleting alarms for event ${eventPath}`);
 
-    // TODO: we also need to delete/abort all the jobs which are currently running alarms with this path
-    return alarmDB.remove({eventPath});
+    return db.remove({eventPath});
   }
 
   function onUpdate(msg) {
     const eventPath = msg.eventPath;
     const vcalendar = new ICAL.Component(msg.old_event);
     const vevent = vcalendar.getFirstSubcomponent('vevent');
+    // TODO: Handle all alarms, not only the first one!
     const valarm = vevent.getFirstSubcomponent('valarm');
 
     logger.info(`calendar:alarm:update ${eventPath} - Updating alarms for event ${eventPath}`);
@@ -91,7 +88,7 @@ module.exports = dependencies => {
       logger.warn(`calendar:alarm:update ${eventPath} - Aborting old alarms`);
       const alarm = jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstPropertyValue('dtstart'));
 
-      return alarmDB.remove({eventPath, attendee: alarm.attendee});
+      return db.remove({eventPath, attendee: alarm.attendee});
     } : () => Promise.resolve({});
 
     return abort()
@@ -102,10 +99,22 @@ module.exports = dependencies => {
       });
   }
 
+  function processAlarms(callback) {
+    return db.getAlarmsToHandle()
+      .then(submitAlarms)
+      .then(result => callback(null, result))
+      .catch(callback);
+  }
+
+  function registerAlarmHandler(handler) {
+    handlers.register(handler);
+    jobqueue.createWorker(handler);
+  }
+
   function registerNewAlarm(alarm) {
     logger.debug(`calendar:alarm ${alarm.eventPath} - Register new alarm`, alarm);
 
-    return alarmDB.create(alarm);
+    return db.create(alarm);
   }
 
   function registerNextAlarm(previousAlarm) {
@@ -148,5 +157,31 @@ module.exports = dependencies => {
     nextAlarm.dueDate = moment(nextInstance.clone()).add(triggerDuration).format();
 
     return registerNewAlarm(nextAlarm);
+  }
+
+  function submitAlarms(alarms) {
+    logger.debug(`calendar:alarm - Submitting ${alarms.length} alarm(s)`);
+
+    return Q.allSettled(alarms.map(submitAlarm));
+  }
+
+  function submitAlarm(alarm) {
+    logger.info(`calendar:alarm ${alarm._id}::${alarm.eventPath} - Submitting alarm`);
+
+    return db.setState(alarm, CONSTANTS.ALARM.STATE.RUNNING)
+      .then(submitJobs)
+      .then(() => logger.info(`calendar:alarm ${alarm._id}::${alarm.eventPath} - Alarm submitted`))
+      .catch(err => {
+        logger.error(`calendar:alarm ${alarm._id}::${alarm.eventPath} - Alarm submit error`, err);
+        throw err;
+      });
+
+    function submitJobs() {
+      const alarmHandlers = handlers.get(alarm.action);
+
+      return Q.allSettled(alarmHandlers.map(handler => jobqueue.enqueue(alarm, handler)))
+        .then(() => logger.debug(`calendar:alarm ${alarm._id}::${alarm.eventPath} - Submitted jobs in job queue`))
+        .then(() => registerNextAlarm(alarm));
+    }
   }
 };

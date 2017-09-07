@@ -1,6 +1,3 @@
-// code the handler which will send email
-// the handler does not deal with document state. it is just here to send email and return result
-
 const CONSTANTS = require('../../constants');
 const path = require('path');
 const Q = require('q');
