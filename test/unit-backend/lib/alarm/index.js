@@ -28,7 +28,7 @@ describe('The alarm module', function() {
     jobLib = {
       start: function() {}
     };
-    mockery.registerMock('./job', function() {
+    mockery.registerMock('./cronjob', function() {
       return jobLib;
     });
 
