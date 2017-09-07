@@ -15,15 +15,15 @@ module.exports = () => {
     return handlers;
   }
 
-  function register(action, handler) {
-    if (!action || !handler) {
-      return;
+  function register(handler) {
+    if (!handler || !handler.action || !handler.uniqueId || !handler.handle) {
+      throw new Error('Alarm handler not compliant');
     }
 
-    if (!handlers[action]) {
-      handlers[action] = [];
+    if (!handlers[handler.action]) {
+      handlers[handler.action] = [];
     }
 
-    handlers[action].push(handler);
+    handlers[handler.action].push(handler);
   }
 };

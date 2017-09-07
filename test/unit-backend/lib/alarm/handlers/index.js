@@ -1,11 +1,13 @@
 const expect = require('chai').expect;
 
 describe('The alarm handlers module', function() {
-  let action, handler;
+  let action, handler, handle, uniqueId;
 
   beforeEach(function() {
+    uniqueId = 'foo.bar.baz';
     action = 'myaction';
-    handler = 'myhandler';
+    handle = function() {};
+    handler = {action, handle, uniqueId};
 
     this.calendarModulePath = this.moduleHelpers.modulePath;
     this.requireModule = function() {
@@ -24,27 +26,41 @@ describe('The alarm handlers module', function() {
   });
 
   describe('The register function', function() {
+    it('should not register handler when undefined', function() {
+      const module = this.requireModule();
+
+      expect(module.register).to.throw(/Alarm handler not compliant/);
+    });
+
     it('should not register handler when action is undefined', function() {
       const module = this.requireModule();
 
-      module.register(undefined, handler);
+      delete handler.action;
 
-      expect(module.getHandlers()).to.be.empty;
+      expect(() => module.register(handler)).to.throw(/Alarm handler not compliant/);
     });
 
-    it('should not register handler when handler is undefined', function() {
+    it('should not register handler when handle is undefined', function() {
       const module = this.requireModule();
 
-      module.register(action);
+      delete handler.handle;
 
-      expect(module.getHandlers()).to.be.empty;
+      expect(() => module.register(handler)).to.throw(/Alarm handler not compliant/);
+    });
+
+    it('should not register handler when uniqueId is undefined', function() {
+      const module = this.requireModule();
+
+      delete handler.uniqueId;
+
+      expect(() => module.register(handler)).to.throw(/Alarm handler not compliant/);
     });
 
     it('should not override current handler', function() {
       const module = this.requireModule();
 
-      module.register(action, handler);
-      module.register(action, handler);
+      module.register(handler);
+      module.register(handler);
 
       expect(module.get(action)).to.deep.equal([handler, handler]);
     });
@@ -53,7 +69,7 @@ describe('The alarm handlers module', function() {
   it('should return handlers registered for the given action', function() {
     const module = this.requireModule();
 
-    module.register(action, handler);
+    module.register(handler);
 
     expect(module.get(action)).to.deep.equal([handler]);
   });

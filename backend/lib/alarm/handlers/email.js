@@ -16,6 +16,7 @@ module.exports = dependencies => {
   const linksHelper = require('../../helpers/links')(dependencies);
 
   return {
+    uniqueId: 'linagora.esn.calendar.alarm.email',
     action: CONSTANTS.VALARM_ACTIONS.EMAIL,
     handle
   };

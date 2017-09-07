@@ -130,8 +130,8 @@ describe('The Alarm job module', function() {
     });
 
     it('should run each found alarm and register next alarms', function(done) {
-      const emailHandler = sinon.stub().returns(Promise.resolve());
-      const notificationHandler = sinon.stub().returns(Promise.resolve());
+      const emailHandler = {handle: sinon.stub().returns(Promise.resolve())};
+      const notificationHandler = {handle: sinon.stub().returns(Promise.resolve())};
       const getHandlers = {email: [emailHandler], notification: [notificationHandler]};
       const handlers = {
         get: sinon.spy(function(action) {
@@ -162,8 +162,8 @@ describe('The Alarm job module', function() {
 
         cronTask(err => {
           expect(err).to.not.exists;
-          expect(emailHandler).to.have.been.calledWith(emailAlarm);
-          expect(notificationHandler).to.have.been.calledWith(notificationAlarm);
+          expect(emailHandler.handle).to.have.been.calledWith(emailAlarm);
+          expect(notificationHandler.handle).to.have.been.calledWith(notificationAlarm);
           expect(registerNextAlarm).to.have.been.calledTwice;
           expect(registerNextAlarm).to.have.been.calledWith(emailAlarm);
           expect(registerNextAlarm).to.have.been.calledWith(notificationAlarm);
@@ -178,8 +178,8 @@ describe('The Alarm job module', function() {
 
     it('should not reject when a handler rejects and register next alarms', function(done) {
       const error = new Error('Notification failure');
-      const emailHandler = sinon.stub().returns(Promise.resolve());
-      const notificationHandler = sinon.stub().returns(Promise.reject(error));
+      const emailHandler = {handle: sinon.stub().returns(Promise.resolve())};
+      const notificationHandler = {handle: sinon.stub().returns(Promise.reject(error))};
       const getHandlers = {email: [emailHandler], notification: [notificationHandler]};
       const handlers = {
         get: function(action) {
@@ -210,8 +210,8 @@ describe('The Alarm job module', function() {
 
         cronTask(err => {
           expect(err).to.not.exists;
-          expect(emailHandler).to.have.been.calledWith(emailAlarm);
-          expect(notificationHandler).to.have.been.calledWith(notificationAlarm);
+          expect(emailHandler.handle).to.have.been.calledWith(emailAlarm);
+          expect(notificationHandler.handle).to.have.been.calledWith(notificationAlarm);
           expect(registerNextAlarm).to.have.been.calledTwice;
           expect(registerNextAlarm).to.have.been.calledWith(emailAlarm);
           expect(registerNextAlarm).to.have.been.calledWith(notificationAlarm);
@@ -226,7 +226,7 @@ describe('The Alarm job module', function() {
 
     it('should set state to error when next alarm can not be registered', function(done) {
       const error = new Error('Can not register the next alarm');
-      const emailHandler = sinon.stub().returns(Promise.resolve());
+      const emailHandler = {handle: sinon.stub().returns(Promise.resolve())};
       const getHandlers = {email: [emailHandler]};
       const handlers = {
         get: function(action) {
@@ -249,7 +249,7 @@ describe('The Alarm job module', function() {
 
         cronTask(err => {
           expect(err).to.not.exists;
-          expect(emailHandler).to.have.been.calledWith(emailAlarm);
+          expect(emailHandler.handle).to.have.been.calledWith(emailAlarm);
           expect(registerNextAlarm).to.have.been.calledWith(emailAlarm);
           expect(emailAlarm.set).to.have.been.calledWith({state: CONSTANTS.ALARM.STATE.RUNNING});
           expect(emailAlarm.set).to.not.have.been.calledWith({state: CONSTANTS.ALARM.STATE.DONE});

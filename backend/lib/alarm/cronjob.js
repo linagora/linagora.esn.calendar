@@ -79,16 +79,16 @@ module.exports = (dependencies, lib) => {
       });
 
       function callHandler(handler) {
-        logger.info(`calendar:alarm:run ${alarm.eventPath} - Running handler for action ${alarm.action}`);
+        logger.info(`calendar:alarm:run ${alarm.eventPath} - Handler ${handler.uniqueId} running for action ${alarm.action}`);
 
-        return handler(alarm)
+        return handler.handle(alarm)
           .then(result => {
-            logger.debug(`calendar:alarm:run ${alarm.eventPath} - Alarm has been processed`, result);
+            logger.debug(`calendar:alarm:run ${alarm.eventPath} - Handler ${handler.uniqueId} processed alarm correctly`, result);
 
             return result;
           })
           .catch(err => {
-            logger.error(`calendar:alarm:run ${alarm.eventPath} - Error while running the alarm handler for action ${alarm.action}`, err);
+            logger.error(`calendar:alarm:run ${alarm.eventPath} - Handler ${handler.uniqueId} failed to process alarm`, err);
             throw err;
           });
       }

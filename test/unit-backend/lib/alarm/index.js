@@ -34,7 +34,7 @@ describe('The alarm module', function() {
 
     this.moduleHelpers.addDep('pubsub', this.helpers.mock.pubsub('', localstub, {}));
 
-    mockery.registerMock('./handlers/email', function() {return {};});
+    mockery.registerMock('./handlers/email', function() {return {handle: function() {}, uniqueId: 'foo.bar.baz', action: 'EMAIL'};});
 
     this.requireModule = function() {
       return require(this.calendarModulePath + '/backend/lib/alarm')(this.moduleHelpers.dependencies);

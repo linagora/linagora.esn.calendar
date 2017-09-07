@@ -31,7 +31,7 @@ module.exports = dependencies => {
 
     const emailHandler = require('./handlers/email')(dependencies);
 
-    handlers.register(emailHandler.action, emailHandler.handle);
+    handlers.register(emailHandler);
     cronjob.start();
 
     pubsub.local.topic(CONSTANTS.EVENTS.EVENT.CREATED).subscribe(onCreate);
