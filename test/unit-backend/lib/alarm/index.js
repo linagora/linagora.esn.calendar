@@ -8,14 +8,13 @@ const ICAL = require('ical.js');
 const CONSTANTS = require('../../../../backend/lib/constants');
 
 describe('The alarm module', function() {
-  let alarms, attendee, eventUid, attendeeEmail, eventPath, alarmDB, jobLib, jobQueue, localstub;
+  let alarms, eventUid, attendeeEmail, eventPath, alarmDB, jobLib, jobQueue, localstub;
 
   beforeEach(function() {
     this.calendarModulePath = this.moduleHelpers.modulePath;
     alarms = [];
     attendeeEmail = 'slemaistre@gmail.com';
     eventUid = 'f1514f44bf39311568d640721cbc555071ca90e08d3349ccae43e1787553988ae047feb2aab16e43439a608f28671ab7c10e754cec5324c4e4cd93f443dc3934f6c5d2e592a8112c';
-    attendee = `mailto:${attendeeEmail}`;
     eventPath = '/calendars/USER/CAL_ID/EVENT_UID.ics';
     localstub = {};
 
@@ -159,11 +158,35 @@ describe('The alarm module', function() {
         const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.CREATED].handler;
 
         handleAlarm({
-          eventPath: '/calendars/USER/CAL_ID/EVENT_UID.ics',
+          eventPath,
           event: this.getEventAsJSON('withVALARMandRRULE')
         }).then(() => {
           expect(alarmDB.create).to.have.been.called.twice;
           checkAlarmCreated(done);
+        }).catch(done);
+      });
+
+      it('should add as many alarms as there are in the event', function(done) {
+        this.requireModule().init();
+        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.CREATED].handler;
+
+        handleAlarm({
+          eventPath,
+          event: this.getEventAsJSON('with2VALARMs')
+        }).then(() => {
+          expect(alarmDB.create).to.have.been.called.twice;
+          expect(alarmDB.create).to.have.been.calledWithMatch({
+            action: 'EMAIL',
+            attendee: attendeeEmail,
+            eventUid,
+            eventPath
+          });
+          expect(alarmDB.create).to.have.been.calledWithMatch({
+            action: 'DISPLAY',
+            eventUid,
+            eventPath
+          });
+          done();
         }).catch(done);
       });
     });
@@ -178,7 +201,7 @@ describe('The alarm module', function() {
           event: this.getEventAsJSON('withVALARM'),
           old_event: this.getEventAsJSON('allday')
         }).then(() => {
-          expect(alarmDB.remove).to.not.have.been.called;
+          expect(alarmDB.remove).to.have.been.calledWith({eventPath, state: CONSTANTS.ALARM.STATE.WAITING});
           checkAlarmCreated();
           done();
         }).catch(done);
@@ -201,10 +224,7 @@ describe('The alarm module', function() {
           done(new Error('Should not occur'));
         }).catch(err => {
           expect(err).to.equal(error);
-          expect(alarmDB.remove).to.have.been.calledWith({
-            eventPath,
-            attendee
-          });
+          expect(alarmDB.remove).to.have.been.calledWith({ eventPath, state: CONSTANTS.ALARM.STATE.WAITING });
           expect(alarmDB.create).to.not.have.been.called;
           done();
         });
@@ -236,7 +256,7 @@ describe('The alarm module', function() {
           event: this.getEventAsJSON('withVALARMandRRULE'),
           old_event: this.getEventAsJSON('allday')
         }).then(() => {
-          expect(alarmDB.remove).to.not.have.been.called;
+          expect(alarmDB.remove).to.have.been.calledWith({ eventPath, state: CONSTANTS.ALARM.STATE.WAITING });
           checkAlarmCreated(done);
         }).catch(done);
       });

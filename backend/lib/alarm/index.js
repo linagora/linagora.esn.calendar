@@ -41,31 +41,34 @@ module.exports = dependencies => {
     const eventPath = msg.eventPath;
     const vcalendar = new ICAL.Component(msg.event);
     const vevent = vcalendar.getFirstSubcomponent('vevent');
-    // TODO: Handle all alarms, not only the first one!
-    const valarm = vevent.getFirstSubcomponent('valarm');
+    const valarms = vevent.getAllSubcomponents('valarm');
 
-    logger.info(`calendar:alarm:create ${eventPath} - Creating new alarm for event ${eventPath}`);
+    logger.info(`calendar:alarm:create ${eventPath} - Creating new alarms for event ${eventPath}`);
 
-    if (!valarm) {
+    if (!valarms || !valarms.length) {
       logger.debug(`calendar:alarm:create ${eventPath} - No alarm defined, skipping`);
 
-      return Promise.resolve({});
+      return Promise.resolve([]);
     }
 
-    const alarm = jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstPropertyValue('dtstart'));
-    const context = {
-      action: valarm.getFirstPropertyValue('action'),
-      attendee: alarm.email || alarm.attendee,
-      eventPath,
-      eventUid: vevent.getFirstPropertyValue('uid'),
-      dueDate: moment(alarm.alarmDueDate.format()).toDate(),
-      ics: vcalendar.toString()
-    };
+    return Q.allSettled(valarms.map(createAlarm));
 
-    // TODO: do not create alarms for past alarms, or at least for alarms which are too old...
-    logger.info(`calendar:alarm:create ${eventPath} - Registering new event alarm email ${alarm.email} due at ${alarm.alarmDueDate.clone().local().format()}`);
+    function createAlarm(valarm) {
+      // TODO: do not create alarms for past alarms, or at least for alarms which are too old...
+      const alarm = jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstPropertyValue('dtstart'));
+      const context = {
+        action: valarm.getFirstPropertyValue('action'),
+        attendee: alarm.email || alarm.attendee,
+        eventPath,
+        eventUid: vevent.getFirstPropertyValue('uid'),
+        dueDate: moment(alarm.alarmDueDate.format()).toDate(),
+        ics: vcalendar.toString()
+      };
 
-    return registerNewAlarm(context);
+      logger.info(`calendar:alarm:create ${eventPath} - Registering new alarm with action ${context.action} due at ${alarm.alarmDueDate.clone().local().format()}`);
+
+      return registerNewAlarm(context);
+    }
   }
 
   function onDelete(msg) {
@@ -78,26 +81,15 @@ module.exports = dependencies => {
 
   function onUpdate(msg) {
     const eventPath = msg.eventPath;
-    const vcalendar = new ICAL.Component(msg.old_event);
-    const vevent = vcalendar.getFirstSubcomponent('vevent');
-    // TODO: Handle all alarms, not only the first one!
-    const valarm = vevent.getFirstSubcomponent('valarm');
 
     logger.info(`calendar:alarm:update ${eventPath} - Updating alarms for event ${eventPath}`);
 
-    const abort = valarm ? () => {
-      logger.warn(`calendar:alarm:update ${eventPath} - Aborting old alarms`);
-      const alarm = jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstPropertyValue('dtstart'));
-
-      return db.remove({eventPath, attendee: alarm.attendee});
-    } : () => Promise.resolve({});
-
-    return abort()
+    return db.remove({eventPath, state: CONSTANTS.ALARM.STATE.WAITING})
       .then(() => onCreate(msg))
       .catch(err => {
         logger.warn(`calendar:alarm:update ${eventPath} - Error while aborting old alarm, creating new one`, err);
         throw err;
-      });
+    });
   }
 
   function processAlarms(callback) {
