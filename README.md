@@ -66,14 +66,14 @@ this can be easily done using [Scripting](https://www.elastic.co/guide/en/elasti
 
         service elasticsearch restart
 
-* Copy the content of `events.idx` into a temporary index (`events-tmp.idx` for example). For here I will use [Sense](https://www.elastic.co/guide/en/sense/current/installing.html). For sure you can the same using curl ;-)
+* Copy the content of `events.idx` into a temporary index (`events-tmp.idx` for example). For here I will use [Sense](https://www.elastic.co/guide/en/sense/current/installing.html). For sure you can the same using curl ;-). In the following command, we will try to update the `_id` field so it has the following format: `userId--calendarId`
 
         POST /_reindex
         {
             "source": { "index": "events.idx" },
             "dest": { "index": "events-tmp.idx" },
             "script": {
-                "inline": "ctx._id= ctx._source['userId'] + '--' + ctx._source['calendarId']" // here I need to change the `_id` field
+                "inline": "ctx._id= ctx._source['userId'] + '--' + ctx._source['calendarId']"
             }
         }
 
@@ -219,7 +219,7 @@ this can be easily done using [Scripting](https://www.elastic.co/guide/en/elasti
         POST /_reindex
         {
             "source": { "index": "events-tmp.idx" },
-            "dest": { "index": "events.idx" },
+            "dest": { "index": "events.idx" }
         }
 
 * That it. Now you can verify that you have all the events indexed back in `events.idx`
