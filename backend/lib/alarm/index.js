@@ -54,20 +54,20 @@ module.exports = dependencies => {
     return Q.allSettled(valarms.map(createAlarm));
 
     function createAlarm(valarm) {
-      // TODO: do not create alarms for past alarms, or at least for alarms which are too old...
-      const alarm = jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstPropertyValue('dtstart'));
-      const context = {
+      const alarmObject = jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstPropertyValue('dtstart'));
+      const alarm = {
         action: valarm.getFirstPropertyValue('action'),
-        attendee: alarm.email || alarm.attendee,
         eventPath,
         eventUid: vevent.getFirstPropertyValue('uid'),
-        dueDate: moment(alarm.alarmDueDate.format()).toDate(),
+        dueDate: moment(alarmObject.alarmDueDate.format()).toDate(),
         ics: vcalendar.toString()
       };
 
-      logger.info(`calendar:alarm:create ${eventPath} - Registering new alarm with action ${context.action} due at ${alarm.alarmDueDate.clone().local().format()}`);
+      if (alarmObject.email) {
+        alarm.attendee = alarmObject.email;
+      }
 
-      return registerNewAlarm(context);
+      return registerNewAlarm(alarm);
     }
   }
 
@@ -125,15 +125,10 @@ module.exports = dependencies => {
     const valarm = vevent.getFirstSubcomponent('valarm');
     const trigger = valarm.getFirstPropertyValue('trigger');
     const triggerDuration = moment.duration(trigger);
-    let expandStart = moment().add(triggerDuration).format();
-
-    expandStart = new Date(expandStart);
-    expandStart = new Date(expandStart.getTime() + 60000);
-    expandStart = new ICAL.Time.fromDateTimeString(expandStart.toISOString());
 
     const expand = new ICAL.RecurExpansion({
       component: vevent,
-      dtstart: expandStart
+      dtstart: getStartTimeForNextRecurringEvent(triggerDuration)
     });
     const nextInstance = expand.next();
 
@@ -150,6 +145,15 @@ module.exports = dependencies => {
     nextAlarm.dueDate = moment(nextInstance.clone()).add(triggerDuration).format();
 
     return registerNewAlarm(nextAlarm);
+
+    function getStartTimeForNextRecurringEvent(triggerDuration) {
+      const start = moment().add(triggerDuration).format();
+      let result = new Date(start);
+
+      result = new Date(result.getTime() + 60000);
+
+      return new ICAL.Time.fromDateTimeString(result.toISOString());
+    }
   }
 
   function submitAlarms(alarms) {

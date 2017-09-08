@@ -26,7 +26,7 @@ module.exports = dependencies => {
 
   function getCronExpression() {
     return esnConfig('alarm-cron-expression').inModule('linagora.esn.calendar').get()
-      .then(value => value || CONSTANTS.ALARM.DEFAULT_CRON_EXPRESSION)
+      .then(alarmCronExpression => alarmCronExpression || CONSTANTS.ALARM.DEFAULT_CRON_EXPRESSION)
       .catch(err => {
         logger.warn(`calendar:alarm:cronjob - Can not get cron expression from configuration, default to ${CONSTANTS.ALARM.DEFAULT_CRON_EXPRESSION}`, err);
 
