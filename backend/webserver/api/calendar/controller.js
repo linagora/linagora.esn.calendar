@@ -200,7 +200,8 @@ module.exports = function(dependencies) {
           _links: {
             self: eventData.path
           },
-          data: eventData.event
+          data: eventData.event,
+          etag: eventData.etag
         });
       });
 

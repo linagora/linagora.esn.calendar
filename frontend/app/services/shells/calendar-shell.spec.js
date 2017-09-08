@@ -1106,6 +1106,14 @@ describe('CalendarShell factory', function() {
     });
   });
 
+  describe('calendarHomeId property', function() {
+    it('should compute the id from the path', function() {
+      var event = CalendarShell.fromIncompleteShell({path: '/calendarHomeId/calendarId/events'});
+
+      expect(event.calendarHomeId).to.equal('calendarHomeId');
+    });
+  });
+
   describe('calendarUniqueId property', function() {
     it('should be computed with calPathBuilder.forCalendarId function from calendar Home Id and Id', function() {
       var event = CalendarShell.fromIncompleteShell({path: 'xxxxxxxxxxxx/calendarHomeId/calendarId/eventUid.ics'});
