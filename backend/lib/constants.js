@@ -41,6 +41,14 @@ module.exports = {
       CANCEL: 'calendar:event:cancel',
       DELETED: 'calendar:event:deleted',
       REPLY: 'calendar:event:reply'
+    },
+    ALARM: {
+      CREATED: 'calendar:event:alarm:created',
+      UPDATED: 'calendar:event:alarm:updated',
+      DELETED: 'calendar:event:alarm:deleted',
+      REQUEST: 'calendar:event:alarm:request',
+      REPLY: 'calendar:event:alarm:reply',
+      CANCEL: 'calendar:event:alarm:cancel'
     }
   },
   WEBSOCKET: {

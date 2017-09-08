@@ -8,7 +8,7 @@ const ICAL = require('ical.js');
 const CONSTANTS = require('../../../../backend/lib/constants');
 
 describe('The alarm module', function() {
-  let alarms, eventUid, attendeeEmail, eventPath, alarmDB, jobLib, jobQueue, localstub;
+  let alarms, eventUid, notifyFunctions, amqpClientProviderMock, amqpClient, attendeeEmail, eventPath, alarmDB, jobLib, jobQueue;
 
   beforeEach(function() {
     this.calendarModulePath = this.moduleHelpers.modulePath;
@@ -16,7 +16,7 @@ describe('The alarm module', function() {
     attendeeEmail = 'slemaistre@gmail.com';
     eventUid = 'f1514f44bf39311568d640721cbc555071ca90e08d3349ccae43e1787553988ae047feb2aab16e43439a608f28671ab7c10e754cec5324c4e4cd93f443dc3934f6c5d2e592a8112c';
     eventPath = '/calendars/USER/CAL_ID/EVENT_UID.ics';
-    localstub = {};
+    notifyFunctions = {};
 
     jobLib = {
       start: () => {}
@@ -38,7 +38,17 @@ describe('The alarm module', function() {
     };
     mockery.registerMock('./db', () => alarmDB);
 
-    this.moduleHelpers.addDep('pubsub', this.helpers.mock.pubsub('', localstub, {}));
+    amqpClient = {
+      subscribe: sinon.spy((exchange, notifyFn) => {
+        notifyFunctions[exchange] = notifyFn;
+      }),
+      ack: sinon.spy()
+    };
+
+    amqpClientProviderMock = {
+      getClient: () => Promise.resolve(amqpClient)
+    };
+    this.moduleHelpers.addDep('amqpClientProvider', amqpClientProviderMock);
 
     mockery.registerMock('./handlers/email', function() {return {handle: function() {}, uniqueId: 'foo.bar.baz', action: 'EMAIL'};});
 
@@ -66,44 +76,55 @@ describe('The alarm module', function() {
   }
 
   describe('The init function', function() {
-    it('should be callable once', function() {
+    it('should be callable once', function(done) {
       const module = this.requireModule();
 
-      module.init();
-
-      expect(module.init).to.throw(/Already initialized/);
+      module.init()
+        .then(() => {
+          expect(module.init).to.throw(/Already initialized/);
+          expect(amqpClient.subscribe.callCount).to.equals(6);
+          done();
+        })
+        .catch(done);
     });
 
-    it('should register email handler', function() {
+    it('should register email handler', function(done) {
       const register = sinon.spy();
 
       mockery.registerMock('./handlers', () => ({register}));
-      this.requireModule().init();
 
-      expect(register).to.have.been.calledOnce;
+      this.requireModule().init()
+        .then(() => {
+          expect(register).to.have.been.calledOnce;
+          done();
+        })
+        .catch(done);
     });
 
-    it('should start the job', function() {
+    it('should start the job', function(done) {
       const spy = sinon.spy(jobLib, 'start');
 
-      this.requireModule().init();
-
-      expect(spy).to.have.been.calledOnce;
+      this.requireModule().init().then(() => {
+        expect(spy).to.have.been.calledOnce;
+        done();
+      }).catch(done);
     });
   });
 
   describe('on pubsub event', function() {
-    describe('on EVENTS.EVENT.DELETED event', function() {
+    describe('on EVENTS.ALARM.DELETED event', function() {
       it('should remove alarms at the given eventPath', function(done) {
-        this.requireModule().init();
-        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.DELETED].handler;
-
-        handleAlarm({eventPath})
-          .then(() => {
-            expect(alarmDB.remove).to.have.been.calledWith({eventPath});
-            done();
-          })
+        this.requireModule().init()
+          .then(test)
           .catch(done);
+
+        function test() {
+          return notifyFunctions[CONSTANTS.EVENTS.ALARM.DELETED]({eventPath})
+            .then(() => {
+              expect(alarmDB.remove).to.have.been.calledWith({eventPath});
+              done();
+            });
+        }
       });
 
       it('should reject when abort rejects', function(done) {
@@ -111,100 +132,113 @@ describe('The alarm module', function() {
 
         alarmDB.remove = sinon.stub().returns(Promise.reject(error));
 
-        this.requireModule().init();
-        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.DELETED].handler;
+        this.requireModule().init().then(test).catch(done);
 
-        handleAlarm({eventPath})
-          .then(() => done(new Error('Should not occur')))
-          .catch(err => {
-            expect(err).to.equal(error);
-            expect(alarmDB.remove).to.have.been.calledWith({eventPath});
-            done();
-          });
+        function test() {
+          return notifyFunctions[CONSTANTS.EVENTS.ALARM.DELETED]({eventPath})
+            .then(() => done(new Error('Should not occur')))
+            .catch(err => {
+              expect(err).to.equal(error);
+              expect(alarmDB.remove).to.have.been.calledWith({eventPath});
+              done();
+            });
+        }
       });
     });
 
-    describe('on EVENTS.EVENT.CREATED event', function() {
+    describe('on EVENTS.ALARM.CREATED event', function() {
       it('should register a new alarm without recurring', function(done) {
-        this.requireModule().init();
+        const self = this;
 
-        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.CREATED].handler;
+        this.requireModule().init().then(test).catch(done);
 
-        handleAlarm({
-          eventPath,
-          event: this.getEventAsJSON('withVALARM')
-        })
-        .then(() => checkAlarmCreated(done))
-        .catch(done);
+        function test() {
+          return notifyFunctions[CONSTANTS.EVENTS.ALARM.CREATED]({
+            eventPath,
+            event: self.getEventAsJSON('withVALARM')
+          })
+          .then(() => checkAlarmCreated(done));
+        }
       });
 
       it('should do nothing if event has no valarm', function(done) {
-        this.requireModule().init();
-        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.CREATED].handler;
+        const self = this;
 
-        handleAlarm({
-          eventPath,
-          event: this.getEventAsJSON('allday')
-        })
-        .then(() => {
-          expect(alarmDB.create).to.not.have.been.called;
-          done();
-        })
-        .catch(done);
+        this.requireModule().init().then(test).catch(done);
+
+        function test() {
+          return notifyFunctions[CONSTANTS.EVENTS.ALARM.CREATED]({
+            eventPath,
+            event: self.getEventAsJSON('allday')
+          })
+          .then(() => {
+            expect(alarmDB.create).to.not.have.been.called;
+            done();
+          });
+        }
       });
 
       it('should register a new alarm with recurring', function(done) {
-        this.requireModule().init();
-        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.CREATED].handler;
+        const self = this;
 
-        handleAlarm({
-          eventPath,
-          event: this.getEventAsJSON('withVALARMandRRULE')
-        }).then(() => {
-          expect(alarmDB.create).to.have.been.called.twice;
-          checkAlarmCreated(done);
-        }).catch(done);
+        this.requireModule().init().then(test).catch(done);
+
+        function test() {
+          return notifyFunctions[CONSTANTS.EVENTS.ALARM.CREATED]({
+            eventPath,
+            event: self.getEventAsJSON('withVALARMandRRULE')
+          }).then(() => {
+            expect(alarmDB.create).to.have.been.called.twice;
+            checkAlarmCreated(done);
+          });
+        }
       });
 
       it('should add as many alarms as there are in the event', function(done) {
-        this.requireModule().init();
-        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.CREATED].handler;
+        const self = this;
 
-        handleAlarm({
-          eventPath,
-          event: this.getEventAsJSON('with2VALARMs')
-        }).then(() => {
-          expect(alarmDB.create).to.have.been.called.twice;
-          expect(alarmDB.create).to.have.been.calledWithMatch({
-            action: 'EMAIL',
-            attendee: attendeeEmail,
-            eventUid,
-            eventPath
+        this.requireModule().init().then(test).catch(done);
+
+        function test() {
+          return notifyFunctions[CONSTANTS.EVENTS.ALARM.CREATED]({
+            eventPath,
+            event: self.getEventAsJSON('with2VALARMs')
+          }).then(() => {
+            expect(alarmDB.create).to.have.been.called.twice;
+            expect(alarmDB.create).to.have.been.calledWithMatch({
+              action: 'EMAIL',
+              attendee: attendeeEmail,
+              eventUid,
+              eventPath
+            });
+            expect(alarmDB.create).to.have.been.calledWithMatch({
+              action: 'DISPLAY',
+              eventUid,
+              eventPath
+            });
+            done();
           });
-          expect(alarmDB.create).to.have.been.calledWithMatch({
-            action: 'DISPLAY',
-            eventUid,
-            eventPath
-          });
-          done();
-        }).catch(done);
+        }
       });
     });
 
-    describe('on EVENTS.EVENT.UPDATED event', function() {
+    describe('on EVENTS.ALARM.UPDATED event', function() {
       it('should not try to remove alarm for previous event if no alarm was defined and register a new one if defined', function(done) {
-        this.requireModule().init();
-        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.UPDATED].handler;
+        const self = this;
 
-        handleAlarm({
-          eventPath,
-          event: this.getEventAsJSON('withVALARM'),
-          old_event: this.getEventAsJSON('allday')
-        }).then(() => {
-          expect(alarmDB.remove).to.have.been.calledWith({eventPath, state: CONSTANTS.ALARM.STATE.WAITING});
-          checkAlarmCreated();
-          done();
-        }).catch(done);
+        this.requireModule().init().then(test).catch(done);
+
+        function test() {
+          return notifyFunctions[CONSTANTS.EVENTS.ALARM.UPDATED]({
+            eventPath,
+            event: self.getEventAsJSON('withVALARM'),
+            old_event: self.getEventAsJSON('allday')
+          }).then(() => {
+            expect(alarmDB.remove).to.have.been.calledWith({eventPath, state: CONSTANTS.ALARM.STATE.WAITING});
+            checkAlarmCreated();
+            done();
+          });
+        }
       });
 
       it('should fail if the deletion of previous alarm failed', function(done) {
@@ -213,52 +247,56 @@ describe('The alarm module', function() {
 
         alarmDB.remove = sinon.stub().returns(Promise.reject(error));
 
-        this.requireModule().init();
-        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.UPDATED].handler;
+        this.requireModule().init().then(test, done);
 
-        handleAlarm({
-          eventPath,
-          event: ics,
-          old_event: ics
-        }).then(() => {
-          done(new Error('Should not occur'));
-        }).catch(err => {
-          expect(err).to.equal(error);
-          expect(alarmDB.remove).to.have.been.calledWith({ eventPath, state: CONSTANTS.ALARM.STATE.WAITING });
-          expect(alarmDB.create).to.not.have.been.called;
-          done();
-        });
+        function test() {
+          return notifyFunctions[CONSTANTS.EVENTS.ALARM.UPDATED]({
+            eventPath,
+            event: ics,
+            old_event: ics
+          }).then(() => {
+            done(new Error('Should not occur'));
+          }).catch(err => {
+            expect(err).to.equal(error);
+            expect(alarmDB.remove).to.have.been.calledWith({ eventPath, state: CONSTANTS.ALARM.STATE.WAITING });
+            expect(alarmDB.create).to.not.have.been.called;
+            done();
+          });
+        }
       });
 
       it('should delete alarm for the event if any and register a new one', function(done) {
         const ics = this.getEventAsJSON('withVALARM');
 
-        this.requireModule().init();
-        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.UPDATED].handler;
+        this.requireModule().init().then(test).catch(done);
 
-        handleAlarm({
-          eventPath,
-          event: ics,
-          old_event: ics
-        }).then(() => {
-          expect(alarmDB.remove).to.have.been.called;
-          checkAlarmCreated(done);
-        }).catch(done);
+        function test() {
+          return notifyFunctions[CONSTANTS.EVENTS.ALARM.UPDATED]({
+            eventPath,
+            event: ics,
+            old_event: ics
+          }).then(() => {
+            expect(alarmDB.remove).to.have.been.called;
+            checkAlarmCreated(done);
+          });
+        }
       });
 
       it('should only register an alarm if there is no alarm for the previous version of event with recurring', function(done) {
-        this.requireModule().init();
+        const self = this;
 
-        const handleAlarm = localstub.topics[CONSTANTS.EVENTS.EVENT.UPDATED].handler;
+        this.requireModule().init().then(test).catch(done);
 
-        handleAlarm({
-          eventPath,
-          event: this.getEventAsJSON('withVALARMandRRULE'),
-          old_event: this.getEventAsJSON('allday')
-        }).then(() => {
-          expect(alarmDB.remove).to.have.been.calledWith({ eventPath, state: CONSTANTS.ALARM.STATE.WAITING });
-          checkAlarmCreated(done);
-        }).catch(done);
+        function test() {
+          return notifyFunctions[CONSTANTS.EVENTS.ALARM.UPDATED]({
+            eventPath,
+            event: self.getEventAsJSON('withVALARMandRRULE'),
+            old_event: self.getEventAsJSON('allday')
+          }).then(() => {
+            expect(alarmDB.remove).to.have.been.calledWith({ eventPath, state: CONSTANTS.ALARM.STATE.WAITING });
+            checkAlarmCreated(done);
+          });
+        }
       });
     });
   });

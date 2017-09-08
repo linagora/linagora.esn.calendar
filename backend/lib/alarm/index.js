@@ -8,12 +8,13 @@ const jcalHelper = require('../helpers/jcal');
 let initialized = false;
 
 module.exports = dependencies => {
-  const pubsub = dependencies('pubsub');
+  const amqpClientProvider = dependencies('amqpClientProvider');
   const logger = dependencies('logger');
   const db = require('./db')(dependencies);
   const handlers = require('./handlers')(dependencies);
   const cronjob = require('./cronjob')(dependencies);
   const jobqueue = require('./jobqueue')(dependencies);
+  let amqpClient;
 
   return {
     init,
@@ -32,9 +33,34 @@ module.exports = dependencies => {
     registerAlarmHandler(require('./handlers/email')(dependencies));
     cronjob.start(processAlarms);
 
-    pubsub.local.topic(CONSTANTS.EVENTS.EVENT.CREATED).subscribe(onCreate);
-    pubsub.local.topic(CONSTANTS.EVENTS.EVENT.UPDATED).subscribe(onUpdate);
-    pubsub.local.topic(CONSTANTS.EVENTS.EVENT.DELETED).subscribe(onDelete);
+    return initAMQPListeners();
+  }
+
+  function initAMQPListeners() {
+    const amqpClientPromise = amqpClientProvider.getClient();
+
+    return amqpClientPromise
+      .then(client => {
+        amqpClient = client;
+
+        amqpClient.subscribe(CONSTANTS.EVENTS.ALARM.CANCEL, messageHandler(onDelete));
+        amqpClient.subscribe(CONSTANTS.EVENTS.ALARM.CREATED, messageHandler(onCreate));
+        amqpClient.subscribe(CONSTANTS.EVENTS.ALARM.DELETED, messageHandler(onDelete));
+        amqpClient.subscribe(CONSTANTS.EVENTS.ALARM.REPLY, messageHandler(onCreate));
+        amqpClient.subscribe(CONSTANTS.EVENTS.ALARM.REQUEST, messageHandler(onCreate));
+        amqpClient.subscribe(CONSTANTS.EVENTS.ALARM.UPDATED, messageHandler(onUpdate));
+    });
+
+    function messageHandler(handler) {
+      return function(jsonMessage, originalMessage) {
+        return handler(jsonMessage)
+          .then(() => amqpClient.ack(originalMessage))
+          .catch(err => {
+            logger.error('calendar:alarm:init - Fail to process AMQP message', err);
+            throw err;
+          });
+      };
+    }
   }
 
   function onCreate(msg) {
