@@ -14,7 +14,7 @@ module.exports = function(dependencies) {
 
   return {
     dispatchEvent,
-    inviteAttendees,
+    sendInvitation,
     changeParticipation,
     searchEvents
   };
@@ -49,7 +49,7 @@ module.exports = function(dependencies) {
     });
   }
 
-  function inviteAttendees(req, res) {
+  function sendInvitation(req, res) {
     if (!req.user) {
       return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'You must be logged in to access this resource'}});
     }
@@ -77,7 +77,7 @@ module.exports = function(dependencies) {
       return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'Calendar Id is required and must be a string'}});
     }
 
-    calendar.inviteAttendees(req.user, email, notify, method, event, calendarURI)
+    calendar.sendInvitation(req.user, email, notify, method, event, calendarURI)
       .then(() => res.status(200).end())
       .catch(err => {
         logger.error('Error when trying to send invitations to attendees', err);

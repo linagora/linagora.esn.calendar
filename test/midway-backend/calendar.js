@@ -197,10 +197,10 @@ describe('The Calendar calendars API /api/calendars', function() {
     });
   });
 
-  describe('POST /api/calendars/inviteattendees', function() {
+  describe('POST /api/calendars/event/invite', function() {
 
     it('should send 401 if not logged in', function(done) {
-      this.helpers.api.requireLogin(this.app, 'post', '/api/calendars/inviteattendees', done);
+      this.helpers.api.requireLogin(this.app, 'post', '/api/calendars/event/invite', done);
     });
 
     var testError400 = function(requestJSON, helpers, app, done) {
@@ -208,7 +208,7 @@ describe('The Calendar calendars API /api/calendars', function() {
         if (err) {
           return done(err);
         }
-        var req = requestAsMember(request(app).post('/api/calendars/inviteattendees'));
+        var req = requestAsMember(request(app).post('/api/calendars/event/invite'));
         req.send(requestJSON);
         req.expect(400, done);
       });
@@ -288,7 +288,7 @@ describe('The Calendar calendars API /api/calendars', function() {
         if (err) {
           return done(err);
         }
-        var req = requestAsMember(request(self.app).post('/api/calendars/inviteattendees'));
+        var req = requestAsMember(request(self.app).post('/api/calendars/event/invite'));
         req.send({
           email: 'email1@domain1',
           method: 'REQUEST',

@@ -29,7 +29,7 @@ module.exports = dependencies => {
   return {
     dispatch,
     generateActionLinks,
-    inviteAttendees,
+    sendInvitation,
     searchEvents
   };
 
@@ -209,7 +209,7 @@ module.exports = dependencies => {
     }));
   }
 
-  function inviteAttendees(user, attendeeEmail, notify, method, ics, calendarURI) {
+  function sendInvitation(user, attendeeEmail, notify, method, ics, calendarURI) {
     if (!notify) {
       return Promise.resolve({});
     }
@@ -310,7 +310,7 @@ module.exports = dependencies => {
           attendeeEmail: attendeePreferedEmail,
           organizerEmail: event.organizer.email,
           uid: event.uid,
-          calendarURI: calendarURI
+          calendarURI
         };
 
         return generateActionLinks(baseUrl, jwtPayload).then(links => {

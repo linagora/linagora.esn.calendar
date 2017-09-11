@@ -17,9 +17,11 @@ module.exports = dependencies => {
     collaborationMW.requiresCollaborationMember,
     controller.dispatchEvent);
 
-  router.post('/inviteattendees',
+  router.post('/inviteattendees', (req, res) => res.redirect('/calendar/api/calendars/event/invite'));
+
+  router.post('/event/invite',
     authorizationMW.requiresAPILogin,
-    controller.inviteAttendees);
+    controller.sendInvitation);
 
   router.get('/event/participation',
     authorizationMW.requiresJWT,
