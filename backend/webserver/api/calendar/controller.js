@@ -13,10 +13,10 @@ module.exports = function(dependencies) {
   const userModule = dependencies('user');
 
   return {
-    dispatchEvent: dispatchEvent,
-    inviteAttendees: inviteAttendees,
-    changeParticipation: changeParticipation,
-    searchEvents: searchEvents
+    dispatchEvent,
+    inviteAttendees,
+    changeParticipation,
+    searchEvents
   };
 
   function dispatchEvent(req, res) {
@@ -77,15 +77,13 @@ module.exports = function(dependencies) {
       return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'Calendar Id is required and must be a string'}});
     }
 
-    calendar.inviteAttendees(req.user, email, notify, method, event, calendarURI, err => {
-      if (err) {
+    calendar.inviteAttendees(req.user, email, notify, method, event, calendarURI)
+      .then(() => res.status(200).end())
+      .catch(err => {
         logger.error('Error when trying to send invitations to attendees', err);
 
-        return res.status(500).json({error: {code: 500, message: 'Error when trying to send invitations to attendees', details: err.message}});
-      }
-
-      res.status(200).end();
-    });
+        res.status(500).json({error: {code: 500, message: 'Error when trying to send invitations to attendees', details: err.message}});
+      });
   }
 
   function changeParticipationSuccess(res, vcalendar, eventData) {

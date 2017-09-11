@@ -1,7 +1,7 @@
 'use strict';
 
 const async = require('async');
-const q = require('q');
+const Q = require('q');
 const path = require('path');
 const urljoin = require('url-join');
 const extend = require('extend');
@@ -24,6 +24,7 @@ module.exports = dependencies => {
   const jwt = dependencies('auth').jwt;
   const searchModule = require('../../../lib/search')(dependencies);
   const caldavClient = require('../../../lib/caldav-client')(dependencies);
+  const emailHelpers = require('../../../lib/helpers/email');
 
   return {
     dispatch,
@@ -31,14 +32,6 @@ module.exports = dependencies => {
     inviteAttendees,
     searchEvents
   };
-
-  function _getParticipationStatus(event, attendeeEmail) {
-    if (!event.attendees || !event.attendees[attendeeEmail] || !event.attendees[attendeeEmail].partstat) {
-      return;
-    }
-
-    return event.attendees[attendeeEmail].partstat;
-  }
 
   /**
    * Check if the user has the right to create an eventmessage in that
@@ -180,19 +173,19 @@ module.exports = dependencies => {
   }
 
   function generateActionLink(baseUrl, jwtPayload, action) {
-    const deferred = q.defer();
     const payload = {};
 
     extend(true, payload, jwtPayload, {action: action});
-    jwt.generateWebToken(payload, (err, token) => {
-      if (err) {
-        return deferred.reject(err);
-      }
 
-      return deferred.resolve(urljoin(baseUrl, '/calendar/api/calendars/event/participation/?jwt=' + token));
+    return new Promise((resolve, reject) => {
+      jwt.generateWebToken(payload, (err, token) => {
+        if (err) {
+          return reject(err);
+        }
+
+        resolve(urljoin(baseUrl, '/calendar/api/calendars/event/participation/?jwt=' + token));
+      });
     });
-
-    return deferred.promise;
   }
 
   /**
@@ -209,188 +202,173 @@ module.exports = dependencies => {
     const noPromise = generateActionLink(baseUrl, jwtPayload, 'DECLINED');
     const maybePromise = generateActionLink(baseUrl, jwtPayload, 'TENTATIVE');
 
-    return q.all([yesPromise, noPromise, maybePromise]).then(links => ({
+    return Promise.all([yesPromise, noPromise, maybePromise]).then(links => ({
       yes: links[0],
       no: links[1],
       maybe: links[2]
     }));
   }
 
-  function inviteAttendees(editor, attendeeEmail, notify, method, ics, calendarURI, callback) {
+  function inviteAttendees(editor, attendeeEmail, notify, method, ics, calendarURI) {
     if (!notify) {
-      return q({}).nodeify(callback);
+      return Promise.resolve({});
     }
 
     if (!editor || !editor.domains || !editor.domains.length) {
-      return q.reject(new Error('Organizer must be an User object')).nodeify(callback);
+      return Promise.reject(new Error('Organizer must be an User object'));
     }
 
     if (!attendeeEmail) {
-      return q.reject(new Error('AttendeeEmails is required')).nodeify(callback);
+      return Promise.reject(new Error('AttendeeEmails is required'));
     }
 
     if (!method) {
-      return q.reject(new Error('The method is required')).nodeify(callback);
+      return Promise.reject(new Error('The method is required'));
     }
 
     if (!ics) {
-      return q.reject(new Error('The ics is required')).nodeify(callback);
+      return Promise.reject(new Error('The ics is required'));
     }
 
-    function userDisplayName(user) {
-      return user.firstname + ' ' + user.lastname;
-    }
-
-    const attendeePromise = q.nfbind(userModule.findByEmail)(attendeeEmail);
     const mailer = emailModule.getMailer(editor);
 
-    return configHelpers.getBaseUrl(editor, (err, baseUrl) => {
-      if (err) {
-        return q.reject(err).nodeify(callback);
-      }
+    return Promise.all([
+      Q.nfbind(configHelpers.getBaseUrl)(editor),
+      Q.nfbind(userModule.findByEmail)(attendeeEmail)])
+    .then(result => {
+      const baseUrl = result[0];
+      const attendee = result[1];
+      const attendeePreferedEmail = attendee ? attendee.email || attendee.emails[0] : attendeeEmail;
 
-      return attendeePromise.then(function(attendee) {
-        const attendeePreferedEmail = attendee ? attendee.email || attendee.emails[0] : attendeeEmail;
+      return i18nLib.getI18nForMailer(attendee).then(i18nConf => {
+        let subject = 'Unknown method';
+        const editorEmail = editor.email || editor.emails[0];
+        const event = jcal2content(ics, baseUrl);
+        const template = { name: 'event.invitation', path: TEMPLATES_PATH };
+        const i18n = i18nConf.i18n;
+        let inviteMessage;
 
-        return i18nLib.getI18nForMailer(attendee).then(i18nConf => {
-          const editorEmail = editor.email || editor.emails[0];
-          const event = jcal2content(ics, baseUrl);
-          let subject = 'Unknown method';
-          const template = { name: 'event.invitation', path: TEMPLATES_PATH };
-          const i18n = i18nConf.i18n;
-          let inviteMessage;
-
-          function _i18nHelper(phrase, isSummaryExist = false, isUserDisplayNameExists = false) {
-            const option = Object.assign(
-              {},
-              isSummaryExist ? { summary: event.summary } : {},
-              isUserDisplayNameExists ? { userDisplayName: userDisplayName(editor) } : {}
-            );
-
-            return i18n.__({phrase: phrase, locale: i18nConf.locale}, option);
-          }
-
-          function _getReplyContents() {
-            const response = [];
-
-            switch (_getParticipationStatus(event, editorEmail)) {
-              case 'ACCEPTED':
-                response.push(_i18nHelper('Accepted: {{summary}} ({{userDisplayName}})', true, true));
-                response.push(_i18nHelper('has accepted this invitation'));
-                break;
-              case 'DECLINED':
-                response.push(_i18nHelper('Declined: {{summary}} ({{userDisplayName}})', true, true));
-                response.push(_i18nHelper('has declined this invitation'));
-                break;
-              case 'TENTATIVE':
-                response.push(_i18nHelper('Tentatively accepted: {{summary}} ({{userDisplayName}})', true, true));
-                response.push(_i18nHelper('has replied "Maybe" to this invitation'));
-                break;
-              default:
-                response.push(_i18nHelper('Participation updated: {{summary}}', true));
-                response.push(_i18nHelper('has changed his participation'));
+        switch (method) {
+          case 'REQUEST':
+            if (event.sequence > 0) {
+              subject = _i18nHelper('Event {{summary}} from {{userDisplayName}} updated', true, true);
+              template.name = 'event.update';
+              inviteMessage = _i18nHelper('has updated a meeting');
+            } else {
+              subject = _i18nHelper('New event from {{userDisplayName}}: {{summary}}', true, true);
+              template.name = 'event.invitation';
+              inviteMessage = _i18nHelper('has invited you to a meeting');
             }
+            break;
+          case 'REPLY':
+            template.name = 'event.reply';
+            [subject, inviteMessage] = _getReplyContents();
+            break;
+          case 'CANCEL':
+            subject = _i18nHelper('Event {{summary}} from {{userDisplayName}} canceled', true, true);
+            template.name = 'event.cancel';
+            inviteMessage = _i18nHelper('has canceled a meeting');
+            break;
+        }
 
-            return response;
-          }
+        const message = {
+          from: editorEmail,
+          subject,
+          encoding: 'base64',
+          alternatives: [{
+            content: ics,
+            contentType: 'text/calendar; charset=UTF-8; method=' + method
+          }],
+          attachments: [{
+            filename: 'meeting.ics',
+            content: ics,
+            contentType: 'application/ics'
+          }]
+        };
+        const content = {
+          baseUrl,
+          inviteMessage,
+          event,
+          editor: {
+            displayName: userModule.getDisplayName(editor),
+            email: editor.email || editor.emails[0]
+          },
+          calendarHomeId: editor._id
+        };
 
-          switch (method) {
-            case 'REQUEST':
-              if (event.sequence > 0) {
-                subject = _i18nHelper('Event {{summary}} from {{userDisplayName}} updated', true, true);
-                template.name = 'event.update';
-                inviteMessage = _i18nHelper('has updated a meeting');
-              } else {
-                subject = _i18nHelper('New event from {{userDisplayName}}: {{summary}}', true, true);
-                template.name = 'event.invitation';
-                inviteMessage = _i18nHelper('has invited you to a meeting');
-              }
-              break;
-            case 'REPLY':
-              template.name = 'event.reply';
-              [subject, inviteMessage] = _getReplyContents();
-              break;
-            case 'CANCEL':
-              subject = _i18nHelper('Event {{summary}} from {{userDisplayName}} canceled', true, true);
-              template.name = 'event.cancel';
-              inviteMessage = _i18nHelper('has canceled a meeting');
-              break;
-          }
+        let userIsInvolved = attendeeEmail === event.organizer.email;
 
-          const message = {
-            from: editorEmail,
-            subject: subject,
-            encoding: 'base64',
-            alternatives: [{
-              content: ics,
-              contentType: 'text/calendar; charset=UTF-8; method=' + method
-            }],
-            attachments: [{
-              filename: 'meeting.ics',
-              content: ics,
-              contentType: 'application/ics'
-            }]
-          };
-          const content = {
-            baseUrl: baseUrl,
-            inviteMessage: inviteMessage,
-            event: event,
-            editor: {
-              displayName: userDisplayName(editor),
-              email: editor.email || editor.emails[0]
-            },
-            calendarHomeId: editor._id
-          };
+        if (event.attendees && event.attendees[attendeeEmail]) {
+          userIsInvolved = event.attendees[attendeeEmail].partstat ? event.attendees[attendeeEmail].partstat !== 'DECLINED' : true;
+        }
 
-          function filter(filename) {
-            switch (filename) {
-              case 'map-marker.png':
-                return !!event.location;
-              case 'format-align-justify.png':
-                return !!event.description;
-              case 'folder-download.png':
-                return !!event.files;
-              case 'check.png':
-                return !(event.allDay && event.durationInDays === 1);
-              default:
-                return true;
-            }
-          }
+        if (!userIsInvolved) {
+          return Promise.reject(new Error('The user is not involved in the event'));
+        }
 
-          let userIsInvolved = attendeeEmail === event.organizer.email;
+        const jwtPayload = {
+          attendeeEmail: attendeePreferedEmail,
+          organizerEmail: event.organizer.email,
+          uid: event.uid,
+          calendarURI: calendarURI
+        };
 
-          if (event.attendees && event.attendees[attendeeEmail]) {
-            userIsInvolved = event.attendees[attendeeEmail].partstat ? event.attendees[attendeeEmail].partstat !== 'DECLINED' : true;
-          }
+        return generateActionLinks(baseUrl, jwtPayload).then(links => {
+          const contentWithLinks = {};
+          const email = {};
 
-          if (!userIsInvolved) {
-            return q.reject(new Error('The user is not involved in the event'));
-          }
+          extend(true, contentWithLinks, content, links);
+          extend(true, email, message, { to: attendeeEmail });
 
-          const jwtPayload = {
-            attendeeEmail: attendeePreferedEmail,
-            organizerEmail: event.organizer.email,
-            uid: event.uid,
-            calendarURI: calendarURI
-          };
-
-          return generateActionLinks(baseUrl, jwtPayload).then(function(links) {
-            const contentWithLinks = {};
-            const email = {};
-
-            extend(true, contentWithLinks, content, links);
-            extend(true, email, message, { to: attendeeEmail });
-
-            const locals = {
-              content: contentWithLinks,
-              filter: filter,
-              translate: i18nConf.translate
-            };
-
-            return mailer.sendHTML(email, template, locals);
+          return mailer.sendHTML(email, template, {
+            content: contentWithLinks,
+            filter: emailHelpers.filterEventAttachments(event),
+            translate: i18nConf.translate
           });
         });
-      }).nodeify(callback);
+
+        function _getReplyContents() {
+          const response = [];
+
+          switch (_getParticipationStatus(event, editorEmail)) {
+            case 'ACCEPTED':
+              response.push(_i18nHelper('Accepted: {{summary}} ({{userDisplayName}})', true, true));
+              response.push(_i18nHelper('has accepted this invitation'));
+              break;
+            case 'DECLINED':
+              response.push(_i18nHelper('Declined: {{summary}} ({{userDisplayName}})', true, true));
+              response.push(_i18nHelper('has declined this invitation'));
+              break;
+            case 'TENTATIVE':
+              response.push(_i18nHelper('Tentatively accepted: {{summary}} ({{userDisplayName}})', true, true));
+              response.push(_i18nHelper('has replied "Maybe" to this invitation'));
+              break;
+            default:
+              response.push(_i18nHelper('Participation updated: {{summary}}', true));
+              response.push(_i18nHelper('has changed his participation'));
+          }
+
+          return response;
+        }
+
+        function _getParticipationStatus(event, attendeeEmail) {
+          if (!event.attendees || !event.attendees[attendeeEmail] || !event.attendees[attendeeEmail].partstat) {
+            return;
+          }
+
+          return event.attendees[attendeeEmail].partstat;
+        }
+
+        function _i18nHelper(phrase, isSummaryExist = false, isUserDisplayNameExists = false) {
+          const option = Object.assign(
+            {},
+            isSummaryExist ? { summary: event.summary } : {},
+            isUserDisplayNameExists ? { userDisplayName: userModule.getDisplayName(editor) } : {}
+          );
+
+          return i18n.__({phrase: phrase, locale: i18nConf.locale}, option);
+        }
+      });
     });
   }
 
@@ -427,7 +405,7 @@ module.exports = dependencies => {
         });
       });
 
-      q.allSettled(eventPromises).finally(() => {
+      Q.allSettled(eventPromises).finally(() => {
         callback(null, output);
       });
     });
