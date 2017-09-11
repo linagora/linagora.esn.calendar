@@ -209,13 +209,13 @@ module.exports = dependencies => {
     }));
   }
 
-  function inviteAttendees(editor, attendeeEmail, notify, method, ics, calendarURI) {
+  function inviteAttendees(user, attendeeEmail, notify, method, ics, calendarURI) {
     if (!notify) {
       return Promise.resolve({});
     }
 
-    if (!editor || !editor.domains || !editor.domains.length) {
-      return Promise.reject(new Error('Organizer must be an User object'));
+    if (!user || !user.domains || !user.domains.length) {
+      return Promise.reject(new Error('User must be an User object'));
     }
 
     if (!attendeeEmail) {
@@ -230,10 +230,10 @@ module.exports = dependencies => {
       return Promise.reject(new Error('The ics is required'));
     }
 
-    const mailer = emailModule.getMailer(editor);
+    const mailer = emailModule.getMailer(user);
 
     return Promise.all([
-      Q.nfbind(configHelpers.getBaseUrl)(editor),
+      Q.nfbind(configHelpers.getBaseUrl)(user),
       Q.nfbind(userModule.findByEmail)(attendeeEmail)])
     .then(result => {
       const baseUrl = result[0];
@@ -242,7 +242,7 @@ module.exports = dependencies => {
 
       return i18nLib.getI18nForMailer(attendee).then(i18nConf => {
         let subject = 'Unknown method';
-        const editorEmail = editor.email || editor.emails[0];
+        const userEmail = user.email || user.emails[0];
         const event = jcal2content(ics, baseUrl);
         const template = { name: 'event.invitation', path: TEMPLATES_PATH };
         const i18n = i18nConf.i18n;
@@ -272,7 +272,7 @@ module.exports = dependencies => {
         }
 
         const message = {
-          from: editorEmail,
+          from: userEmail,
           subject,
           encoding: 'base64',
           alternatives: [{
@@ -290,10 +290,10 @@ module.exports = dependencies => {
           inviteMessage,
           event,
           editor: {
-            displayName: userModule.getDisplayName(editor),
-            email: editor.email || editor.emails[0]
+            displayName: userModule.getDisplayName(user),
+            email: user.email || user.emails[0]
           },
-          calendarHomeId: editor._id
+          calendarHomeId: user._id
         };
 
         let userIsInvolved = attendeeEmail === event.organizer.email;
@@ -330,7 +330,7 @@ module.exports = dependencies => {
         function _getReplyContents() {
           const response = [];
 
-          switch (_getParticipationStatus(event, editorEmail)) {
+          switch (_getParticipationStatus(event, userEmail)) {
             case 'ACCEPTED':
               response.push(_i18nHelper('Accepted: {{summary}} ({{userDisplayName}})', true, true));
               response.push(_i18nHelper('has accepted this invitation'));
@@ -363,7 +363,7 @@ module.exports = dependencies => {
           const option = Object.assign(
             {},
             isSummaryExist ? { summary: event.summary } : {},
-            isUserDisplayNameExists ? { userDisplayName: userModule.getDisplayName(editor) } : {}
+            isUserDisplayNameExists ? { userDisplayName: userModule.getDisplayName(user) } : {}
           );
 
           return i18n.__({phrase: phrase, locale: i18nConf.locale}, option);
