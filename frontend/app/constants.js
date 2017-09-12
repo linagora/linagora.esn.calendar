@@ -138,6 +138,14 @@
       unknown: 'unknown'
     })
 
+    .constant('CAL_CALENDAR_SHARED_RIGHT_PRIORITY', {
+      SHAREE_OWNER: 9,
+      SHAREE_READ: 5,
+      SHAREE_READ_WRITE: 7,
+      SHAREE_ADMIN: 8,
+      SHAREE_FREE_BUSY: 3
+    })
+
     .constant('CAL_CALENDAR_PUBLIC_RIGHT', {
       PRIVATE: '',
       PRIVATE_LABEL: 'Private',
@@ -156,6 +164,13 @@
       FREE_BUSY_LABEL_LONG: 'Free/Busy',
 
       unknown: 'unknown'
+    })
+
+    .constant('CAL_CALENDAR_PUBLIC_RIGHT_PRIORITY', {
+      PRIVATE: 0,
+      READ: 4,
+      READ_WRITE: 6,
+      FREE_BUSY: 2
     })
 
     .constant('CAL_CALENDAR_SHARED_INVITE_STATUS', {
@@ -179,7 +194,8 @@
       color: 'apple:color',
       description: 'caldav:description',
       name: 'dav:name',
-      source: 'calendarserver:source'
+      source: 'calendarserver:source',
+      delegatedsource: 'calendarserver:delegatedsource'
     })
 
     .constant('CAL_MAX_RRULE_COUNT', 3499)
