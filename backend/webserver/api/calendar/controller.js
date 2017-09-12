@@ -6,11 +6,12 @@ const ICAL = require('ical.js');
 const jcalHelper = require('../../../lib/helpers/jcal');
 const MAX_TRY_NUMBER = 12;
 
-module.exports = function(dependencies) {
+module.exports = dependencies => {
   const logger = dependencies('logger');
   const calendar = require('./core')(dependencies);
   const configHelpers = dependencies('helpers').config;
   const userModule = dependencies('user');
+  const invitation = require('../../../lib/invitation')(dependencies);
 
   return {
     dispatchEvent,
@@ -50,10 +51,6 @@ module.exports = function(dependencies) {
   }
 
   function sendInvitation(req, res) {
-    if (!req.user) {
-      return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'You must be logged in to access this resource'}});
-    }
-
     const email = req.body.email;
 
     if (!email) {
@@ -77,7 +74,9 @@ module.exports = function(dependencies) {
       return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'Calendar Id is required and must be a string'}});
     }
 
-    calendar.sendInvitation(req.user, email, notify, method, event, calendarURI)
+    const notificationPromise = notify ? invitation.email.send : () => Promise.resolve();
+
+    notificationPromise(req.user, email, method, event, calendarURI)
       .then(() => res.status(200).end())
       .catch(err => {
         logger.error('Error when trying to send invitations to attendees', err);

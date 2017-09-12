@@ -8,7 +8,7 @@ var q = require('q');
 var sinon = require('sinon');
 
 describe('The calendar controller', function() {
-  var userModuleMock, coreMock, helpers, self;
+  var userModuleMock, coreMock, helpers, self, sendMailSpy;
 
   beforeEach(function() {
     self = this;
@@ -25,6 +25,12 @@ describe('The calendar controller', function() {
         getBaseUrl: function(user, callback) { callback(null, 'baseUrl'); }
       }
     };
+    sendMailSpy = sinon.stub().returns(Promise.resolve());
+    mockery.registerMock('../../../lib/invitation', () => ({
+      email: {
+        send: sendMailSpy
+      }
+    }));
     this.moduleHelpers.addDep('helpers', helpers);
     userModuleMock = {
       findByEmail: function(mail, callback) {
@@ -427,6 +433,148 @@ describe('The calendar controller', function() {
         var controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
 
         controller.changeParticipation(req, res);
+      });
+    });
+  });
+
+  describe('The sendInvitation function', function() {
+    let req;
+
+    beforeEach(function() {
+      req = {
+        user: 1,
+        body: {
+          email: 'me@open-paas.org',
+          method: 'REQUEST',
+          event: 'The event',
+          calendarURI: 'The Calendar URI',
+          notify: true
+        }
+      };
+
+      this.checkErrorResponse = function(status, errorMessage, done) {
+        return {
+          status: function(_status) {
+            expect(_status).to.equal(status);
+
+            return {
+              json: function(body) {
+                expect(body.error.details).to.equals(errorMessage);
+                done && done();
+              }
+            };
+          }
+        };
+      };
+    });
+
+    it('should HTTP 400 when body.email is not defined', function(done) {
+      delete req.body.email;
+
+      const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
+
+      controller.sendInvitation(req, this.checkErrorResponse(400, 'The "emails" array is required and must contain at least one element', done));
+    });
+
+    it('should HTTP 400 when body.method is not defined', function(done) {
+      delete req.body.method;
+
+      const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
+
+      controller.sendInvitation(req, this.checkErrorResponse(400, 'Method is required and must be a string (REQUEST, REPLY, CANCEL, etc.)', done));
+    });
+
+    it('should HTTP 400 when body.method is not a string', function(done) {
+      req.body.method = {foo: 'bar'};
+
+      const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
+
+      controller.sendInvitation(req, this.checkErrorResponse(400, 'Method is required and must be a string (REQUEST, REPLY, CANCEL, etc.)', done));
+    });
+
+    it('should HTTP 400 when body.event is not a defined', function(done) {
+      delete req.body.event;
+
+      const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
+
+      controller.sendInvitation(req, this.checkErrorResponse(400, 'Event is required and must be a string (ICS format)', done));
+    });
+
+    it('should HTTP 400 when body.event is not a string', function(done) {
+      req.body.event = {foo: 'bar'};
+
+      const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
+
+      controller.sendInvitation(req, this.checkErrorResponse(400, 'Event is required and must be a string (ICS format)', done));
+    });
+
+    it('should HTTP 400 when body.calendarURI is not a defined', function(done) {
+      delete req.body.calendarURI;
+
+      const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
+
+      controller.sendInvitation(req, this.checkErrorResponse(400, 'Calendar Id is required and must be a string', done));
+    });
+
+    it('should HTTP 400 when body.calendarURI is not a string', function(done) {
+      req.body.calendarURI = {foo: 'bar'};
+
+      const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
+
+      controller.sendInvitation(req, this.checkErrorResponse(400, 'Calendar Id is required and must be a string', done));
+    });
+
+    it('should not notify when body.notify is false', function(done) {
+      req.body.notify = false;
+
+      const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
+
+      controller.sendInvitation(req, {
+        status: _status => {
+          expect(_status).to.equal(200);
+          expect(sendMailSpy).to.not.have.been.called;
+
+          return {
+            end: done
+          };
+        }
+      });
+    });
+
+    it('should HTTP 500 when invitation can not be send', function(done) {
+      const error = new Error('I failed to send the email');
+
+      sendMailSpy.returns(Promise.reject(error));
+
+      const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
+
+      controller.sendInvitation(req, {
+        status: _status => {
+          expect(_status).to.equal(500);
+          expect(sendMailSpy).to.have.been.calledWith(req.user, req.body.email, req.body.method, req.body.event, req.body.calendarURI);
+
+          return {
+            json: body => {
+              expect(body.error.details).to.equal(error.message);
+              done();
+            }
+          };
+        }
+      });
+    });
+
+    it('should HTTP 200 when notification has been sent', function(done) {
+      const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
+
+      controller.sendInvitation(req, {
+        status: _status => {
+          expect(_status).to.equal(200);
+          expect(sendMailSpy).to.have.been.calledWith(req.user, req.body.email, req.body.method, req.body.event, req.body.calendarURI);
+
+          return {
+            end: done
+          };
+        }
       });
     });
   });
