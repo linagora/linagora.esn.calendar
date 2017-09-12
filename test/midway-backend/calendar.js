@@ -282,18 +282,30 @@ describe('The Calendar calendars API /api/calendars', function() {
       }, this.helpers, this.app, done);
     });
 
+    it('should send 400 if the request body "eventPath" property is invalid', function(done) {
+      testError400({
+        email: 'email1@domain1',
+        method: 'REQUEST',
+        event: 'ICS',
+        calendarURI: 'calId'
+      }, this.helpers, this.app, done);
+    });
+
     it('should send 200 if the request is correct', function(done) {
-      var self = this;
+      const self = this;
+
       this.helpers.api.loginAsUser(this.app, user.emails[0], password, function(err, requestAsMember) {
         if (err) {
           return done(err);
         }
-        var req = requestAsMember(request(self.app).post('/api/calendars/event/invite'));
+        const req = requestAsMember(request(self.app).post('/api/calendars/event/invite'));
+
         req.send({
           email: 'email1@domain1',
           method: 'REQUEST',
           event: 'ICS',
-          calendarURI: 'calId'
+          calendarURI: 'calId',
+          eventPath: '/foo/bar/baz.ics'
         });
         req.expect(200, done);
       });

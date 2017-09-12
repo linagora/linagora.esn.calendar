@@ -444,6 +444,7 @@ describe('The calendar controller', function() {
       req = {
         user: 1,
         body: {
+          eventPath: '/foo/bar/baz.ics',
           email: 'me@open-paas.org',
           method: 'REQUEST',
           event: 'The event',
@@ -474,6 +475,22 @@ describe('The calendar controller', function() {
       const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
 
       controller.sendInvitation(req, this.checkErrorResponse(400, 'The "emails" array is required and must contain at least one element', done));
+    });
+
+    it('should HTTP 400 when body.eventPath is not defined', function(done) {
+      delete req.body.eventPath;
+
+      const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
+
+      controller.sendInvitation(req, this.checkErrorResponse(400, 'eventPath is required and must be a string', done));
+    });
+
+    it('should HTTP 400 when body.eventPath is not a string', function(done) {
+      req.body.eventPath = {foo: 'bar'};
+
+      const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
+
+      controller.sendInvitation(req, this.checkErrorResponse(400, 'eventPath is required and must be a string', done));
     });
 
     it('should HTTP 400 when body.method is not defined', function(done) {

@@ -51,16 +51,11 @@ module.exports = dependencies => {
   }
 
   function sendInvitation(req, res) {
-    const email = req.body.email;
+    const {email, notify, method, event, calendarURI, eventPath} = req.body;
 
     if (!email) {
       return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'The "emails" array is required and must contain at least one element'}});
     }
-
-    const notify = req.body.notify || false;
-    const method = req.body.method;
-    const event = req.body.event;
-    const calendarURI = req.body.calendarURI;
 
     if (!method || typeof method !== 'string') {
       return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'Method is required and must be a string (REQUEST, REPLY, CANCEL, etc.)'}});
@@ -74,9 +69,13 @@ module.exports = dependencies => {
       return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'Calendar Id is required and must be a string'}});
     }
 
+    if (!eventPath || typeof eventPath !== 'string') {
+      return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'eventPath is required and must be a string'}});
+    }
+
     const notificationPromise = notify ? invitation.email.send : () => Promise.resolve();
 
-    notificationPromise(req.user, email, method, event, calendarURI)
+    notificationPromise(req.user, email, method, event, calendarURI, eventPath)
       .then(() => res.status(200).end())
       .catch(err => {
         logger.error('Error when trying to send invitations to attendees', err);
