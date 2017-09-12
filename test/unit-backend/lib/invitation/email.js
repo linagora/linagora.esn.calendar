@@ -143,7 +143,7 @@ describe('The invitation email module', function() {
           callback(new Error('Error in findByEmail'));
         };
 
-        this.module.send(organizer, attendeeEmail, true, 'REQUEST', ics, 'calendarURI').then(done, () => done());
+        this.module.send(organizer, attendeeEmail, 'REQUEST', ics, 'calendarURI').then(done, () => done());
       });
 
       it('should return an error it cannot retrieve base url', function(done) {

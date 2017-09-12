@@ -10,19 +10,20 @@ module.exports = dependencies => {
   const configHelpers = dependencies('helpers').config;
   const emailModule = dependencies('email');
   const i18nLib = require('./../i18n')(dependencies);
-  const link = require('./link')(dependencies);
+  const invitationLink = require('./link')(dependencies);
+  const linksHelper = require('../helpers/links')(dependencies);
 
   return {
     send
   };
 
-  function send(user, attendeeEmail, method, ics, calendarURI) {
+  function send(user, attendeeEmail, method, ics, calendarURI, eventPath) {
     if (!user || !user.domains || !user.domains.length) {
       return Promise.reject(new Error('User must be an User object'));
     }
 
     if (!attendeeEmail) {
-      return Promise.reject(new Error('AttendeeEmails is required'));
+      return Promise.reject(new Error('The attendeeEmail is required'));
     }
 
     if (!method) {
@@ -37,11 +38,12 @@ module.exports = dependencies => {
 
     return Promise.all([
       Q.nfbind(configHelpers.getBaseUrl)(user),
-      Q.nfbind(userModule.findByEmail)(attendeeEmail)
+      Q.nfbind(userModule.findByEmail)(attendeeEmail),
+      eventPath ? linksHelper.getEventDetails(eventPath) : Promise.resolve(false),
+      linksHelper.getEventInCalendar(ics)
     ])
     .then(result => {
-      const baseUrl = result[0];
-      const attendee = result[1];
+      const [baseUrl, attendee, consultLink, seeInCalendarLink] = result;
       const attendeePreferedEmail = attendee ? attendee.email || attendee.emails[0] : attendeeEmail;
 
       return i18nLib.getI18nForMailer(attendee).then(i18nConf => {
@@ -97,7 +99,9 @@ module.exports = dependencies => {
             displayName: userModule.getDisplayName(user),
             email: user.email || user.emails[0]
           },
-          calendarHomeId: user._id
+          calendarHomeId: user._id,
+          seeInCalendarLink,
+          consultLink
         };
 
         let userIsInvolved = attendeeEmail === event.organizer.email;
@@ -117,12 +121,14 @@ module.exports = dependencies => {
           calendarURI
         };
 
-        return link.generateActionLinks(baseUrl, jwtPayload).then(links => {
+        return invitationLink.generateActionLinks(baseUrl, jwtPayload).then(links => {
           const contentWithLinks = {};
           const email = {};
 
           extend(true, contentWithLinks, content, links);
-          extend(true, email, message, { to: attendeeEmail });
+          extend(true, email, message, {
+            to: attendeeEmail
+          });
 
           return mailer.sendHTML(email, template, {
             content: contentWithLinks,
