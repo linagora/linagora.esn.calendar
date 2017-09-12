@@ -46,8 +46,7 @@ module.exports = dependencies => {
         amqpClient.subscribe(CONSTANTS.EVENTS.ALARM.CANCEL, messageHandler(onDelete));
         amqpClient.subscribe(CONSTANTS.EVENTS.ALARM.CREATED, messageHandler(onCreate));
         amqpClient.subscribe(CONSTANTS.EVENTS.ALARM.DELETED, messageHandler(onDelete));
-        amqpClient.subscribe(CONSTANTS.EVENTS.ALARM.REPLY, messageHandler(onCreate));
-        amqpClient.subscribe(CONSTANTS.EVENTS.ALARM.REQUEST, messageHandler(onCreate));
+        amqpClient.subscribe(CONSTANTS.EVENTS.ALARM.REQUEST, messageHandler(onUpdate));
         amqpClient.subscribe(CONSTANTS.EVENTS.ALARM.UPDATED, messageHandler(onUpdate));
     });
 
