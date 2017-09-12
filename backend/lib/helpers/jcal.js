@@ -131,7 +131,7 @@ function getIcalEvent(icalendar) {
     }
    }
  */
-function jcal2content(icalendar, baseUrl) {
+function jcal2content(icalendar, baseUrl = '') {
 
   function getTimezoneOfIcalDate(icalDatetime) {
     if (icalDatetime.isDate) {
