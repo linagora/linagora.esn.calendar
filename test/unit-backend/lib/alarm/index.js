@@ -82,7 +82,7 @@ describe('The alarm module', function() {
       module.init()
         .then(() => {
           expect(module.init).to.throw(/Already initialized/);
-          expect(amqpClient.subscribe.callCount).to.equals(6);
+          expect(amqpClient.subscribe.callCount).to.equals(5);
           done();
         })
         .catch(done);
