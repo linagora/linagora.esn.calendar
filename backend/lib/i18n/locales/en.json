@@ -65,8 +65,8 @@
   "Display": "Display",
   "Do you want to participate?": "Do you want to participate?",
   "Edit event": "Edit event",
-  "Edit events": "Edit events",  
-  "Edit events and manage sharing": "Edit events and manage sharing",  
+  "Edit events": "Edit events",
+  "Edit events and manage sharing": "Edit events and manage sharing",
   "End": "End",
   "Enter the title of your event": "Enter the title of your event",
   "Event %s from %s canceled": "Event %s from %s canceled",
@@ -187,5 +187,6 @@
   "occurrences": "occurrences",
   "week": "week",
   "weeks": "weeks",
-  "years": "years"
+  "years": "years",
+  "Notification": "Notification"
 }

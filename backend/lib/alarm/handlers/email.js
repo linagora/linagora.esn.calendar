@@ -33,20 +33,20 @@ module.exports = dependencies => {
         linksHelper.getEventDetails(eventPath),
         linksHelper.getEventInCalendar(ics)
       ]))
-    .spread((baseUrl, i18nConf, eventDetailsLink, eventInCalendarLink) => {
+    .spread((baseUrl, i18nConf, eventDetailsLink, seeInCalendarLink) => {
       const event = jcalHelper.jcal2content(ics, baseUrl);
       const alarm = event.alarm;
       const message = {
         to: attendee,
-        subject: event.alarm.summary
+        subject: `${i18nConf.translate('Notification')} : ${event.alarm.summary}`
       };
 
       return emailModule.getMailer().sendHTML(message, template, {
         content: {
-          baseUrl: baseUrl,
-          event: event,
-          alarm: alarm,
-          seeInCalendarLink: eventInCalendarLink
+          baseUrl,
+          event,
+          alarm,
+          seeInCalendarLink
         },
         translate: i18nConf.translate
       });
