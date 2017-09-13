@@ -1456,17 +1456,13 @@ describe('CalendarShell factory', function() {
     });
 
     function expectAlarm(event, expectedSummary, expectedLocation, expectedStart, expectedEnd, expectedClass) {
-      expect(event.alarm.summary).to.equal('Pending event! ' + expectedSummary);
+      expect(event.alarm.summary).to.equal(expectedSummary);
       expect(event.alarm.description)
         .to.contain('The event ' + expectedSummary + ' will start')
         .and.to.contain('start: ' + expectedStart)
         .and.to.contain('end: ' + expectedEnd)
         .and.to.contain('location: ' + expectedLocation + ' \\n')
-        .and.to.contain('class: ' + expectedClass + ' \\n')
-        .and.to.contain(
-        'More details:\\n' +
-        'https://localhost:8080/#/calendar//event/00000000-0000-4000-a000-000000000000/consult'
-      );
+        .and.to.contain('class: ' + expectedClass + ' \\n');
     }
 
     it('should not escape value of some valarm properties', function() {
