@@ -6,17 +6,18 @@ const ICAL = require('ical.js');
 const jcalHelper = require('../../../lib/helpers/jcal');
 const MAX_TRY_NUMBER = 12;
 
-module.exports = function(dependencies) {
+module.exports = dependencies => {
   const logger = dependencies('logger');
   const calendar = require('./core')(dependencies);
   const configHelpers = dependencies('helpers').config;
   const userModule = dependencies('user');
+  const invitation = require('../../../lib/invitation')(dependencies);
 
   return {
-    dispatchEvent: dispatchEvent,
-    inviteAttendees: inviteAttendees,
-    changeParticipation: changeParticipation,
-    searchEvents: searchEvents
+    dispatchEvent,
+    sendInvitation,
+    changeParticipation,
+    searchEvents
   };
 
   function dispatchEvent(req, res) {
@@ -49,21 +50,12 @@ module.exports = function(dependencies) {
     });
   }
 
-  function inviteAttendees(req, res) {
-    if (!req.user) {
-      return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'You must be logged in to access this resource'}});
-    }
-
-    const email = req.body.email;
+  function sendInvitation(req, res) {
+    const {email, notify, method, event, calendarURI, eventPath} = req.body;
 
     if (!email) {
       return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'The "emails" array is required and must contain at least one element'}});
     }
-
-    const notify = req.body.notify || false;
-    const method = req.body.method;
-    const event = req.body.event;
-    const calendarURI = req.body.calendarURI;
 
     if (!method || typeof method !== 'string') {
       return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'Method is required and must be a string (REQUEST, REPLY, CANCEL, etc.)'}});
@@ -77,15 +69,19 @@ module.exports = function(dependencies) {
       return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'Calendar Id is required and must be a string'}});
     }
 
-    calendar.inviteAttendees(req.user, email, notify, method, event, calendarURI, err => {
-      if (err) {
+    if (!eventPath || typeof eventPath !== 'string') {
+      return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'eventPath is required and must be a string'}});
+    }
+
+    const notificationPromise = notify ? invitation.email.send : () => Promise.resolve();
+
+    notificationPromise(req.user, email, method, event, calendarURI, eventPath)
+      .then(() => res.status(200).end())
+      .catch(err => {
         logger.error('Error when trying to send invitations to attendees', err);
 
-        return res.status(500).json({error: {code: 500, message: 'Error when trying to send invitations to attendees', details: err.message}});
-      }
-
-      res.status(200).end();
-    });
+        res.status(500).json({error: {code: 500, message: 'Error when trying to send invitations to attendees', details: err.message}});
+      });
   }
 
   function changeParticipationSuccess(res, vcalendar, eventData) {

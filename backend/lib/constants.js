@@ -7,6 +7,13 @@ module.exports = {
   MODE: {
     IMPORT: 'import'
   },
+  ATTENDEE: {
+    ACTIONS: {
+      ACCEPTED: 'ACCEPTED',
+      DECLINED: 'DECLINED',
+      TENTATIVE: 'TENTATIVE'
+    }
+  },
   NOTIFICATIONS: {
     EVENT_ADDED: 'events:event:add',
     EVENT_UPDATED: 'events:event:update',
