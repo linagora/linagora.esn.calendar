@@ -46,8 +46,7 @@ module.exports = dependencies => {
           baseUrl: baseUrl,
           event: event,
           alarm: alarm,
-          seeInCalendarLink: eventInCalendarLink,
-          consultLink: eventDetailsLink
+          seeInCalendarLink: eventInCalendarLink
         },
         translate: i18nConf.translate
       });
