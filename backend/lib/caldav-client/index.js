@@ -5,7 +5,7 @@ const urljoin = require('url-join');
 const Q = require('q');
 const _ = require('lodash');
 const path = require('path');
-const uuid = require('node-uuid');
+const uuidV4 = require('uuid/v4');
 const ICAL = require('ical.js');
 
 const JSON_CONTENT_TYPE = 'application/json';
@@ -30,8 +30,8 @@ module.exports = dependencies => {
   };
 
   function createEventInDefaultCalendar(user, options) {
-    const eventUid = uuid.v4(),
-          event = _buildJCalEvent(eventUid, options);
+    const eventUid = uuidV4(),
+      event = _buildJCalEvent(eventUid, options);
 
     return storeEventInDefaultCalendar(user, eventUid, event);
   }
@@ -68,30 +68,30 @@ module.exports = dependencies => {
 
   function getCalendarList(userId) {
     return _requestCaldav(userId, null, null, (url, token) => ({
-        method: 'GET',
-        url: url,
-        json: true,
-        headers: {
-          ESNToken: token,
-          Accept: JSON_CONTENT_TYPE
-        }
-      })).then(res => {
-        if (res && res._embedded && res._embedded['dav:calendar']) {
-          return _.map(res._embedded['dav:calendar'], calendar => {
-            const uri = calendar._links.self.href.replace('.json', ''); // No JSON for *DAV URI
+      method: 'GET',
+      url: url,
+      json: true,
+      headers: {
+        ESNToken: token,
+        Accept: JSON_CONTENT_TYPE
+      }
+    })).then(res => {
+      if (res && res._embedded && res._embedded['dav:calendar']) {
+        return _.map(res._embedded['dav:calendar'], calendar => {
+          const uri = calendar._links.self.href.replace('.json', ''); // No JSON for *DAV URI
 
-            return {
-              id: path.basename(uri),
-              uri: uri,
-              name: calendar['dav:name'] || DEFAULT_CALENDAR_NAME,
-              description: calendar['caldav:description'],
-              color: calendar['apple:color']
-            };
-          });
-        }
+          return {
+            id: path.basename(uri),
+            uri: uri,
+            name: calendar['dav:name'] || DEFAULT_CALENDAR_NAME,
+            description: calendar['caldav:description'],
+            color: calendar['apple:color']
+          };
+        });
+      }
 
-        return [];
-      });
+      return [];
+    });
   }
 
   function getEventInDefaultCalendar(user, eventUID) {
@@ -151,8 +151,8 @@ module.exports = dependencies => {
 
   function _buildJCalEvent(uid, options) {
     const vCalendar = new ICAL.Component(['vcalendar', [], []]),
-          vEvent = new ICAL.Component('vevent'),
-          event = new ICAL.Event(vEvent);
+      vEvent = new ICAL.Component('vevent'),
+      event = new ICAL.Event(vEvent);
 
     event.uid = uid;
     event.summary = options.summary;

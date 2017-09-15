@@ -2,20 +2,20 @@ const ICAL = require('ical.js');
 const _ = require('lodash');
 const Chance = require('chance');
 const moment = require('moment');
-const uuid = require('node-uuid');
-const {db} = require('./constants');
+const uuidV4 = require('uuid/v4');
+const { db } = require('./constants');
 
 module.exports = {
   asICAL,
   generateFakeEvents
 };
 
-function asICAL({location, summary, start, duration = 1}) {
+function asICAL({ location, summary, start, duration = 1 }) {
   const vCalendar = new ICAL.Component(['vcalendar', [], []]);
   const vEvent = new ICAL.Component('vevent');
   const event = new ICAL.Event(vEvent);
 
-  event.uid = uuid.v4();
+  event.uid = uuidV4();
   event.summary = summary;
   event.location = location;
   event.startDate = ICAL.Time.fromJSDate(start.toDate(), true);
@@ -26,7 +26,7 @@ function asICAL({location, summary, start, duration = 1}) {
   return vCalendar;
 }
 
-function generateFakeEvents({size, weeks = 0}) {
+function generateFakeEvents({ size, weeks = 0 }) {
   const chance = new Chance();
   const events = Array(size).fill(0).map(() => Object.assign({}, db.events[_.random(0, db.events.length - 1)]));
 

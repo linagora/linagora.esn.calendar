@@ -24,7 +24,7 @@ describe('Caldav-client helper', function() {
     authMock = {
       token: {
         getNewToken: sinon.spy(function(opts, callback) {
-          return callback(null, {token: token});
+          return callback(null, { token: token });
         })
       }
     };
@@ -511,7 +511,7 @@ describe('Caldav-client helper', function() {
               ]
             ];
 
-      mockery.registerMock('node-uuid', { v4: () => 'UUIDv4' });
+      mockery.registerMock('uuid/v4', () => 'UUIDv4');
       mockery.registerMock('request', opts => {
         expect(opts).to.shallowDeepEqual({
           method: 'PUT',
