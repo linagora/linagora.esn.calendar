@@ -294,9 +294,9 @@ GruntfileUtils.prototype.setupElasticsearchIndex = function() {
     const esnConf = new EsnConfig({host: servers.host, port: servers.elasticsearch.port, path: p});
 
     Q.all([
-      esnConf.createIndex('users'),
-      esnConf.createIndex('events'),
-      esnConf.createIndex('contacts')
+      esnConf.createIndex('users.idx', 'users'),
+      esnConf.createIndex('events.idx', 'events'),
+      esnConf.createIndex('contacts.idx', 'contacts')
     ]).then(function() {
       grunt.log.write('Elasticsearch settings are successfully added');
       done(true);
