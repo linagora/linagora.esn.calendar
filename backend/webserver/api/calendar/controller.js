@@ -196,8 +196,7 @@ module.exports = dependencies => {
           _links: {
             self: eventData.path
           },
-          data: eventData.event,
-          etag: eventData.etag
+          data: eventData.event
         });
       });
 
