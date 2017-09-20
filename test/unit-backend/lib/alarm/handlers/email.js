@@ -155,6 +155,14 @@ describe('The email alarm handler', function() {
     });
 
     it('should send email to the attendee with valid information', function(done) {
+      const translated = 'translated';
+      const translate = sinon.stub().returns(translated);
+      const getI18nForMailer = sinon.stub().returns(Promise.resolve({
+        translate
+      }));
+
+      mockery.registerMock('../../i18n', () => ({ getI18nForMailer }));
+
       const event = {
         alarm: {
           summary: 'Summary of alarm'
@@ -173,7 +181,7 @@ describe('The email alarm handler', function() {
         expect(sendHTMLMock).to.have.been.calledWith(
           sinon.match({
             to: attendee,
-            subject: event.alarm.summary
+            subject: `${translated} : ${event.alarm.summary}`
           }),
           sinon.match({
             name: 'event.alarm',

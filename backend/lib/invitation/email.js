@@ -43,7 +43,7 @@ module.exports = dependencies => {
       linksHelper.getEventInCalendar(ics)
     ])
     .then(result => {
-      const [baseUrl, attendee, consultLink, seeInCalendarLink] = result;
+      const [baseUrl, attendee, , seeInCalendarLink] = result;
       const attendeePreferedEmail = attendee ? attendee.email || attendee.emails[0] : attendeeEmail;
 
       return i18nLib.getI18nForMailer(attendee).then(i18nConf => {
@@ -100,8 +100,7 @@ module.exports = dependencies => {
             email: user.email || user.emails[0]
           },
           calendarHomeId: user._id,
-          seeInCalendarLink,
-          consultLink
+          seeInCalendarLink
         };
 
         let userIsInvolved = attendeeEmail === event.organizer.email;

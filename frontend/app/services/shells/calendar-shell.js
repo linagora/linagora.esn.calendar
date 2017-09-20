@@ -839,17 +839,14 @@
         return;
       }
 
-      var SUMMARY_TEMPLATE = 'Pending event! <%= summary %>';
+      var SUMMARY_TEMPLATE = '<%= summary %>';
       var DESCRIPTION_TEMPLATE =
         'This is an automatic alarm sent by OpenPaas\\n' +
-        'PENDING EVENT!\\n' +
         'The event <%= summary %> will start <%- diffStart %>\\n' +
         'start: <%- start %> \\n' +
         'end: <%- end %> \\n' +
         'location: <%= location %> \\n' +
-        'class: <%= classProperty %> \\n' +
-        'More details:\\n' +
-        'https://localhost:8080/#/calendar/<%- calendarId %>/event/<%- eventId %>/consult';
+        'class: <%= classProperty %> \\n';
 
       var valarm = new ICAL.Component('valarm');
       var mailto = calendarUtils.prependMailto(this.__alarmValue.attendee);
