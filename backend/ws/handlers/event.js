@@ -41,6 +41,10 @@ module.exports = dependencies => {
   }
 
   function parseEventPath(eventPath) {
+    if (!eventPath || eventPath === '/') {
+      throw new Error(`Bad event path ${eventPath}`);
+    }
+
     // The eventPath is in this form : /calendars/{{userId}}/{{calendarId}}/{{eventUid}}.ics
     const pathParts = eventPath.replace(/^\//, '').split('/');
 

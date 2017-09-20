@@ -70,6 +70,28 @@ describe('The websocket event handler module', function() {
       });
     });
 
+    it('should not emit when eventPath is not defined', function() {
+      const message = {};
+      const module = require(this.moduleHelpers.backendPath + '/ws/handlers/event')(this.moduleHelpers.dependencies);
+
+      sinon.spy(this.helper, 'getUserSocketsFromNamespace');
+      module.notify(topic, message);
+
+      expect(this.helper.getUserSocketsFromNamespace).to.not.have.been.called;
+    });
+
+    it('should not emit when eventPath === /', function() {
+      const message = {
+        eventPath: '/'
+      };
+      const module = require(this.moduleHelpers.backendPath + '/ws/handlers/event')(this.moduleHelpers.dependencies);
+
+      sinon.spy(this.helper, 'getUserSocketsFromNamespace');
+      module.notify(topic, message);
+
+      expect(this.helper.getUserSocketsFromNamespace).to.not.have.been.called;
+    });
+
     it('should not emit when eventPath.replace failed', function() {
       var message = {
         eventPath: {}
