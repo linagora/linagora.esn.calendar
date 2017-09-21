@@ -107,10 +107,6 @@
         return this.path && (calPathParser.parseEventPath(this.path).calendarId);
       },
 
-      get calendarHomeId() {
-        return this.path && (calPathParser.parseEventPath(this.path).calendarHomeId);
-      },
-
       get calendarUniqueId() {
         if (!this.path) {
           return;
