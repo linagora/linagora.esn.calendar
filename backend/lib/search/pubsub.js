@@ -45,7 +45,7 @@ module.exports = dependencies => {
     }
 
     function canPublishMessage(message) {
-      return !message.eventSourcePath;
+      return !message.eventSourcePath && message.eventPath && message.eventPath !== '/';
     }
   }
 };
