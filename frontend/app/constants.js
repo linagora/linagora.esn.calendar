@@ -48,7 +48,7 @@
             eventLimit: 3,
             eventLimitClick: 'dayWithDisplayedEvent',
             eventLimitText: '...',
-            columnFormat: 'ddd D'
+            columnFormat: 'dd D'
           },
           day: {
             eventLimit: true,
@@ -74,7 +74,7 @@
           center: 'title',
           right: 'next'
         },
-        dayNamesShort: ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+        columnFormat: 'dd'
       }
     })
 
