@@ -287,7 +287,7 @@
             name: cn || mail,
             partstat: partstat,
             displayName: cn || mail,
-            cutype: cutype || CAL_ICAL.cutype.individual
+            cutype: cutype || CAL_ICAL.cutype.individual
           };
         });
 
