@@ -1588,6 +1588,7 @@ describe('CalendarShell factory', function() {
         email: 'user1@demo.open-paas.org',
         name: 'user1@demo.open-paas.org',
         partstat: 'ACCEPTED',
+        cutype: 'INDIVIDUAL',
         displayName: 'user1@demo.open-paas.org'
       }]);
     });
@@ -1610,6 +1611,7 @@ describe('CalendarShell factory', function() {
         email: 'disisemail',
         name: 'disisemail',
         partstat: 'NEEDS-ACTION',
+        cutype: 'INDIVIDUAL',
         displayName: 'disisemail'
       }]);
     });
@@ -1638,6 +1640,7 @@ describe('CalendarShell factory', function() {
         email: 'user1@demo.open-paas.org',
         name: 'user1@demo.open-paas.org',
         partstat: 'DECLINED',
+        cutype: 'INDIVIDUAL',
         displayName: 'user1@demo.open-paas.org'
       }]);
     });

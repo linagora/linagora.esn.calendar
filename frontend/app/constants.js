@@ -96,6 +96,11 @@
       role: {
         reqparticipant: 'REQ-PARTICIPANT',
         chair: 'CHAIR'
+      },
+      cutype: {
+        individual: 'INDIVIDUAL',
+        room: 'ROOM',
+        resource: 'RESOURCE'
       }
     })
 
