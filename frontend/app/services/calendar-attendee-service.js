@@ -19,14 +19,22 @@
     return service;
 
     function getAttendeeCandidates(query, limit) {
-      return attendeeService.getAttendeeCandidates(query, limit, [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.resource]).then(function(attendeeCandidates) {
-        return attendeeCandidates.map(function(attendeeCandidate) {
-          attendeeCandidate.partstat = attendeeTypeToPartstat[attendeeCandidate.objectType] || CAL_ICAL.partstat.needsaction;
-          attendeeCandidate.cutype = attendeeTypeToCUType[attendeeCandidate.objectType] || CAL_ICAL.cutype.individual;
-
-          return attendeeCandidate;
+      return attendeeService.getAttendeeCandidates(query, limit, [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.resource])
+        .then(function(attendeeCandidates) {
+          return attendeeCandidates.map(mapPartStat).map(mapCUType);
         });
-      });
+    }
+
+    function mapPartStat(attendee) {
+      attendee.partstat = attendeeTypeToPartstat[attendee.objectType] || CAL_ICAL.partstat.needsaction;
+
+      return attendee;
+    }
+
+    function mapCUType(attendee) {
+      attendee.cutype = attendeeTypeToCUType[attendee.objectType] || CAL_ICAL.cutype.individual;
+
+      return attendee;
     }
   }
 
