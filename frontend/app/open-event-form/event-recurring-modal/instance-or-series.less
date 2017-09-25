@@ -1,0 +1,31 @@
+.calendar-modal-instance-or-series {
+  .modal-body {
+    .flex-column;
+
+    p {
+      margin-bottom: 10px;
+    }
+
+    .actions-buttons {
+      .flex-vertical-centered;
+      .flex-column;
+
+      button {
+        margin-top: 20px;
+      }
+    }
+  }
+}
+
+@media (min-width: @screen-md-min) {
+  .calendar-modal-instance-or-series {
+    .modal-body {
+      .flex-column;
+      
+      .actions-buttons {
+        .flex-row;
+        .flex-space-around;
+      }
+    }
+  }
+}
