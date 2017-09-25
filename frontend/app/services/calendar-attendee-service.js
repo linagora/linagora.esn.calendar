@@ -2,7 +2,7 @@
   'use strict';
 
   angular.module('esn.calendar')
-         .factory('calendarAttendeeService', calendarAttendeeService);
+    .factory('calendarAttendeeService', calendarAttendeeService);
 
   function calendarAttendeeService(attendeeService, CAL_ICAL) {
     var service = {
@@ -10,8 +10,6 @@
     };
 
     return service;
-
-    ////////////
 
     function getAttendeeCandidates(query, limit) {
       return attendeeService.getAttendeeCandidates(query, limit).then(function(attendeeCandidates) {
