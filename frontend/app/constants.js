@@ -99,6 +99,11 @@
       }
     })
 
+    .constant('CAL_ATTENDEE_OBJECT_TYPE', {
+      user: 'user',
+      resource: 'resource'
+    })
+
     .constant('CAL_AVAILABLE_VIEWS', ['agendaWeek', 'agendaDay', 'month', 'agendaThreeDays', 'basicDay'])
 
     .constant('CAL_CALENDAR_SHARED_RIGHT', {

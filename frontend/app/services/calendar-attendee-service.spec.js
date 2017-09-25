@@ -1,13 +1,18 @@
 'use strict';
 
 /* global chai: false */
+/* global sinon: false */
 
 var expect = chai.expect;
 
 describe('the calendarAttendeeService', function() {
+  var query, limit, CAL_ATTENDEE_OBJECT_TYPE, $rootScope, calendarAttendeeService;
   var attendeeService = {};
 
   beforeEach(function() {
+    query = 'query';
+    limit = 42;
+
     attendeeService.addProvider = function() {};
     attendeeService.getAttendeeCandidates = function() {
       return $q.when([]);
@@ -18,41 +23,72 @@ describe('the calendarAttendeeService', function() {
       $provide.value('attendeeService', attendeeService);
     });
 
-    angular.mock.inject(function($rootScope) {
-      this.$rootScope = $rootScope;
+    angular.mock.inject(function(_$rootScope_, _CAL_ATTENDEE_OBJECT_TYPE_) {
+      $rootScope = _$rootScope_;
+      CAL_ATTENDEE_OBJECT_TYPE = _CAL_ATTENDEE_OBJECT_TYPE_;
     });
   });
 
-  beforeEach(angular.mock.inject(function(calendarAttendeeService) {
-    this.calendarAttendeeService = calendarAttendeeService;
+  beforeEach(angular.mock.inject(function(_calendarAttendeeService_) {
+    calendarAttendeeService = _calendarAttendeeService_;
   }));
 
   describe('the getAttendeeCandidates function', function() {
 
     it('should return a promise', function() {
-      var promise = this.calendarAttendeeService.getAttendeeCandidates('query', 10);
-
-      expect(promise.then).to.be.a.function;
+      expect(calendarAttendeeService.getAttendeeCandidates('query', 10)).to.be.a.function;
     });
 
-    it('should add a need-action parstat to all attendeeCandidates returned by the attendeeService', function(done) {
-      var query = 'query';
-      var limit = 42;
+    it('should add a need-action parstat to all attendeeCandidates which does not have objectType', function(done) {
+      attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([{_id: 'attendee1'}, {_id: 'attendee2'}]));
 
-      attendeeService.getAttendeeCandidates = function(q, l) {
-        expect(q).to.equal(query);
-        expect(l).to.equal(limit);
-
-        return $q.when([{_id: 'attendee1'}, {_id: 'attendee2'}]);
-      };
-
-      this.calendarAttendeeService.getAttendeeCandidates(query, limit).then(function(attendeeCandidates) {
+      calendarAttendeeService.getAttendeeCandidates(query, limit).then(function(attendeeCandidates) {
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.resource]);
         expect(attendeeCandidates).to.deep.equal([{_id: 'attendee1', partstat: 'NEEDS-ACTION'}, {_id: 'attendee2', partstat: 'NEEDS-ACTION'}]);
         done();
-      }, function(err) {
-        done(err);
-      });
-      this.$rootScope.$apply();
+      }, done);
+
+      $rootScope.$apply();
+    });
+
+    it('should add a need-action parstat to all user attendeeCandidates', function(done) {
+      attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([{_id: 'attendee1', objectType: CAL_ATTENDEE_OBJECT_TYPE.user}, {_id: 'attendee2', objectType: CAL_ATTENDEE_OBJECT_TYPE.user}]));
+
+      calendarAttendeeService.getAttendeeCandidates(query, limit).then(function(attendeeCandidates) {
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.resource]);
+        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: 'NEEDS-ACTION'}, {_id: 'attendee2', partstat: 'NEEDS-ACTION'}]);
+        done();
+      }, done);
+
+      $rootScope.$apply();
+    });
+
+    it('should add an accepted parstat to all resource attendeeCandidates', function(done) {
+      attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([{_id: 'attendee1', objectType: CAL_ATTENDEE_OBJECT_TYPE.resource}, {_id: 'attendee2', objectType: CAL_ATTENDEE_OBJECT_TYPE.resource}]));
+
+      calendarAttendeeService.getAttendeeCandidates(query, limit).then(function(attendeeCandidates) {
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.resource]);
+        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: 'ACCEPTED'}, {_id: 'attendee2', partstat: 'ACCEPTED'}]);
+        done();
+      }, done);
+
+      $rootScope.$apply();
+    });
+
+    it('should add a need-action parstat to all attendeeCandidates which are not recognized', function(done) {
+      attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([{_id: 'attendee1', objectType: 'this is not a supported objectType'}, {_id: 'attendee2'}]));
+
+      calendarAttendeeService.getAttendeeCandidates(query, limit).then(function(attendeeCandidates) {
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.resource]);
+        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: 'NEEDS-ACTION'}, {_id: 'attendee2', partstat: 'NEEDS-ACTION'}]);
+        done();
+      }, done);
+
+      $rootScope.$apply();
     });
   });
 });
