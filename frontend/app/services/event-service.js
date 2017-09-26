@@ -81,7 +81,7 @@
               var vevents = vcalendar.getAllSubcomponents('vevent');
 
               vevents.forEach(function(vevent) {
-                var shell = new CalendarShell(vevent, {path: icaldata._links.self, etag: icaldata.etag});
+                var shell = new CalendarShell(vevent, {path: icaldata._links.self.href, etag: icaldata.etag});
 
                 shells.push(shell);
               });

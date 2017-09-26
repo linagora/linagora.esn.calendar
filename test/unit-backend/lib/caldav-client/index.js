@@ -101,7 +101,7 @@ describe('Caldav-client helper', function() {
       const requestMock = function(opts, callback) {
         expect(opts).to.deep.equal(request);
 
-        callback(null, { body: 'result', headers: { etag: 'etag' } });
+        callback(null, { body: 'body', headers: { etag: 'etag' }}, 'body');
       };
 
       mockery.registerMock('request', requestMock);
@@ -110,7 +110,7 @@ describe('Caldav-client helper', function() {
         .getEvent(userId, calendarId, eventId)
         .then(
           function(event) {
-            expect(event).to.deep.equal({ ical: 'result', etag: 'etag' });
+            expect(event).to.deep.equal({ ical: 'body', etag: 'etag' });
             expect(authMock.token.getNewToken).to.have.been.calledWith({ user: userId });
             expect(davServerMock.utils.getDavEndpoint).to.have.been.called;
 
@@ -125,7 +125,7 @@ describe('Caldav-client helper', function() {
 
         expect(opts).to.deep.equal(request);
 
-        callback(null, { body: 'result', headers: { etag: 'etag' } });
+        callback(null, { body: 'body', headers: { etag: 'etag' }}, 'body');
       };
 
       mockery.registerMock('request', requestMock);
@@ -134,7 +134,7 @@ describe('Caldav-client helper', function() {
         .getEvent(userId, null, eventId)
         .then(
           function(event) {
-            expect(event).to.deep.equal({ ical: 'result', etag: 'etag' });
+            expect(event).to.deep.equal({ical: 'body', etag: 'etag'});
             expect(authMock.token.getNewToken).to.have.been.calledWith({ user: userId });
             expect(davServerMock.utils.getDavEndpoint).to.have.been.called;
 
@@ -149,7 +149,7 @@ describe('Caldav-client helper', function() {
 
         expect(opts).to.deep.equal(request);
 
-        callback(null, { body: 'result', headers: { etag: 'etag' }});
+        callback(null, {body: 'body', headers: {etag: 'etag'}}, 'body');
       };
 
       mockery.registerMock('request', requestMock);
@@ -158,7 +158,7 @@ describe('Caldav-client helper', function() {
         .getEvent(userId, calendarId)
         .then(
           function(event) {
-            expect(event).to.deep.equal({ ical: 'result', etag: 'etag' });
+            expect(event).to.deep.equal({ical: 'body', etag: 'etag'});
             expect(authMock.token.getNewToken).to.have.been.calledWith({ user: userId });
             expect(davServerMock.utils.getDavEndpoint).to.have.been.called;
 
@@ -231,7 +231,7 @@ describe('Caldav-client helper', function() {
       const requestMock = function(opts, callback) {
         expect(opts).to.deep.equal(request);
 
-        callback(null, { body: 'result' });
+        callback(null, { body: 'body' }, 'body');
       };
 
       mockery.registerMock('request', requestMock);
@@ -240,7 +240,7 @@ describe('Caldav-client helper', function() {
         .iTipRequest(userId, jcal)
         .then(
           function(event) {
-            expect(event).to.deep.equal('result');
+            expect(event).to.deep.equal('body');
             expect(authMock.token.getNewToken).to.have.been.calledWith({ user: userId });
             expect(davServerMock.utils.getDavEndpoint).to.have.been.called;
 
@@ -302,9 +302,10 @@ describe('Caldav-client helper', function() {
         expect(opts).to.deep.equal(request);
 
         callback(null, {
-          statusCode: 200,
-          body: {}
-        });
+            statusCode: 200,
+            body: {}
+          },
+          {});
       };
 
       mockery.registerMock('request', requestMock);
@@ -321,36 +322,37 @@ describe('Caldav-client helper', function() {
         expect(opts).to.deep.equal(request);
 
         callback(null, {
-          statusCode: 200,
-          body: {
-            _links: {
-              self: {
-                href: '/dav/calendars/584abaa9e2d7d7686cff340f.json'
-              }
-            },
-            _embedded: {
-              'dav:calendar': [
-                {
-                  _links: {
-                    self: {
-                      href: '/dav/calendars/584abaa9e2d7d7686cff340f/events.json'
-                    }
-                  }
-                },
-                {
-                  _links: {
-                    self: {
-                      href: '/dav/calendars/584abaa9e2d7d7686cff340f/df68daee-a30d-4191-80de-9c1d689062e1.json'
+            statusCode: 200,
+            body: {
+              _links: {
+                self: {
+                  href: '/dav/calendars/584abaa9e2d7d7686cff340f.json'
+                }
+              },
+              _embedded: {
+                'dav:calendar': [
+                  {
+                    _links: {
+                      self: {
+                        href: '/dav/calendars/584abaa9e2d7d7686cff340f/events.json'
+                      }
                     }
                   },
-                  'dav:name': 'Personal',
-                  'caldav:description': 'Description of Personal',
-                  'apple:color': '#aa37bb'
-                }
-              ]
+                  {
+                    _links: {
+                      self: {
+                        href: '/dav/calendars/584abaa9e2d7d7686cff340f/df68daee-a30d-4191-80de-9c1d689062e1.json'
+                      }
+                    },
+                    'dav:name': 'Personal',
+                    'caldav:description': 'Description of Personal',
+                    'apple:color': '#aa37bb'
+                  }
+                ]
+              }
             }
-          }
-        });
+          },
+          'body');
       };
 
       mockery.registerMock('request', requestMock);
@@ -491,25 +493,25 @@ describe('Caldav-client helper', function() {
 
     it('should create a 1h event in the default calendar', function(done) {
       const summary = 'Summary',
-            location = 'Location',
-            start = moment('2017-01-01T12:00:00Z'),
-            event = [
-              'vcalendar',
-              [],
+        location = 'Location',
+        start = moment('2017-01-01T12:00:00Z'),
+        event = [
+          'vcalendar',
+          [],
+          [
+            [
+              'vevent',
               [
-                [
-                  'vevent',
-                  [
-                    ['uid', {}, 'text', 'UUIDv4'],
-                    ['summary', {}, 'text', summary],
-                    ['location', {}, 'text', location],
-                    ['dtstart', {}, 'date-time', '2017-01-01T12:00:00Z'],
-                    ['dtend', {}, 'date-time', '2017-01-01T13:00:00Z'] // 1h event
-                  ],
-                  []
-                ]
-              ]
-            ];
+                ['uid', {}, 'text', 'UUIDv4'],
+                ['summary', {}, 'text', summary],
+                ['location', {}, 'text', location],
+                ['dtstart', {}, 'date-time', '2017-01-01T12:00:00Z'],
+                ['dtend', {}, 'date-time', '2017-01-01T13:00:00Z'] // 1h event
+              ],
+              []
+            ]
+          ]
+        ];
 
       mockery.registerMock('uuid/v4', () => 'UUIDv4');
       mockery.registerMock('request', opts => {

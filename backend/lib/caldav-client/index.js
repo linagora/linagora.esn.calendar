@@ -111,7 +111,9 @@ module.exports = dependencies => {
   }
 
   function getEventPath(userId, calendarURI, eventUID) {
-    return calendarURI && eventUID ? urljoin(userId, calendarURI, eventUID + '.ics') : userId;
+    const eventPath = calendarURI && eventUID ? urljoin(userId, calendarURI, eventUID + '.ics') : userId;
+
+    return urljoin('/calendars', eventPath);
   }
 
   function iTipRequest(userId, jcal) {
@@ -134,7 +136,7 @@ module.exports = dependencies => {
       .spread((eventUrl, newToken) =>
         Q.nfcall(request, formatRequest(eventUrl, newToken.token))
       )
-      .then(response => {
+      .spread(response => {
         if (response.statusCode < 200 || response.statusCode >= 300) {
           return Q.reject(response.body);
         }
@@ -144,9 +146,9 @@ module.exports = dependencies => {
   }
 
   function _buildEventUrl(userId, calendarURI, eventUID, callback) {
-    davserver.getDavEndpoint(function(davserver) {
-      return callback(null, urljoin(davserver, 'calendars', getEventPath(userId, calendarURI, eventUID)));
-    });
+    davserver.getDavEndpoint(davserver =>
+      callback(null, urljoin(davserver, getEventPath(userId, calendarURI, eventUID)))
+    );
   }
 
   function _buildJCalEvent(uid, options) {

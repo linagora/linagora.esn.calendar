@@ -194,7 +194,9 @@ module.exports = dependencies => {
 
         davItems.push({
           _links: {
-            self: eventData.path
+            self: {
+              href: eventData.path
+            }
           },
           data: eventData.event,
           etag: eventData.etag
