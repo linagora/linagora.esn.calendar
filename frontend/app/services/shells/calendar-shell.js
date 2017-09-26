@@ -279,13 +279,15 @@
           var cn = attendee.getParameter('cn');
           var mail = calendarUtils.removeMailto(attendeeEmail);
           var partstat = attendee.getParameter('partstat');
+          var cutype = attendee.getParameter('cutype');
 
           return {
             fullmail: calendarUtils.fullmailOf(cn, mail),
             email: mail,
             name: cn || mail,
             partstat: partstat,
-            displayName: cn || mail
+            displayName: cn || mail,
+            cutype: cutype || CAL_ICAL.cutype.individual
           };
         });
 
@@ -307,6 +309,7 @@
             property.setParameter('partstat', attendee.partstat || (isOrganizer ? CAL_ICAL.partstat.accepted : CAL_ICAL.partstat.needsaction));
             property.setParameter('rsvp', isOrganizer ? CAL_ICAL.rsvp.false : CAL_ICAL.rsvp.true);
             property.setParameter('role', isOrganizer ? CAL_ICAL.role.chair : CAL_ICAL.role.reqparticipant);
+            property.setParameter('cutype', attendee.cutype || CAL_ICAL.cutype.individual);
             if (attendee.displayName && attendee.displayName !== mail) {
               property.setParameter('cn', attendee.displayName);
             }
@@ -579,6 +582,7 @@
       property.setParameter('partstat', status || CAL_ICAL.partstat.accepted);
       property.setParameter('rsvp', CAL_ICAL.rsvp.false);
       property.setParameter('role', CAL_ICAL.role.chair);
+      property.setParameter('cutype', CAL_ICAL.cutype.individual);
       this.__attendees = null;
     }
 

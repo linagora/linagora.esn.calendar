@@ -96,7 +96,17 @@
       role: {
         reqparticipant: 'REQ-PARTICIPANT',
         chair: 'CHAIR'
+      },
+      cutype: {
+        individual: 'INDIVIDUAL',
+        room: 'ROOM',
+        resource: 'RESOURCE'
       }
+    })
+
+    .constant('CAL_ATTENDEE_OBJECT_TYPE', {
+      user: 'user',
+      resource: 'resource'
     })
 
     .constant('CAL_AVAILABLE_VIEWS', ['agendaWeek', 'agendaDay', 'month', 'agendaThreeDays', 'basicDay'])

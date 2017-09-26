@@ -271,21 +271,24 @@ describe('The calEventService service', function() {
             email: 'test@example.com',
             name: 'name',
             partstat: 'ACCEPTED',
-            displayName: 'name'
+            displayName: 'name',
+            cutype: 'INDIVIDUAL'
           },
           {
             fullmail: 'noname@example.com',
             email: 'noname@example.com',
             name: 'noname@example.com',
             partstat: 'DECLINED',
-            displayName: 'noname@example.com'
+            displayName: 'noname@example.com',
+            cutype: 'INDIVIDUAL'
           },
           {
             fullmail: 'yolo@example.com',
             email: 'yolo@example.com',
             name: 'yolo@example.com',
             partstat: 'YOLO',
-            displayName: 'yolo@example.com'
+            displayName: 'yolo@example.com',
+            cutype: 'INDIVIDUAL'
           }
         ]);
 
@@ -1216,6 +1219,7 @@ describe('The calEventService service', function() {
       att.setParameter('partstat', 'ACCEPTED');
       att.setParameter('rsvp', 'TRUE');
       att.setParameter('role', 'REQ-PARTICIPANT');
+      att.setParameter('cutype', 'INDIVIDUAL');
       self.event.attendees = [{emails: emails}];
       self.$httpBackend.expectPUT('/dav/api/path/to/uid.ics', copy.toJSON()).respond(200, new ICAL.Component('vcalendar').jCal);
 
@@ -1305,6 +1309,7 @@ describe('The calEventService service', function() {
       att.setParameter('partstat', 'ACCEPTED');
       att.setParameter('rsvp', 'TRUE');
       att.setParameter('role', 'REQ-PARTICIPANT');
+      att.setParameter('cutype', 'INDIVIDUAL');
 
       self.$httpBackend.expectGET(/^\/dav\/api\/path\/to\/uid.ics/).respond(200, JSON.stringify(recurrentCalendarShell.vcalendar.jCal));
 
