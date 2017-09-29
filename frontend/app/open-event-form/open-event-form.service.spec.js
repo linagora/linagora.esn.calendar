@@ -12,9 +12,6 @@ describe('The calOpenEventForm service', function() {
   beforeEach(function() {
     calendarHomeId = '123';
     calendar = {id: 1, calendarHomeId: calendarHomeId};
-    calEventUtils = {
-      setEditedEvent: sinon.spy()
-    };
     $modal = sinon.spy();
     $state = {
       go: sinon.spy()
@@ -26,7 +23,10 @@ describe('The calOpenEventForm service', function() {
       })
     };
     regularEvent = {
+      etag: 'etag',
       uid: '456',
+      calendarHomeId: 'eventCalendarHomeId',
+      calendarId: 'eventCalendarId',
       isInstance: sinon.stub().returns(false)
     };
     master = {};
@@ -41,16 +41,16 @@ describe('The calOpenEventForm service', function() {
 
     angular.mock.module('linagora.esn.graceperiod', 'esn.calendar');
     angular.mock.module(function($provide) {
-      $provide.value('calEventUtils', calEventUtils);
       $provide.value('$modal', $modal);
       $provide.value('$state', $state);
       $provide.value('calendarService', calendarService);
     });
   });
 
-  beforeEach(angular.mock.inject(function(_$q_, _$rootScope_, _calOpenEventForm_, _calUIAuthorizationService_, _notificationFactory_, _session_, _CAL_DEFAULT_CALENDAR_ID_, _CAL_EVENTS_) {
+  beforeEach(angular.mock.inject(function(_$q_, _$rootScope_, _calEventUtils_, _calOpenEventForm_, _calUIAuthorizationService_, _notificationFactory_, _session_, _CAL_DEFAULT_CALENDAR_ID_, _CAL_EVENTS_) {
     $rootScope = _$rootScope_;
     $q = _$q_;
+    calEventUtils = _calEventUtils_;
     calOpenEventForm = _calOpenEventForm_;
     calUIAuthorizationService = _calUIAuthorizationService_;
     notificationFactory = _notificationFactory_;
@@ -77,10 +77,8 @@ describe('The calOpenEventForm service', function() {
     });
 
     it('should call calendarService with event calendar id', function(done) {
-      regularEvent.calendarId = 'Test';
-
       calendarService.getCalendar = sinon.spy(function(_calendarHomeId, _calendarId) {
-        expect(_calendarHomeId).to.equal(calendarHomeId);
+        expect(_calendarHomeId).to.equal(regularEvent.calendarHomeId);
         expect(_calendarId).to.equal(regularEvent.calendarId);
         done();
       });
@@ -90,7 +88,7 @@ describe('The calOpenEventForm service', function() {
       $rootScope.$digest();
     });
 
-    it('should call calendarService with default calendar if event is new', function(done) {
+    it('should call calendarService with default calendar and user calendarHomeId if event is new', function(done) {
       regularEvent = {
       };
 
@@ -238,6 +236,8 @@ describe('The calOpenEventForm service', function() {
 
     describe('Recurrent event', function() {
       it('should call $modal with master and instance of recurrent event passed as arguments', function(done) {
+        sinon.spy(calEventUtils, 'setEditedEvent');
+
         calOpenEventForm(calendarHomeId, instance);
         $rootScope.$digest();
 

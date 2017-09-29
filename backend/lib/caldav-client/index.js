@@ -2,7 +2,6 @@
 
 const request = require('request');
 const urljoin = require('url-join');
-const async = require('async');
 const Q = require('q');
 const _ = require('lodash');
 const path = require('path');
@@ -96,7 +95,7 @@ module.exports = dependencies => {
   }
 
   function getEventInDefaultCalendar(user, eventUID) {
-    return getEvent(user.id, DEFAULT_CALENDAR_URI, eventUID);
+    return getEvent(user.id, DEFAULT_CALENDAR_URI, eventUID).then(response => response.ical);
   }
 
   function getEvent(userId, calendarURI, eventUID) {
@@ -106,12 +105,15 @@ module.exports = dependencies => {
         headers: {
           ESNToken: token
         }
-      })
+      }),
+      response => ({ ical: response.body, etag: response.headers.etag })
     );
   }
 
   function getEventPath(userId, calendarURI, eventUID) {
-    return calendarURI && eventUID ? urljoin(userId, calendarURI, eventUID + '.ics') : userId;
+    const eventPath = calendarURI && eventUID ? urljoin(userId, calendarURI, eventUID + '.ics') : userId;
+
+    return urljoin('/calendars', eventPath);
   }
 
   function iTipRequest(userId, jcal) {
@@ -126,38 +128,27 @@ module.exports = dependencies => {
     }));
   }
 
-  function _requestCaldav(userId, calendarURI, eventUID, formatRequest) {
-    const deferred = Q.defer();
-
-    async.parallel([
-        function(cb) {
-          _buildEventUrl(userId, calendarURI, eventUID, url => cb(null, url));
-        },
-        function(cb) {
-          token.getNewToken({user: userId}, cb);
-        }
-      ],
-      (err, results) => {
-        if (err) {
-          return deferred.reject(err);
+  function _requestCaldav(userId, calendarURI, eventUID, formatRequest, formatResult) {
+    return Q.all([
+      Q.nfcall(_buildEventUrl, userId, calendarURI, eventUID),
+      Q.nfcall(token.getNewToken, { user: userId })
+    ])
+      .spread((eventUrl, newToken) =>
+        Q.nfcall(request, formatRequest(eventUrl, newToken.token))
+      )
+      .spread(response => {
+        if (response.statusCode < 200 || response.statusCode >= 300) {
+          return Q.reject(response.body);
         }
 
-        request(formatRequest(results[0], results[1].token), (err, response) => {
-          if (err || response.statusCode < 200 || response.statusCode >= 300) {
-            return deferred.reject(err ? err.message : response.body);
-          }
-
-          return deferred.resolve(response.body);
-        });
+        return formatResult ? formatResult(response) : response.body;
       });
-
-    return deferred.promise;
   }
 
   function _buildEventUrl(userId, calendarURI, eventUID, callback) {
-    davserver.getDavEndpoint(function(davserver) {
-      return callback(urljoin(davserver, 'calendars', getEventPath(userId, calendarURI, eventUID)));
-    });
+    davserver.getDavEndpoint(davserver =>
+      callback(null, urljoin(davserver, getEventPath(userId, calendarURI, eventUID)))
+    );
   }
 
   function _buildJCalEvent(uid, options) {
