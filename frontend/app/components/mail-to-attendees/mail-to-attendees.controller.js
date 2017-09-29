@@ -4,19 +4,21 @@
   angular.module('esn.calendar')
     .controller('calMailToAttendeesController', calMailToAttendeesController);
 
-  function calMailToAttendeesController(session, _) {
+  function calMailToAttendeesController(session, _, CAL_ICAL) {
     var self = this;
 
     self.getEmailAddressesFromUsers = getEmailAddressesFromUsers;
 
-    ////////////
-
     function getEmailAddressesFromUsers(list) {
-      return _.chain(list).map('email').uniq().reject(removeTheCurrentUser).join().value();
+      return _.chain(list).reject(removeResources).map('email').uniq().reject(removeCurrentUser).join().value();
     }
 
-    function removeTheCurrentUser(email) {
+    function removeCurrentUser(email) {
      return email === session.user.preferredEmail;
+    }
+
+    function removeResources(attendee) {
+      return attendee.cutype && attendee.cutype === CAL_ICAL.cutype.resource;
     }
   }
 })();

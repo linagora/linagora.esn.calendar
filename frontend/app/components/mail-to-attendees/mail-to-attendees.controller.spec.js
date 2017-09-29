@@ -5,9 +5,7 @@
 var expect = chai.expect;
 
 describe('The calMailToAttendeesController', function() {
-
-  var $controller;
-  var ctrl, attendeesTest, attendeesMailTest;
+  var $controller, ctrl, attendeesTest, attendeesMailTest, CAL_ICAL;
 
   beforeEach(function() {
     attendeesTest = [
@@ -31,8 +29,9 @@ describe('The calMailToAttendeesController', function() {
       });
     });
 
-    angular.mock.inject(function(_$controller_) {
+    angular.mock.inject(function(_$controller_, _CAL_ICAL_) {
       $controller = _$controller_;
+      CAL_ICAL = _CAL_ICAL_;
     });
 
     ctrl = initController();
@@ -54,6 +53,12 @@ describe('The calMailToAttendeesController', function() {
       attendees.push(attendeesTest[1]);
 
       expect(ctrl.getEmailAddressesFromUsers(attendees)).to.equal(attendeesMailTest);
+    });
+
+    it('should not add resource attendee', function() {
+      attendeesTest.push({email: 'aresource@example.com', partstat: 'ACCEPTED', clicked: false, cutype: CAL_ICAL.cutype.resource});
+
+      expect(ctrl.getEmailAddressesFromUsers(attendeesTest)).to.equal(attendeesMailTest);
     });
   });
 });
