@@ -56,6 +56,9 @@ module.exports = {
       REQUEST: 'calendar:event:alarm:request',
       REPLY: 'calendar:event:alarm:reply',
       CANCEL: 'calendar:event:alarm:cancel'
+    },
+    RESOURCE: {
+      CREATED: 'resource:created'
     }
   },
   WEBSOCKET: {
@@ -68,6 +71,17 @@ module.exports = {
       ERROR: 'error',
       RUNNING: 'running',
       WAITING: 'waiting'
+    }
+  },
+  RESOURCE: {
+    TYPE: {
+      CALENDAR: 'calendar'
+    },
+    ERROR: {
+      MAIL: {
+        SUBJECT: 'Resource\'s calendar not created',
+        MESSAGE: 'The resource\'s calendar has not been created'
+      }
     }
   }
 };

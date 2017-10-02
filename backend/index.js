@@ -94,6 +94,7 @@ const AwesomeCalendarModule = new AwesomeModule('linagora.esn.calendar', {
     start: function(dependencies, callback) {
       require('./ws').init(dependencies);
       require('./lib/search')(dependencies).listen();
+      require('./lib/resource')(dependencies).listen();
       require('./lib/config')(dependencies).register();
 
       dependencies('autoconf') && dependencies('autoconf').addTransformer(require('./lib/autoconf')(dependencies));
