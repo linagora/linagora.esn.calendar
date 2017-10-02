@@ -60,7 +60,7 @@ describe('The calendar resource module', function() {
     });
 
     it('should call pubsub susbcribe', function() {
-      expect(globalpubsub.topics).to.have.length.greaterThan(0);
+      expect(localpubsub.topics).to.have.length.greaterThan(0);
     });
 
     describe('The create function', function() {
@@ -71,7 +71,7 @@ describe('The calendar resource module', function() {
           name: 'test'
         };
 
-        globalpubsub.topics['resource:created'].handler(fakeResource);
+        localpubsub.topics['resource:created'].handler(fakeResource);
         expect(requestMock).to.not.have.been.called;
       });
 
@@ -87,7 +87,7 @@ describe('The calendar resource module', function() {
         requestError = new Error('Error');
         requestStatus = null;
 
-        globalpubsub.topics['resource:created'].handler(fakeResource).then(() => {
+        localpubsub.topics['resource:created'].handler(fakeResource).then(() => {
           expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${requestError || requestStatus}`);
           expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, {subject: RESOURCE.ERROR.MAIL.SUBJECT, text: RESOURCE.ERROR.MAIL.MESSAGE});
           done();
@@ -106,7 +106,7 @@ describe('The calendar resource module', function() {
         requestError = null;
         requestStatus = 501;
 
-        globalpubsub.topics['resource:created'].handler(fakeResource).then(() => {
+        localpubsub.topics['resource:created'].handler(fakeResource).then(() => {
           expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${requestError || requestStatus}`);
           expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, {subject: RESOURCE.ERROR.MAIL.SUBJECT, text: RESOURCE.ERROR.MAIL.MESSAGE});
           done();
@@ -125,7 +125,7 @@ describe('The calendar resource module', function() {
         requestError = null;
         requestStatus = 201;
 
-        globalpubsub.topics['resource:created'].handler(fakeResource).then(() => {
+        localpubsub.topics['resource:created'].handler(fakeResource).then(() => {
           expect(requestMock).to.have.been.called;
           expect(logger.info).to.have.been.calledWith(`Calendar created for the resource: ${fakeResource._id} with the status: ${requestStatus}`);
           done();
