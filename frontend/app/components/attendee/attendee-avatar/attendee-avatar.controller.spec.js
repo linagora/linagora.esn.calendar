@@ -5,8 +5,7 @@
 var expect = chai.expect;
 
 describe('The CalAttendeeAvatarController controller', function() {
-
-  var esnAvatarUrlService, $controller, $rootScope, $scope, context, attendee;
+  var esnAvatarUrlService, $controller, $rootScope, $scope, context, attendee, CAL_ICAL, CAL_RESOURCE;
 
   beforeEach(function() {
     module('jadeTemplates');
@@ -25,9 +24,11 @@ describe('The CalAttendeeAvatarController controller', function() {
     });
   });
 
-  beforeEach(angular.mock.inject(function(_$controller_, _$rootScope_) {
+  beforeEach(angular.mock.inject(function(_$controller_, _$rootScope_, _CAL_ICAL_, _CAL_RESOURCE_) {
     $controller = _$controller_;
     $rootScope = _$rootScope_;
+    CAL_ICAL = _CAL_ICAL_;
+    CAL_RESOURCE = _CAL_RESOURCE_;
     $scope = $rootScope.$new();
   }));
 
@@ -36,21 +37,37 @@ describe('The CalAttendeeAvatarController controller', function() {
   }
 
   describe('The $onChanges function', function() {
-    var ctrl;
+    var ctrl, avatarUrl;
 
     beforeEach(function() {
-      ctrl = initController();
-    });
-    it('should set the controller avatarUrl from esnAvatarUrlService service', function() {
-      var result = 'The Avatar URL result';
+      avatarUrl = '/foo/bar/baz.png';
 
-      esnAvatarUrlService.generateUrlByUserEmail = sinon.spy(function() {
-        return result;
-      });
+      esnAvatarUrlService.generateUrlByUserEmail = sinon.stub().returns(avatarUrl);
+      ctrl = initController();
+      ctrl.$onInit();
+    });
+
+    it('should set the controller avatarUrl from esnAvatarUrlService service if attendee.cutype is not defined', function() {
       ctrl.$onChanges();
 
-      expect(ctrl.avatarUrl).to.equal(result);
+      expect(ctrl.avatarUrl).to.equal(avatarUrl);
       expect(esnAvatarUrlService.generateUrlByUserEmail).to.have.been.calledWith(attendee.email);
+    });
+
+    it('should set the controller avatarUrl from esnAvatarUrlService service if attendee.cutype is a individual', function() {
+      attendee.cutype = CAL_ICAL.cutype.individual;
+      ctrl.$onChanges();
+
+      expect(ctrl.avatarUrl).to.equal(avatarUrl);
+      expect(esnAvatarUrlService.generateUrlByUserEmail).to.have.been.calledWith(attendee.email);
+    });
+
+    it('should set the controller avatarUrl from resource avatar url if attendee.cutype is a resource', function() {
+      attendee.cutype = CAL_ICAL.cutype.resource;
+      ctrl.$onChanges();
+
+      expect(ctrl.avatarUrl).to.equal(CAL_RESOURCE.AVATAR_URL);
+      expect(esnAvatarUrlService.generateUrlByUserEmail).to.not.have.been.called;
     });
   });
 });

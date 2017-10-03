@@ -104,6 +104,10 @@
       }
     })
 
+    .constant('CAL_RESOURCE', {
+      AVATAR_URL: '/linagora.esn.resource/images/resource.png'
+    })
+
     .constant('CAL_ATTENDEE_OBJECT_TYPE', {
       user: 'user',
       resource: 'resource'
