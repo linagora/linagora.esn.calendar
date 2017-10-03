@@ -17,7 +17,7 @@ module.exports = dependencies => {
   };
 
   function listen() {
-    pubsub.global.topic(EVENTS.RESOURCE.CREATED).subscribe(_create);
+    pubsub.local.topic(EVENTS.RESOURCE.CREATED).subscribe(_create);
 
     function generatePayload(resource) {
       return {
