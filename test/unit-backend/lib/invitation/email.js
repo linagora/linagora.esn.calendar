@@ -4,7 +4,6 @@ const mockery = require('mockery');
 const fs = require('fs');
 
 describe('The invitation email module', function() {
-
   let userMock, helpersMock, authMock, emailMock, esnConfigMock;
 
   beforeEach(function() {
@@ -318,6 +317,7 @@ describe('The invitation email module', function() {
               expect(template.name).to.equal('event.invitation');
               expect(template.path).to.match(/templates\/email/);
               expect(locals.filter).is.a.function;
+              expect(locals.content.method).to.equal(method);
               expect(locals.content.baseUrl).to.equal('http://localhost:8888');
               expect(locals.content.yes).to.equal('http://localhost:8888/calendar/api/calendars/event/participation?jwt=token');
               expect(locals.content.no).to.equal('http://localhost:8888/calendar/api/calendars/event/participation?jwt=token');
@@ -372,6 +372,7 @@ describe('The invitation email module', function() {
               expect(template.path).to.match(/templates\/email/);
               expect(locals).to.be.an('object');
               expect(locals.filter).is.a.function;
+              expect(locals.content.method).to.equal(method);
               expect(locals.content.baseUrl).to.equal('http://localhost:8888');
               expect(locals.content.yes).to.equal('http://localhost:8888/calendar/api/calendars/event/participation?jwt=token');
               expect(locals.content.no).to.equal('http://localhost:8888/calendar/api/calendars/event/participation?jwt=token');

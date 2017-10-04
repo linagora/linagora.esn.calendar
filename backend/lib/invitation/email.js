@@ -94,6 +94,7 @@ module.exports = dependencies => {
         const content = {
           baseUrl,
           inviteMessage,
+          method,
           event,
           editor: {
             displayName: userModule.getDisplayName(user),

@@ -92,7 +92,7 @@ html.mail
                 img(src="cid:folder-download", alt=translate('Files'))
               td(colspan="5")
                 span file.odt
-          if (content.event.method != 'CANCEL')
+          if (content.method != 'CANCEL')
             tr.table-footer
               td.attend-question(colspan="3")
                 | #{translate('Will you attend?')}
