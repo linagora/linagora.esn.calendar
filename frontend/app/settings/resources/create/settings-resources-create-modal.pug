@@ -1,0 +1,21 @@
+.modal.full-screen(tabindex="-1", role="dialog")
+  .modal-dialog
+    form(name="form")
+      .modal-content
+        .modal-header
+          button.close(type='button', data-dismiss="modal", aria-label="Close", ng-click="$hide()")
+            span(aria-hidden="true") &times;
+          h4.modal-title #{__('Create a new calendar resource')}
+        .modal-body
+          .cal-settings-resources-create
+            .row
+              .col-xs-12
+                esn-form-group(label=__('Name'))
+                  input.form-control(type="text", ng-model="ctrl.resource.name", name="resourceName", required)
+            .row
+              .col-xs-12
+                esn-form-group(label=__('Description'))
+                  textarea.form-control(rows="5", ng-model="ctrl.resource.description", name="resourceDescription", required)
+        .modal-footer
+          button.btn.btn-default(type="button", ng-click="$hide()") #{__('Cancel')}
+          button.btn.btn-primary(type="button", ng-disabled="form.$invalid", ng-click="ctrl.submit(); $hide()") #{__('Create')}

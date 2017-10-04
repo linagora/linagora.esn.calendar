@@ -105,7 +105,8 @@
     })
 
     .constant('CAL_RESOURCE', {
-      AVATAR_URL: '/linagora.esn.resource/images/resource.png'
+      AVATAR_URL: '/linagora.esn.resource/images/resource.png',
+      type: 'calendar'
     })
 
     .constant('CAL_ATTENDEE_OBJECT_TYPE', {

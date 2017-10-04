@@ -192,5 +192,10 @@
   "week": "tuần",
   "weeks": "tuần",
   "years": "năm",
-  "Notification": "Thông báo"
+  "Notification": "Thông báo",
+  "Resources": "Tài nguyên",
+  "Create a new calendar resource": "Tạo tài nguyên lịch mới",
+  "Creating resource...": "Đang tạo tài nguyên...",
+  "Resource has been created": "Tài nguyên đã được tạo",
+  "Failed to create resource": "Không thể tạo được tài nguyên"
 }

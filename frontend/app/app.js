@@ -28,6 +28,7 @@
     'esn.user-configuration',
     'esn.widget.helper',
     'linagora.esn.graceperiod',
+    'linagora.esn.resource',
     'materialAdmin',
     'mgcrea.ngStrap.aside',
     'mgcrea.ngStrap.datepicker',
