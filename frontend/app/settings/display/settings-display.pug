@@ -1,6 +1,5 @@
 mixin settingsSwitch(title, rightLabel, leftLabel)
-  p
-    span #{__(title)}
+  h3 #{__(title)}
   p.cal-setting-switch
     span.working-days-disabled(ng-class="{'toggle-active': " + attributes.switchValue + "}")
       | #{__(rightLabel)}
