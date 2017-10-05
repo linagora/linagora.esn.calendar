@@ -58,7 +58,8 @@ module.exports = {
       CANCEL: 'calendar:event:alarm:cancel'
     },
     RESOURCE: {
-      CREATED: 'resource:created'
+      CREATED: 'resource:created',
+      DELETED: 'resource:deleted'
     }
   },
   WEBSOCKET: {
@@ -79,8 +80,14 @@ module.exports = {
     },
     ERROR: {
       MAIL: {
-        SUBJECT: 'Resource\'s calendar not created',
-        MESSAGE: 'The resource\'s calendar has not been created'
+        CREATED: {
+          SUBJECT: 'Resource\'s calendar not created',
+          MESSAGE: 'The resource\'s calendar has not been created'
+        },
+        REMOVED: {
+          SUBJECT: 'Resource\'s calendar not removed',
+          MESSAGE: 'The resource\'s calendar has not been removed'
+        }
       }
     }
   }
