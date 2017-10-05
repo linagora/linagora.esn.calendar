@@ -13,13 +13,13 @@
     notificationFactory,
     userUtils,
     uuid4,
+    calCalendarRightComparatorService,
     calendarService,
     calendarHomeService,
     CalendarCollectionShell,
     userAndExternalCalendars,
     CAL_CALENDAR_SHARED_INVITE_STATUS,
-    CAL_CALENDAR_SHARED_TYPE
-  ) {
+    CAL_CALENDAR_SHARED_TYPE) {
 
     var self = this;
     var noResponseDelegationCalendars;
@@ -55,11 +55,11 @@
     function filterSubscribedCalendars(userCalendars) {
       return getSubscribedCalendarsForCurrentUser().then(function(subscribedCalendars) {
         var sources = subscribedCalendars.map(function(calendar) {
-          return calendar.source.href;
+          return (calendar.source && calendar.source.href) || calendar.delegatedsource;
         });
 
         return _.filter(userCalendars, function(userCalendar) {
-          return !_.contains(sources, userCalendar.calendar.href);
+          return !_.contains(sources, userCalendar.source);
         });
       });
     }
@@ -68,7 +68,9 @@
       return calendarHomeService.getUserCalendarHomeId()
         .then(calendarService.listCalendars)
         .then(function(calendars) {
-          return userAndExternalCalendars(calendars).publicCalendars || [];
+          var externalCalendars = userAndExternalCalendars(calendars);
+
+          return (externalCalendars.publicCalendars || []).concat(externalCalendars.sharedCalendars || []);
         });
     }
 
@@ -78,6 +80,7 @@
             return {
               user: user,
               calendar: calendar,
+              source: calendar.href,
               type: CAL_CALENDAR_SHARED_TYPE.PUBLIC
             };
           });
@@ -90,6 +93,7 @@
           return delegationCalendars.map(function(delegationCalendar) {
             return {
               calendar: delegationCalendar,
+              source: delegationCalendar.delegatedsource,
               type: CAL_CALENDAR_SHARED_TYPE.DELEGATION
             };
           });
@@ -112,12 +116,14 @@
       }
 
       getPublicCalendarsForUser(user)
-        .then(filterSubscribedCalendars)
-        .then(function(userCalendars) {
-          self.calendarsPerUser = self.calendarsPerUser.concat(userCalendars);
+        .then(function(publicCalendars) {
+          return (publicCalendars || []).concat(noResponseDelegationCalendars.getCalendarsForUser(user));
         })
-        .then(function() {
-          self.calendarsPerUser = self.calendarsPerUser.concat(noResponseDelegationCalendars.getCalendarsForUser(user));
+        .then(filterSubscribedCalendars)
+        .then(function(allCalendars) {
+          var filteredCalendars = _filterDuplicates(allCalendars);
+
+          self.calendarsPerUser = self.calendarsPerUser.concat(filteredCalendars);
         })
         .catch(function(err) {
           $log.error('Can not get shared calendars for user', user._id, err);
@@ -165,6 +171,28 @@
           });
         }));
       });
+    }
+
+    function _filterDuplicates(calendars) {
+      return calendars.reduce(function(accCalendarList, currentCalendar) {
+          var duplicateIndex = _.findIndex(accCalendarList, function(tmpCalListItem) {
+            return (tmpCalListItem.source === currentCalendar.source);
+          });
+
+          if (duplicateIndex >= 0) {
+            var chosenOne = calCalendarRightComparatorService.getMostPermissive(session.user._id, currentCalendar, accCalendarList[duplicateIndex]);
+
+            if (chosenOne === currentCalendar) {
+              accCalendarList.splice(duplicateIndex, 1, chosenOne);
+            }
+          } else {
+            accCalendarList.push(currentCalendar);
+          }
+
+          return accCalendarList;
+        },
+        []
+      );
     }
 
     function subscribeToSelectedCalendars() {

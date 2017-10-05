@@ -19,6 +19,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
     notificationFactory,
     calendarHomeId,
     CalendarCollectionShell,
+    calCalendarRightComparatorService,
     calFullUiConfiguration,
     userAndExternalCalendars,
     publicCalendars,
@@ -38,6 +39,9 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
         return $q.when();
       })
     };
+    calCalendarRightComparatorService = {
+      getMostPermissive: sinon.spy()
+    };
   });
 
   beforeEach(function() {
@@ -45,6 +49,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       $provide.value('CalendarCollectionShell', CalendarCollectionShell);
       $provide.value('userAndExternalCalendars', userAndExternalCalendars);
       $provide.value('calFullUiConfiguration', calFullUiConfiguration);
+      $provide.value('calCalendarRightComparatorService', calCalendarRightComparatorService);
     });
   });
 
@@ -52,9 +57,9 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
     calendarHomeId = 'calendarHomeId';
     user = {_id: 1};
     anotherUser = {_id: 2};
-    calendar = {_id: 3};
+    calendar = {_id: 3, href: 'href'};
     anotherCalendar = {_id: 4};
-    angular.mock.inject(function(_$rootScope_, _$controller_, _$q_, _$log_, _$state_, _calendarService_, _calendarHomeService_, _notificationFactory_, _session_, _CAL_CALENDAR_SHARED_TYPE_) {
+    angular.mock.inject(function(_$rootScope_, _$controller_, _$q_, _$log_, _$state_, _calendarService_, _calendarHomeService_, _calCalendarRightComparatorService_, _notificationFactory_, _session_, _CAL_CALENDAR_SHARED_TYPE_) {
       $rootScope = _$rootScope_;
       $controller = _$controller_;
       $q = _$q_;
@@ -63,6 +68,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       calendarService = _calendarService_;
       notificationFactory = _notificationFactory_;
       calendarHomeService = _calendarHomeService_;
+      calCalendarRightComparatorService = _calCalendarRightComparatorService_;
       session = _session_;
       CAL_CALENDAR_SHARED_TYPE = _CAL_CALENDAR_SHARED_TYPE_;
     });
@@ -127,6 +133,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       });
       var sharedCalendar = {
         _id: 'first delegation',
+        delegatedsource: 'delegatedsource',
         getOwner: function() {
           return $q.when(user);
         }
@@ -141,6 +148,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
         return $q.when([]);
       });
       var controller = initController();
+      $rootScope.$digest();
 
       controller.onUserAdded(user);
       $rootScope.$digest();
@@ -148,7 +156,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       expect(listPublicCalendarsStub).to.have.been.calledWith(user._id);
       expect(listCalendarsStub).to.have.been.calledWith(calendarHomeId);
       expect(calendarService.listDelegationCalendars).to.have.been.calledWith(session.user._id, 'noresponse');
-      expect(controller.calendarsPerUser).to.shallowDeepEqual([{ user: user, calendar: calendar }, { user: user, calendar: sharedCalendar }]);
+      expect(controller.calendarsPerUser).to.shallowDeepEqual([{ user: user, source: 'href', calendar: calendar }, { user: user, source: 'delegatedsource', calendar: sharedCalendar }]);
     });
 
     it('should not fill calendarsPerUser with a calendar which has already been subscribed', function() {
@@ -165,6 +173,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
         return $q.when([subscribed]);
       });
       var controller = initController();
+      $rootScope.$digest();
 
       controller.calendarsPerUser.push({calendar: calendar, user: user});
       controller.calendarsPerUser.push({calendar: anotherCalendar, user: anotherUser});
@@ -176,6 +185,47 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       expect(userAndExternalCalendars).to.have.been.calledWith([subscribed]);
       expect(calendarService.listDelegationCalendars).to.have.been.calledWith(session.user._id, 'noresponse');
       expect(controller.calendarsPerUser).to.have.lengthOf(2);
+    });
+
+    it('should add most permissive instance of the same calendar in calendarsPerUser', function() {
+      var sameCalendarHref = 'This is the href of the original calendar';
+      var publicCalendar = { href: sameCalendarHref };
+      var delegatedCalendar = {
+        delegatedsource: sameCalendarHref,
+        getOwner: function() {
+          return $q.when(user);
+        }
+      };
+
+      calendarService.listDelegationCalendars.restore();
+
+      sinon.stub(calendarService, 'listDelegationCalendars', function() {
+        return $q.when([delegatedCalendar]);
+      });
+
+      calCalendarRightComparatorService.getMostPermissive = sinon.spy(function(userId, cal, cal2) {
+          return cal.type === CAL_CALENDAR_SHARED_TYPE.DELEGATION ? cal : cal2;
+        });
+
+      var listPublicCalendarsStub = sinon.stub(calendarService, 'listPublicCalendars', function() {
+        return $q.when([publicCalendar]);
+      });
+
+      var listCalendarsStub = sinon.stub(calendarService, 'listCalendars', function() {
+        return $q.when([]);
+      });
+
+      var controller = initController();
+      $rootScope.$digest();
+
+      controller.onUserAdded(user);
+      $rootScope.$digest();
+
+      expect(listPublicCalendarsStub).to.have.been.calledWith(user._id);
+      expect(listCalendarsStub).to.have.been.calledWith(calendarHomeId);
+      expect(userAndExternalCalendars).to.have.been.calledWith();
+      expect(calendarService.listDelegationCalendars).to.have.been.calledWith(session.user._id, 'noresponse');
+      expect(controller.calendarsPerUser).to.deep.equal([{ user: user, source: sameCalendarHref, calendar: delegatedCalendar, type: CAL_CALENDAR_SHARED_TYPE.DELEGATION }]);
     });
 
     it('should log error when public calendars fetch fails', function() {

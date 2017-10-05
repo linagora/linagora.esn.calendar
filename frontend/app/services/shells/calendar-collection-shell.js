@@ -31,6 +31,7 @@
       this.color = calendar[CAL_CALENDAR_PROPERTIES.color] || CAL_DEFAULT_EVENT_COLOR;
       this.description = calendar[CAL_CALENDAR_PROPERTIES.description] || '';
       this.source = calendar[CAL_CALENDAR_PROPERTIES.source] && getCalendarCollectionShell(calendar[CAL_CALENDAR_PROPERTIES.source]);
+      this.delegatedsource = calendar[CAL_CALENDAR_PROPERTIES.delegatedsource];
 
       this.href = calendar._links.self.href;
 
