@@ -159,6 +159,10 @@
             $scope.editedEvent.setOrganizerPartStat();
 
             return owner;
+          }).catch(function() {
+            // Here getOwner() work only with user. Need to defined a behaviors for resources
+            // By this catch we allow event creation
+            return;
           });
       }
 
