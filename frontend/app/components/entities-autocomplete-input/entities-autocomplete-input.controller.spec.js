@@ -4,7 +4,7 @@
 
 var expect = chai.expect;
 
-describe('The calAttendeesAutocompleteInputController', function() {
+describe('The calEntitiesAutocompleteInputController', function() {
 
   var $rootScope, $scope, $controller, calendarAttendeeService, session, calEventsProviders, CAL_AUTOCOMPLETE_MAX_RESULTS;
 
@@ -93,26 +93,26 @@ describe('The calAttendeesAutocompleteInputController', function() {
   });
 
   function initController(bindings) {
-    return $controller('calAttendeesAutocompleteInputController', null, bindings);
+    return $controller('calEntitiesAutocompleteInputController', null, bindings);
   }
 
   it('should initialize the model, if none given', function() {
     var ctrl = initController();
 
-    expect(ctrl.mutableAttendees).to.deep.equal([]);
+    expect(ctrl.mutableEntities).to.deep.equal([]);
   });
 
   it('should use the model, if one given', function() {
-    var bindings = { mutableAttendees: [{ a: '1' }] };
+    var bindings = { mutableEntities: [{ a: '1' }] };
     var ctrl = initController(bindings);
 
-    expect(ctrl.mutableAttendees).to.deep.equal([{a: '1'}]);
+    expect(ctrl.mutableEntities).to.deep.equal([{a: '1'}]);
   });
 
-  describe('getInvitableAttendees', function() {
+  describe('getInvitableEntities', function() {
     var query = 'aQuery';
     var ctrl;
-    var expectedAtttendeesDuplication = [
+    var expectedEntitiesDuplication = [
       {
         displayName: 'contact3',
         email: 'user3@test.com',
@@ -133,7 +133,7 @@ describe('The calAttendeesAutocompleteInputController', function() {
       }
     ];
 
-    var expectedAttendeesSorted = [
+    var expectedEntitiesSorted = [
       {
         displayName: 'contact2',
         email: 'user2@test.com',
@@ -167,8 +167,8 @@ describe('The calAttendeesAutocompleteInputController', function() {
     });
 
     it('should call calendarAttendeeService, remove session.user and sort the other users based on the displayName property ', function(done) {
-      ctrl.getInvitableAttendees(query).then(function(response) {
-        expect(response).to.deep.equal(expectedAttendeesSorted);
+      ctrl.getInvitableEntities(query).then(function(response) {
+        expect(response).to.deep.equal(expectedEntitiesSorted);
 
         done();
       });
@@ -176,37 +176,37 @@ describe('The calAttendeesAutocompleteInputController', function() {
       $scope.$digest();
     });
 
-    it('should remove duplicate attendees, based on primary email, comparing to added already attendees', function(done) {
-      ctrl.originalAttendees = [{ email: 'user2@test.com', emails: ['user2@test.com'] }];
+    it('should remove duplicate entities, based on primary email, comparing to added already entities', function(done) {
+      ctrl.originalEntities = [{ email: 'user2@test.com', emails: ['user2@test.com'] }];
 
       _checkDuplication(done);
     });
 
-    it('should remove duplicate attendees, based on secondary email, comparing to added already attendees', function(done) {
-      ctrl.originalAttendees = [{ email: 'another@world.com', emails: ['another@world.com', 'user2@test.com'] }];
+    it('should remove duplicate entities, based on secondary email, comparing to added already entities', function(done) {
+      ctrl.originalEntities = [{ email: 'another@world.com', emails: ['another@world.com', 'user2@test.com'] }];
 
       _checkDuplication(done);
     });
 
-    it('should remove duplicate attendees, based on primary email, comparing to attendees being currently added', function(done) {
-      ctrl.mutableAttendees = [{ email: 'user2@test.com', emails: ['user2@test.com'] }];
+    it('should remove duplicate entities, based on primary email, comparing to entities being currently added', function(done) {
+      ctrl.mutableEntities = [{ email: 'user2@test.com', emails: ['user2@test.com'] }];
 
       _checkDuplication(done);
     });
 
-    it('should remove duplicate attendees, based on secondary email, comparing to attendees being currently added', function(done) {
-      ctrl.mutableAttendees = [{ email: 'another@world.com', emails: ['another@world.com', 'user2@test.com'] }];
+    it('should remove duplicate entities, based on secondary email, comparing to entities being currently added', function(done) {
+      ctrl.mutableEntities = [{ email: 'another@world.com', emails: ['another@world.com', 'user2@test.com'] }];
 
       _checkDuplication(done);
     });
 
     function _checkDuplication(done) {
-      _getAndCheckInvitableAttendees(ctrl, query, expectedAtttendeesDuplication, done);
+      _getAndCheckInvitableEntities(ctrl, query, expectedEntitiesDuplication, done);
     }
 
-    function _getAndCheckInvitableAttendees(ctrl, query, expectedAtttendeesDuplication, done) {
-      ctrl.getInvitableAttendees(query).then(function(response) {
-        expect(response).to.deep.equal(expectedAtttendeesDuplication);
+    function _getAndCheckInvitableEntities(ctrl, query, expectedEntitiesDuplication, done) {
+      ctrl.getInvitableEntities(query).then(function(response) {
+        expect(response).to.deep.equal(expectedEntitiesDuplication);
 
         done();
       });
@@ -226,7 +226,7 @@ describe('The calAttendeesAutocompleteInputController', function() {
         return $q.when(response);
       };
 
-      ctrl.getInvitableAttendees(query).then(function(response) {
+      ctrl.getInvitableEntities(query).then(function(response) {
         expect(response.length).to.equal(CAL_AUTOCOMPLETE_MAX_RESULTS);
 
         done();
@@ -236,74 +236,74 @@ describe('The calAttendeesAutocompleteInputController', function() {
     });
   });
 
-  describe('onAddingAttendee', function() {
-    it('should work with attendee having an email', function() {
-      var attendee, response;
+  describe('onAddingEntity', function() {
+    it('should work with entity having an email', function() {
+      var entity, response;
       var ctrl = initController();
 
-      attendee = { id: 1, displayName: 'yolo', email: 'yolo@open-paas.org' };
-      response = ctrl.onAddingAttendee(attendee);
+      entity = { id: 1, displayName: 'yolo', email: 'yolo@open-paas.org' };
+      response = ctrl.onAddingEntity(entity);
 
       expect(response).to.be.true;
     });
 
-    it('should work with attendee without an email', function() {
-      var attendee, response;
+    it('should work with entity without an email', function() {
+      var entity, response;
       var ctrl = initController();
 
-      attendee = {displayName: 'eric cartman'};
-      response = ctrl.onAddingAttendee(attendee);
+      entity = {displayName: 'eric cartman'};
+      response = ctrl.onAddingEntity(entity);
 
       expect(response).to.be.true;
-      expect(attendee.email).to.be.equal('eric cartman');
+      expect(entity.email).to.be.equal('eric cartman');
     });
 
-    describe('adding plain email attendee', function() {
+    describe('adding plain email entity', function() {
       it('should use displayName as ID and email', function() {
         var displayName = 'plain@email.com';
-        var attendee = { displayName: displayName };
+        var entity = { displayName: displayName };
         var ctrl = initController();
 
-        ctrl.onAddingAttendee(attendee);
-        expect(attendee).to.deep.equal({
+        ctrl.onAddingEntity(entity);
+        expect(entity).to.deep.equal({
           displayName: displayName,
           id: displayName,
           email: displayName
         });
       });
 
-      it('should return false when trying to add duplicate contact as attendee', function() {
+      it('should return false when trying to add duplicate contact as entities', function() {
         var duplicateContact = {
           id: '1',
           email: 'duplicate@email.com'
         };
         var ctrl = initController();
 
-        ctrl.originalAttendees = [duplicateContact];
+        ctrl.originalEntities = [duplicateContact];
 
-        expect(ctrl.onAddingAttendee(duplicateContact)).to.be.false;
+        expect(ctrl.onAddingEntity(duplicateContact)).to.be.false;
       });
 
-      it('should return false when adding contact with existent id as attendee', function() {
+      it('should return false when adding contact with existent id as entity', function() {
         var duplicateContact = {
           id: '1'
         };
         var ctrl = initController();
 
-        ctrl.originalAttendees = [duplicateContact];
+        ctrl.originalEntities = [duplicateContact];
 
-        expect(ctrl.onAddingAttendee(duplicateContact)).to.be.false;
+        expect(ctrl.onAddingEntity(duplicateContact)).to.be.false;
       });
 
-      it('should return false when adding contact with existent email as attendee', function() {
+      it('should return false when adding contact with existent email as entity', function() {
         var duplicateContact = {
           email: 'duplicate@email.com'
         };
         var ctrl = initController();
 
-        ctrl.originalAttendees = [duplicateContact];
+        ctrl.originalEntities = [duplicateContact];
 
-        expect(ctrl.onAddingAttendee(duplicateContact)).to.be.false;
+        expect(ctrl.onAddingEntity(duplicateContact)).to.be.false;
       });
     });
   });

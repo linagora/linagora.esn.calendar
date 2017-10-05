@@ -236,6 +236,8 @@
 
     .constant('CAL_AUTOCOMPLETE_MAX_RESULTS', 5)
 
+    .constant('CAL_AUTOCOMPLETE_DEFAULT_PLACEHOLDER', 'Search')
+
     .constant('CAL_DAV_PATH', '/dav/api')
 
     .constant('CAL_GRACE_DELAY', 10000)
