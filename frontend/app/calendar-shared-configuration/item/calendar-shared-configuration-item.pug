@@ -1,7 +1,6 @@
 .cal-calendar-shared-configuration-item
   .meta
-    .avatar
-      img(src='/images/user.png', ng-src='/api/users/{{::$ctrl.item.user._id}}/profile/avatar', alt=__("User Avatar"))
+    cal-attendee-avatar.attendee-avatar(attendee='$ctrl.item.user')
     .title
       .name
         span {{::$ctrl.item.calendar.name}}
