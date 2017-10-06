@@ -69,5 +69,21 @@ describe('The CalAttendeeAvatarController controller', function() {
       expect(ctrl.avatarUrl).to.equal(CAL_RESOURCE.AVATAR_URL);
       expect(esnAvatarUrlService.generateUrlByUserEmail).to.not.have.been.called;
     });
+
+    it('should return the displayName if the attendee is a user', function() {
+      attendee.cutype = CAL_ICAL.cutype.individual;
+      attendee.displayName = 'toto';
+      ctrl.$onChanges();
+
+      expect(ctrl.getDisplayName()).to.be.equal(attendee.displayName);
+    });
+
+    it('should return the name if the attendee is a resource', function() {
+      attendee.cutype = CAL_ICAL.cutype.resource;
+      attendee.name = 'toto';
+      ctrl.$onChanges();
+
+      expect(ctrl.getDisplayName()).to.be.equal(attendee.name);
+    });
   });
 });
