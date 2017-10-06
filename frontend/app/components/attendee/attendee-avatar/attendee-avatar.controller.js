@@ -9,6 +9,7 @@
 
     self.$onChanges = $onChanges;
     self.$onInit = $onInit;
+    self.getDisplayName = getDisplayName;
 
     function $onChanges() {
       self.avatarUrl = getAvatarUrl();
@@ -30,6 +31,10 @@
 
     function getUserAvatar() {
       return esnAvatarUrlService.generateUrlByUserEmail(self.attendee.email);
+    }
+
+    function getDisplayName() {
+      return self.attendee.name || self.attendee.displayName;
     }
   }
 })();
