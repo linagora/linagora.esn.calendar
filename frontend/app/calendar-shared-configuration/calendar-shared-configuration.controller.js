@@ -66,7 +66,7 @@
 
     function getSubscribedCalendarsForCurrentUser() {
       return calendarHomeService.getUserCalendarHomeId()
-        .then(calendarService.listCalendars)
+        .then(calendarService.listPersonalAndAcceptedDelegationCalendars)
         .then(function(calendars) {
           var externalCalendars = userAndExternalCalendars(calendars);
 

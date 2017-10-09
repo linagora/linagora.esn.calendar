@@ -144,7 +144,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       sinon.stub(calendarService, 'listDelegationCalendars', function() {
         return $q.when([sharedCalendar]);
       });
-      var listCalendarsStub = sinon.stub(calendarService, 'listCalendars', function() {
+      var listPersonalAndAcceptedDelegationCalendarsStub = sinon.stub(calendarService, 'listPersonalAndAcceptedDelegationCalendars', function() {
         return $q.when([]);
       });
       var controller = initController();
@@ -154,7 +154,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       $rootScope.$digest();
 
       expect(listPublicCalendarsStub).to.have.been.calledWith(user._id);
-      expect(listCalendarsStub).to.have.been.calledWith(calendarHomeId);
+      expect(listPersonalAndAcceptedDelegationCalendarsStub).to.have.been.calledWith(calendarHomeId);
       expect(calendarService.listDelegationCalendars).to.have.been.calledWith(session.user._id, 'noresponse');
       expect(controller.calendarsPerUser).to.shallowDeepEqual([{ user: user, source: 'href', calendar: calendar }, { user: user, source: 'delegatedsource', calendar: sharedCalendar }]);
     });
@@ -169,7 +169,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       var listPublicCalendarsStub = sinon.stub(calendarService, 'listPublicCalendars', function() {
         return $q.when([calendar]);
       });
-      var listCalendarsStub = sinon.stub(calendarService, 'listCalendars', function() {
+      var listPersonalAndAcceptedDelegationCalendarsStub = sinon.stub(calendarService, 'listPersonalAndAcceptedDelegationCalendars', function() {
         return $q.when([subscribed]);
       });
       var controller = initController();
@@ -181,7 +181,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       $rootScope.$digest();
 
       expect(listPublicCalendarsStub).to.have.been.calledWith(user._id);
-      expect(listCalendarsStub).to.have.been.calledWith(calendarHomeId);
+      expect(listPersonalAndAcceptedDelegationCalendarsStub).to.have.been.calledWith(calendarHomeId);
       expect(userAndExternalCalendars).to.have.been.calledWith([subscribed]);
       expect(calendarService.listDelegationCalendars).to.have.been.calledWith(session.user._id, 'noresponse');
       expect(controller.calendarsPerUser).to.have.lengthOf(2);
@@ -211,7 +211,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
         return $q.when([publicCalendar]);
       });
 
-      var listCalendarsStub = sinon.stub(calendarService, 'listCalendars', function() {
+      var listPersonalAndAcceptedDelegationCalendarsStub = sinon.stub(calendarService, 'listPersonalAndAcceptedDelegationCalendars', function() {
         return $q.when([]);
       });
 
@@ -222,7 +222,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       $rootScope.$digest();
 
       expect(listPublicCalendarsStub).to.have.been.calledWith(user._id);
-      expect(listCalendarsStub).to.have.been.calledWith(calendarHomeId);
+      expect(listPersonalAndAcceptedDelegationCalendarsStub).to.have.been.calledWith(calendarHomeId);
       expect(userAndExternalCalendars).to.have.been.calledWith();
       expect(calendarService.listDelegationCalendars).to.have.been.calledWith(session.user._id, 'noresponse');
       expect(controller.calendarsPerUser).to.deep.equal([{ user: user, source: sameCalendarHref, calendar: delegatedCalendar, type: CAL_CALENDAR_SHARED_TYPE.DELEGATION }]);
