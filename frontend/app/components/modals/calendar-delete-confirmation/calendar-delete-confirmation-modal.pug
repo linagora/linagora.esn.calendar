@@ -4,7 +4,8 @@
       .modal-header
         h4.modal-title #{__('Confirmation')}
       .modal-body
-        span #{__('Remove "%s" and all events it contains?', "{{::ctrl.calendarName}}")}
+        span(ng-if="!ctrl.isShared") #{__('Remove "%s" and all events it contains?', "{{::ctrl.calendarName}}")}
+        span(ng-if="ctrl.isShared") #{__('Do you want to unsubscribe to "%s" calendar?', "{{::ctrl.calendarName}}")}
       .modal-footer
         button.btn.btn-default(type="button", ng-click="$hide()") #{__('Cancel')}
         button.btn.btn-danger(type="button", ng-click="ctrl.delete(); $hide()") #{__('Remove')}

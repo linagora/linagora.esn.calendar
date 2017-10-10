@@ -237,7 +237,7 @@ describe('CalendarCollectionShell factory', function() {
       expect(calendarCollectionShell.isSubscription()).to.be.false;
     });
 
-    it('Should return false if the calendar has a source property', function() {
+    it('Should return true if the calendar has a source property', function() {
       var calendarCollectionShell = new CalendarCollectionShell({
         'calendarserver:source': calendarSource,
         _links: {
@@ -248,6 +248,34 @@ describe('CalendarCollectionShell factory', function() {
       });
 
       expect(calendarCollectionShell.isSubscription()).to.be.true;
+    });
+  });
+
+  describe('isDelegate fn', function() {
+    it('Should return false if the calendar does not have delegatedsource property', function() {
+      var calendarCollectionShell = new CalendarCollectionShell({
+        'calendarserver:delegatedsource': undefined,
+        _links: {
+          self: {
+            href: '/calendars/' + calendarHomeId + '/' + id + '.json'
+          }
+        }
+      });
+
+      expect(calendarCollectionShell.isDelegated()).to.be.false;
+    });
+
+    it('Should return true if the calendar has a delegatedsource property', function() {
+      var calendarCollectionShell = new CalendarCollectionShell({
+        'calendarserver:delegatedsource': 'source',
+        _links: {
+          self: {
+            href: '/calendars/' + calendarHomeId + '/' + id + '.json'
+          }
+        }
+      });
+
+      expect(calendarCollectionShell.isDelegated()).to.be.true;
     });
   });
 

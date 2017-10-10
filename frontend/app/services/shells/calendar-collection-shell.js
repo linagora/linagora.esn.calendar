@@ -11,7 +11,6 @@
     calendarUsersCache,
     CalendarRightShell,
     session,
-    userAPI,
     CAL_DEFAULT_EVENT_COLOR,
     CAL_DEFAULT_CALENDAR_ID,
     CAL_CALENDAR_PUBLIC_RIGHT,
@@ -60,14 +59,15 @@
     Object.defineProperty(CalendarCollectionShell.prototype, 'uniqueId', { get: function() { return calPathBuilder.forCalendarId(this.calendarHomeId, this.id); } });
 
     CalendarCollectionShell.prototype.getOwner = getOwner;
+    CalendarCollectionShell.prototype.getUniqueId = getUniqueId;
     CalendarCollectionShell.prototype.isAdmin = isAdmin;
+    CalendarCollectionShell.prototype.isDelegated = isDelegated;
     CalendarCollectionShell.prototype.isOwner = isOwner;
+    CalendarCollectionShell.prototype.isPublic = isPublic;
     CalendarCollectionShell.prototype.isReadable = isReadable;
     CalendarCollectionShell.prototype.isShared = isShared;
-    CalendarCollectionShell.prototype.isPublic = isPublic;
     CalendarCollectionShell.prototype.isSubscription = isSubscription;
     CalendarCollectionShell.prototype.isWritable = isWritable;
-    CalendarCollectionShell.prototype.getUniqueId = getUniqueId;
 
     CalendarCollectionShell.toDavCalendar = toDavCalendar;
     CalendarCollectionShell.from = from;
@@ -185,6 +185,14 @@
      */
     function isSubscription() {
       return !!this.source;
+    }
+
+    /**
+     * Check if this calendar has been shared by another user
+     * @returns {boolean} return true if the calendar has a delegated source property
+     */
+    function isDelegated() {
+      return !!this.delegatedsource;
     }
 
     /**

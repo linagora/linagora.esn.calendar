@@ -11,6 +11,7 @@
         controller: function() {
           this.calendarName = calendar.name;
           this.delete = onConfirm;
+          this.isShared = calendar.isSubscription() || calendar.isDelegated();
         },
         controllerAs: 'ctrl',
         backdrop: 'static',
