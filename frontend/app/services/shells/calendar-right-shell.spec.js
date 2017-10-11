@@ -52,6 +52,34 @@ describe('CalendarRightShell factory', function() {
       calendarRightShell = new CalendarRightShell(acl, []);
       expect(calendarRightShell.getPublicRight()).to.be.equal(publicRight);
     });
+
+    it('should initialize resourceId if the calendar is from a resource', function() {
+      var publicOwnerId = '123456789';
+      var invite = [
+        {
+          href: 'principals/resources/' + publicOwnerId,
+          access: 1,
+          principal: 'principals/resources/' + publicOwnerId
+        }
+      ];
+
+      calendarRightShell = new CalendarRightShell([], invite, publicOwnerId);
+      expect(calendarRightShell._resourceId).to.be.equal(publicOwnerId);
+    });
+
+    it('should initialize ownerId if the calendar is from a user', function() {
+      var publicOwnerId = '123456789';
+      var invite = [
+        {
+          href: 'principals/users/' + publicOwnerId,
+          access: 1,
+          principal: 'principals/users/' + publicOwnerId
+        }
+      ];
+
+      calendarRightShell = new CalendarRightShell([], invite, publicOwnerId);
+      expect(calendarRightShell._ownerId).to.be.equal(publicOwnerId);
+    });
   });
 
   describe('getOwnerId', function() {

@@ -6,7 +6,8 @@ var expect = chai.expect;
 
 describe('CalendarCollectionShell factory', function() {
   var $rootScope, Cache, CalendarCollectionShell, calPathBuilder, calendarRightShell, calendar, calendarSource, CAL_DEFAULT_CALENDAR_ID, CAL_CALENDAR_PUBLIC_RIGHT,
-    CAL_CALENDAR_SHARED_RIGHT, calendarSharedRight, calendarPublicRight, calendarOwner, calendarOwnerId, publicCalendarOwnerId, subscriptionId, calendarHomeId, id, CAL_CALENDAR_PROPERTIES;
+    CAL_CALENDAR_SHARED_RIGHT, calendarSharedRight, calendarPublicRight, calendarOwner, calendarOwnerId, publicCalendarOwnerId, subscriptionId, calendarHomeId, id,
+    CAL_CALENDAR_PROPERTIES, calendarType;
 
   beforeEach(function() {
     calendarHomeId = '56095ccccbd51b7318ce6d0c';
@@ -49,6 +50,9 @@ describe('CalendarCollectionShell factory', function() {
         },
         getPublicRight: function() {
           return calendarPublicRight;
+        },
+        getCalendarType: function() {
+          return calendarType;
         }
       };
     });

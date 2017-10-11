@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .factory('CalendarRightShell', CalendarRightShell);
 
-  function CalendarRightShell(_, $log, session, calendarUtils, CAL_CALENDAR_PUBLIC_RIGHT, CAL_CALENDAR_SHARED_RIGHT) {
+  function CalendarRightShell(_, $log, session, calendarUtils, CAL_CALENDAR_PUBLIC_RIGHT, CAL_CALENDAR_SHARED_RIGHT, CAL_CALENDAR_TYPE) {
 
     //the idea here is that there is a multitude of possible combinaison of webdav right and webdav sharing right
     //I will suppose that right are only settle by OpenPaas and that the only possible combinaison are the following
@@ -14,11 +14,12 @@
     // read: he have no WEBDAV right but one a shared intance with read access
     // free_busy: he own no shared instance and has only the WEBDAV right read-free-busy
     // none: he own no shared instance and no WEBDAV right BUT FOR THE MOMENT I do not know we can overwrite global read-free-busy
-    var principalRegexp = new RegExp('principals/users/([^/]*)$');
+    var principalRegexp = new RegExp('principals/([a-zA-Z]+)/([^/]*)$');
 
     CalendarRightShell.prototype.clone = clone;
     CalendarRightShell.prototype.equals = equals;
     CalendarRightShell.prototype.getOwnerId = getOwnerId;
+    CalendarRightShell.prototype.getResourceId = getResourceId;
     CalendarRightShell.prototype.getPublicRight = getPublicRight;
     CalendarRightShell.prototype.getShareeRight = getShareeRight;
     CalendarRightShell.prototype.updateSharee = updateSharee;
@@ -46,6 +47,8 @@
       this._public = CAL_CALENDAR_PUBLIC_RIGHT.PRIVATE;
       this._sharee = {};
       this._ownerId = ownerId || session.user._id;
+      this._resourceId = '';
+      this._type = '';
 
       function pickHighestPriorityRight(oldPublicRight, newPublicRight) {
         var CalendarRightShellValues = [
@@ -78,14 +81,17 @@
         var userId, match = inviteItem.principal && inviteItem.principal.match(principalRegexp);
 
         if (match) {
-          userId = match[1];
+          userId = match[2];
           var access = '' + inviteItem.access;
 
           if (access !== CAL_CALENDAR_SHARED_RIGHT.SHAREE_OWNER) {
             this._sharee[userId] = access;
           } else {
-            this._ownerId = userId;
+            this._ownerId = match[1] === 'users' ? userId : null;
+            this._resourceId = match[1] === 'resources' ? userId : null;
+            this._type = match[1] === 'resources' ? CAL_CALENDAR_TYPE.RESOURCE : CAL_CALENDAR_TYPE.USER;
           }
+
           this._userEmails[userId] = calendarUtils.removeMailto(inviteItem.href);
         }
       }, this);
@@ -97,6 +103,14 @@
      */
     function getOwnerId() {
       return this._ownerId;
+    }
+
+    /**
+     * Returns calendar resource
+     * @returns {String} resourceId of the calendar resource
+     */
+    function getResourceId() {
+      return this._resourceId;
     }
 
     function getUsersEmails() {
