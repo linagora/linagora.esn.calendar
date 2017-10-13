@@ -40,7 +40,7 @@
       this.calendarHomeId = parsedPath.calendarHomeId;
       this.selected = this.id === CAL_DEFAULT_CALENDAR_ID;
 
-      this.invite = calendar.invite;
+      this.invite = calendar.invite || this.source && this.source.invite;
 
       var self = this;
 
@@ -52,7 +52,8 @@
         self.acl = calendar.acl;
       }
 
-      this.rights = new CalendarRightShell(this.acl, calendar.invite, ownerId);
+      this.rights = new CalendarRightShell(this.acl, this.invite, ownerId);
+      this.type = this.rights._type;
       this.readOnly = !this.isWritable(session.user._id);
     }
 
@@ -68,6 +69,9 @@
     CalendarCollectionShell.prototype.isShared = isShared;
     CalendarCollectionShell.prototype.isSubscription = isSubscription;
     CalendarCollectionShell.prototype.isWritable = isWritable;
+    CalendarCollectionShell.prototype.getUniqueId = getUniqueId;
+    CalendarCollectionShell.prototype.getCalendarType = getCalendarType;
+    CalendarCollectionShell.prototype.getResourceId = getResourceId;
 
     CalendarCollectionShell.toDavCalendar = toDavCalendar;
     CalendarCollectionShell.from = from;
@@ -140,6 +144,18 @@
      */
     function getOwner() {
       return calendarUsersCache.getUser(this.rights.getOwnerId());
+    }
+
+    /**
+     * Get the type of the calendar
+     * @returns {string} return the type of the calendar
+     */
+    function getCalendarType() {
+      return this.type;
+    }
+
+    function getResourceId() {
+      return this.rights.getResourceId();
     }
 
     /**

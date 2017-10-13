@@ -209,6 +209,11 @@
 
     .constant('CAL_DEFAULT_EVENT_COLOR', '#2196f3')
 
+    .constant('CAL_CALENDAR_TYPE', {
+      USER: 'user',
+      RESOURCE: 'resource'
+    })
+
     .constant('CAL_LEFT_PANEL_BOTTOM_MARGIN', 15)
 
     .constant('CAL_EVENT_FORM', {
