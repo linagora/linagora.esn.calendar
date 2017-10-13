@@ -16,6 +16,9 @@
               .col-xs-12
                 esn-form-group(label=__('Description'))
                   textarea.form-control(rows="5", ng-model="ctrl.resource.description", name="resourceDescription", required)
+            .row.admin-field
+              h6.col-xs-12 #{__('Administrators')}
+              users-autocomplete-input(mutable-users="ctrl.resourceAdmin", add-from-autocomplete-only="true")
         .modal-footer
           button.btn.btn-default(type="button", ng-click="$hide()") #{__('Cancel')}
           button.btn.btn-primary(type="button", ng-disabled="form.$invalid", ng-click="ctrl.submit(); $hide()") #{__('Create')}
