@@ -71,8 +71,8 @@ module.exports = dependencies => {
   }
 
   function resolveUserEmail(to) {
-    if (to && to._id && to.preferedEmail) {
-      return Promise.resolve({ user: to, email: to.preferedEmail });
+    if (to && to._id && to.preferredEmail) {
+      return Promise.resolve({ user: to, email: to.preferredEmail });
     }
 
     return findByEmail(to).then(user => ({user, email: to}));

@@ -124,8 +124,8 @@ describe('The Resource handlers module', function() {
         .catch(done);
     });
 
-    it('should user user.preferedEmail when to is a user object', function(done) {
-      payload.to = {_id: 1, preferedEmail: 'me@open-paas.org'};
+    it('should user user.preferredEmail when to is a user object', function(done) {
+      payload.to = {_id: 1, preferredEmail: 'me@open-paas.org'};
 
       this.requireModule().send(payload)
         .then(() => {

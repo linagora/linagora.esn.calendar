@@ -1,0 +1,84 @@
+doctype html
+html.mail
+  head
+    meta(charset='utf-8')
+    meta(name='viewport', content='width=device-width, initial-scale=1')
+    style
+      include ../css/media.less
+
+  body
+    .wrapper
+      br
+      .mail-content
+
+        table
+          tr.table-header
+            td.logo(colspan="2")
+              div
+                a(href=content.baseUrl)
+                  img(src="cid:logo", alt="OpenPaas Logo")
+            td.organizer(colspan="3")
+              if (content.event.organizer)
+                h5
+                  p
+                    | #{content.event.organizer.cn} (
+                    span.small
+                      a(href=`mailto:${content.event.organizer.email}`)
+                        img(src="cid:email", alt=translate('Organizer mail'))
+                      | )
+            td.avatar.indent-right
+              if (content.event.organizer)
+                img(src=content.event.organizer.avatar, alt=translate('Organizer Avatar'), width="45px", height="42px")
+          tr
+            th(colspan="6").title.indent #{content.event.summary}
+          tr
+            td.indent
+              if (content.event.end)
+                img(src="cid:clock", alt=translate('From'))
+              else
+                img(src="cid:clock", alt=translate('At'))
+            td
+              p #{content.event.start.date}
+              if (!content.event.allDay)
+                p #{content.event.start.time}
+                p #{content.event.start.timezone}
+            if (content.event.end)
+              td
+                if (content.event.allDay && content.event.end.date == content.event.start.date)
+                  p #{translate('All day')}
+                else
+                  img.check-transform(src="cid:check", alt=translate('To'))
+              td
+                if (!content.event.allDay || (content.event.allDay && content.event.end.date != content.event.start.date))
+                  p #{content.event.end.date}
+                  if (!content.event.allDay)
+                    p #{content.event.end.time}
+                    p #{content.event.end.timezone}
+            else
+              td(colspan="2")
+            td.recurrence
+            td.indent-right
+              a(href=content.seeInCalendarLink) #{translate('See in calendar')}
+          if (content.event.description)
+            tr
+              td
+                img(src="cid:format-align-justify", alt=translate('Description'))
+              td(colspan="5") #{content.event.description}
+          if (content.event.files)
+            tr
+              td
+                img(src="cid:folder-download", alt=translate('Files'))
+              td(colspan="5")
+                span file.odt
+          tr.table-footer
+            td.attend-question(colspan="3")
+              | #{translate('User requested to book the resource, confirm?')}
+            td(colspan="1")
+              a.green(href=content.links.yes) #{translate('Yes')}
+            td(colspan="1")
+              a.red(href=content.links.no) #{translate('No')}
+
+      footer
+        div.footer
+          if (content.consultLink)
+            a(href=content.consultLink) #{translate('More details...')}

@@ -60,6 +60,9 @@ module.exports = {
     RESOURCE: {
       CREATED: 'resource:created',
       DELETED: 'resource:deleted'
+    },
+    RESOURCE_EVENT: {
+      CREATED: 'resource:calendar:event:created'
     }
   },
   WEBSOCKET: {
