@@ -1,0 +1,8 @@
+.resource-list.resource-list-condensed
+  .resource-sublist
+    .resource-sublist-title.accepted #{__('Resources')}
+    .resource-sublist-body
+      cal-resource-item(resource='resource', can-modify-resource='::ctrl.canModifyResources', ng-click= "ctrl.selectResource(resource)", ng-repeat="resource in ctrl.resources track by $index")
+  .resource-actions
+    .trash(ng-if='ctrl.canModifyResources && ctrl.resourceClickedCount > 0', ng-click='ctrl.deleteSelectedResource()')
+      i.mdi.mdi-delete(ng-if='ctrl.canModifyResources && ctrl.resourceClickedCount > 0', ng-click='ctrl.deleteSelectedResources()')

@@ -1,0 +1,8 @@
+.resource-item.resource-item-edition
+  cal-attendee-avatar(attendee='ctrl.resource')
+  .checkbox(ng-if='ctrl.canModifyResource')
+    label
+      input.force-position-initial(type="checkbox", ng-checked="ctrl.resource.clicked")
+      i.input-helper
+  .name
+    span {{::ctrl.resource.name}}

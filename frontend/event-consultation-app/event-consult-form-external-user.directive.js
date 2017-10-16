@@ -44,7 +44,7 @@
 
       function modifyEventParticipation(partstat) {
         scope.invitedAttendee.partstat = partstat;
-        scope.$broadcast(CAL_EVENTS.EVENT_ATTENDEES_UPDATE, scope.event.attendees);
+        scope.$broadcast(CAL_EVENTS.EVENT_ATTENDEES_UPDATE);
         $http({ method: 'GET', url: urls[partstat] });
       }
     }

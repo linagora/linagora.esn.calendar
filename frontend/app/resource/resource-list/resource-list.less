@@ -1,0 +1,38 @@
+.resource-list {
+  .flex-space-between;
+
+  font-size: 15px;
+  margin: 0;
+
+  .resource-sublist {
+    .flex-column;
+
+    .resource-sublist-title {
+      margin-top: 5px;
+      margin-bottom: 5px;
+    }
+
+    .resource-sublist-body {
+      .flex-column;
+    }
+  }
+
+  .resource-actions {
+    .flex-horizontal-centered;
+
+    min-width: 40px;
+  }
+
+  .trash {
+    .flex-vertical-centered;
+
+    background: none;
+    font-size: 2em;
+    color: @m-red;
+    cursor: pointer;
+
+    :hover, :focus {
+      color: darken(@m-red, 10%);
+    }
+  }
+}

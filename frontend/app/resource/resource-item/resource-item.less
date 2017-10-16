@@ -1,0 +1,52 @@
+.resource-item {
+  .flex-row;
+  .flex-space-between;
+  .flex-vertical-centered;
+  .clickable;
+
+  height: 30px;
+  margin: 2px;
+  position: relative;
+
+  .avatar {
+    .flex-row;
+
+    position: relative;
+
+    img {
+      .esn-avatar;
+    }
+  }
+
+  .name {
+    .ellipsis;
+    .flex-grow(1);
+
+    margin-right: 4px;
+    margin-left: 4px;
+  }
+
+  &.resource-item {
+    .align-items(baseline);
+    .flex-row;
+
+    .checkbox {
+      position: absolute;
+      bottom: 8px;
+      left: 20px;
+      right: 0;
+      margin: 0;
+    }
+
+    .input-helper {
+      &:before{
+        border: none;
+      }
+
+      &:after {
+        border-width: 3px;
+        border-color: black;
+      }
+    }
+  }
+}
