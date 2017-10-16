@@ -56,7 +56,7 @@ module.exports = dependencies => {
             };
             const content = Object.assign({}, context, { baseUrl, event, seeInCalendarLink });
 
-            return emailModule.getMailer().sendHTML(
+            return emailModule.getMailer(userEmail.user).sendHTML(
               message,
               { name: emailTemplateName, path: TEMPLATE_PATH },
               { content, translate: i18nConf.translate }

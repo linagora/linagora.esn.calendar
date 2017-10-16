@@ -27,9 +27,9 @@ describe('The Resource handlers module', function() {
 
     sendHTML = sinon.stub().returns(Promise.resolve());
     emailModule = {
-      getMailer: () => ({
+      getMailer: sinon.spy(() => ({
         sendHTML
-      })
+      }))
     };
 
     translate = sinon.stub().returns('translated');
@@ -124,7 +124,7 @@ describe('The Resource handlers module', function() {
         .catch(done);
     });
 
-    it('should user user.preferredEmail when to is a user object', function(done) {
+    it('should use user.preferredEmail when to is a user object', function(done) {
       payload.to = {_id: 1, preferredEmail: 'me@open-paas.org'};
 
       this.requireModule().send(payload)
@@ -132,6 +132,7 @@ describe('The Resource handlers module', function() {
           expect(userModule.findByEmail).to.not.have.been.called;
           expect(translate).to.have.been.calledWith(payload.subject);
           expect(sendHTML).to.have.been.calledOnce;
+          expect(emailModule.getMailer).to.have.been.calledWith(payload.to);
           done();
         })
         .catch(done);
