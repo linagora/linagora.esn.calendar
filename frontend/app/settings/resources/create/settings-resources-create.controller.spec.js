@@ -58,7 +58,37 @@ describe('The CalSettingsResourcesCreateController controller', function() {
       expect(esnResourceAPIClient.create).to.have.been.calledWith({
         type: CAL_RESOURCE.type,
         name: resource.name,
-        description: resource.description
+        description: resource.description,
+        administrators: []
+      });
+
+      expect(goSpy).to.have.been.calledWith('calendar.settings.resources', sinon.match.any, { reload: true });
+    });
+
+    it('should add the administrators ', function() {
+      esnResourceAPIClient.create = sinon.stub().returns($q.when());
+      var goSpy = sinon.spy($state, 'go');
+
+      ctrl.resourceAdministrators = [
+        {
+          _id: 1
+        }
+      ];
+
+      ctrl.submit();
+      asyncAction.firstCall.args[1]();
+      $rootScope.$digest();
+
+      expect(esnResourceAPIClient.create).to.have.been.calledWith({
+        type: CAL_RESOURCE.type,
+        name: resource.name,
+        description: resource.description,
+        administrators: [
+          {
+            id: 1,
+            objectType: 'user'
+          }
+        ]
       });
 
       expect(goSpy).to.have.been.calledWith('calendar.settings.resources', sinon.match.any, { reload: true });
