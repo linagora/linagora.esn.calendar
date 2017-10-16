@@ -34,6 +34,16 @@ cd $ESN
 npm link linagora.esn.calendar
 ```
 
+**3. Run tests**
+
+In order to run tests, you have to create a symbolic link for the `linagora.esn.resource` module:
+
+```
+ln -s $PWD/node_modules/linagora.esn.resource node_modules/linagora-rse/node_modules/
+```
+
+You can now run tests from your ternminal with `grunt` (check `Gruntfile.js` for further commands).
+
 ## Troubleshoot
 
 **I can only search events from my default calendar "Events", the events from other calendars are not reachable!**
@@ -46,16 +56,16 @@ and search for the `calendarId` in the `events` mapping type. You may have the f
 
     "calendarId": { "type": "string" }
 
-In such case, the `calendarId` is `analyzed string`. For more information, have a look [here](https://www.elastic.co/guide/en/elasticsearch/guide/current/mapping-intro.html#_index_2). Normally, this attribute should be `not_analyzed`. To solve it, you should reindex Elasticsearch. 
+In such case, the `calendarId` is `analyzed string`. For more information, have a look [here](https://www.elastic.co/guide/en/elasticsearch/guide/current/mapping-intro.html#_index_2). Normally, this attribute should be `not_analyzed`. To solve it, you should reindex Elasticsearch.
 To do so you may delete the `events.idx` and start again from scratch as explained in the [Elasticsearch Index](https://ci.linagora.com/linagora/lgs/openpaas/esn#elasticsearch-index) section in the [OpenPaaS documentation](https://ci.linagora.com/linagora/lgs/openpaas/esn). Or you can simply update the `events.idx` as explained in the next section
 
 Once the elasticsearch is reindexed, the `calendarId` in the `events` mapping type should have the following output:
-    
+
     "calendarId": { "type": "string", "index": "not_analyzed" }
 
 **I want to reindex `events.idx` with out restarting from scratch**
 
-this can be easily done using [Scripting](https://www.elastic.co/guide/en/elasticsearch/reference/2.3/modules-scripting.html) provided by elasticsearch. 
+this can be easily done using [Scripting](https://www.elastic.co/guide/en/elasticsearch/reference/2.3/modules-scripting.html) provided by elasticsearch.
 
 * Before starting you should enable scripting in your elasticsearch.yml
 

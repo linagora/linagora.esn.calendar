@@ -72,6 +72,7 @@
     "karma-rawfixtures-preprocessor": "github:linagora/karma-rawfixtures-preprocessor",
     "karma-spec-reporter": "0.0.26",
     "linagora-rse": "github:linagora/openpaas-esn#master",
+    "linagora.esn.resource": "github:linagora/linagora.esn.resource",
     "mocha": "3.1.2",
     "mockery": "1.7.0",
     "mongodb": "2.2.31",
