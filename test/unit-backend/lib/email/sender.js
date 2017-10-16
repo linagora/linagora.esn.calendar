@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const sinon = require('sinon');
 const mockery = require('mockery');
 
-describe('The Resource handlers module', function() {
+describe('The email sender module', function() {
   let emailModule, error, translate, eventDetails, baseUrl, eventInCalendar, helpers, payload, jcalHelper, linksHelper, userModule, sendHTML, i18nModule;
   let from, to, subject, ics, eventPath, emailTemplateName, context;
 

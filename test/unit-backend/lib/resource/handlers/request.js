@@ -2,7 +2,7 @@ const { expect } = require('chai');
 const sinon = require('sinon');
 const mockery = require('mockery');
 
-describe('The Resource handlers module', function() {
+describe('The Resource request handler module', function() {
   let resourceModule, emailModule, utilsModule, payload, resource;
 
   beforeEach(function() {
