@@ -201,5 +201,6 @@
   "Creating resource...": "Création de la ressource...",
   "Resource has been created": "La ressource a été créée",
   "Failed to create resource": "Une erreur s'est produite lors de la création de la ressource",
-  "An user booked the resource {{name}}": "Un utilisateur a réservé la ressource {{name}}"
+  "An user booked the resource {{name}}": "Un utilisateur a réservé la ressource {{name}}",
+  "The reservation of resource {{name}} has been accepted": "La réservation de la ressource {{name}} a été acceptée"
 }

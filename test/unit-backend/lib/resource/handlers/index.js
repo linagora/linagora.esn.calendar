@@ -29,13 +29,23 @@ describe('The Resource handlers module', function() {
 
   describe('The init function', function() {
     beforeEach(function() {
-      mockery.registerMock('./request', () => {});
+      mockery.registerMock('./request', () => ({handle: () => {}}));
+      mockery.registerMock('./accepted', () => ({handle: () => {}}));
     });
 
     it('should subscribe to CONSTANTS.EVENTS.RESOURCE_EVENT.CREATED', function(done) {
       this.requireModule().init()
         .then(() => {
           expect(amqpClient.subscribe).to.have.been.calledWith(CONSTANTS.EVENTS.RESOURCE_EVENT.CREATED, sinon.match.func);
+          done();
+        })
+        .catch(done);
+    });
+
+    it('should subscribe to CONSTANTS.EVENTS.RESOURCE_EVENT.ACCEPTED', function(done) {
+      this.requireModule().init()
+        .then(() => {
+          expect(amqpClient.subscribe).to.have.been.calledWith(CONSTANTS.EVENTS.RESOURCE_EVENT.ACCEPTED, sinon.match.func);
           done();
         })
         .catch(done);
@@ -56,7 +66,11 @@ describe('The Resource handlers module', function() {
     });
   });
 
-  describe('The resourceEventCreated function', function() {
+  describe('The handleEvent function', function() {
+    beforeEach(function() {
+      mockery.registerMock('./accepted', () => ({handle: () => {}}));
+    });
+
     it('should reject when request handler rejects', function(done) {
       const error = new Error('I failed');
       const handle = sinon.stub().returns(Promise.reject(error));
