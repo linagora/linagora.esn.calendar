@@ -2,6 +2,7 @@
 
 module.exports = dependencies => {
   const pubsub = require('./pubsub')(dependencies);
+  const handlers = require('./handlers')(dependencies);
 
   return {
     listen
@@ -9,5 +10,6 @@ module.exports = dependencies => {
 
   function listen() {
     pubsub.listen();
+    handlers.init();
   }
 };

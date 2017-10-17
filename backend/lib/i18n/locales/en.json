@@ -200,5 +200,6 @@
   "Create a new calendar resource": "Create a new calendar resource",
   "Creating resource...": "Creating resource...",
   "Resource has been created": "Resource has been created",
-  "Failed to create resource": "Failed to create resource"
+  "Failed to create resource": "Failed to create resource",
+  "An user booked the resource {{name}}": "An user booked the resource {{name}}"
 }

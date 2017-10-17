@@ -6,7 +6,7 @@ const sinon = require('sinon');
 const _ = require('lodash');
 
 describe('The calendar resource module', function() {
-  let pubsubListen, deps, dependencies;
+  let pubsubListen, deps, dependencies, handlersInit;
 
   beforeEach(function() {
     deps = {
@@ -19,12 +19,15 @@ describe('The calendar resource module', function() {
       }
     };
 
+    handlersInit = sinon.stub();
+
     dependencies = function(name) {
       return deps[name];
     };
 
     pubsubListen = sinon.spy();
     mockery.registerMock('./pubsub', _.constant({listen: pubsubListen}));
+    mockery.registerMock('./handlers', () => ({ init: handlersInit }));
   });
 
   describe('The listen function', function() {
@@ -34,6 +37,7 @@ describe('The calendar resource module', function() {
 
       module.listen();
       expect(pubsubListen).to.have.been.calledOnce;
+      expect(handlersInit).to.have.been.calledOnce;
     });
   });
 });

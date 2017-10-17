@@ -17,6 +17,7 @@ test:
    - npm i
    - npm update
    - bower i
+   - ln -s ${PWD}/node_modules/linagora.esn.resource node_modules/linagora-rse/node_modules/
    - grunt
 
 deploy_dev:
