@@ -1,7 +1,8 @@
 const { expect } = require('chai');
+const sinon = require('sinon');
 
 describe('The resource utils lib', function() {
-  let helpers, module, error, baseUrl;
+  let helpers, module, error, endpoint, davserver, baseUrl;
 
   beforeEach(function() {
     error = null;
@@ -10,7 +11,16 @@ describe('The resource utils lib', function() {
         getBaseUrl: (arg, callback) => callback(error, baseUrl)
       }
     };
+    endpoint = 'http://dav';
+    davserver = {
+      utils: {
+        getDavEndpoint: sinon.spy(function(user, callback) {
+          callback(null, endpoint);
+        })
+      }
+    };
     this.moduleHelpers.addDep('helpers', helpers);
+    this.moduleHelpers.addDep('davserver', davserver);
   });
 
   describe('The generateValidationLinks function', function() {
@@ -46,6 +56,39 @@ describe('The resource utils lib', function() {
           done();
         })
         .catch(done);
+    });
+  });
+
+  describe('The getCalendarUrl function', function() {
+    let resourceId;
+
+    beforeEach(function() {
+      resourceId = 1;
+      module = require(this.moduleHelpers.backendPath + '/lib/resource/utils')(this.moduleHelpers.dependencies);
+    });
+
+    it('should resolve with correct url', function(done) {
+      module.getCalendarUrl(resourceId).then(url => {
+        expect(url).to.equal(`${endpoint}/calendars/${resourceId}.json`);
+        done();
+      });
+    });
+  });
+
+  describe('The getEventUrl function', function() {
+    let resourceId, eventId;
+
+    beforeEach(function() {
+      resourceId = 1;
+      eventId = 2;
+      module = require(this.moduleHelpers.backendPath + '/lib/resource/utils')(this.moduleHelpers.dependencies);
+    });
+
+    it('should resolve with correct url', function(done) {
+      module.getEventUrl(resourceId, eventId).then(url => {
+        expect(url).to.equal(`${endpoint}/calendars/${resourceId}/${eventId}.ics`);
+        done();
+      });
     });
   });
 });

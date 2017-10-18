@@ -13,12 +13,15 @@ const DEFAULT_CALENDAR_NAME = 'Events';
 const DEFAULT_CALENDAR_URI = 'events';
 
 module.exports = dependencies => {
+  const logger = dependencies('logger');
   const davserver = dependencies('davserver').utils;
   const token = dependencies('auth').token;
 
   return {
     getCalendarList,
     getEvent,
+    getEventFromUrl,
+    updateEvent,
     getEventInDefaultCalendar,
     getEventPath,
     storeEvent,
@@ -165,5 +168,31 @@ module.exports = dependencies => {
     vCalendar.addSubcomponent(vEvent);
 
     return vCalendar;
+  }
+
+  function getEventFromUrl({ url, ESNToken }) {
+    return new Promise((resolve, reject) => {
+      request({ method: 'GET', url, headers: { ESNToken }}, (err, response) => {
+        if (err || response.statusCode < 200 || response.statusCode >= 300) {
+          return reject(err || new Error(`Invalid response status from DAV server ${response.statusCode}`));
+        }
+
+        return resolve({ ical: response.body, etag: response.headers.etag });
+      });
+    });
+  }
+
+  function updateEvent({ url, json, etag, ESNToken }) {
+    return new Promise((resolve, reject) => {
+      request({method: 'PUT', headers: { ESNToken, 'If-Match': etag }, body: json, url, json: true}, (err, response) => {
+        if (err || response.statusCode < 200 || response.statusCode >= 300) {
+          err && logger.error('Error while sending the event to the server', err);
+
+          return reject(new Error('Can not update the event'));
+        }
+
+        resolve();
+      });
+    });
   }
 };

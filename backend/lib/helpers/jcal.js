@@ -12,7 +12,9 @@ module.exports = {
   getIcalEvent,
   getOrganizerEmail,
   getVAlarmAsObject,
-  getVeventAttendeeByMail
+  getVeventAttendeeByMail,
+  updateParticipation,
+  icsAsVcalendar
 };
 
 function _getEmail(attendee) {
@@ -239,4 +241,28 @@ function getOrganizerEmail(icalendar) {
   if (organizer) {
     return organizer.getFirstValue().replace(/^MAILTO:/i, '');
   }
+}
+
+/**
+ * Update the participation of the given attendee.
+ * Returns the updated event as JSON or throw an error if the attendee is not in the event attendees.
+ *
+ * @param {*} jsonEvent as JSON
+ * @param {*} attendeeEmail
+ * @param {*} partstat
+ */
+function updateParticipation(vcalendar, attendeeEmail, partstat) {
+  const vevent = vcalendar.getFirstSubcomponent('vevent');
+  const events = [vevent].concat(vcalendar.getAllSubcomponents('vevent').filter(vevent => vevent.getFirstPropertyValue('recurrence-id')));
+  const attendees = events.map(vevent => getVeventAttendeeByMail(vevent, attendeeEmail)).filter(Boolean);
+
+  if (attendees.length) {
+    attendees.forEach(attendee => attendee.setParameter('partstat', partstat));
+  }
+
+  return vcalendar;
+}
+
+function icsAsVcalendar(ics) {
+  return ICAL.Component.fromString(ics);
 }

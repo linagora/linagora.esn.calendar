@@ -336,4 +336,15 @@ describe('jcalHelper', function() {
     });
   });
 
+  describe('The updateParticipation function', function() {
+    it('should update the participation of the given attendee', function() {
+      const attendeeEmail = 'johndoe@open-paas.org';
+      const partstat = 'ABC';
+      const ics = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/meeting.ics').toString('utf8');
+      const vcalendar = icaljs.Component.fromString(ics);
+      const result = this.jcalHelper.updateParticipation(vcalendar, attendeeEmail, partstat);
+
+      expect(result.toString()).to.match(/CN=John Doe;PARTSTAT=ABC/);
+    });
+  });
 });
