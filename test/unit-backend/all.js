@@ -3,33 +3,32 @@
 var mockery = require('mockery');
 var chai = require('chai');
 var path = require('path');
-var helpers = require('linagora-rse').test.helpers;
-var testConfig = require('../config/servers-conf.js');
 var backendPath = path.normalize(__dirname + '/../../backend');
+let rse;
 
 before(function() {
   chai.use(require('chai-shallow-deep-equal'));
   chai.use(require('sinon-chai'));
   chai.use(require('chai-as-promised'));
 
-const basePath = path.resolve(__dirname + '/../../node_modules/linagora-rse');
-const tmpPath = path.resolve(__dirname + '/../..', testConfig.tmp);
+  const basePath = path.resolve(__dirname + '/../../node_modules/linagora-rse');
+
   this.testEnv = {
     basePath: basePath,
     backendPath: backendPath,
-    tmp: tmpPath,
     fixtures: path.resolve(__dirname + '/fixtures'),
-    initCore: function(callback) {
-      var core = require(basePath + '/backend/core');
-      core.init();
-      if (callback) {
-        callback();
-      }
-      return core;
+    initCore(callback = () => {}) {
+      rse.core.init(() => process.nextTick(callback));
     }
   };
+
+  rse = require('linagora-rse');
+
   this.helpers = {};
-  helpers(this.helpers, this.testEnv);
+
+  rse.test.helpers(this.helpers, this.testEnv);
+  rse.test.moduleHelpers(this.helpers, this.testEnv);
+  rse.test.apiHelpers(this.helpers, this.testEnv);
 });
 
 beforeEach(function() {
