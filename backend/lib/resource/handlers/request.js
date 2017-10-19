@@ -1,6 +1,7 @@
 const Q = require('q');
 const emailTemplateName = 'resource.request';
 const subject = 'An user booked the resource {{name}}';
+const EMAIL_REFERER = 'email';
 
 // A resource has been booked from a user ie has been added as attendee in an event
 // Send email to all the administrators
@@ -23,7 +24,7 @@ module.exports = dependencies => {
       }
 
       return Q.all([
-        utils.generateValidationLinks(resourceId, eventId),
+        utils.generateValidationLinks(resourceId, eventId, EMAIL_REFERER),
         resourceModule.lib.administrator.resolve(resource)
       ])
       .spread((links, administrators) => emailModule.sender.send({

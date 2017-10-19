@@ -45,13 +45,15 @@ describe('The resource utils lib', function() {
     });
 
     it('should generate valid links', function(done) {
+      const referer = 'email';
+
       baseUrl = url;
 
-      module.generateValidationLinks(resourceId, eventId)
+      module.generateValidationLinks(resourceId, eventId, referer)
         .then(links => {
           expect(links).to.deep.equals({
-            yes: `${url}/calendar/api/resources/${resourceId}/${eventId}/participation?status=ACCEPTED`,
-            no: `${url}/calendar/api/resources/${resourceId}/${eventId}/participation?status=DECLINED`
+            yes: `${url}/calendar/api/resources/${resourceId}/${eventId}/participation?status=ACCEPTED&referrer=${referer}`,
+            no: `${url}/calendar/api/resources/${resourceId}/${eventId}/participation?status=DECLINED&referrer=${referer}`
           });
           done();
         })

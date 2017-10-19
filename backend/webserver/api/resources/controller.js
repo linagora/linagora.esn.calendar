@@ -1,5 +1,6 @@
 const jcalHelper = require('../../../lib/helpers/jcal');
 const resourceHelper = require('../../../lib/resource/helpers');
+const EMAIL_REFERRER = 'email';
 
 module.exports = dependencies => {
   const logger = dependencies('logger');
@@ -20,11 +21,19 @@ module.exports = dependencies => {
       .then(event => ({ vcalendar: jcalHelper.icsAsVcalendar(event.ical), etag: event.etag }))
       .then(event => ({ vcalendar: jcalHelper.updateParticipation(event.vcalendar, attendeeEmail, status), etag: event.etag}))
       .then(updatedEvent => caldavClient.updateEvent({ url, etag: updatedEvent.etag, ESNToken, json: updatedEvent.vcalendar.toJSON() }))
-      .then(() => res.status(200).send()))
+      .then(() => {
+        if (req.query.referrer === EMAIL_REFERRER) {
+          return res.redirect('/#/calendar');
+        }
+        res.status(200).send();
+      }))
       .catch(err => {
         const details = 'Error while updating event participation';
 
         logger.error(details, err);
+        if (req.query.referrer === EMAIL_REFERRER) {
+          return res.redirect('/#/calendar');
+        }
         res.status(500).json({error: { code: 500, message: 'Server Error', details}});
       });
     }

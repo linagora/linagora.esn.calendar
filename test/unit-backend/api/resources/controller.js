@@ -151,5 +151,31 @@ describe('The resource controller', function() {
         }
       });
     });
+
+    it('should redirect when ?referer=email', function(done) {
+      req.query.referrer = 'email';
+
+      this.loadModule().changeParticipation(req, {
+        redirect: path => {
+          expect(path).to.equals('/#/calendar');
+          done();
+        }
+      });
+    });
+
+    it('should redirect when error and ?referer=email', function(done) {
+      const errorMsg = 'Can not get event url';
+
+      req.query.referrer = 'email';
+      getEventUrl.returns(Promise.reject(new Error(errorMsg)));
+
+      this.loadModule().changeParticipation(req, {
+        redirect: path => {
+          expect(loggerSpy.firstCall.args[1].message).to.equal(errorMsg);
+          expect(path).to.equals('/#/calendar');
+          done();
+        }
+      });
+    });
   });
 });

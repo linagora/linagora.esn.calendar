@@ -3,6 +3,5 @@ module.exports = {
 };
 
 function getResourceEmail(resource) {
-  // FIXME
   return `${resource._id}@${resource.domain.name}`;
 }
