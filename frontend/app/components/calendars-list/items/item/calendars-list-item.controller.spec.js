@@ -34,9 +34,13 @@ describe('The CalendarsListItemController controller', function() {
   describe('The $onInit function', function() {
     it('should set the ctrl.ownerDisplayName property when ctrl.showDetails is truely', function() {
       var displayName = 'The user display name';
+      var isResource = false;
       var owner = {_id: 1};
       var controller = initController();
 
+      calendar.isResource = sinon.spy(function() {
+        return isResource;
+      });
       calendar.getOwner = sinon.spy(function() {
         return $q.when(owner);
       });
