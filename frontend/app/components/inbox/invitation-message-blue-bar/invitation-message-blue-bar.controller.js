@@ -1,19 +1,16 @@
-(function() {
+(function(angular) {
   'use strict';
 
   angular.module('esn.calendar')
     .controller('calInboxInvitationMessageBlueBarController', calInboxInvitationMessageBlueBarController);
 
-  function calInboxInvitationMessageBlueBarController($q, $log, calEventService, calendarHomeService, calEventUtils,
-                                                      notificationFactory, INVITATION_MESSAGE_HEADERS) {
-    var self = this,
-      defaultParticipationButtonClass = 'btn-default';
+  function calInboxInvitationMessageBlueBarController($q, $log, calEventService, calendarHomeService, calEventUtils, notificationFactory, INVITATION_MESSAGE_HEADERS) {
+    var self = this;
+    var defaultParticipationButtonClass = 'btn-default';
 
     self.$onInit = $onInit;
     self.changeParticipation = changeParticipation;
     self.getParticipationButtonClass = getParticipationButtonClass;
-
-    /////
 
     function $onInit() {
       self.meeting = {
@@ -124,4 +121,4 @@
       this.meeting = self.meeting;
     }
   }
-})();
+})(angular);
