@@ -31,6 +31,7 @@ describe('The Resource handlers module', function() {
     beforeEach(function() {
       mockery.registerMock('./request', () => ({handle: () => {}}));
       mockery.registerMock('./accepted', () => ({handle: () => {}}));
+      mockery.registerMock('./declined', () => ({handle: () => {}}));
     });
 
     it('should subscribe to CONSTANTS.EVENTS.RESOURCE_EVENT.CREATED', function(done) {
@@ -46,6 +47,15 @@ describe('The Resource handlers module', function() {
       this.requireModule().init()
         .then(() => {
           expect(amqpClient.subscribe).to.have.been.calledWith(CONSTANTS.EVENTS.RESOURCE_EVENT.ACCEPTED, sinon.match.func);
+          done();
+        })
+        .catch(done);
+    });
+
+    it('should subscribe to CONSTANTS.EVENTS.RESOURCE_EVENT.DECLINED', function(done) {
+      this.requireModule().init()
+        .then(() => {
+          expect(amqpClient.subscribe).to.have.been.calledWith(CONSTANTS.EVENTS.RESOURCE_EVENT.DECLINED, sinon.match.func);
           done();
         })
         .catch(done);
@@ -69,6 +79,7 @@ describe('The Resource handlers module', function() {
   describe('The handleEvent function', function() {
     beforeEach(function() {
       mockery.registerMock('./accepted', () => ({handle: () => {}}));
+      mockery.registerMock('./declined', () => ({handle: () => {}}));
     });
 
     it('should reject when request handler rejects', function(done) {

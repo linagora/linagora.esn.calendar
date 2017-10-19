@@ -5,6 +5,7 @@ module.exports = dependencies => {
   const amqpClientProvider = dependencies('amqpClientProvider');
   const requestHandler = require('./request')(dependencies);
   const acceptedHandler = require('./accepted')(dependencies);
+  const declinedHandler = require('./declined')(dependencies);
   let amqpClient;
 
   return {
@@ -19,6 +20,7 @@ module.exports = dependencies => {
         amqpClient = client;
         amqpClient.subscribe(CONSTANTS.EVENTS.RESOURCE_EVENT.CREATED, handleEvent(requestHandler.handle));
         amqpClient.subscribe(CONSTANTS.EVENTS.RESOURCE_EVENT.ACCEPTED, handleEvent(acceptedHandler.handle));
+        amqpClient.subscribe(CONSTANTS.EVENTS.RESOURCE_EVENT.DECLINED, handleEvent(declinedHandler.handle));
       })
       .catch(err => {
         logger.error('The AMQP client can not be created, resource calendars may not work properly', err);

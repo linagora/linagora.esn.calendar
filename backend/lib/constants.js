@@ -63,7 +63,8 @@ module.exports = {
     },
     RESOURCE_EVENT: {
       CREATED: 'resource:calendar:event:created',
-      ACCEPTED: 'resource:calendar:event:accepted'
+      ACCEPTED: 'resource:calendar:event:accepted',
+      DECLINED: 'resource:calendar:event:declined'
     }
   },
   WEBSOCKET: {
