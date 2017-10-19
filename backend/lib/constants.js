@@ -62,7 +62,8 @@ module.exports = {
       DELETED: 'resource:deleted'
     },
     RESOURCE_EVENT: {
-      CREATED: 'resource:calendar:event:created'
+      CREATED: 'resource:calendar:event:created',
+      ACCEPTED: 'resource:calendar:event:accepted'
     }
   },
   WEBSOCKET: {

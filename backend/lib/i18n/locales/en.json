@@ -201,5 +201,6 @@
   "Creating resource...": "Creating resource...",
   "Resource has been created": "Resource has been created",
   "Failed to create resource": "Failed to create resource",
-  "An user booked the resource {{name}}": "An user booked the resource {{name}}"
+  "An user booked the resource {{name}}": "An user booked the resource {{name}}",
+  "The reservation of resource {{name}} has been accepted": "The reservation of resource {{name}} has been accepted"
 }

@@ -4,6 +4,7 @@ module.exports = dependencies => {
   const logger = dependencies('logger');
   const amqpClientProvider = dependencies('amqpClientProvider');
   const requestHandler = require('./request')(dependencies);
+  const acceptedHandler = require('./accepted')(dependencies);
   let amqpClient;
 
   return {
@@ -16,25 +17,26 @@ module.exports = dependencies => {
     return amqpClientProvider.getClient()
       .then(client => {
         amqpClient = client;
-        amqpClient.subscribe(CONSTANTS.EVENTS.RESOURCE_EVENT.CREATED, resourceEventCreated);
+        amqpClient.subscribe(CONSTANTS.EVENTS.RESOURCE_EVENT.CREATED, handleEvent(requestHandler.handle));
+        amqpClient.subscribe(CONSTANTS.EVENTS.RESOURCE_EVENT.ACCEPTED, handleEvent(acceptedHandler.handle));
       })
       .catch(err => {
         logger.error('The AMQP client can not be created, resource calendars may not work properly', err);
         throw err;
       });
 
-    function resourceEventCreated(jsonMessage, originalMessage) {
-      return requestHandler.handle(jsonMessage)
-        .then(response => {
-          logger.debug(`CAlResourceRequestHandler[${jsonMessage.uid}] Successfully processed`);
-          amqpClient.ack(originalMessage);
+      function handleEvent(handler) {
+        return (jsonMessage, originalMessage) => handler(jsonMessage)
+          .then(response => {
+            logger.debug(`CAlResourceRequestHandler[${jsonMessage.uid}] Successfully processed`);
+            amqpClient.ack(originalMessage);
 
-          return response;
-        })
-        .catch(err => {
-          logger.error(`CAlResourceRequestHandler[${jsonMessage.uid}] Error`, err);
-          throw err;
-        });
+            return response;
+          })
+          .catch(err => {
+            logger.error(`CAlResourceRequestHandler[${jsonMessage.uid}] Error`, err);
+            throw err;
+          });
       }
   }
 };
