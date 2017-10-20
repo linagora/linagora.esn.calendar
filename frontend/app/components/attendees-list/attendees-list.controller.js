@@ -15,9 +15,9 @@
     self.$onInit = $onInit;
 
     function $onInit() {
-      updateAttendeeStats(self.attendees);
-      $scope.$on(CAL_EVENTS.EVENT_ATTENDEES_UPDATE, function(event, data) {
-        updateAttendeeStats(data);
+      updateAttendeeStats();
+      $scope.$on(CAL_EVENTS.EVENT_ATTENDEES_UPDATE, function() {
+        updateAttendeeStats();
       });
     }
 
@@ -28,6 +28,8 @@
     function deleteSelectedAttendees() {
       self.attendees = self.attendees.filter(function(attendee) { return !attendee.clicked; });
       self.attendeeClickedCount = 0;
+
+      updateAttendeeStats();
     }
 
     function selectAttendee(attendee) {
@@ -37,7 +39,7 @@
       }
     }
 
-    function updateAttendeeStats(attendees) {
+    function updateAttendeeStats() {
       var partstatMap = self.attendeesPerPartstat = {
         'NEEDS-ACTION': 0,
         ACCEPTED: 0,
@@ -46,11 +48,11 @@
         OTHER: 0
       };
 
-      if (!attendees || !attendees.length) {
+      if (!self.attendees || !self.attendees.length) {
         return;
       }
 
-      attendees.forEach(function(attendee) {
+      self.attendees.forEach(function(attendee) {
         partstatMap[attendee.partstat in partstatMap ? attendee.partstat : 'OTHER']++;
       });
     }

@@ -1,0 +1,38 @@
+.cal-resource-list {
+  .flex-space-between;
+
+  font-size: 15px;
+  margin: 0;
+
+  .cal-resource-sublist {
+    .flex-column;
+
+    .cal-resource-sublist-title {
+      margin-top: 5px;
+      margin-bottom: 5px;
+    }
+
+    .cal-resource-sublist-body {
+      .flex-column;
+    }
+  }
+
+  .cal-resource-actions {
+    .flex-horizontal-centered;
+
+    min-width: 40px;
+  }
+
+  .trash {
+    .flex-vertical-centered;
+
+    background: none;
+    font-size: 2em;
+    color: @m-red;
+    cursor: pointer;
+
+    :hover, :focus {
+      color: darken(@m-red, 10%);
+    }
+  }
+}

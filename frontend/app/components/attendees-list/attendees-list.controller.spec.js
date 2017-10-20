@@ -47,19 +47,20 @@ describe('The CalAttendeesListController controller', function() {
   });
 
   it('should fire updateAttendeeStats if CAL_EVENTS.EVENT_ATTENDEES_UPDATE is emited', function() {
-    var attendees = [
+    var ctrl = this.initController();
+
+    ctrl.attendees = [
       { email: 'other1@example.com', partstat: 'ACCEPTED', clicked: false },
       { email: 'other2@example.com', partstat: 'ACCEPTED', clicked: true },
       { email: 'other3@example.com', partstat: 'DECLINED', clicked: false },
       { email: 'other4@example.com', partstat: 'DECLINED', clicked: true },
       { email: 'other5@example.com', partstat: 'YOLO' }
     ];
-    var ctrl = this.initController();
 
     ctrl.$onInit();
 
     this.$scope.$digest();
-    this.$scope.$broadcast(this.CAL_EVENTS.EVENT_ATTENDEES_UPDATE, attendees);
+    this.$scope.$broadcast(this.CAL_EVENTS.EVENT_ATTENDEES_UPDATE);
 
     expect(ctrl.attendeesPerPartstat).to.deep.equal({
       'NEEDS-ACTION': 0,

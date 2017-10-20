@@ -1,25 +1,25 @@
-.attendees-list {
+.cal-attendees-list {
   .flex;
 
   font-size: 15px;
   margin: 0;
 
-  .attendees-sublists {
+  .cal-attendees-sublists {
     .flex-column;
 
-    .attendees-sublist {
+    .cal-attendees-sublist {
       .attendees-sublist-title {
         margin-top: 5px;
         margin-bottom: 5px;
       }
 
-      .attendees-sublist-body {
+      .cal-attendees-sublist-body {
         .flex-wrap;
       }
     }
   }
 
-  .attendees-actions {
+  .cal-attendees-actions {
     .flex-horizontal-centered;
 
     min-width: 40px;
@@ -50,13 +50,13 @@
     color: @m-red;
   }
 
-  &.attendees-list-expanded {
-    .attendees-sublists .attendees-sublist .attendees-sublist-body {
+  &.cal-attendees-list-expanded {
+    .cal-attendees-sublists .cal-attendees-sublist .cal-attendees-sublist-body {
       .flex-column;
     }
   }
 
-  &.attendees-list-condensed {
+  &.cal-attendees-list-condensed {
     .flex-space-between;
   }
 }

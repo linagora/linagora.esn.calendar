@@ -166,7 +166,7 @@ describe('The event-form module controllers', function() {
     });
   });
 
-  beforeEach(angular.mock.inject(function($controller, _$rootScope_, moment, calEventUtils, calUIAuthorizationService, session, CalendarShell, CAL_EVENTS, CAL_ALARM_TRIGGER, CAL_EVENT_FORM) {
+  beforeEach(angular.mock.inject(function($controller, _$rootScope_, moment, calEventUtils, calUIAuthorizationService, session, CalendarShell, CAL_EVENTS, CAL_ALARM_TRIGGER, CAL_EVENT_FORM, CAL_ICAL) {
     this.rootScope = $rootScope = _$rootScope_;
     this.scope = $rootScope.$new();
     this.controller = $controller;
@@ -178,6 +178,7 @@ describe('The event-form module controllers', function() {
     this.CAL_EVENTS = CAL_EVENTS;
     this.CAL_ALARM_TRIGGER = CAL_ALARM_TRIGGER;
     this.CAL_EVENT_FORM = CAL_EVENT_FORM;
+    this.CAL_ICAL = CAL_ICAL;
   }));
 
   beforeEach(function() {
@@ -462,6 +463,26 @@ describe('The event-form module controllers', function() {
 
         expect(this.scope.editedEvent.class).to.equal(this.CAL_EVENT_FORM.class.default);
       });
+
+      it('should initialize the attendees and resources lists from event.attendees', function() {
+        this.scope.event = this.CalendarShell.fromIncompleteShell({
+          attendees: [{
+            displayName: 'attendee1',
+            email: 'attendee1@openpaas.org',
+            cutype: this.CAL_ICAL.cutype.individual
+          }, {
+            displayName: 'resource1',
+            email: 'resource1@openpaas.org',
+            cutype: this.CAL_ICAL.cutype.resource
+          }]
+        });
+
+        this.initController();
+
+        expect(this.scope.attendees).to.shallowDeepEqual([{displayName: 'attendee1'}]);
+        expect(this.scope.resources).to.shallowDeepEqual([{displayName: 'resource1'}]);
+      });
+
     });
 
     describe('modifyEvent function', function() {
@@ -577,19 +598,20 @@ describe('The event-form module controllers', function() {
 
           this.initController();
 
+          this.scope.attendees = [{
+            name: 'attendee1',
+            email: 'attendee1@openpaas.org',
+            partstat: 'ACCEPTED'
+          }, {
+            name: 'attendee2',
+            email: 'attendee2@openpaas.org',
+            partstat: 'ACCEPTED'
+          }];
           this.scope.editedEvent = this.CalendarShell.fromIncompleteShell({
             start: this.moment(),
             end: this.moment(),
             title: 'title',
-            attendees: [{
-              name: 'attendee1',
-              email: 'attendee1@openpaas.org',
-              partstat: 'ACCEPTED'
-            }, {
-              name: 'attendee2',
-              email: 'attendee2@openpaas.org',
-              partstat: 'ACCEPTED'
-            }]
+            attendees: this.scope.attendees
           });
 
           this.calEventServiceMock.modifyEvent = sinon.spy(function() {
@@ -646,13 +668,14 @@ describe('The event-form module controllers', function() {
 
           this.initController();
 
+          this.scope.attendees = [{
+            displayName: 'attendee1',
+            email: 'user1@test.com',
+            partstart: 'ACCEPTED'
+          }];
           this.scope.editedEvent = this.CalendarShell.fromIncompleteShell({
             title: 'title',
-            attendees: [{
-              displayName: 'attendee1',
-              email: 'user1@test.com',
-              partstart: 'ACCEPTED'
-            }]
+            attendees: this.scope.attendees
           });
           this.scope.newAttendees = [{
             displayName: 'attendee2',
@@ -920,14 +943,15 @@ describe('The event-form module controllers', function() {
         it('should save master event with edited fields of selected instance when all occurences have been chosen', function(done) {
           this.scope.modifyEvent();
 
+          this.scope.attendees = [{
+            email: 'user1@test.com'
+          }, {
+            email: 'user2@test.com'
+          }];
           this.scope.editedEvent = {
             title: 'Edited',
             location: 'Marseille',
-            attendees: [{
-              email: 'user1@test.com'
-            }, {
-              email: 'user2@test.com'
-            }],
+            attendees: this.scope.attendees,
             start: this.moment('2013-02-08 10:30'),
             end: this.moment('2013-02-08 11:30'),
             class: 'PUBLIC',
@@ -982,14 +1006,15 @@ describe('The event-form module controllers', function() {
         it('should save selected instance event when a single occurence has been chosen', function(done) {
           this.scope.modifyEvent();
 
+          this.scope.attendees = [{
+            email: 'user1@test.com'
+          }, {
+            email: 'user2@test.com'
+          }];
           this.scope.editedEvent = {
             title: 'Edited',
             location: 'Marseille',
-            attendees: [{
-              email: 'user1@test.com'
-            }, {
-              email: 'user2@test.com'
-            }],
+            attendees: this.scope.attendees,
             start: this.moment('2013-02-08 10:30'),
             end: this.moment('2013-02-08 11:30'),
             class: 'PUBLIC',
@@ -1340,8 +1365,8 @@ describe('The event-form module controllers', function() {
         });
 
         it('should modify attendees list and broadcast on CAL_EVENTS.EVENT_ATTENDEES_UPDATE', function(done) {
-          this.scope.$on(this.CAL_EVENTS.EVENT_ATTENDEES_UPDATE, function(event, attendees) { // eslint-disable-line
-            expect(attendees).to.shallowDeepEqual([{
+          this.scope.$on(this.CAL_EVENTS.EVENT_ATTENDEES_UPDATE, function() {
+            expect(this.scope.editedEvent.attendees).to.shallowDeepEqual([{
               email: 'owner@test.com',
               partstat: 'ACCEPTED'
             }]);
@@ -1455,17 +1480,20 @@ describe('The event-form module controllers', function() {
           organizer: {
             name: 'organiser',
             email: 'organiser@openpaas.org',
-            partstart: 'ACCEPTED'
+            partstart: 'ACCEPTED',
+            cutype: this.CAL_ICAL.cutype.individual
           },
           attendees: [{
             name: 'organiser',
             email: 'organiser@openpaas.org',
-            partstart: 'ACCEPTED'
+            partstart: 'ACCEPTED',
+            cutype: this.CAL_ICAL.cutype.individual
           },
             {
               name: 'attendee1',
               email: 'attendee1@openpaas.org',
-              partstart: 'ACCEPTED'
+              partstart: 'ACCEPTED',
+              cutype: this.CAL_ICAL.cutype.individual
             }],
           etag: '0000'
         });
@@ -1475,9 +1503,20 @@ describe('The event-form module controllers', function() {
         expect(this.scope.displayCalMailToAttendeesButton()).to.be.true;
       });
 
-      it('should return false if the event has no attendees', function() {
+      it('should return false if the event has no individual attendees', function() {
         this.scope.event = this.CalendarShell.fromIncompleteShell({
-          gracePeriodTaskId: '0000'
+          gracePeriodTaskId: '0000',
+          organizer: {
+            name: 'organiser',
+            email: 'organiser@openpaas.org',
+            partstart: 'ACCEPTED',
+            cutype: this.CAL_ICAL.cutype.individual
+          },
+          attendees: [{
+            name: 'resource',
+            email: 'resource',
+            cutype: this.CAL_ICAL.cutype.resource
+          }]
         });
 
         this.initController();
@@ -1490,17 +1529,20 @@ describe('The event-form module controllers', function() {
           organizer: {
             name: 'organiser',
             email: 'organiser@openpaas.org',
-            partstart: 'ACCEPTED'
+            partstart: 'ACCEPTED',
+            cutype: this.CAL_ICAL.cutype.individual
           },
           attendees: [{
             name: 'organiser',
             email: 'organiser@openpaas.org',
-            partstart: 'ACCEPTED'
+            partstart: 'ACCEPTED',
+            cutype: this.CAL_ICAL.cutype.individual
           },
             {
               name: 'attendee1',
               email: 'attendee1@openpaas.org',
-              partstart: 'ACCEPTED'
+              partstart: 'ACCEPTED',
+              cutype: this.CAL_ICAL.cutype.individual
             }],
           gracePeriodTaskId: '0000',
           etag: '0000'
@@ -1516,17 +1558,20 @@ describe('The event-form module controllers', function() {
           organizer: {
             name: 'organiser',
             email: 'organiser@openpaas.org',
-            partstart: 'ACCEPTED'
+            partstart: 'ACCEPTED',
+            cutype: this.CAL_ICAL.cutype.individual
           },
           attendees: [{
             name: 'organiser',
             email: 'organiser@openpaas.org',
-            partstart: 'ACCEPTED'
+            partstart: 'ACCEPTED',
+            cutype: this.CAL_ICAL.cutype.individual
           },
             {
               name: 'attendee1',
               email: 'attendee1@openpaas.org',
-              partstart: 'ACCEPTED'
+              partstart: 'ACCEPTED',
+              cutype: this.CAL_ICAL.cutype.individual
             }],
           gracePeriodTaskId: '0000'
         });
@@ -1541,12 +1586,14 @@ describe('The event-form module controllers', function() {
           organizer: {
             name: 'organiser',
             email: 'organiser@openpaas.org',
-            partstart: 'ACCEPTED'
+            partstart: 'ACCEPTED',
+            cutype: this.CAL_ICAL.cutype.individual
           },
           attendees: [{
             name: 'organiser',
             email: 'organiser@openpaas.org',
-            partstart: 'ACCEPTED'
+            partstart: 'ACCEPTED',
+            cutype: this.CAL_ICAL.cutype.individual
           }],
           gracePeriodTaskId: '0000'
         });

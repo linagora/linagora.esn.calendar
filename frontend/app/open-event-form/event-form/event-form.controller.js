@@ -22,7 +22,8 @@
     esnI18nService,
     calMoment,
     CAL_EVENTS,
-    CAL_EVENT_FORM) {
+    CAL_EVENT_FORM,
+    CAL_ICAL) {
 
       $scope.restActive = false;
       $scope.CAL_EVENT_FORM = CAL_EVENT_FORM;
@@ -47,7 +48,7 @@
       function displayCalMailToAttendeesButton() {
         function organizerIsNotTheOnlyAttendeeInEvent() {
           return _.some($scope.editedEvent.attendees, function(attendee) {
-            return $scope.editedEvent.organizer && $scope.editedEvent.organizer.email !== attendee.email;
+            return attendee.cutype === CAL_ICAL.cutype.individual && $scope.editedEvent.organizer && $scope.editedEvent.organizer.email !== attendee.email;
           });
         }
 
@@ -132,12 +133,24 @@
             });
           })
           .then(function() {
+            var attendees = [];
+            var resources = [];
+
             $scope.userAsAttendee = null;
             $scope.editedEvent.attendees.forEach(function(attendee) {
+              if (attendee.cutype === CAL_ICAL.cutype.individual) {
+                attendees.push(attendee);
+              } else {
+                resources.push(attendee);
+              }
+
               if (attendee.email in session.user.emailMap) {
                 $scope.userAsAttendee = attendee;
               }
             });
+
+            $scope.resources = resources;
+            $scope.attendees = attendees;
 
             if (!$scope.editedEvent.class) {
               $scope.editedEvent.class = CAL_EVENT_FORM.class.default;
@@ -188,7 +201,7 @@
         }
 
         if ($scope.editedEvent.attendees && $scope.newAttendees) {
-          $scope.editedEvent.attendees = $scope.editedEvent.attendees.concat($scope.newAttendees);
+          $scope.editedEvent.attendees = $scope.attendees.concat($scope.newAttendees, $scope.resources);
         } else {
           $scope.editedEvent.attendees = $scope.newAttendees;
         }
@@ -219,6 +232,7 @@
 
       function _changeParticipationAsAttendee() {
         var status = $scope.userAsAttendee.partstat;
+
         $scope.restActive = true;
 
         calEventService.changeParticipation($scope.editedEvent.path, $scope.event, session.user.emails, status).then(function(response) {
@@ -249,7 +263,7 @@
         }
 
         if ($scope.editedEvent.attendees && $scope.newAttendees) {
-          $scope.editedEvent.attendees = $scope.editedEvent.attendees.concat($scope.newAttendees);
+          $scope.editedEvent.attendees = $scope.attendees.concat($scope.newAttendees, $scope.resources);
         }
 
         if (!calEventUtils.hasAnyChange($scope.editedEvent, $scope.event)) {
@@ -384,11 +398,11 @@
         if ($scope.isOrganizer) {
           if (status !== $scope.editedEvent.getOrganizerPartStat()) {
             $scope.editedEvent.setOrganizerPartStat(status);
-            $scope.$broadcast(CAL_EVENTS.EVENT_ATTENDEES_UPDATE, $scope.editedEvent.attendees);
+            $scope.$broadcast(CAL_EVENTS.EVENT_ATTENDEES_UPDATE);
           }
         } else {
           $scope.editedEvent.changeParticipation(status, [$scope.userAsAttendee.email]);
-          $scope.$broadcast(CAL_EVENTS.EVENT_ATTENDEES_UPDATE, $scope.editedEvent.attendees);
+          $scope.$broadcast(CAL_EVENTS.EVENT_ATTENDEES_UPDATE);
 
           _changeParticipationAsAttendee();
         }
