@@ -23,6 +23,12 @@ module.exports = dependencies => {
         throw new Error(`Resource ${resourceId} has not been found`);
       }
 
+      const headers = {
+        'X-OPENPAAS-CAL-ACTION': 'RESOURCE_REQUEST',
+        'X-OPENPAAS-CAL-EVENT-PATH': eventPath,
+        'X-OPENPAAS-CAL-RESOURCE-ID': resourceId
+      };
+
       return Q.all([
         utils.generateValidationLinks(resourceId, eventId, EMAIL_REFERER),
         resourceModule.lib.administrator.resolve(resource)
@@ -34,7 +40,8 @@ module.exports = dependencies => {
         ics,
         eventPath,
         emailTemplateName,
-        context: { links, resource }
+        context: { links, resource },
+        headers
       }))
       .catch(err => {
         logger.error('Error while sending email to resource administrators', err);
