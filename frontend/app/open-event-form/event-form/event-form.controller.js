@@ -21,12 +21,14 @@
     calPathBuilder,
     esnI18nService,
     calMoment,
+    CAL_ATTENDEE_OBJECT_TYPE,
     CAL_EVENTS,
     CAL_EVENT_FORM,
     CAL_ICAL) {
 
       $scope.restActive = false;
       $scope.CAL_EVENT_FORM = CAL_EVENT_FORM;
+      $scope.CAL_ATTENDEE_OBJECT_TYPE = CAL_ATTENDEE_OBJECT_TYPE;
       $scope.initFormData = initFormData;
       $scope.changeParticipation = changeParticipation;
       $scope.modifyEvent = modifyEvent;
@@ -119,6 +121,7 @@
         }
 
         $scope.newAttendees = calEventUtils.getNewAttendees();
+        $scope.newResources = [];
         $scope.isOrganizer = calEventUtils.isOrganizer($scope.editedEvent);
 
         calendarService.listPersonalAndAcceptedDelegationCalendars($scope.calendarHomeId)
@@ -200,11 +203,7 @@
           $scope.editedEvent.class = CAL_EVENT_FORM.class.default;
         }
 
-        if ($scope.editedEvent.attendees && $scope.newAttendees) {
-          $scope.editedEvent.attendees = $scope.attendees.concat($scope.newAttendees, $scope.resources);
-        } else {
-          $scope.editedEvent.attendees = $scope.newAttendees;
-        }
+        $scope.editedEvent.attendees = $scope.attendees.concat($scope.newAttendees, $scope.resources, $scope.newResources);
 
         if ($scope.calendar) {
           $scope.restActive = true;
@@ -262,9 +261,7 @@
           return;
         }
 
-        if ($scope.editedEvent.attendees && $scope.newAttendees) {
-          $scope.editedEvent.attendees = $scope.attendees.concat($scope.newAttendees, $scope.resources);
-        }
+        $scope.editedEvent.attendees = $scope.attendees.concat($scope.newAttendees, $scope.resources, $scope.newResources);
 
         if (!calEventUtils.hasAnyChange($scope.editedEvent, $scope.event)) {
           _hideModal();

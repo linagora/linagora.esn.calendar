@@ -31,7 +31,8 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
                   i.mdi.mdi-map-marker
                 .fg-line
                   input.input.location.form-control(type="text", ng-model='editedEvent.location', ng-model-options="{getterSetter: true}", maxlength="{{::CAL_EVENT_FORM.location.maxlength}}", placeholder=__('Location'), ng-readonly="!canModifyEvent")
-          cal-entities-autocomplete-input(ng-hide='!canModifyEventAttendees', original-entities='editedEvent.attendees', mutable-entities='newAttendees', place-holder="Attendees", show-icon='true')
+          cal-entities-autocomplete-input.cal-user-autocomplete-input(ng-hide='!canModifyEventAttendees', type='{{::CAL_ATTENDEE_OBJECT_TYPE.user}}', original-entities='editedEvent.attendees', mutable-entities='newAttendees', place-holder="Attendees", show-icon='true')
+          cal-entities-autocomplete-input(ng-hide='!canModifyEventAttendees', type='{{::CAL_ATTENDEE_OBJECT_TYPE.resource}}', original-entities='editedEvent.attendees', mutable-entities='newResources', place-holder="Resources", show-icon='true', show-resource-icon='true')
           .col-xs-12(ng-if='displayParticipationButton')
             .form-group.status.row
               .col-xs-12.text-center

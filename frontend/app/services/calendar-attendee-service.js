@@ -18,8 +18,10 @@
 
     return service;
 
-    function getAttendeeCandidates(query, limit) {
-      return attendeeService.getAttendeeCandidates(query, limit, [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.resource])
+    function getAttendeeCandidates(query, limit, types) {
+      var typesFilter = types instanceof Array ? types : [CAL_ATTENDEE_OBJECT_TYPE.user];
+
+      return attendeeService.getAttendeeCandidates(query, limit, typesFilter)
         .then(function(attendeeCandidates) {
           return attendeeCandidates.map(mapPartStat).map(mapCUType);
         });
