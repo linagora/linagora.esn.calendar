@@ -136,13 +136,13 @@
             });
           })
           .then(function() {
-            var attendees = [];
+            var users = [];
             var resources = [];
 
             $scope.userAsAttendee = null;
             $scope.editedEvent.attendees.forEach(function(attendee) {
               if (attendee.cutype === CAL_ICAL.cutype.individual) {
-                attendees.push(attendee);
+                users.push(attendee);
               } else {
                 resources.push(attendee);
               }
@@ -152,8 +152,10 @@
               }
             });
 
-            $scope.resources = resources;
-            $scope.attendees = attendees;
+            $scope.attendees = {
+              resources: resources,
+              users: users
+            };
 
             if (!$scope.editedEvent.class) {
               $scope.editedEvent.class = CAL_EVENT_FORM.class.default;
@@ -203,7 +205,7 @@
           $scope.editedEvent.class = CAL_EVENT_FORM.class.default;
         }
 
-        $scope.editedEvent.attendees = $scope.attendees.concat($scope.newAttendees, $scope.resources, $scope.newResources);
+        $scope.editedEvent.attendees = $scope.attendees.users.concat($scope.newAttendees, $scope.attendees.resources, $scope.newResources);
 
         if ($scope.calendar) {
           $scope.restActive = true;
@@ -261,7 +263,7 @@
           return;
         }
 
-        $scope.editedEvent.attendees = $scope.attendees.concat($scope.newAttendees, $scope.resources, $scope.newResources);
+        $scope.editedEvent.attendees = $scope.attendees.users.concat($scope.newAttendees, $scope.attendees.resources, $scope.newResources);
 
         if (!calEventUtils.hasAnyChange($scope.editedEvent, $scope.event)) {
           _hideModal();

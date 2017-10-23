@@ -47,9 +47,9 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
                     i.mdi.mdi-close
                     | #{__("Cannot go")}
           .col-xs-12
-            cal-resource-list(ng-if='resources.length > 0', resources='resources', can-modify-resources='::canModifyEventAttendees')
+            cal-resource-list(ng-if='attendees.resources.length > 0', resources='attendees.resources', can-modify-resources='::canModifyEventAttendees')
           .col-xs-12
-            cal-attendees-list-condensed(ng-if='attendees.length > 1 || newAttendees.length > 0', attendees='attendees', can-modify-attendees='::canModifyEventAttendees', organizer='::editedEvent.organizer')
+            cal-attendees-list-condensed(ng-if='attendees.users.length > 1 || newAttendees.length > 0', attendees='attendees.users', can-modify-attendees='::canModifyEventAttendees', organizer='::editedEvent.organizer')
           .col-xs-12
             cal-mail-to-attendees(ng-if='displayCalMailToAttendeesButton()', event='editedEvent')
           .col-xs-12
