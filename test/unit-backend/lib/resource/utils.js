@@ -14,9 +14,7 @@ describe('The resource utils lib', function() {
     endpoint = 'http://dav';
     davserver = {
       utils: {
-        getDavEndpoint: sinon.spy(function(user, callback) {
-          callback(null, endpoint);
-        })
+        getDavEndpoint: sinon.spy(callback => callback(endpoint))
       }
     };
     this.moduleHelpers.addDep('helpers', helpers);

@@ -18,10 +18,11 @@ module.exports = dependencies => {
   }
 
   function getCalendarUrl(resourceId) {
-    return Q.denodeify(davserverUtils.getDavEndpoint)(null).then(davserver => (`${davserver}/calendars/${resourceId}.json`));
+    // davserverUtils.getDavEndpoint does not follow the callback(err) way but callback(url)...
+    return new Promise(resolve => davserverUtils.getDavEndpoint(davserver => resolve(`${davserver}/calendars/${resourceId}.json`)));
   }
 
   function getEventUrl(resourceId, eventId) {
-    return Q.denodeify(davserverUtils.getDavEndpoint)(null).then(davserver => (`${davserver}/calendars/${resourceId}/${eventId}.ics`));
+    return new Promise(resolve => davserverUtils.getDavEndpoint(davserver => resolve(`${davserver}/calendars/${resourceId}/${eventId}.ics`)));
   }
 };
