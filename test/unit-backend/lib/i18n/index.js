@@ -1,11 +1,7 @@
-'use strict';
-
 const expect = require('chai').expect;
 const mockery = require('mockery');
-const q = require('q');
 
-describe('i18n lib', function() {
-
+describe('The i18n lib', function() {
   let requireModule, i18nLib;
   const user = {
     _id: 'userID'
@@ -28,16 +24,15 @@ describe('i18n lib', function() {
       const i18nHelper = function() {
         return {
           getLocaleForSystem: function() {
-            return q.when(local);
+            return Promise.resolve(local);
           }
         };
       };
 
       mockery.registerMock('./helpers', i18nHelper);
       i18nLib = requireModule();
-      i18nLib.getI18nForMailer().then(function(i18nConf) {
+      i18nLib.getI18nForMailer().then(i18nConf => {
         expect(i18nConf.locale).to.equal(local);
-
         done();
       }, (error = 'fail') => done(error));
     });
@@ -47,12 +42,14 @@ describe('i18n lib', function() {
         return {
           getLocaleForUser: function(u) {
             expect(u).to.equal(user);
-            return q.reject();
+
+            return Promise.reject();
           }
         };
       };
+
       mockery.registerMock('./helpers', i18nHelper);
-      requireModule().getI18nForMailer(user).then(function(i18nConf) {
+      requireModule().getI18nForMailer(user).then(i18nConf => {
         expect(i18nConf.locale).to.equal(i18nLib.DEFAULT_LOCALE);
 
         done();
@@ -64,12 +61,14 @@ describe('i18n lib', function() {
         return {
           getLocaleForUser: function(u) {
             expect(u).to.equal(user);
-            return q.when();
+
+            return Promise.resolve();
           }
         };
       };
+
       mockery.registerMock('./helpers', i18nHelper);
-      requireModule().getI18nForMailer(user).then(function(i18nConf) {
+      requireModule().getI18nForMailer(user).then(i18nConf => {
         expect(i18nConf.locale).to.equal(i18nLib.DEFAULT_LOCALE);
 
         done();
@@ -82,17 +81,18 @@ describe('i18n lib', function() {
         return {
           getLocaleForUser: function(u) {
             expect(u).to.equal(user);
-            return q.when(localeFromConf);
+
+            return Promise.resolve(localeFromConf);
           }
         };
       };
+
       mockery.registerMock('./helpers', i18nHelper);
-      requireModule().getI18nForMailer(user).then(function(i18nConf) {
+      requireModule().getI18nForMailer(user).then(i18nConf => {
         expect(i18nConf.locale).to.equal(localeFromConf);
 
         done();
       }, (error = 'fail') => done(error));
     });
   });
-
 });
