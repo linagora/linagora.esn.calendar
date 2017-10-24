@@ -11,15 +11,19 @@
     calEventService,
     calResourceService,
     esnResourceAPIClient,
+    esnResourceService,
     notificationFactory,
+    CAL_ICAL,
     INVITATION_MESSAGE_HEADERS,
     X_OPENPAAS_CAL_HEADERS
   ) {
+    var defaultParticipationButtonClass = 'btn-default';
     var self = this;
 
     self.$onInit = $onInit;
     self.acceptResourceReservation = acceptResourceReservation;
     self.declineResourceReservation = declineResourceReservation;
+    self.getParticipationButtonClass = getParticipationButtonClass;
 
     function $onInit() {
       self.meeting = {
@@ -46,11 +50,19 @@
     }
 
     function acceptResourceReservation() {
+      if (getResourceParticipation().partstat === CAL_ICAL.partstat.accepted) {
+        return;
+      }
+
       return calResourceService.acceptResourceReservation(self.resource._id, self.event.id)
         .then(notify('Resource reservation confirmed!'), notify('Cannot change the resource reservation'));
     }
 
     function declineResourceReservation() {
+      if (getResourceParticipation().partstat === CAL_ICAL.partstat.declined) {
+        return;
+      }
+
       return calResourceService.declineResourceReservation(self.resource._id, self.event.id)
         .then(notify('Resource reservation declined!'), notify('Cannot change the resource reservation'));
     }
@@ -71,6 +83,16 @@
 
     function getEvent() {
       return calEventService.getEvent(self.meeting.eventPath);
+    }
+
+    function getParticipationButtonClass(cls, partstat) {
+      return getResourceParticipation().partstat === partstat ? cls : defaultParticipationButtonClass;
+    }
+
+    function getResourceParticipation() {
+      return _.find(self.event.attendees, function(attendee) {
+        return attendee.email === esnResourceService.getEmail(self.resource);
+      }) || {};
     }
 
     function bindEventToController(event) {

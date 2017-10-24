@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('The calInboxResourceManagementBlueBar component', function() {
-  var $compile, $rootScope, scope, element, esnResourceAPIClient, calEventService, event;
+  var $compile, $rootScope, scope, element, esnResourceService, esnResourceAPIClient, calEventService, event;
 
   function initDirective() {
     element = $compile('<div dynamic-directive="inbox-message-info" />')(scope);
@@ -19,10 +19,12 @@ describe('The calInboxResourceManagementBlueBar component', function() {
     event = { calendarHomeId: 1 };
     esnResourceAPIClient = { get: sinon.stub() };
     calEventService = { getEvent: sinon.stub() };
+    esnResourceService = { getEmail: sinon.stub() };
 
     module(function($provide) {
       $provide.value('esnResourceAPIClient', esnResourceAPIClient);
       $provide.value('calEventService', calEventService);
+      $provide.value('esnResourceService', esnResourceService);
     });
   });
 
