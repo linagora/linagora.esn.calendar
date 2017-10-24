@@ -8,7 +8,7 @@ const q = require('q');
 const {RESOURCE} = require('../../../../backend/lib/constants');
 
 describe('The calendar resource module', function() {
-  let module, requestMock, logger, pubsub, auth, davserver, localpubsub,
+  let module, requestMock, logger, pubsub, technicalUser, davserver, localpubsub,
       globalpubsub, email, requestError, requestStatus, requestBody;
 
   beforeEach(function() {
@@ -19,10 +19,9 @@ describe('The calendar resource module', function() {
       warning: sinon.spy()
     };
 
-    auth = {
-      token: {
-        getNewToken: (options, cb) => cb(null, { token: 'fakeToken' })
-      }
+    technicalUser = {
+        findByTypeAndDomain: (technicalUserType, domainId, cb) => cb(null, ['technical user 1']),
+        getNewToken: (technicalUser, ttl, cb) => cb(null, { token: 'fakeToken' })
     };
 
     davserver = {
@@ -42,7 +41,7 @@ describe('The calendar resource module', function() {
 
     this.moduleHelpers.addDep('email', email);
     this.moduleHelpers.addDep('logger', logger);
-    this.moduleHelpers.addDep('auth', auth);
+    this.moduleHelpers.addDep('technical-user', technicalUser);
     this.moduleHelpers.addDep('davserver', davserver);
     this.moduleHelpers.addDep('pubsub', pubsub);
     this.moduleHelpers.addDep('pubsub', this.helpers.mock.pubsub('', localpubsub, globalpubsub));
@@ -199,7 +198,7 @@ describe('The calendar resource module', function() {
 
         requestError = null;
         requestBody = null;
-        requestStatus = 200;
+        requestStatus = 204;
 
         localpubsub.topics['resource:deleted'].handler(fakeResource).then(() => {
           expect(requestMock).to.have.been.called;
