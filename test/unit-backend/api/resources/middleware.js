@@ -2,11 +2,13 @@ const { expect } = require('chai');
 const sinon = require('sinon');
 
 describe('The resource middleware', function() {
-  let resourceModule, resource, resourceId, req, error, user;
+  let resourceModule, preferredDomainId, technicalUsers, technicalUserModule, resource, resourceId, req, error, user;
 
   beforeEach(function() {
     error = new Error('I failed');
-    user = {_id: 1};
+    preferredDomainId = 'A domain';
+    technicalUsers = [1, 2, 3];
+    user = {_id: 1, preferredDomainId};
     resourceId = 'resourceId';
     req = {
       params: {
@@ -28,10 +30,120 @@ describe('The resource middleware', function() {
         }
       }
     };
+    technicalUserModule = {};
 
     this.moduleHelpers.addDep('resource', resourceModule);
+    this.moduleHelpers.addDep('technical-user', technicalUserModule);
 
     this.loadModule = () => require(`${this.moduleHelpers.backendPath}/webserver/api/resources/middleware`)(this.moduleHelpers.dependencies);
+  });
+
+  describe('The getTechnicalUserToken function', function() {
+    it('should 500 when technicalUserModule.findByTypeAndDomain fails', function(done) {
+      technicalUserModule.findByTypeAndDomain = sinon.spy((type, domain, callback) => {
+        callback(error);
+      });
+
+      this.loadModule().getTechnicalUserToken(req, {
+        status: status => {
+          expect(status).to.equals(500);
+
+          return {
+            json: json => {
+              expect(technicalUserModule.findByTypeAndDomain).to.have.been.calledWith('dav', preferredDomainId, sinon.match.func);
+              expect(json.error.details).to.match(/Error while getting technical user/);
+              done();
+            }
+          };
+        }
+      }, () => done(new Error('Should not be called')));
+    });
+
+    it('should 404 when technicalUserModule.findByTypeAndDomain does not return any technical user', function(done) {
+      technicalUserModule.findByTypeAndDomain = sinon.spy((type, domain, callback) => {
+        callback();
+      });
+
+      this.loadModule().getTechnicalUserToken(req, {
+        status: status => {
+          expect(status).to.equals(404);
+
+          return {
+            json: json => {
+              expect(technicalUserModule.findByTypeAndDomain).to.have.been.calledWith('dav', preferredDomainId, sinon.match.func);
+              expect(json.error.details).to.match(/Can not find technical user for resource management/);
+              done();
+            }
+          };
+        }
+      }, () => done(new Error('Should not be called')));
+    });
+
+    it('should 500 when technicalUser token generation fails', function(done) {
+      technicalUserModule.findByTypeAndDomain = sinon.spy((type, domain, callback) => {
+        callback(null, technicalUsers);
+      });
+      technicalUserModule.getNewToken = sinon.spy((user, ttl, callback) => {
+        callback(error);
+      });
+
+      this.loadModule().getTechnicalUserToken(req, {
+        status: status => {
+          expect(status).to.equals(500);
+
+          return {
+            json: json => {
+              expect(technicalUserModule.findByTypeAndDomain).to.have.been.called;
+              expect(technicalUserModule.getNewToken).to.have.been.calledWith(technicalUsers[0]);
+              expect(json.error.details).to.match(/Error while generating technical user token/);
+              done();
+            }
+          };
+        }
+      }, () => done(new Error('Should not be called')));
+    });
+
+    it('should 500 when technicalUser token can not be generated', function(done) {
+      technicalUserModule.findByTypeAndDomain = sinon.spy((type, domain, callback) => {
+        callback(null, technicalUsers);
+      });
+      technicalUserModule.getNewToken = sinon.spy((user, ttl, callback) => {
+        callback();
+      });
+
+      this.loadModule().getTechnicalUserToken(req, {
+        status: status => {
+          expect(status).to.equals(500);
+
+          return {
+            json: json => {
+              expect(technicalUserModule.findByTypeAndDomain).to.have.been.called;
+              expect(technicalUserModule.getNewToken).to.have.been.calledWith(technicalUsers[0]);
+              expect(json.error.details).to.match(/Can not generate technical user token/);
+              done();
+            }
+          };
+        }
+      }, () => done(new Error('Should not be called')));
+    });
+
+    it('should set the token in the request', function(done) {
+      const token = 123;
+
+      technicalUserModule.findByTypeAndDomain = sinon.spy((type, domain, callback) => {
+        callback(null, technicalUsers);
+      });
+      technicalUserModule.getNewToken = sinon.spy((user, ttl, callback) => {
+        callback(null, token);
+      });
+
+      this.loadModule().getTechnicalUserToken(req, {
+        status: () => done(new Error('Should not be called'))
+      }, () => {
+        expect(req.token).to.equal(token);
+        done();
+      });
+    });
   });
 
   describe('The load function', function() {

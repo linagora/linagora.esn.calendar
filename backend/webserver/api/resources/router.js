@@ -5,7 +5,6 @@ module.exports = dependencies => {
   const resourceMW = require('./middleware')(dependencies);
   const authorizationMW = dependencies('authorizationMW');
   const davMiddleware = dependencies('davserver').davMiddleware;
-  const tokenMW = dependencies('tokenMW');
   const router = express.Router();
 
   router.get('/:resourceId/:eventId/participation',
@@ -13,7 +12,7 @@ module.exports = dependencies => {
     resourceMW.requiresStatusQueryParameter,
     resourceMW.load,
     resourceMW.requiresCurrentUserAsAdministrator,
-    tokenMW.generateNewToken(),
+    resourceMW.getTechnicalUserToken,
     davMiddleware.getDavEndpoint,
     controller.changeParticipation);
 
