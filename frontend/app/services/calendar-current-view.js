@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
          .factory('calendarCurrentView', calendarCurrentView);
 
-  function calendarCurrentView($location, $log, calMoment, matchmedia, CAL_AVAILABLE_VIEWS, SM_XS_MEDIA_QUERY) {
+  function calendarCurrentView($location, $log, calMoment, matchmedia, CAL_AVAILABLE_VIEWS, ESN_MEDIA_QUERY_SM_XS) {
     var currentView = null;
 
     var service = {
@@ -48,7 +48,7 @@
 
       if (getParam.viewMode && CAL_AVAILABLE_VIEWS.indexOf(getParam.viewMode) !== -1) {
         view.name = getParam.viewMode;
-      } else if (matchmedia.is(SM_XS_MEDIA_QUERY)) {
+      } else if (matchmedia.is(ESN_MEDIA_QUERY_SM_XS)) {
         view.name = CAL_AVAILABLE_VIEWS[3];
       }
 

@@ -23,7 +23,7 @@ describe('The calendar configuration controller', function() {
     userUtilsMock,
     Cache,
     uuid4,
-    SM_XS_MEDIA_QUERY,
+    ESN_MEDIA_QUERY_SM_XS,
     CAL_CALENDAR_PUBLIC_RIGHT,
     CAL_CALENDAR_SHARED_RIGHT;
 
@@ -173,14 +173,14 @@ describe('The calendar configuration controller', function() {
   });
 
   beforeEach(function() {
-    angular.mock.inject(function(_$rootScope_, _$controller_, _CalendarCollectionShell_, _CAL_CALENDAR_PUBLIC_RIGHT_, _CAL_CALENDAR_SHARED_RIGHT_, _SM_XS_MEDIA_QUERY_) {
+    angular.mock.inject(function(_$rootScope_, _$controller_, _CalendarCollectionShell_, _CAL_CALENDAR_PUBLIC_RIGHT_, _CAL_CALENDAR_SHARED_RIGHT_, _ESN_MEDIA_QUERY_SM_XS_) {
       $rootScope = _$rootScope_;
       $scope = $rootScope.$new();
       $controller = _$controller_;
       CalendarCollectionShell = _CalendarCollectionShell_;
       CAL_CALENDAR_PUBLIC_RIGHT = _CAL_CALENDAR_PUBLIC_RIGHT_;
       CAL_CALENDAR_SHARED_RIGHT = _CAL_CALENDAR_SHARED_RIGHT_;
-      SM_XS_MEDIA_QUERY = _SM_XS_MEDIA_QUERY_;
+      ESN_MEDIA_QUERY_SM_XS = _ESN_MEDIA_QUERY_SM_XS_;
     });
   });
 
@@ -561,7 +561,7 @@ describe('The calendar configuration controller', function() {
         calendarConfigurationController.submit();
         $rootScope.$digest();
 
-        expect(matchmedia.is).to.have.been.calledWith(SM_XS_MEDIA_QUERY);
+        expect(matchmedia.is).to.have.been.calledWith(ESN_MEDIA_QUERY_SM_XS);
         expect(stateMock.go).to.have.been.called;
         expect(calendarService.modifyCalendar).to.have.not.been.called;
       });
@@ -592,7 +592,7 @@ describe('The calendar configuration controller', function() {
         calendarConfigurationController.submit();
         $rootScope.$digest();
 
-        expect(matchmedia.is).to.have.been.calledWith(SM_XS_MEDIA_QUERY);
+        expect(matchmedia.is).to.have.been.calledWith(ESN_MEDIA_QUERY_SM_XS);
         expect(stateMock.go).to.have.been.called;
         expect(calendarService.modifyCalendar).to.have.not.been.called;
         expect(calendarAPI.modifyPublicRights).to.have.not.been.called;

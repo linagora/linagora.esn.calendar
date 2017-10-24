@@ -18,7 +18,7 @@
     uuid4,
     calendarUsersCache,
     userUtils,
-    SM_XS_MEDIA_QUERY,
+    ESN_MEDIA_QUERY_SM_XS,
     CAL_CALENDAR_MODIFY_COMPARE_KEYS,
     CAL_CALENDAR_PUBLIC_RIGHT,
     CAL_CALENDAR_SHARED_RIGHT,
@@ -150,7 +150,7 @@
         var publicRightChanged = self.publicSelection !== self.calendar.rights.getPublicRight();
 
         if (!rightChanged && !calendarChanged && !publicRightChanged) {
-          if (matchmedia.is(SM_XS_MEDIA_QUERY)) {
+          if (matchmedia.is(ESN_MEDIA_QUERY_SM_XS)) {
             $state.go('calendar.settings');
           } else {
             $state.go('calendar.main');
