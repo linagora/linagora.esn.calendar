@@ -203,5 +203,10 @@
   "Failed to create resource": "Không thể tạo được tài nguyên",
   "An user booked the resource {{name}}": "Một người dùng đã đăng kí tài nguyên {{name}}",
   "The reservation of resource {{name}} has been accepted": "Việc đặt trước tài nguyên {{name}} đã được chấp nhận",
-  "The reservation of resource {{name}} has been declined": "Việc đặt trước tài nguyên {{name}} đã bị từ chối"
+  "The reservation of resource {{name}} has been declined": "Việc đặt trước tài nguyên {{name}} đã bị từ chối",
+  "Accept the resource reservation?": "Chấp nhận việc đặt phòng tài nguyên?",
+  "An error occured while getting resource reservation contained in this message.": "Đã xảy ra lỗi khi truy cập tài nguyên có trong thư này.",
+  "The resource reservation event can not be retrieved.": "Không thể truy xuất sự kiện đặt trước tài nguyên.",
+  "This message contains some resource reservation information. Please wait while we fetch the event details...": "Thông báo này chứa một số thông tin đặt chỗ tài nguyên. Vui lòng đợi trong khi chúng tôi tìm nạp chi tiết sự kiện ...",
+  "This message contains an resource to manage": "Thư này chứa một tài nguyên để quản lý"
 }

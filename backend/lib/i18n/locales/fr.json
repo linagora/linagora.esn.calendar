@@ -203,5 +203,10 @@
   "Failed to create resource": "Une erreur s'est produite lors de la création de la ressource",
   "An user booked the resource {{name}}": "Un utilisateur a réservé la ressource {{name}}",
   "The reservation of resource {{name}} has been accepted": "La réservation de la ressource {{name}} a été acceptée",
-  "The reservation of resource {{name}} has been declined": "La réservation de la ressource {{name}} a été rejetée"
+  "The reservation of resource {{name}} has been declined": "La réservation de la ressource {{name}} a été rejetée",
+  "Accept the resource reservation?": "Accepter la réservation de la ressource?",
+  "An error occured while getting resource reservation contained in this message.": "Une erreur est survenue en chargeant la réservation de ressource contenue dans ce message.",
+  "The resource reservation event can not be retrieved.": "L'évènement lié à la réservation de la ressource n'a pas pu être chargé.",
+  "This message contains some resource reservation information. Please wait while we fetch the event details...": "Ce message contient des informations sur la réservation d'une ressource. Merci de patienter pendant le chargement...",
+  "This message contains an resource to manage": "Ce message contient une ressource à gérer"
 }

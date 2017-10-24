@@ -203,5 +203,10 @@
   "Failed to create resource": "Failed to create resource",
   "An user booked the resource {{name}}": "An user booked the resource {{name}}",
   "The reservation of resource {{name}} has been accepted": "The reservation of resource {{name}} has been accepted",
-  "The reservation of resource {{name}} has been declined": "The reservation of resource {{name}} has been declined"
+  "The reservation of resource {{name}} has been declined": "The reservation of resource {{name}} has been declined",
+  "Accept the resource reservation?": "Accept the resource reservation?",
+  "An error occured while getting resource reservation contained in this message.": "An error occured while getting resource reservation contained in this message.",
+  "The resource reservation event can not be retrieved.": "The resource reservation event can not be retrieved.",
+  "This message contains some resource reservation information. Please wait while we fetch the event details...": "This message contains some resource reservation information. Please wait while we fetch the event details...",
+  "This message contains an resource to manage": "This message contains an resource to manage"
 }
