@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('The calendarCurrentView factory', function() {
-  var locationMock, matchmediaMock, calMoment, calendarCurrentView, CAL_AVAILABLE_VIEWS, SM_XS_MEDIA_QUERY;
+  var locationMock, matchmediaMock, calMoment, calendarCurrentView, CAL_AVAILABLE_VIEWS, ESN_MEDIA_QUERY_SM_XS;
 
   beforeEach(function() {
     locationMock = {search: sinon.spy(), url: function() { return ''; }};
@@ -21,11 +21,11 @@ describe('The calendarCurrentView factory', function() {
       $provide.value('matchmedia', matchmediaMock);
     });
 
-    angular.mock.inject(function(_calMoment_, _calendarCurrentView_, _CAL_AVAILABLE_VIEWS_, _SM_XS_MEDIA_QUERY_) {
+    angular.mock.inject(function(_calMoment_, _calendarCurrentView_, _CAL_AVAILABLE_VIEWS_, _ESN_MEDIA_QUERY_SM_XS_) {
       calMoment = _calMoment_;
       calendarCurrentView = _calendarCurrentView_;
       CAL_AVAILABLE_VIEWS = _CAL_AVAILABLE_VIEWS_;
-      SM_XS_MEDIA_QUERY = _SM_XS_MEDIA_QUERY_;
+      ESN_MEDIA_QUERY_SM_XS = _ESN_MEDIA_QUERY_SM_XS_;
     });
   });
 
@@ -207,7 +207,7 @@ describe('The calendarCurrentView factory', function() {
       var view = calendarCurrentView.get();
 
       expect(locationMock.search).to.have.been.calledOnce;
-      expect(matchmediaMock.is).to.have.been.calledWith(SM_XS_MEDIA_QUERY);
+      expect(matchmediaMock.is).to.have.been.calledWith(ESN_MEDIA_QUERY_SM_XS);
       expect(view.name).to.equal('agendaThreeDays');
     });
 

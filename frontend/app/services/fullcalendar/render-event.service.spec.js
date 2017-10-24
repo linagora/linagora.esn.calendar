@@ -117,7 +117,7 @@ describe('The calFullCalendarRenderEventService service', function() {
     });
   });
 
-  beforeEach(angular.mock.inject(function(calFullCalendarRenderEventService, calEventUtils, $rootScope, calMoment, CalendarShell, escapeHtmlUtils, matchmedia, SM_XS_MEDIA_QUERY, CAL_MAX_DURATION_OF_SMALL_EVENT) {
+  beforeEach(angular.mock.inject(function(calFullCalendarRenderEventService, calEventUtils, $rootScope, calMoment, CalendarShell, escapeHtmlUtils, matchmedia, ESN_MEDIA_QUERY_SM_XS, CAL_MAX_DURATION_OF_SMALL_EVENT) {
     this.calFullCalendarRenderEventService = calFullCalendarRenderEventService;
     this.calEventUtils = calEventUtils;
     this.$rootScope = $rootScope;
@@ -125,7 +125,7 @@ describe('The calFullCalendarRenderEventService service', function() {
     this.CalendarShell = CalendarShell;
     this.escapeHtmlUtils = escapeHtmlUtils;
     this.matchmedia = matchmedia;
-    this.SM_XS_MEDIA_QUERY = SM_XS_MEDIA_QUERY;
+    this.ESN_MEDIA_QUERY_SM_XS = ESN_MEDIA_QUERY_SM_XS;
     this.CAL_MAX_DURATION_OF_SMALL_EVENT = CAL_MAX_DURATION_OF_SMALL_EVENT;
     event.start = calMoment();
     event.end = event.start.add(this.CAL_MAX_DURATION_OF_SMALL_EVENT.DESKTOP, 'minutes');
@@ -275,14 +275,14 @@ describe('The calFullCalendarRenderEventService service', function() {
   describe('The addIcons function', function() {
     describe('In mobile mode', function() {
       beforeEach(function() {
-        var SM_XS_MEDIA_QUERY = this.SM_XS_MEDIA_QUERY;
+        var ESN_MEDIA_QUERY_SM_XS = this.ESN_MEDIA_QUERY_SM_XS;
 
         fcTitle.prepend = sinon.spy();
 
         eventIconsDivInMobile.append = sinon.spy();
 
         this.matchmedia.is = function(mediaquery) {
-          expect(mediaquery).to.equal(SM_XS_MEDIA_QUERY);
+          expect(mediaquery).to.equal(ESN_MEDIA_QUERY_SM_XS);
 
           return true;
         };
@@ -439,13 +439,13 @@ describe('The calFullCalendarRenderEventService service', function() {
 
     describe('In desktop mode', function() {
       beforeEach(function() {
-        var SM_XS_MEDIA_QUERY = this.SM_XS_MEDIA_QUERY;
+        var ESN_MEDIA_QUERY_SM_XS = this.ESN_MEDIA_QUERY_SM_XS;
 
         fcTitle.prepend = sinon.spy();
         fcTime.prepend = sinon.spy();
 
         this.matchmedia.is = function(mediaquery) {
-          expect(mediaquery).to.equal(SM_XS_MEDIA_QUERY);
+          expect(mediaquery).to.equal(ESN_MEDIA_QUERY_SM_XS);
 
           return false;
         };

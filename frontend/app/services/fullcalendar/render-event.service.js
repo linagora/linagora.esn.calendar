@@ -10,7 +10,7 @@
     session,
     calEventUtils,
     calUIAuthorizationService,
-    SM_XS_MEDIA_QUERY,
+    ESN_MEDIA_QUERY_SM_XS,
     CAL_MAX_DURATION_OF_SMALL_EVENT
   ) {
     return function(calendar) {
@@ -71,7 +71,7 @@
         }
 
         function addIcons() {
-          if (matchmedia.is(SM_XS_MEDIA_QUERY)) {
+          if (matchmedia.is(ESN_MEDIA_QUERY_SM_XS)) {
             title.append(angular.element('<div class="event-icons-mobile"></div>'));
             eventIconsDivInMobile = title.find('.event-icons-mobile');
 
