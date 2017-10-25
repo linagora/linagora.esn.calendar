@@ -4,9 +4,10 @@
   angular.module('esn.calendar')
     .controller('CalSettingsResourcesCreateController', CalSettingsResourcesCreateController);
 
-  function CalSettingsResourcesCreateController($state, _, esnResourceAPIClient, asyncAction, CAL_RESOURCE) {
+  function CalSettingsResourcesCreateController($state, _, esnResourceAPIClient, asyncAction, CAL_RESOURCE, session) {
     var self = this;
 
+    self.beAdmin = true;
     self.submit = submit;
     self.resourceAdministrators = [];
 
@@ -17,6 +18,11 @@
         failure: 'Failed to create resource'
       }, function() {
         self.resource.type = CAL_RESOURCE.type;
+
+        if (self.beAdmin) {
+          self.resourceAdministrators.push(session.user);
+        }
+
         self.resource.administrators = _.map(self.resourceAdministrators, function(admin) {
           return {
             id: admin._id,
