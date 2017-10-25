@@ -21,11 +21,7 @@ html.mail
               if (content.event.organizer)
                 h5
                   p
-                    | #{content.event.organizer.cn} (
-                    span.small
-                      a(href=`mailto:${content.event.organizer.email}`)
-                        img(src="cid:email", alt=translate('Organizer mail'))
-                      | )
+                    a(href=`mailto:${content.event.organizer.email}`) #{content.event.organizer.cn}
             td.avatar.indent-right
               if (content.event.organizer)
                 img(src=content.event.organizer.avatar, alt=translate('Organizer Avatar'), width="45px", height="42px")
@@ -47,7 +43,7 @@ html.mail
                 if (content.event.allDay && content.event.end.date == content.event.start.date)
                   p #{translate('All day')}
                 else
-                  img.check-transform(src="cid:check", alt=translate('To'))
+                  img(src="cid:to", alt=translate('To'))
               td
                 if (!content.event.allDay || (content.event.allDay && content.event.end.date != content.event.start.date))
                   p #{content.event.end.date}

@@ -33,8 +33,8 @@ body {
 
   .title {
     font-size: 1.3em;
-    font-weight: bold;
-    padding: 10px 10px 10px 0;
+    padding-bottom: 10px;
+    padding-top: 20px;
     text-align: left;
   }
 
@@ -44,6 +44,36 @@ body {
 
   .big {
     font-size: 1.3em;
+  }
+
+  .green {
+    color: green;
+  }
+
+  .red {
+    color: red;
+  }
+
+  .blue {
+    color: blue;
+  }
+
+  .table-footer {
+    text-align: center;
+    font-size: 1.2em;
+    border-top: 1px solid @esn-primary-lesslight;
+    td {
+      padding-top: 20px;
+    }
+
+    a {
+      text-decoration: none;
+
+    }
+
+    .attend-question {
+      color: grey;
+    }
   }
 
   .indent {
@@ -64,7 +94,13 @@ body {
 
     td.organizer {
       text-align: right;
-      width: 55%;
+      transform: translate(65px);
+      -webkit-transform: translate(65px);
+      -moz-transform: translate(65px);
+      transform-origin: right top;
+      -webkit-transform-origin: right top;
+      -moz-transform-origin: right top;
+      padding-right: 5px;
       img {
         margin: 0;
         padding: 0;
@@ -72,7 +108,6 @@ body {
     }
 
     td.logo {
-      width: 33%;
       text-align: left;
     }
 
@@ -98,10 +133,6 @@ body {
     .indent-right {
       text-align: right;
       padding-right: 15px;
-    }
-
-    .alarm-description {
-      width: 100%;
     }
   }
 
