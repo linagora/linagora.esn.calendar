@@ -20,15 +20,15 @@ module.exports = function(dependencies) {
 
     return localePromise
       .then((locale = DEFAULT_LOCALE) => ({
-          i18n: i18n,
+          i18n,
           locale,
-          translate: phrase => i18n.__({phrase, locale})
+          translate: (phrase, parameters) => i18n.__({phrase, locale}, parameters)
         })
       )
       .catch(() => ({
         i18n: i18n,
         locale: DEFAULT_LOCALE,
-        translate: i18n.__
+        translate: (phrase, parameters) => i18n.__(phrase, parameters)
       }));
   }
 };

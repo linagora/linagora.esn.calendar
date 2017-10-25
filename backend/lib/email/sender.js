@@ -19,7 +19,7 @@ module.exports = dependencies => {
     send
   };
 
-  function send({from, to, subject, ics, eventPath, emailTemplateName, context = {}}) {
+  function send({from, to, subject, ics, eventPath, emailTemplateName, context = {}, headers = {}, includeICS}) {
     return Q.all([
       Q.nfcall(helpers.config.getBaseUrl, null),
       linksHelper.getEventDetails(eventPath),
@@ -45,15 +45,25 @@ module.exports = dependencies => {
           .then(userEmail => i18nLib.getI18nForMailer(userEmail.user)
           .then(i18nConf => {
             const message = {
-              attachments: [{
+              encoding: 'base64',
+              from,
+              subject: _getSubject(subject, i18nConf.translate),
+              to: userEmail.email,
+              headers
+            };
+
+            if (includeICS) {
+              message.alternatives = [{
+                content: ics,
+                contentType: 'text/calendar; charset=UTF-8;'
+              }];
+
+              message.attachments = [{
                 filename: ATTACHMENT_NAME,
                 content: ics,
                 contentType: 'application/ics'
-              }],
-              from,
-              subject: _getSubject(subject, i18nConf.translate),
-              to: userEmail.email
-            };
+              }];
+            }
             const content = Object.assign({}, context, { baseUrl, event, seeInCalendarLink });
 
             return emailModule.getMailer(userEmail.user).sendHTML(

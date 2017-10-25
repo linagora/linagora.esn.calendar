@@ -12,16 +12,17 @@ module.exports = dependencies => {
 
   function generateValidationLinks(resourceId, eventId, referer) {
     return Q.nfcall(helpers.config.getBaseUrl, null).then(baseUrl => ({
-      yes: `${baseUrl}/calendar/api/resources/${resourceId}/${eventId}/participation?status=ACCEPTED&referrer=${referer}`,
-      no: `${baseUrl}/calendar/api/resources/${resourceId}/${eventId}/participation?status=DECLINED&referrer=${referer}`
+      yes: `${baseUrl}/calendar/api/resources/${resourceId}/${eventId.replace(/\.ics$/, '')}/participation?status=ACCEPTED&referrer=${referer}`,
+      no: `${baseUrl}/calendar/api/resources/${resourceId}/${eventId.replace(/\.ics$/, '')}/participation?status=DECLINED&referrer=${referer}`
     }));
   }
 
   function getCalendarUrl(resourceId) {
-    return Q.denodeify(davserverUtils.getDavEndpoint)(null).then(davserver => (`${davserver}/calendars/${resourceId}.json`));
+    // davserverUtils.getDavEndpoint does not follow the callback(err) way but callback(url)...
+    return new Promise(resolve => davserverUtils.getDavEndpoint(davserver => resolve(`${davserver}/calendars/${resourceId}.json`)));
   }
 
   function getEventUrl(resourceId, eventId) {
-    return Q.denodeify(davserverUtils.getDavEndpoint)(null).then(davserver => (`${davserver}/calendars/${resourceId}/${eventId}.ics`));
+    return new Promise(resolve => davserverUtils.getDavEndpoint(davserver => resolve(`${davserver}/calendars/${resourceId}/${resourceId}/${eventId.replace(/\.ics$/, '')}.ics`)));
   }
 };

@@ -95,7 +95,9 @@ describe('The invitation email module', function() {
     };
     const attendeeEmail = attendee1.emails[0];
 
-    const ics = ['BEGIN:VCALENDAR',
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'METHOD:REQUEST',
       'BEGIN:VEVENT',
       'UID:123123',
       'SUMMARY:description',

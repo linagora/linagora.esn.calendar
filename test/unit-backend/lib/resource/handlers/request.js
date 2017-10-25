@@ -106,7 +106,12 @@ describe('The Resource request handler module', function() {
             ics: sinon.match.any,
             eventPath: payload.eventPath,
             emailTemplateName: 'resource.request',
-            context: { links, resource }
+            context: { links, resource },
+            headers: {
+              'X-OPENPAAS-CAL-ACTION': 'RESOURCE_REQUEST',
+              'X-OPENPAAS-CAL-EVENT-PATH': payload.eventPath,
+              'X-OPENPAAS-CAL-RESOURCE-ID': payload.resourceId
+            }
           });
           done();
         })

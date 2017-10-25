@@ -1,3 +1,4 @@
+const ICAL = require('ical.js');
 const Q = require('q');
 const path = require('path');
 const extend = require('extend');
@@ -75,6 +76,17 @@ module.exports = dependencies => {
             template.name = 'event.cancel';
             inviteMessage = _i18nHelper('has canceled a meeting');
             break;
+        }
+
+        // This is a temporary fix since sabre does not send method in ICS and James needs it.
+        const vcalendar = ICAL.Component.fromString(ics);
+        let methodProperty = vcalendar.getFirstProperty('method');
+
+        if (!methodProperty) {
+          methodProperty = new ICAL.Property('method');
+          methodProperty.setValue(method);
+          vcalendar.addProperty(methodProperty);
+          ics = vcalendar.toString();
         }
 
         const message = {
