@@ -147,16 +147,20 @@ function jcal2content(icalendar, baseUrl = '') {
   const vevent = vcalendar.getFirstSubcomponent('vevent');
   const method = vcalendar.getFirstPropertyValue('method');
   const attendees = {};
+  const resources = {};
 
   vevent.getAllProperties('attendee').forEach(attendee => {
     const partstat = attendee.getParameter('partstat');
     const cn = attendee.getParameter('cn');
     const mail = _getEmail(attendee);
+    const isResource = attendee.getParameter('cutype') && attendee.getParameter('cutype') === 'RESOURCE';
+    const attendeeElement = {partstat, cn};
 
-    attendees[mail] = {
-      partstat: partstat,
-      cn: cn
-    };
+    if (isResource) {
+      resources[mail] = attendeeElement;
+    } else {
+      attendees[mail] = attendeeElement;
+    }
   });
 
   const dtstart = vevent.getFirstProperty('dtstart');
@@ -200,7 +204,7 @@ function jcal2content(icalendar, baseUrl = '') {
   }
 
   const content = {
-    method: method,
+    method,
     uid: vevent.getFirstPropertyValue('uid'),
     sequence: vevent.getFirstPropertyValue('sequence'),
     summary: vevent.getFirstPropertyValue('summary'),
@@ -211,11 +215,12 @@ function jcal2content(icalendar, baseUrl = '') {
       time: allDay ? undefined : startDate.format('LT'),
       timezone: getTimezoneOfIcalDate(icalEvent.startDate)
     },
-    end: end,
-    allDay: allDay,
-    attendees: attendees,
-    organizer: organizer,
-    durationInDays: durationInDays
+    end,
+    allDay,
+    attendees,
+    resources,
+    organizer,
+    durationInDays
   };
   const valarm = vevent.getFirstSubcomponent('valarm');
 

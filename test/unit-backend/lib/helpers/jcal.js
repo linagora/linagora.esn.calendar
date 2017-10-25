@@ -4,7 +4,7 @@ var expect = require('chai').expect;
 var fs = require('fs-extra');
 var icaljs = require('ical.js');
 
-describe('jcalHelper', function() {
+describe('The jcal helper module', function() {
 
   beforeEach(function() {
     this.calendarModulePath = this.moduleHelpers.modulePath;
@@ -124,6 +124,7 @@ describe('jcalHelper', function() {
           email: 'johndoe@open-paas.org',
           avatar: 'http://localhost:8080/api/avatars?objectType=user&email=johndoe@open-paas.org'
         },
+        resources: {},
         attendees: {
           'johndoe@open-paas.org': {
             cn: 'John Doe',
@@ -168,7 +169,8 @@ describe('jcalHelper', function() {
             cn: 'Jane Doe',
             partstat: 'NEEDS-ACTION'
           }
-        }
+        },
+        resources: {}
       });
     });
 
@@ -184,6 +186,18 @@ describe('jcalHelper', function() {
           date: '06/12/2015',
           time: '1:30 PM',
           timezone: 'America/New_York'
+        }
+      });
+    });
+
+    it('should split resources and user attendees', function() {
+      ics = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/meeting-with-resource.ics').toString('utf8');
+      expect(this.jcalHelper.jcal2content(ics, 'http://localhost:8080/')).to.shallowDeepEqual({
+        resources: {
+          'meetingroom@open-paas.org': {
+            cn: 'Meeting Room',
+            partstat: 'NEEDS-ACTION'
+          }
         }
       });
     });
@@ -253,7 +267,8 @@ describe('jcalHelper', function() {
             cn: 'Jane Doe',
             partstat: 'NEEDS-ACTION'
           }
-        }
+        },
+        resources: {}
       });
     });
 
