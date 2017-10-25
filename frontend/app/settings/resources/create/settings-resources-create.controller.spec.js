@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('The CalSettingsResourcesCreateController controller', function() {
-  var $q, $state, $controller, $rootScope, $scope, context, resource, esnResourceAPIClient, asyncAction, CAL_RESOURCE;
+  var $q, $state, $controller, $rootScope, $scope, context, resource, esnResourceAPIClient, sessionMock, asyncAction, CAL_RESOURCE;
 
   beforeEach(function() {
     module('jadeTemplates');
@@ -20,9 +20,19 @@ describe('The CalSettingsResourcesCreateController controller', function() {
       resource: resource
     };
 
+    sessionMock = {
+      ready: {
+        then: angular.noop
+      },
+      user: {
+        _id: 3
+      }
+    };
+
     module(function($provide) {
       $provide.value('asyncAction', asyncAction);
       $provide.value('esnResourceAPIClient', esnResourceAPIClient);
+      $provide.value('session', sessionMock);
     });
   });
 
@@ -51,6 +61,7 @@ describe('The CalSettingsResourcesCreateController controller', function() {
       esnResourceAPIClient.create = sinon.stub().returns($q.when());
       var goSpy = sinon.spy($state, 'go');
 
+      ctrl.beAdmin = false;
       ctrl.submit();
       asyncAction.firstCall.args[1]();
       $rootScope.$digest();
@@ -75,6 +86,7 @@ describe('The CalSettingsResourcesCreateController controller', function() {
         }
       ];
 
+      ctrl.beAdmin = false;
       ctrl.submit();
       asyncAction.firstCall.args[1]();
       $rootScope.$digest();
@@ -93,5 +105,49 @@ describe('The CalSettingsResourcesCreateController controller', function() {
 
       expect(goSpy).to.have.been.calledWith('calendar.settings.resources', sinon.match.any, { reload: true });
     });
+
+    it('should add the creator in administrators field if the checkbox is checked', function() {
+      esnResourceAPIClient.create = sinon.stub().returns($q.when());
+      var goSpy = sinon.spy($state, 'go');
+
+      ctrl.beAdmin = true;
+      ctrl.submit();
+      asyncAction.firstCall.args[1]();
+      $rootScope.$digest();
+
+      expect(esnResourceAPIClient.create).to.have.been.calledWith({
+        type: CAL_RESOURCE.type,
+        name: resource.name,
+        description: resource.description,
+        administrators: [
+          {
+            id: 3,
+            objectType: 'user'
+          }
+        ]
+      });
+
+      expect(goSpy).to.have.been.calledWith('calendar.settings.resources', sinon.match.any, { reload: true });
+    });
+
+    it('should not add the creator in administrators field if the checkbox is not checked', function() {
+      esnResourceAPIClient.create = sinon.stub().returns($q.when());
+      var goSpy = sinon.spy($state, 'go');
+
+      ctrl.beAdmin = false;
+      ctrl.submit();
+      asyncAction.firstCall.args[1]();
+      $rootScope.$digest();
+
+      expect(esnResourceAPIClient.create).to.have.been.calledWith({
+        type: CAL_RESOURCE.type,
+        name: resource.name,
+        description: resource.description,
+        administrators: []
+      });
+
+      expect(goSpy).to.have.been.calledWith('calendar.settings.resources', sinon.match.any, { reload: true });
+    });
+
   });
 });

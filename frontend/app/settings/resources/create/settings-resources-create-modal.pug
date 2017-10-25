@@ -16,8 +16,11 @@
               .col-xs-12
                 esn-form-group(label=__('Description'))
                   textarea.form-control(rows="5", ng-model="ctrl.resource.description", name="resourceDescription", required)
-            .row.admin-field
+            .row
               h6.col-xs-12 #{__('Administrators')}
+              .col-xs-12
+                input(type="checkbox", ng-model="ctrl.beAdmin")
+                span.admin-checkbox #{__('Add me as administrator')}
               users-autocomplete-input(mutable-users="ctrl.resourceAdministrators", add-from-autocomplete-only="true")
         .modal-footer
           button.btn.btn-default(type="button", ng-click="$hide()") #{__('Cancel')}
