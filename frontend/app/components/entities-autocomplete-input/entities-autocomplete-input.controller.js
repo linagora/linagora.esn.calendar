@@ -27,8 +27,9 @@
 
     function getInvitableEntities(query) {
       self.query = query;
+      var types = self.type ? [self.type] : [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.resource];
 
-      return calendarAttendeeService.getAttendeeCandidates(query, CAL_AUTOCOMPLETE_MAX_RESULTS * 2, [self.type]).then(function(entityCandidates) {
+      return calendarAttendeeService.getAttendeeCandidates(query, CAL_AUTOCOMPLETE_MAX_RESULTS * 2, types).then(function(entityCandidates) {
         entityCandidates = _fillNonDuplicateEntities(entityCandidates);
         entityCandidates.sort(function(a, b) {
           return naturalService.naturalSort(a.displayName, b.displayName);

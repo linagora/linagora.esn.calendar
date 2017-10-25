@@ -19,9 +19,7 @@
     return service;
 
     function getAttendeeCandidates(query, limit, types) {
-      var typesFilter = types instanceof Array ? types : [CAL_ATTENDEE_OBJECT_TYPE.user];
-
-      return attendeeService.getAttendeeCandidates(query, limit, typesFilter)
+      return attendeeService.getAttendeeCandidates(query, limit, types)
         .then(function(attendeeCandidates) {
           return attendeeCandidates.map(mapPartStat).map(mapCUType);
         });

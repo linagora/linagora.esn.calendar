@@ -46,9 +46,9 @@ describe('the calendarAttendeeService', function() {
     it('should add a need-action partstat to all attendeeCandidates which does not have objectType', function(done) {
       attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([{_id: 'attendee1'}, {_id: 'attendee2'}]));
 
-      calendarAttendeeService.getAttendeeCandidates(query, limit).then(function(attendeeCandidates) {
+      calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
-        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, [CAL_ATTENDEE_OBJECT_TYPE.user]);
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
         expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: 'NEEDS-ACTION'}, {_id: 'attendee2', partstat: 'NEEDS-ACTION'}]);
         done();
       }, done);
@@ -59,9 +59,9 @@ describe('the calendarAttendeeService', function() {
     it('should add a need-action partstat to all user attendeeCandidates', function(done) {
       attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([{_id: 'attendee1', objectType: CAL_ATTENDEE_OBJECT_TYPE.user}, {_id: 'attendee2', objectType: CAL_ATTENDEE_OBJECT_TYPE.user}]));
 
-      calendarAttendeeService.getAttendeeCandidates(query, limit).then(function(attendeeCandidates) {
+      calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
-        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, [CAL_ATTENDEE_OBJECT_TYPE.user]);
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
         expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: 'NEEDS-ACTION'}, {_id: 'attendee2', partstat: 'NEEDS-ACTION'}]);
         done();
       }, done);
@@ -85,9 +85,9 @@ describe('the calendarAttendeeService', function() {
     it('should add a need-action partstat to all attendeeCandidates which are not recognized', function(done) {
       attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([{_id: 'attendee1', objectType: 'this is not a supported objectType'}, {_id: 'attendee2'}]));
 
-      calendarAttendeeService.getAttendeeCandidates(query, limit).then(function(attendeeCandidates) {
+      calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
-        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, [CAL_ATTENDEE_OBJECT_TYPE.user]);
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
         expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: 'NEEDS-ACTION'}, {_id: 'attendee2', partstat: 'NEEDS-ACTION'}]);
         done();
       }, done);
@@ -98,9 +98,9 @@ describe('the calendarAttendeeService', function() {
     it('should add an individual cutype to all attendeeCandidates which does not have objectType', function(done) {
       attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([{_id: 'attendee1'}, {_id: 'attendee2'}]));
 
-      calendarAttendeeService.getAttendeeCandidates(query, limit).then(function(attendeeCandidates) {
+      calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
-        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, [CAL_ATTENDEE_OBJECT_TYPE.user]);
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
         expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', cutype: 'INDIVIDUAL'}, {_id: 'attendee2', cutype: 'INDIVIDUAL'}]);
         done();
       }, done);
@@ -137,38 +137,10 @@ describe('the calendarAttendeeService', function() {
     it('should add an individual cutype to all attendeeCandidates which are not recognized', function(done) {
       attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([{_id: 'attendee1', objectType: 'this is not a supported objectType'}, {_id: 'attendee2'}]));
 
-      calendarAttendeeService.getAttendeeCandidates(query, limit).then(function(attendeeCandidates) {
+      calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
-        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, [CAL_ATTENDEE_OBJECT_TYPE.user]);
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
         expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', cutype: 'INDIVIDUAL'}, {_id: 'attendee2', cutype: 'INDIVIDUAL'}]);
-        done();
-      }, done);
-
-      $rootScope.$apply();
-    });
-
-    it('should filter attendeeCandidates with default type when type is not an array', function(done) {
-      var attendeeTypes = 'test';
-
-      attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([]));
-
-      calendarAttendeeService.getAttendeeCandidates(query, limit, attendeeTypes).then(function() {
-        expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
-        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, [CAL_ATTENDEE_OBJECT_TYPE.user]);
-        done();
-      }, done);
-
-      $rootScope.$apply();
-    });
-
-    it('should filter attendeeCandidates with types when specified', function(done) {
-      var attendeeTypes = ['test'];
-
-      attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([]));
-
-      calendarAttendeeService.getAttendeeCandidates(query, limit, attendeeTypes).then(function() {
-        expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
-        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeeTypes);
         done();
       }, done);
 
