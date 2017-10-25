@@ -56,14 +56,16 @@ describe('The calPathParser service', function() {
     it('should return valid object', function() {
       expect(calPathParser.parseEventPath('/a/path/calendars/' + calendarHomeId + '/' + calendarId + '/event.ics')).to.deep.equal({
         calendarHomeId: calendarHomeId,
-        calendarId: calendarId
+        calendarId: calendarId,
+        eventId: 'event'
       });
     });
 
     it('should strip trailing /', function() {
       expect(calPathParser.parseEventPath('/' + calendarHomeId + '/' + calendarId + '/event.ics')).to.deep.equal({
         calendarHomeId: calendarHomeId,
-        calendarId: calendarId
+        calendarId: calendarId,
+        eventId: 'event'
       });
     });
   });

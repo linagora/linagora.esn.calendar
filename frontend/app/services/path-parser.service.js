@@ -22,11 +22,12 @@
 
     function parseEventPath(path) {
       // The eventPath is in this form : /calendars/{{calendarHomeId}}/{{calendarId}}/{{eventId}}.ics
-      var pathParts = path.replace(/^\//, '').split('/');
+      var pathParts = path.replace(/^\//, '').replace(/\.ics$/, '').split('/');
 
       return {
         calendarHomeId: pathParts[pathParts.length - 3],
-        calendarId: pathParts[pathParts.length - 2]
+        calendarId: pathParts[pathParts.length - 2],
+        eventId: pathParts[pathParts.length - 1]
       };
     }
   }
