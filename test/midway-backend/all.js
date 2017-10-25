@@ -4,6 +4,7 @@ const chai = require('chai');
 const path = require('path');
 const fs = require('fs-extra');
 const mongoose = require('mongoose');
+const EsnConfig = require('esn-elasticsearch-configuration');
 const testConfig = require('../config/servers-conf');
 const basePath = path.resolve(__dirname + '/../../node_modules/linagora-rse');
 const tmpPath = path.resolve(__dirname + '/../config/');
@@ -80,6 +81,21 @@ after(function() {
 
 beforeEach(function() {
   this.testEnv.writeDBConfigFile();
+});
+
+beforeEach(function(done) {
+  const esnConf = new EsnConfig(testConfig.elasticsearch);
+
+  Promise.all([
+    esnConf.setup('users.idx', 'users'),
+    esnConf.setup('events.idx', 'events'),
+    esnConf.setup('contacts.idx', 'contacts'),
+    esnConf.setup('resources.idx', 'resources')
+  ]).then(() => done())
+  .catch(err => {
+    console.error('Error while creating ES configuration, but launching tests...', err);
+    done();
+  });
 });
 
 afterEach(function() {

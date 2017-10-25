@@ -6,7 +6,7 @@ stages:
 
 test:
   stage: test
-  variables: 
+  variables:
     TZ: America/New_York
   tags:
     - docker
@@ -17,10 +17,11 @@ test:
     - rabbitmq:3.6
     - linagora/esn-sabre:latest
   script:
-   - npm i
-   - npm update
-   - bower i --allow-root
-   - grunt
+    - npm i
+    - npm update
+    - bower i --allow-root
+    - ln -s ${PWD}/node_modules/linagora.esn.resource node_modules/linagora-rse/node_modules/
+    - grunt
 
 deploy_dev:
   stage: deploy_dev

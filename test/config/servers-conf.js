@@ -1,6 +1,6 @@
 'use strict';
 
-var DEFAULT_PORTS = {
+const DEFAULT_PORTS = {
   express: 23455
 };
 
@@ -26,7 +26,9 @@ module.exports = {
 
   elasticsearch: {
     host: 'elasticsearch',
-    port: 9200
+    port: 9200,
+    tries_index: 10,
+    interval_index: 1000
   },
 
   rabbitmq: {
