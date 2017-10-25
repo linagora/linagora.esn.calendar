@@ -72,11 +72,11 @@ html.mail
                 span file.odt
           tr.table-footer
             td.attend-question(colspan="3")
-              | #{translate('User requested to book the resource, confirm?')}
+              | #{translate('User requested to book the resource')}
             td(colspan="1")
-              a.green(href=content.links.yes) #{translate('Yes')}
+              a.green(href=content.links.yes) #{translate('Accept')}
             td(colspan="1")
-              a.red(href=content.links.no) #{translate('No')}
+              a.red(href=content.links.no) #{translate('Decline')}
 
       footer
         div.footer

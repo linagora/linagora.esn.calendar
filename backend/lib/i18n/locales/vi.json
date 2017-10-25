@@ -209,5 +209,6 @@
   "An error occured while getting resource reservation contained in this message.": "Đã xảy ra lỗi khi truy cập tài nguyên có trong thư này.",
   "The resource reservation event can not be retrieved.": "Không thể truy xuất sự kiện đặt trước tài nguyên.",
   "This message contains some resource reservation information. Please wait while we fetch the event details...": "Thông báo này chứa một số thông tin đặt chỗ tài nguyên. Vui lòng đợi trong khi chúng tôi tìm nạp chi tiết sự kiện ...",
-  "This message contains an resource to manage": "Thư này chứa một tài nguyên để quản lý"
+  "This message contains an resource to manage": "Thư này chứa một tài nguyên để quản lý",
+  "User requested to book the resource": "Người dùng yêu cầu đặt tài nguyên"
 }
