@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('The calInboxResourceManagementBlueBarController', function() {
-  var esnResourceAPIClient, attendeeEmail, esnResourceService, notifySpy, notificationFactory, calResourceService, resource, eventPath, headers, event, calEventService, $controller, $rootScope, $scope, context, $q, X_OPENPAAS_CAL_HEADERS, CAL_ICAL;
+  var esnResourceAPIClient, eventId, attendeeEmail, esnResourceService, notifySpy, notificationFactory, calResourceService, resource, eventPath, headers, event, calEventService, $controller, $rootScope, $scope, context, $q, X_OPENPAAS_CAL_HEADERS, CAL_ICAL;
 
   beforeEach(function() {
     module('jadeTemplates');
@@ -14,6 +14,7 @@ describe('The calInboxResourceManagementBlueBarController', function() {
 
   beforeEach(function() {
     attendeeEmail = 'resource@domain';
+    eventId = 'eventId';
     event = {
       calendarHomeId: 'HomeId',
       attendees: []
@@ -153,6 +154,35 @@ describe('The calInboxResourceManagementBlueBarController', function() {
       expect(controller.meeting.loaded).to.be.true;
     });
 
+    it('should set the partstat from event', function() {
+      var partstat = CAL_ICAL.partstat.accepted;
+
+      event.attendees.push({ email: attendeeEmail, partstat: partstat });
+      calEventService.getEvent.returns($q.when(event));
+      esnResourceAPIClient.get.returns($q.when({data: resource}));
+
+      var controller = initController();
+
+      controller.$onInit();
+
+      $rootScope.$digest();
+
+      expect(controller.partstat).to.equal(partstat);
+    });
+
+    it('should set the default partstat when not available', function() {
+      event.attendees.push({ email: attendeeEmail });
+      calEventService.getEvent.returns($q.when(event));
+      esnResourceAPIClient.get.returns($q.when({data: resource}));
+
+      var controller = initController();
+
+      controller.$onInit();
+
+      $rootScope.$digest();
+
+      expect(controller.partstat).to.equal(CAL_ICAL.partstat.needsaction);
+    });
   });
 
   describe('The acceptResourceReservation function', function() {
@@ -169,7 +199,7 @@ describe('The calInboxResourceManagementBlueBarController', function() {
       var controller = initController();
 
       controller.resource = resource;
-      event.attendees.push({ email: attendeeEmail, partstat: CAL_ICAL.partstat.accepted });
+      controller.partstat = CAL_ICAL.partstat.accepted;
       controller.event = event;
       controller.acceptResourceReservation();
 
@@ -184,13 +214,18 @@ describe('The calInboxResourceManagementBlueBarController', function() {
 
       var controller = initController();
 
+      controller.meeting = {
+        parsedEventPath: {
+          eventId: eventId
+        }
+      };
       controller.resource = resource;
       controller.event = event;
       controller.acceptResourceReservation();
 
       $rootScope.$digest();
 
-      expect(calResourceService.acceptResourceReservation).to.have.been.calledWith(resource._id, event.id);
+      expect(calResourceService.acceptResourceReservation).to.have.been.calledWith(resource._id, eventId);
       expect(notifySpy).to.have.been.calledWith('', sinon.match(/Resource reservation confirmed!/));
     });
 
@@ -199,13 +234,18 @@ describe('The calInboxResourceManagementBlueBarController', function() {
 
       var controller = initController();
 
+      controller.meeting = {
+        parsedEventPath: {
+          eventId: eventId
+        }
+      };
       controller.resource = resource;
       controller.event = event;
       controller.acceptResourceReservation();
 
       $rootScope.$digest();
 
-      expect(calResourceService.acceptResourceReservation).to.have.been.calledWith(resource._id, event.id);
+      expect(calResourceService.acceptResourceReservation).to.have.been.calledWith(resource._id, eventId);
       expect(notifySpy).to.have.been.calledWith('', sinon.match(/Cannot change the resource reservation/));
     });
   });
@@ -224,7 +264,7 @@ describe('The calInboxResourceManagementBlueBarController', function() {
       var controller = initController();
 
       controller.resource = resource;
-      event.attendees.push({ email: attendeeEmail, partstat: CAL_ICAL.partstat.declined });
+      controller.partstat = CAL_ICAL.partstat.declined;
       controller.event = event;
       controller.declineResourceReservation();
 
@@ -239,13 +279,18 @@ describe('The calInboxResourceManagementBlueBarController', function() {
 
       var controller = initController();
 
+      controller.meeting = {
+        parsedEventPath: {
+          eventId: eventId
+        }
+      };
       controller.resource = resource;
       controller.event = event;
       controller.declineResourceReservation();
 
       $rootScope.$digest();
 
-      expect(calResourceService.declineResourceReservation).to.have.been.calledWith(resource._id, event.id);
+      expect(calResourceService.declineResourceReservation).to.have.been.calledWith(resource._id, eventId);
       expect(notifySpy).to.have.been.calledWith('', sinon.match(/Resource reservation declined!/));
     });
 
@@ -254,13 +299,18 @@ describe('The calInboxResourceManagementBlueBarController', function() {
 
       var controller = initController();
 
+      controller.meeting = {
+        parsedEventPath: {
+          eventId: eventId
+        }
+      };
       controller.resource = resource;
       controller.event = event;
       controller.declineResourceReservation();
 
       $rootScope.$digest();
 
-      expect(calResourceService.declineResourceReservation).to.have.been.calledWith(resource._id, event.id);
+      expect(calResourceService.declineResourceReservation).to.have.been.calledWith(resource._id, eventId);
       expect(notifySpy).to.have.been.calledWith('', sinon.match(/Cannot change the resource reservation/));
     });
   });
@@ -276,23 +326,21 @@ describe('The calInboxResourceManagementBlueBarController', function() {
     it('should return the default class when partstat is not the input one', function() {
       var controller = initController();
 
+      controller.partstat = 'notthesame' + partstat;
       controller.resource = resource;
-      event.attendees.push({email: attendeeEmail, parstat: 'notthesame' + partstat});
       controller.event = event;
 
       expect(controller.getParticipationButtonClass(clazz, partstat)).to.equal('btn-default');
-      expect(esnResourceService.getEmail).to.have.been.calledWith(controller.resource);
     });
 
     it('should return the given class when partstat is the input one', function() {
       var controller = initController();
 
+      controller.partstat = partstat;
       controller.resource = resource;
-      event.attendees.push({ email: attendeeEmail, partstat: partstat });
       controller.event = event;
 
       expect(controller.getParticipationButtonClass(clazz, partstat)).to.equal(clazz);
-      expect(esnResourceService.getEmail).to.have.been.calledWith(controller.resource);
     });
   });
 });

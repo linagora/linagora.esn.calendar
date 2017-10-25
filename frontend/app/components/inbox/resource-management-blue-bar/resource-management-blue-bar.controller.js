@@ -9,6 +9,7 @@
     $q,
     $log,
     calEventService,
+    calPathParser,
     calResourceService,
     esnResourceAPIClient,
     esnResourceService,
@@ -31,10 +32,15 @@
         eventPath: getEventPath()
       };
 
+      if (self.meeting.eventPath) {
+        self.meeting.parsedEventPath = calPathParser.parseEventPath(self.meeting.eventPath);
+      }
+
       getEvent()
         .then(bindEventToController, handleUnknownEvent)
         .then(loadResource)
         .then(bindResourceToController)
+        .then(setPartstatFromEvent)
         .catch(handleError)
         .finally(function() {
           self.meeting.loaded = true;
@@ -50,21 +56,29 @@
     }
 
     function acceptResourceReservation() {
-      if (getResourceParticipation().partstat === CAL_ICAL.partstat.accepted) {
+      if (self.partstat === CAL_ICAL.partstat.accepted) {
         return;
       }
 
-      return calResourceService.acceptResourceReservation(self.resource._id, self.event.id)
-        .then(notify('Resource reservation confirmed!'), notify('Cannot change the resource reservation'));
+      return calResourceService.acceptResourceReservation(self.resource._id, self.meeting.parsedEventPath.eventId)
+        .then(function() {
+          self.partstat = CAL_ICAL.partstat.accepted;
+          notify('Resource reservation confirmed!')();
+        })
+        .catch(notify('Cannot change the resource reservation'));
     }
 
     function declineResourceReservation() {
-      if (getResourceParticipation().partstat === CAL_ICAL.partstat.declined) {
+      if (self.partstat === CAL_ICAL.partstat.declined) {
         return;
       }
 
-      return calResourceService.declineResourceReservation(self.resource._id, self.event.id)
-        .then(notify('Resource reservation declined!'), notify('Cannot change the resource reservation'));
+      return calResourceService.declineResourceReservation(self.resource._id, self.meeting.parsedEventPath.eventId)
+        .then(function() {
+          self.partstat = CAL_ICAL.partstat.declined;
+          notify('Resource reservation declined!')();
+        })
+        .catch(notify('Cannot change the resource reservation'));
     }
 
     function handleUnknownEvent(err) {
@@ -86,13 +100,17 @@
     }
 
     function getParticipationButtonClass(cls, partstat) {
-      return getResourceParticipation().partstat === partstat ? cls : defaultParticipationButtonClass;
+      return self.partstat === partstat ? cls : defaultParticipationButtonClass;
     }
 
     function getResourceParticipation() {
       return _.find(self.event.attendees, function(attendee) {
         return attendee.email === esnResourceService.getEmail(self.resource);
       }) || {};
+    }
+
+    function setPartstatFromEvent() {
+      self.partstat = getResourceParticipation().partstat || CAL_ICAL.partstat.needsaction;
     }
 
     function bindEventToController(event) {
