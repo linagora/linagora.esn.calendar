@@ -208,5 +208,6 @@
   "An error occured while getting resource reservation contained in this message.": "Une erreur est survenue en chargeant la réservation de ressource contenue dans ce message.",
   "The resource reservation event can not be retrieved.": "L'évènement lié à la réservation de la ressource n'a pas pu être chargé.",
   "This message contains some resource reservation information. Please wait while we fetch the event details...": "Ce message contient des informations sur la réservation d'une ressource. Merci de patienter pendant le chargement...",
-  "This message contains an resource to manage": "Ce message contient une ressource à gérer"
+  "This message contains an resource to manage": "Ce message contient une ressource à gérer",
+  "User requested to book the resource": "Un utilisateur a demandé la réservation de la ressource"
 }
