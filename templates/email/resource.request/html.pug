@@ -43,7 +43,7 @@ html.mail
                 if (content.event.allDay && content.event.end.date == content.event.start.date)
                   p #{translate('All day')}
                 else
-                  img.check-transform(src="cid:check", alt=translate('To'))
+                  img(src="cid:to", alt=translate('To'))
               td
                 if (!content.event.allDay || (content.event.allDay && content.event.end.date != content.event.start.date))
                   p #{content.event.end.date}
