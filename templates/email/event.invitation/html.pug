@@ -30,7 +30,7 @@ html.mail
               h5
                 p
                   a(href=`mailto:${content.event.organizer.email}`) #{content.event.organizer.cn}
-                p.big #{content.inviteMessage}
+                  span &nbsp;#{content.inviteMessage}
             td.avatar.indent-right
               img(src=content.event.organizer.avatar, alt=translate('Organizer Avatar'), width="45px", height="42px")
           tr
