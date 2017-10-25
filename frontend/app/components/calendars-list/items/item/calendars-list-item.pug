@@ -3,14 +3,13 @@
     .media.row
       .col-md-12
         .media(ng-click="$ctrl.onShowHideToggle()")
-          .pull-left(ng-if="$ctrl.selected", title=__('Hide calendar'))
-            i.mdi.mdi-checkbox-blank-circle(ng-style="{'color': $ctrl.calendar.color}")
-          .pull-left(ng-if="!$ctrl.selected", title=__('Show calendar'))
-            i.mdi.mdi-checkbox-blank-circle-outline(ng-style="{'color': ($ctrl.isHover ? $ctrl.calendar.color : '') }")
+          calendar-icon.pull-left(is-resource="$ctrl.calendar.isResource()", calendar-icon="'mdi-desktop-mac'", is-hover="$ctrl.isHover", calendar-color="$ctrl.calendar.color", selected="$ctrl.selected" )
           .media-body(title="{{ $ctrl.calendar.name }}")
             .lv-title
               span {{ $ctrl.calendar.name }}
             .owner-name(ng-if="$ctrl.ownerDisplayName")
               span {{ ::$ctrl.ownerDisplayName }}
+            .owner-name(ng-if="$ctrl.calendar.isResource()")
+              span.ellipsis {{ ::$ctrl.calendar.source.description }}
       .settings.hidden-xs(ng-click="$ctrl.onOptionClick()")
         i.mdi.mdi-settings

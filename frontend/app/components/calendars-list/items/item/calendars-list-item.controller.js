@@ -10,7 +10,7 @@
     self.$onInit = $onInit;
 
     function $onInit() {
-      if (self.showDetails) {
+      if (self.showDetails && !self.calendar.isResource()) {
         getOwnerDisplayName().then(function(ownerDisplayName) {
           self.ownerDisplayName = ownerDisplayName;
         });

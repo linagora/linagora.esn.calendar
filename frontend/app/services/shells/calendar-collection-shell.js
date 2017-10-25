@@ -15,7 +15,8 @@
     CAL_DEFAULT_CALENDAR_ID,
     CAL_CALENDAR_PUBLIC_RIGHT,
     CAL_CALENDAR_SHARED_RIGHT,
-    CAL_CALENDAR_PROPERTIES
+    CAL_CALENDAR_PROPERTIES,
+    CAL_CALENDAR_TYPE
   ) {
     /**
      * A shell that wraps an caldav calendar component.
@@ -68,6 +69,7 @@
     CalendarCollectionShell.prototype.isReadable = isReadable;
     CalendarCollectionShell.prototype.isShared = isShared;
     CalendarCollectionShell.prototype.isSubscription = isSubscription;
+    CalendarCollectionShell.prototype.isResource = isResource;
     CalendarCollectionShell.prototype.isWritable = isWritable;
     CalendarCollectionShell.prototype.getUniqueId = getUniqueId;
     CalendarCollectionShell.prototype.getCalendarType = getCalendarType;
@@ -193,6 +195,14 @@
      */
     function isPublic() {
       return !!this.rights.getPublicRight();
+    }
+
+    /**
+     * Check if it's a resource calendar
+     * @returns {boolean} return true if the calendar is from a resource
+     */
+    function isResource() {
+      return this.type === CAL_CALENDAR_TYPE.RESOURCE;
     }
 
     /**
