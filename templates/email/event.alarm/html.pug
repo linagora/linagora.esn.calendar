@@ -21,11 +21,7 @@ html.mail
             td.organizer(colspan="2")
               h5
                 p
-                  | #{content.event.organizer.cn} (
-                  span.small
-                    a(href=`mailto:${content.event.organizer.email}`)
-                      img(src="cid:email", alt=translate('Organizer mail'))
-                    | )
+                  a(href=`mailto:${content.event.organizer.email}`) #{content.event.organizer.cn}
                 p.big #{translate('Event Reminder')}
             td.avatar.indent-right(colspan="2")
               img(src=content.event.organizer.avatar, alt=translate('Organizer Avatar'), width="45px", height="42px")
