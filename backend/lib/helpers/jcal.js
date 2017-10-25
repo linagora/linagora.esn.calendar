@@ -219,6 +219,7 @@ function jcal2content(icalendar, baseUrl = '') {
     allDay,
     attendees,
     resources,
+    hasResources: !_.isEmpty(resources),
     organizer,
     durationInDays
   };

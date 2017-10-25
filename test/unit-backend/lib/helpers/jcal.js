@@ -125,6 +125,7 @@ describe('The jcal helper module', function() {
           avatar: 'http://localhost:8080/api/avatars?objectType=user&email=johndoe@open-paas.org'
         },
         resources: {},
+        hasResources: false,
         attendees: {
           'johndoe@open-paas.org': {
             cn: 'John Doe',
@@ -170,7 +171,8 @@ describe('The jcal helper module', function() {
             partstat: 'NEEDS-ACTION'
           }
         },
-        resources: {}
+        resources: {},
+        hasResources: false
       });
     });
 
@@ -193,6 +195,7 @@ describe('The jcal helper module', function() {
     it('should split resources and user attendees', function() {
       ics = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/meeting-with-resource.ics').toString('utf8');
       expect(this.jcalHelper.jcal2content(ics, 'http://localhost:8080/')).to.shallowDeepEqual({
+        hasResources: true,
         resources: {
           'meetingroom@open-paas.org': {
             cn: 'Meeting Room',
@@ -268,7 +271,8 @@ describe('The jcal helper module', function() {
             partstat: 'NEEDS-ACTION'
           }
         },
-        resources: {}
+        resources: {},
+        hasResources: false
       });
     });
 
