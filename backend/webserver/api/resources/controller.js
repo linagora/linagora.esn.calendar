@@ -17,7 +17,15 @@ module.exports = dependencies => {
     const attendeeEmail = resourceHelper.getResourceEmail(req.resource);
 
     return resourceUtils.getEventUrl(req.params.resourceId, req.params.eventId)
+      .then(url => {
+        console.log('URL', url);
+        return url;
+      })
       .then(url => caldavClient.getEventFromUrl({ url, ESNToken })
+      .then(event => {
+        console.log('event', event);
+        return event;
+      })
       .then(event => ({ vcalendar: jcalHelper.icsAsVcalendar(event.ical), etag: event.etag }))
       .then(event => ({ vcalendar: jcalHelper.updateParticipation(event.vcalendar, attendeeEmail, status), etag: event.etag}))
       .then(updatedEvent => caldavClient.updateEvent({ url, etag: updatedEvent.etag, ESNToken, json: updatedEvent.vcalendar.toJSON() }))

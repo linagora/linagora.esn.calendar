@@ -183,6 +183,7 @@ module.exports = dependencies => {
   }
 
   function updateEvent({ url, json, etag, ESNToken }) {
+    console.log('UPDATE EVENT', url, json, etag, ESNToken);
     return new Promise((resolve, reject) => {
       request({method: 'PUT', headers: { ESNToken, 'If-Match': etag }, body: json, url, json: true}, (err, response) => {
         if (err || response.statusCode < 200 || response.statusCode >= 300) {

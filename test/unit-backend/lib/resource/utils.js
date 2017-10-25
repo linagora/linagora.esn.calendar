@@ -26,8 +26,8 @@ describe('The resource utils lib', function() {
 
     beforeEach(function() {
       url = 'http://open-paas.org';
-      resourceId = 1;
-      eventId = 2;
+      resourceId = '1';
+      eventId = '2';
       module = require(this.moduleHelpers.backendPath + '/lib/resource/utils')(this.moduleHelpers.dependencies);
     });
 
@@ -48,6 +48,22 @@ describe('The resource utils lib', function() {
       baseUrl = url;
 
       module.generateValidationLinks(resourceId, eventId, referer)
+        .then(links => {
+          expect(links).to.deep.equals({
+            yes: `${url}/calendar/api/resources/${resourceId}/${eventId}/participation?status=ACCEPTED&referrer=${referer}`,
+            no: `${url}/calendar/api/resources/${resourceId}/${eventId}/participation?status=DECLINED&referrer=${referer}`
+          });
+          done();
+        })
+        .catch(done);
+    });
+
+    it('should discard .ics suffix', function(done) {
+      const referer = 'email';
+
+      baseUrl = url;
+
+      module.generateValidationLinks(resourceId, `${eventId}.ics`, referer)
         .then(links => {
           expect(links).to.deep.equals({
             yes: `${url}/calendar/api/resources/${resourceId}/${eventId}/participation?status=ACCEPTED&referrer=${referer}`,
@@ -79,14 +95,21 @@ describe('The resource utils lib', function() {
     let resourceId, eventId;
 
     beforeEach(function() {
-      resourceId = 1;
-      eventId = 2;
+      resourceId = '1';
+      eventId = '2';
       module = require(this.moduleHelpers.backendPath + '/lib/resource/utils')(this.moduleHelpers.dependencies);
     });
 
     it('should resolve with correct url', function(done) {
       module.getEventUrl(resourceId, eventId).then(url => {
-        expect(url).to.equal(`${endpoint}/calendars/${resourceId}/${eventId}.ics`);
+        expect(url).to.equal(`${endpoint}/calendars/${resourceId}/${resourceId}/${eventId}.ics`);
+        done();
+      });
+    });
+
+    it('should discard .ics suffix', function(done) {
+      module.getEventUrl(resourceId, `${eventId}.ics`).then(url => {
+        expect(url).to.equal(`${endpoint}/calendars/${resourceId}/${resourceId}/${eventId}.ics`);
         done();
       });
     });
