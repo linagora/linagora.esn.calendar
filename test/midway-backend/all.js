@@ -4,11 +4,11 @@ const chai = require('chai');
 const path = require('path');
 const fs = require('fs-extra');
 const mongoose = require('mongoose');
+const EsnConfig = require('esn-elasticsearch-configuration');
 const testConfig = require('../config/servers-conf');
 const basePath = path.resolve(__dirname + '/../../node_modules/linagora-rse');
-const tmpPath = path.resolve(__dirname + '/../..', testConfig.tmp);
+const tmpPath = path.resolve(__dirname + '/../config/');
 const backendPath = path.normalize(__dirname + '/../../backend');
-const host = testConfig.host;
 let rse;
 
 before(function(done) {
@@ -26,9 +26,8 @@ before(function(done) {
     tmp: tmpPath,
     backendPath: backendPath,
     fixtures: path.resolve(basePath, 'test/midway-backend/fixtures'),
-    mongoUrl: 'mongodb://' + host + ':' + testConfig.mongodb.port + '/' + testConfig.mongodb.dbname,
     writeDBConfigFile() {
-      fs.writeFileSync(tmpPath + '/db.json', JSON.stringify({connectionString: 'mongodb://' + host + ':' + testConfig.mongodb.port + '/' + testConfig.mongodb.dbname, connectionOptions: {auto_reconnect: false}}));
+      fs.writeFileSync(tmpPath + '/db.json', JSON.stringify({connectionString: 'mongodb://mongo/tests', connectionOptions: {auto_reconnect: false}}));
     },
     removeDBConfigFile() {
       fs.unlinkSync(tmpPath + '/db.json');
@@ -39,8 +38,12 @@ before(function(done) {
     }
   };
 
-  process.env.NODE_CONFIG = this.testEnv.tmp;
+  process.env.NODE_CONFIG = 'test/config';
   process.env.NODE_ENV = 'test';
+  process.env.REDIS_HOST = 'redis';
+  process.env.REDIS_PORT = 6379;
+  process.env.AMQP_HOST = 'rabbitmq';
+  process.env.ES_HOST = 'elasticsearch';
 
   fs.copySync(this.testEnv.fixtures + '/default.mongoAuth.json', this.testEnv.tmp + '/default.json');
 
@@ -78,6 +81,21 @@ after(function() {
 
 beforeEach(function() {
   this.testEnv.writeDBConfigFile();
+});
+
+beforeEach(function(done) {
+  const esnConf = new EsnConfig(testConfig.elasticsearch);
+
+  Promise.all([
+    esnConf.setup('users.idx', 'users'),
+    esnConf.setup('events.idx', 'events'),
+    esnConf.setup('contacts.idx', 'contacts'),
+    esnConf.setup('resources.idx', 'resources')
+  ]).then(() => done())
+  .catch(err => {
+    console.error('Error while creating ES configuration, but launching tests...', err);
+    done();
+  });
 });
 
 afterEach(function() {

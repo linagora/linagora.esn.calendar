@@ -1,5 +1,3 @@
-'use strict';
-
 var expect = require('chai').expect;
 var request = require('supertest');
 var async = require('async');
@@ -316,7 +314,8 @@ describe('The Calendar calendars API /api/calendars', function() {
     var localpubsub, message, counter = 1;
 
     var search = function(term, expectedSize, done) {
-      var self = this;
+      const self = this;
+
       localpubsub.topic('events:event:add').publish(message);
 
       this.helpers.api.loginAsUser(this.app, user.emails[0], password, function(err, requestAsMember) {
