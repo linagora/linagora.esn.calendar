@@ -11,13 +11,17 @@ const ICAL = require('ical.js');
 const JSON_CONTENT_TYPE = 'application/json';
 const DEFAULT_CALENDAR_NAME = 'Events';
 const DEFAULT_CALENDAR_URI = 'events';
+const RESOURCE_COLOR = '#F44336';
 
 module.exports = dependencies => {
   const logger = dependencies('logger');
   const davserver = dependencies('davserver').utils;
   const token = dependencies('auth').token;
+  const technicalUserHelper = require('../helpers/technical-user')(dependencies);
 
   return {
+    createResourceCalendar,
+    deleteResourceCalendars,
     getCalendarList,
     getEvent,
     getEventFromUrl,
@@ -32,6 +36,39 @@ module.exports = dependencies => {
     createEventInDefaultCalendar
   };
 
+  function createResourceCalendar(resource) {
+    const options = {
+      userId: resource._id,
+      getNewTokenFn: technicalUserHelper.getTechnicalUserToken(resource.domain)
+    };
+
+    return _requestCaldav(options, (url, token) => ({
+      method: 'POST',
+      headers: { ESNToken: token.token },
+      url,
+      body: _generatePayload(resource),
+      json: true
+    }),
+    response => response);
+  }
+
+  function deleteResourceCalendars(resource) {
+    return _requestCaldav({ userId: resource._id }, (url, token) => ({
+      method: 'DELETE',
+      headers: { ESNToken: token.token, accept: 'application/json' },
+      url
+    }),
+    response => response);
+  }
+
+  function _generatePayload(resource) {
+    return {
+      id: resource._id,
+      'dav:name': resource.name,
+      'apple:color': RESOURCE_COLOR,
+      'caldav:description': resource.description
+    };
+  }
   function createEventInDefaultCalendar(user, options) {
     const eventUid = uuidV4(),
       event = _buildJCalEvent(eventUid, options);
@@ -44,7 +81,7 @@ module.exports = dependencies => {
   }
 
   function storeEvent(user, calendarUri, eventUid, event) {
-    return _requestCaldav(user.id, calendarUri, eventUid, (url, token) => ({
+    return _requestCaldav({ userId: user.id, calendarUri, eventUid }, (url, token) => ({
       method: 'PUT',
       url,
       json: true,
@@ -60,7 +97,7 @@ module.exports = dependencies => {
   }
 
   function deleteEvent(user, calendarUri, eventUid) {
-    return _requestCaldav(user.id, calendarUri, eventUid, (url, token) => ({
+    return _requestCaldav({ userId: user.id, calendarUri, eventUid }, (url, token) => ({
       method: 'DELETE',
       url,
       headers: {
@@ -70,7 +107,7 @@ module.exports = dependencies => {
   }
 
   function getCalendarList(userId) {
-    return _requestCaldav(userId, null, null, (url, token) => ({
+    return _requestCaldav({ userId }, (url, token) => ({
       method: 'GET',
       url: url,
       json: true,
@@ -97,12 +134,12 @@ module.exports = dependencies => {
     });
   }
 
-  function getEventInDefaultCalendar(user, eventUID) {
-    return getEvent(user.id, DEFAULT_CALENDAR_URI, eventUID).then(response => response.ical);
+  function getEventInDefaultCalendar(user, eventUid) {
+    return getEvent(user.id, DEFAULT_CALENDAR_URI, eventUid).then(response => response.ical);
   }
 
-  function getEvent(userId, calendarURI, eventUID) {
-    return _requestCaldav(userId, calendarURI, eventUID, (url, token) => ({
+  function getEvent(userId, calendarUri, eventUid) {
+    return _requestCaldav({ userId, calendarUri, eventUid }, (url, token) => ({
         method: 'GET',
         url: url,
         headers: {
@@ -113,14 +150,14 @@ module.exports = dependencies => {
     );
   }
 
-  function getEventPath(userId, calendarURI, eventUID) {
-    const eventPath = calendarURI && eventUID ? urljoin(userId, calendarURI, eventUID + '.ics') : userId;
+  function getEventPath(userId, calendarUri, eventUid) {
+    const eventPath = calendarUri && eventUid ? urljoin(userId, calendarUri, eventUid + '.ics') : userId;
 
     return urljoin('/calendars', eventPath);
   }
 
   function iTipRequest(userId, jcal) {
-    return _requestCaldav(userId, null, null, (url, token) => ({
+    return _requestCaldav({ userId }, (url, token) => ({
       method: 'ITIP',
       url: url,
       headers: {
@@ -131,10 +168,13 @@ module.exports = dependencies => {
     }));
   }
 
-  function _requestCaldav(userId, calendarURI, eventUID, formatRequest, formatResult) {
+  function _requestCaldav(options, formatRequest, formatResult) {
+    const { userId, calendarUri, eventUid, getNewTokenFn } = options;
+    const getNewToken = getNewTokenFn || Q.nfcall(token.getNewToken, { user: userId });
+
     return Q.all([
-      Q.nfcall(_buildEventUrl, userId, calendarURI, eventUID),
-      Q.nfcall(token.getNewToken, { user: userId })
+      _buildEventUrl(userId, calendarUri, eventUid),
+      getNewToken
     ])
       .spread((eventUrl, newToken) =>
         Q.nfcall(request, formatRequest(eventUrl, newToken.token))
@@ -148,10 +188,9 @@ module.exports = dependencies => {
       });
   }
 
-  function _buildEventUrl(userId, calendarURI, eventUID, callback) {
-    davserver.getDavEndpoint(davserver =>
-      callback(null, urljoin(davserver, getEventPath(userId, calendarURI, eventUID)))
-    );
+  function _buildEventUrl(userId, calendarUri, eventUid) {
+    return new Promise(resolve => davserver.getDavEndpoint(davserver => resolve(urljoin(davserver, getEventPath(userId, calendarUri, eventUid)))));
+
   }
 
   function _buildJCalEvent(uid, options) {

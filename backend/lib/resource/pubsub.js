@@ -1,16 +1,12 @@
 'use strict';
 
 const { EVENTS, RESOURCE } = require('../constants');
-const request = require('request');
-const q = require('q');
-const RESOURCE_COLOR = '#F44336';
 
 module.exports = dependencies => {
   const simpleMailModule = dependencies('email').system.simpleMail;
   const pubsub = dependencies('pubsub');
   const logger = dependencies('logger');
-  const token = dependencies('auth').token;
-  const davserver = dependencies('davserver').utils;
+  const caldavClient = require('../caldav-client')(dependencies);
 
   return {
     listen
@@ -20,17 +16,13 @@ module.exports = dependencies => {
     pubsub.local.topic(EVENTS.RESOURCE.CREATED).subscribe(_create);
     pubsub.local.topic(EVENTS.RESOURCE.DELETED).subscribe(_delete);
 
-    function generatePayload(resource) {
-      return {
-        id: resource._id,
-        'dav:name': resource.name,
-        'apple:color': RESOURCE_COLOR,
-        'caldav:description': resource.description
-      };
-    }
+    function _handleError(resource, response, mailOptions) {
+      const { subject, text } = mailOptions;
+      const { body } = response || {};
 
-    function _buildEventUrl(resourceId, callback) {
-      return davserver.getDavEndpoint(davserver => callback(null, `${davserver}/calendars/${resourceId}.json`));
+      logger.error(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${resource.creator} with the message: ${body || response}`);
+
+      return simpleMailModule(resource.creator, { subject, text });
     }
 
     function _create(resource) {
@@ -38,18 +30,22 @@ module.exports = dependencies => {
         return;
       }
 
-      return q.all([
-        q.nfcall(_buildEventUrl, resource._id),
-        q.nfcall(token.getNewToken, { user: resource.creator })
-      ]).spread((davUrl, token) => request({ method: 'POST', headers: { ESNToken: token.token }, url: davUrl, body: generatePayload(resource), json: true }, (err, response, body) => {
-        if (err || response.statusCode !== 201) {
-          logger.error(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${err || response.statusCode} with the message: ${body}`);
+      const mailOptions = {
+         subject: RESOURCE.ERROR.MAIL.CREATED.SUBJECT,
+         text: RESOURCE.ERROR.MAIL.CREATED.MESSAGE
+      };
 
-          return simpleMailModule(resource.creator, { subject: RESOURCE.ERROR.MAIL.CREATED.SUBJECT, text: RESOURCE.ERROR.MAIL.CREATED.MESSAGE });
-        }
+      return caldavClient.createResourceCalendar(resource)
+        .then(response => {
+          if (response.statusCode !== 201) {
+            _handleError(resource, response, mailOptions);
+          }
 
-        logger.info(`Calendar created for the resource: ${resource._id} with the status: ${response.statusCode}`);
-      }));
+          logger.info(`Calendar created for the resource: ${resource._id} with the status: ${response.statusCode}`);
+
+          _delete(resource);
+        })
+        .catch(error => _handleError(resource, error, mailOptions));
     }
 
     function _delete(resource) {
@@ -57,18 +53,20 @@ module.exports = dependencies => {
         return;
       }
 
-      return q.all([
-        q.nfcall(_buildEventUrl, resource._id),
-        q.nfcall(token.getNewToken, { user: resource.creator })
-      ]).spread((davUrl, token) => request({ method: 'DELETE', headers: { ESNToken: token.token }, url: davUrl }, (err, response, body) => {
-        if (err || response.statusCode !== 200) {
-          logger.error(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${err || response.statusCode} with the message: ${body}`);
+      const mailOptions = {
+        subject: RESOURCE.ERROR.MAIL.REMOVED.SUBJECT,
+        text: RESOURCE.ERROR.MAIL.REMOVED.MESSAGE
+     };
 
-          return simpleMailModule(resource.creator, { subject: RESOURCE.ERROR.MAIL.REMOVED.SUBJECT, text: RESOURCE.ERROR.MAIL.REMOVED.MESSAGE });
-        }
+      return caldavClient.deleteResourceCalendars(resource)
+        .then(response => {
+          if (response.statusCode !== 204) {
+            _handleError(resource, response, mailOptions);
+          }
 
-        logger.info(`Calendar removed for the resource: ${resource._id} with the status: ${response.statusCode}`);
-      }));
+          logger.info(`Calendar removed for the resource: ${resource._id} with the status: ${response.statusCode}`);
+        })
+        .catch(error => _handleError(resource, error, mailOptions));
     }
   }
 };
