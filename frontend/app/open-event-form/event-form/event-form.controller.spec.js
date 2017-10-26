@@ -479,10 +479,9 @@ describe('The event-form module controllers', function() {
 
         this.initController();
 
-        expect(this.scope.attendees).to.shallowDeepEqual([{displayName: 'attendee1'}]);
-        expect(this.scope.resources).to.shallowDeepEqual([{displayName: 'resource1'}]);
+        expect(this.scope.attendees.users).to.shallowDeepEqual([{displayName: 'attendee1'}]);
+        expect(this.scope.attendees.resources).to.shallowDeepEqual([{displayName: 'resource1'}]);
       });
-
     });
 
     describe('modifyEvent function', function() {
@@ -598,7 +597,7 @@ describe('The event-form module controllers', function() {
 
           this.initController();
 
-          this.scope.attendees = [{
+          this.scope.attendees.users = [{
             name: 'attendee1',
             email: 'attendee1@openpaas.org',
             partstat: 'ACCEPTED'
@@ -611,7 +610,7 @@ describe('The event-form module controllers', function() {
             start: this.moment(),
             end: this.moment(),
             title: 'title',
-            attendees: this.scope.attendees
+            attendees: this.scope.attendees.users
           });
 
           this.calEventServiceMock.modifyEvent = sinon.spy(function() {
@@ -668,14 +667,14 @@ describe('The event-form module controllers', function() {
 
           this.initController();
 
-          this.scope.attendees = [{
+          this.scope.attendees.users = [{
             displayName: 'attendee1',
             email: 'user1@test.com',
             partstart: 'ACCEPTED'
           }];
           this.scope.editedEvent = this.CalendarShell.fromIncompleteShell({
             title: 'title',
-            attendees: this.scope.attendees
+            attendees: this.scope.attendees.users
           });
           this.scope.newAttendees = [{
             displayName: 'attendee2',
@@ -943,7 +942,7 @@ describe('The event-form module controllers', function() {
         it('should save master event with edited fields of selected instance when all occurences have been chosen', function(done) {
           this.scope.modifyEvent();
 
-          this.scope.attendees = [{
+          this.scope.attendees.users = [{
             email: 'user1@test.com'
           }, {
             email: 'user2@test.com'
@@ -951,7 +950,7 @@ describe('The event-form module controllers', function() {
           this.scope.editedEvent = {
             title: 'Edited',
             location: 'Marseille',
-            attendees: this.scope.attendees,
+            attendees: this.scope.attendees.users,
             start: this.moment('2013-02-08 10:30'),
             end: this.moment('2013-02-08 11:30'),
             class: 'PUBLIC',
@@ -1006,7 +1005,7 @@ describe('The event-form module controllers', function() {
         it('should save selected instance event when a single occurence has been chosen', function(done) {
           this.scope.modifyEvent();
 
-          this.scope.attendees = [{
+          this.scope.attendees.users = [{
             email: 'user1@test.com'
           }, {
             email: 'user2@test.com'
@@ -1014,7 +1013,7 @@ describe('The event-form module controllers', function() {
           this.scope.editedEvent = {
             title: 'Edited',
             location: 'Marseille',
-            attendees: this.scope.attendees,
+            attendees: this.scope.attendees.users,
             start: this.moment('2013-02-08 10:30'),
             end: this.moment('2013-02-08 11:30'),
             class: 'PUBLIC',

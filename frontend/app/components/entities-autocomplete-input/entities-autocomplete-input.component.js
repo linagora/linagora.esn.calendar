@@ -10,7 +10,9 @@ angular.module('esn.calendar')
       onEntityRemoved: '=?',
       addFromAutocompleteOnly: '=?',
       showIcon: '=?',
-      placeHolder: '@?'
+      placeHolder: '@?',
+      showResourceIcon: '=?',
+      type: '@?'
     },
     controller: 'calEntitiesAutocompleteInputController',
     controllerAs: 'ctrl'

@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .controller('calEntitiesAutocompleteInputController', calEntitiesAutocompleteInputController);
 
-  function calEntitiesAutocompleteInputController(calendarAttendeeService, naturalService, session, CAL_AUTOCOMPLETE_MAX_RESULTS, CAL_AUTOCOMPLETE_DEFAULT_PLACEHOLDER) {
+  function calEntitiesAutocompleteInputController(calendarAttendeeService, naturalService, session, CAL_ATTENDEE_OBJECT_TYPE, CAL_AUTOCOMPLETE_MAX_RESULTS, CAL_AUTOCOMPLETE_DEFAULT_PLACEHOLDER) {
     var self = this;
 
     self.mutableEntities = self.mutableEntities || [];
@@ -27,8 +27,9 @@
 
     function getInvitableEntities(query) {
       self.query = query;
+      var types = self.type ? [self.type] : [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.resource];
 
-      return calendarAttendeeService.getAttendeeCandidates(query, CAL_AUTOCOMPLETE_MAX_RESULTS * 2).then(function(entityCandidates) {
+      return calendarAttendeeService.getAttendeeCandidates(query, CAL_AUTOCOMPLETE_MAX_RESULTS * 2, types).then(function(entityCandidates) {
         entityCandidates = _fillNonDuplicateEntities(entityCandidates);
         entityCandidates.sort(function(a, b) {
           return naturalService.naturalSort(a.displayName, b.displayName);
