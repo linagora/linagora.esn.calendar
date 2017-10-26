@@ -7,6 +7,10 @@ mixin attendeeDisplay(mail, details)
     else
       span.small #{mail}
 
+mixin resourceDisplay(resource)
+  div
+    span #{resource.cn}
+
 doctype html
 html.mail
   head
@@ -77,6 +81,14 @@ html.mail
               each details, mail in content.event.attendees
                 span
                   +attendeeDisplay(mail, details)
+          if (content.event.hasResources)
+            tr
+              td.indent
+                img(src="cid:resource", alt=translate('Resources'))
+              td(colspan="5")
+                each resource in content.event.resources
+                  span
+                    +resourceDisplay(resource)
           if (content.event.description)
             tr
               td

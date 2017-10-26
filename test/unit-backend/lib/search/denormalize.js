@@ -10,7 +10,7 @@ describe('search helpers', function() {
     this.denormalize = require(this.calendarModulePath + '/backend/lib/search/denormalize');
   });
 
-  describe('denormilize function', function() {
+  describe('The denormalize function', function() {
     var data, ics;
 
     it('should parse jcal formatted event and return a pruned content for the email', function() {
@@ -44,7 +44,9 @@ describe('search helpers', function() {
         }, {
           email: 'janedoe@open-paas.org',
           cn: 'Jane Doe'
-        }]
+        }],
+        resources: {},
+        hasResources: false
       });
     });
 
@@ -120,7 +122,9 @@ describe('search helpers', function() {
         }, {
           email: 'janedoe@open-paas.org',
           cn: 'Jane Doe'
-        }]
+        }],
+        resources: {},
+        hasResources: false
       });
     });
 
