@@ -8,7 +8,7 @@ const q = require('q');
 const {RESOURCE} = require('../../../../backend/lib/constants');
 
 describe('The calendar resource module', function() {
-  let module, requestMock, logger, pubsub, technicalUser, davserver, localpubsub,
+  let module, requestMock, logger, pubsub, auth, technicalUser, davserver, localpubsub,
       globalpubsub, email, requestError, requestStatus, requestBody;
 
   beforeEach(function() {
@@ -17,6 +17,12 @@ describe('The calendar resource module', function() {
       debug: sinon.spy(),
       info: sinon.spy(),
       warning: sinon.spy()
+    };
+
+    auth = {
+      token: {
+        getNewToken: (options, cb) => cb(null, { token: 'fakeToken' })
+      }
     };
 
     technicalUser = {
@@ -41,12 +47,13 @@ describe('The calendar resource module', function() {
 
     this.moduleHelpers.addDep('email', email);
     this.moduleHelpers.addDep('logger', logger);
+    this.moduleHelpers.addDep('auth', auth);
     this.moduleHelpers.addDep('technical-user', technicalUser);
     this.moduleHelpers.addDep('davserver', davserver);
     this.moduleHelpers.addDep('pubsub', pubsub);
     this.moduleHelpers.addDep('pubsub', this.helpers.mock.pubsub('', localpubsub, globalpubsub));
 
-    requestMock = sinon.spy((option, cb) => cb(requestError, { statusCode: requestStatus }, requestBody));
+    requestMock = sinon.spy((option, cb) => cb(requestError, { statusCode: requestStatus, body: requestBody }, requestBody));
 
     mockery.registerMock('request', requestMock);
   });
@@ -88,13 +95,13 @@ describe('The calendar resource module', function() {
         requestStatus = null;
 
         localpubsub.topics['resource:created'].handler(fakeResource).then(() => {
-          expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${requestError || requestStatus} with the message: ${requestBody}`);
+          expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${fakeResource.creator} with the message: ${requestError}`);
           expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.CREATED.SUBJECT, text: RESOURCE.ERROR.MAIL.CREATED.MESSAGE });
           done();
         }).catch(done);
       });
 
-      it('should send a email if the request return a status != 201 ', function(done) {
+      it('should send a email if the request return a status != 201', function(done) {
         const fakeResource = {
           _id: new ObjectId(),
           creator: new ObjectId(),
@@ -108,7 +115,7 @@ describe('The calendar resource module', function() {
         requestStatus = 501;
 
         localpubsub.topics['resource:created'].handler(fakeResource).then(() => {
-          expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${requestError || requestStatus} with the message: ${requestBody}`);
+          expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${fakeResource.creator} with the message: ${requestBody}`);
           expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.CREATED.SUBJECT, text: RESOURCE.ERROR.MAIL.CREATED.MESSAGE });
           done();
         }).catch(done);
@@ -161,7 +168,7 @@ describe('The calendar resource module', function() {
         requestStatus = null;
 
         localpubsub.topics['resource:deleted'].handler(fakeResource).then(() => {
-          expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${requestError || requestStatus} with the message: ${requestBody}`);
+          expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${fakeResource.creator} with the message: ${requestBody}`);
           expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.REMOVED.SUBJECT, text: RESOURCE.ERROR.MAIL.REMOVED.MESSAGE });
           done();
         }).catch(done);
@@ -181,7 +188,7 @@ describe('The calendar resource module', function() {
         requestStatus = 501;
 
         localpubsub.topics['resource:deleted'].handler(fakeResource).then(() => {
-          expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${requestError || requestStatus} with the message: ${requestBody}`);
+          expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${fakeResource.creator} with the message: ${requestBody}`);
           expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.REMOVED.SUBJECT, text: RESOURCE.ERROR.MAIL.REMOVED.MESSAGE });
           done();
         }).catch(done);
