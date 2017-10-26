@@ -19,16 +19,19 @@
       }, function() {
         self.resource.type = CAL_RESOURCE.type;
 
-        if (self.beAdmin) {
-          self.resourceAdministrators.push(session.user);
-        }
-
         self.resource.administrators = _.map(self.resourceAdministrators, function(admin) {
           return {
             id: admin._id,
             objectType: 'user'
           };
         });
+
+        if (self.beAdmin) {
+          self.resource.administrators.push({
+            id: session.user._id,
+            objectType: 'user'
+          });
+        }
 
         return esnResourceAPIClient.create(self.resource).finally(function() {
           $state.go('calendar.settings.resources', null, { reload: true });
