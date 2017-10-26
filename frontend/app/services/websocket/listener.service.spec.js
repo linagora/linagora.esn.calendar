@@ -6,7 +6,7 @@ var expect = chai.expect;
 
 describe('The calWebsocketListenerService service', function() {
   var $rootScope, $q, $log, scope, liveNotification, calWebsocketListenerService, CAL_WEBSOCKET;
-  var CalendarShellMock, calEventServiceMock, calendarServiceMock, calendarEventEmitterMock, calMasterEventCacheMock, calCachedEventSourceMock;
+  var CalendarShellMock, calEventServiceMock, calendarServiceMock, calendarEventEmitterMock, calEventStoreMock, calMasterEventCacheMock, calCachedEventSourceMock;
   var calendarHomeId, calendarId, calendarPath, calendarSourceHomeId, calendarSourceId, calendarSourcePath;
 
   beforeEach(function() {
@@ -51,6 +51,10 @@ describe('The calWebsocketListenerService service', function() {
       remove: sinon.spy()
     };
 
+    calEventStoreMock = {
+      save: sinon.spy()
+    };
+
     calCachedEventSourceMock = {
       wrapEventSource: sinon.spy(function(id, eventSource) {
         return eventSource;
@@ -75,6 +79,7 @@ describe('The calWebsocketListenerService service', function() {
       $provide.value('CalendarShell', CalendarShellMock);
       $provide.value('calendarEventEmitter', calendarEventEmitterMock);
       $provide.value('calMasterEventCache', calMasterEventCacheMock);
+      $provide.value('calEventStore', calEventStoreMock);
       $provide.value('calCachedEventSource', calCachedEventSourceMock);
       $provide.value('calEventService', calEventServiceMock);
       $provide.value('calendarService', calendarServiceMock);
@@ -139,7 +144,7 @@ describe('The calWebsocketListenerService service', function() {
       };
 
       testUpdateCalCachedEventSourceAndFcEmit = function(wsCallback, expectedCacheMethod, expectedEmitMethod, eventSourcePath) {
-        var event = {id: 'id', calendarId: 'calId'};
+        var event = {id: 'id', calendarId: 'calId', calendarUniqueId: 'calUniqueId'};
         var path = eventSourcePath || 'path';
         var etag = 'etag';
         var resultingEvent = CalendarShellMock.from(event, {etag: etag, path: path});
@@ -150,6 +155,10 @@ describe('The calWebsocketListenerService service', function() {
         expect(CalendarShellMock.from).to.have.been.calledWith(event, {path: path, etag: etag});
         expect(calendarEventEmitterMock[expectedEmitMethod]).to.have.been.calledWith(resultingEvent);
         expect(calCachedEventSourceMock[expectedCacheMethod]).to.have.been.calledWith(resultingEvent);
+
+        if (expectedEmitMethod !== 'emitRemovedEvent') {
+          expect(calEventStoreMock.save).to.have.been.calledWith(event.calendarUniqueId, resultingEvent);
+        }
       };
 
       testUpdateCalMasterEventCache = function(wsCallback, expectedCacheMethod) {

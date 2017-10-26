@@ -10,6 +10,7 @@
     livenotification,
     calCachedEventSource,
     calEventService,
+    calEventStore,
     calPathParser,
     calendarEventEmitter,
     calendarService,
@@ -91,6 +92,7 @@
 
         calCachedEventSource.registerUpdate(event);
         calMasterEventCache.save(event);
+        calEventStore.save(event.calendarUniqueId, event);
         calendarEventEmitter.emitModifiedEvent(event);
       }
 
