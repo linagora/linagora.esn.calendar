@@ -42,8 +42,6 @@ module.exports = dependencies => {
           }
 
           logger.info(`Calendar created for the resource: ${resource._id} with the status: ${response.statusCode}`);
-
-          _delete(resource);
         })
         .catch(error => _handleError(resource, error, mailOptions));
     }
