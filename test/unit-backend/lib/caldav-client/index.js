@@ -143,9 +143,9 @@ describe('Caldav-client helper', function() {
           done);
     });
 
-    it('should return only userId if eventUID is not passed', function(done) {
+    it('should return only userId && calendarURI if eventUID is not passed', function(done) {
       const requestMock = function(opts, callback) {
-        request.url = [davEndpoint, 'calendars', userId].join('/');
+        request.url = [davEndpoint, 'calendars', userId, `${calendarId}.json`].join('/');
 
         expect(opts).to.deep.equal(request);
 
