@@ -28,7 +28,12 @@
     }
 
     function mapPartStat(attendee) {
-      attendee.partstat = attendeeTypeToPartstat[attendee.objectType] || CAL_ICAL.partstat.needsaction;
+      // Set resource participation status as accepted for a resource without administrator
+      if (attendee.objectType === CAL_ATTENDEE_OBJECT_TYPE.resource && attendee.administrators && attendee.administrators.length === 0) {
+        attendee.partstat = CAL_ICAL.partstat.accepted;
+      } else {
+        attendee.partstat = attendeeTypeToPartstat[attendee.objectType] || CAL_ICAL.partstat.needsaction;
+      }
 
       return attendee;
     }

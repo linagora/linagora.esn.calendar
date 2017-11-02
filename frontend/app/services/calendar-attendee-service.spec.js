@@ -6,7 +6,7 @@
 var expect = chai.expect;
 
 describe('the calendarAttendeeService', function() {
-  var query, limit, CAL_ATTENDEE_OBJECT_TYPE, $rootScope, calendarAttendeeService;
+  var query, limit, CAL_ATTENDEE_OBJECT_TYPE, CAL_ICAL, $rootScope, calendarAttendeeService;
   var attendeeService = {};
   var attendeesAllTypes;
 
@@ -24,9 +24,10 @@ describe('the calendarAttendeeService', function() {
       $provide.value('attendeeService', attendeeService);
     });
 
-    angular.mock.inject(function(_$rootScope_, _CAL_ATTENDEE_OBJECT_TYPE_) {
+    angular.mock.inject(function(_$rootScope_, _CAL_ATTENDEE_OBJECT_TYPE_, _CAL_ICAL_) {
       $rootScope = _$rootScope_;
       CAL_ATTENDEE_OBJECT_TYPE = _CAL_ATTENDEE_OBJECT_TYPE_;
+      CAL_ICAL = _CAL_ICAL_;
     });
   });
 
@@ -49,7 +50,7 @@ describe('the calendarAttendeeService', function() {
       calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
-        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: 'NEEDS-ACTION'}, {_id: 'attendee2', partstat: 'NEEDS-ACTION'}]);
+        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: CAL_ICAL.partstat.needsaction}, {_id: 'attendee2', partstat: CAL_ICAL.partstat.needsaction}]);
         done();
       }, done);
 
@@ -62,20 +63,23 @@ describe('the calendarAttendeeService', function() {
       calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
-        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: 'NEEDS-ACTION'}, {_id: 'attendee2', partstat: 'NEEDS-ACTION'}]);
+        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: CAL_ICAL.partstat.needsaction}, {_id: 'attendee2', partstat: CAL_ICAL.partstat.needsaction}]);
         done();
       }, done);
 
       $rootScope.$apply();
     });
 
-    it('should add an tentative partstat to all resource attendeeCandidates', function(done) {
-      attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([{_id: 'attendee1', objectType: CAL_ATTENDEE_OBJECT_TYPE.resource}, {_id: 'attendee2', objectType: CAL_ATTENDEE_OBJECT_TYPE.resource}]));
+    it('should add a tentative partstat to all resource attendeeCandidates', function(done) {
+      attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([
+        {_id: 'attendee1', objectType: CAL_ATTENDEE_OBJECT_TYPE.resource, administrators: [{id: '1', objectType: CAL_ATTENDEE_OBJECT_TYPE.resource}]},
+        {_id: 'attendee2', objectType: CAL_ATTENDEE_OBJECT_TYPE.resource, administrators: [{id: '1', objectType: CAL_ATTENDEE_OBJECT_TYPE.resource}]}
+      ]));
 
       calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
-        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: 'TENTATIVE'}, {_id: 'attendee2', partstat: 'TENTATIVE'}]);
+        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: CAL_ICAL.partstat.tentative}, {_id: 'attendee2', partstat: CAL_ICAL.partstat.tentative}]);
         done();
       }, done);
 
@@ -88,7 +92,23 @@ describe('the calendarAttendeeService', function() {
       calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
-        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: 'TENTATIVE'}, {_id: 'attendee2', partstat: 'TENTATIVE'}]);
+        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: CAL_ICAL.partstat.tentative}, {_id: 'attendee2', partstat: CAL_ICAL.partstat.tentative}]);
+        done();
+      }, done);
+
+      $rootScope.$apply();
+    });
+
+    it('should add an accepted partstat to all resource attendeeCandidates without administators', function(done) {
+      attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([
+        {_id: 'attendee1', objectType: CAL_ATTENDEE_OBJECT_TYPE.resource, administrators: []},
+        {_id: 'attendee2', objectType: CAL_ATTENDEE_OBJECT_TYPE.resource, administrators: []}
+      ]));
+
+      calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
+        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: CAL_ICAL.partstat.accepted}, {_id: 'attendee2', partstat: CAL_ICAL.partstat.accepted}]);
         done();
       }, done);
 
@@ -101,7 +121,7 @@ describe('the calendarAttendeeService', function() {
       calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
-        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: 'NEEDS-ACTION'}, {_id: 'attendee2', partstat: 'NEEDS-ACTION'}]);
+        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: CAL_ICAL.partstat.needsaction}, {_id: 'attendee2', partstat: CAL_ICAL.partstat.needsaction}]);
         done();
       }, done);
 
@@ -114,7 +134,7 @@ describe('the calendarAttendeeService', function() {
       calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
-        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', cutype: 'INDIVIDUAL'}, {_id: 'attendee2', cutype: 'INDIVIDUAL'}]);
+        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', cutype: CAL_ICAL.cutype.individual}, {_id: 'attendee2', cutype: CAL_ICAL.cutype.individual}]);
         done();
       }, done);
 
@@ -127,7 +147,7 @@ describe('the calendarAttendeeService', function() {
       calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
-        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', cutype: 'INDIVIDUAL'}, {_id: 'attendee2', cutype: 'INDIVIDUAL'}]);
+        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', cutype: CAL_ICAL.cutype.individual}, {_id: 'attendee2', cutype: CAL_ICAL.cutype.individual}]);
         done();
       }, done);
 
@@ -140,7 +160,7 @@ describe('the calendarAttendeeService', function() {
       calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
-        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', cutype: 'RESOURCE'}, {_id: 'attendee2', cutype: 'RESOURCE'}]);
+        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', cutype: CAL_ICAL.cutype.resource}, {_id: 'attendee2', cutype: CAL_ICAL.cutype.resource}]);
         done();
       }, done);
 
@@ -153,7 +173,7 @@ describe('the calendarAttendeeService', function() {
       calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
-        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', cutype: 'GROUP'}, {_id: 'attendee2', cutype: 'GROUP'}]);
+        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', cutype: CAL_ICAL.cutype.group}, {_id: 'attendee2', cutype: CAL_ICAL.cutype.group}]);
         done();
       }, done);
 
@@ -166,7 +186,7 @@ describe('the calendarAttendeeService', function() {
       calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
-        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', cutype: 'INDIVIDUAL'}, {_id: 'attendee2', cutype: 'INDIVIDUAL'}]);
+        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', cutype: CAL_ICAL.cutype.individual}, {_id: 'attendee2', cutype: CAL_ICAL.cutype.individual}]);
         done();
       }, done);
 
