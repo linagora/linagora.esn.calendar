@@ -59,6 +59,7 @@ module.exports = {
     },
     RESOURCE: {
       CREATED: 'resource:created',
+      UPDATED: 'resource:updated',
       DELETED: 'resource:deleted'
     },
     RESOURCE_EVENT: {
@@ -88,6 +89,10 @@ module.exports = {
         CREATED: {
           SUBJECT: 'Resource\'s calendar not created',
           MESSAGE: 'The resource\'s calendar has not been created'
+        },
+        UPDATED: {
+          SUBJECT: 'Resource\'s calendar not updated',
+          MESSAGE: 'The resource\'s calendar has not been updated'
         },
         REMOVED: {
           SUBJECT: 'Resource\'s calendar not removed',

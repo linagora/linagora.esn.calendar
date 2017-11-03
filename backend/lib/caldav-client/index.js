@@ -11,7 +11,6 @@ const ICAL = require('ical.js');
 const JSON_CONTENT_TYPE = 'application/json';
 const DEFAULT_CALENDAR_NAME = 'Events';
 const DEFAULT_CALENDAR_URI = 'events';
-const RESOURCE_COLOR = '#F44336';
 
 module.exports = dependencies => {
   const logger = dependencies('logger');
@@ -20,8 +19,10 @@ module.exports = dependencies => {
   const technicalUserHelper = require('../helpers/technical-user')(dependencies);
 
   return {
-    createResourceCalendar,
-    deleteResourceCalendars,
+    createCalendarAsTechnicalUser,
+    updateCalendarAsTechnicalUser,
+    deleteCalendarsAsTechnicalUser,
+    getCalendarAsTechnicalUser,
     getCalendarList,
     getEvent,
     getEventFromUrl,
@@ -36,39 +37,86 @@ module.exports = dependencies => {
     createEventInDefaultCalendar
   };
 
-  function createResourceCalendar(resource) {
-    const options = {
-      userId: resource._id,
-      getNewTokenFn: technicalUserHelper.getTechnicalUserToken(resource.domain)
+  function createCalendarAsTechnicalUser(options, payload) {
+    const { userId, domainId } = options;
+    const requestOptions = {
+      userId,
+      getNewTokenFn: technicalUserHelper.getTechnicalUserToken(domainId)
     };
 
-    return _requestCaldav(options, (url, token) => ({
+    return _requestCaldav(requestOptions, (url, token) => ({
       method: 'POST',
-      headers: { ESNToken: token.token },
+      headers: { ESNToken: token },
       url,
-      body: _generatePayload(resource),
+      body: payload,
       json: true
     }),
     response => response);
   }
 
-  function deleteResourceCalendars(resource) {
-    return _requestCaldav({ userId: resource._id }, (url, token) => ({
+  function updateCalendarAsTechnicalUser(options, payload) {
+    const { userId, calendarUri, domainId } = options;
+    const requestOptions = {
+      userId,
+      calendarUri,
+      getNewTokenFn: technicalUserHelper.getTechnicalUserToken(domainId)
+    };
+
+    return _requestCaldav(requestOptions, (url, token) => ({
+      method: 'PROPPATCH',
+      headers: { ESNToken: token },
+      url,
+      body: payload,
+      json: true
+    }),
+    response => response);
+  }
+
+  function deleteCalendarsAsTechnicalUser(options) {
+    const { userId, domainId } = options;
+    const requestOptions = {
+      userId,
+      getNewTokenFn: technicalUserHelper.getTechnicalUserToken(domainId)
+    };
+
+    return _requestCaldav(requestOptions, (url, token) => ({
       method: 'DELETE',
-      headers: { ESNToken: token.token, accept: 'application/json' },
+      headers: { ESNToken: token, accept: 'application/json' },
       url
     }),
     response => response);
   }
 
-  function _generatePayload(resource) {
-    return {
-      id: resource._id,
-      'dav:name': resource.name,
-      'apple:color': RESOURCE_COLOR,
-      'caldav:description': resource.description
+  function getCalendarAsTechnicalUser(options) {
+    const { userId, calendarUri, domainId } = options;
+    const requestOptions = {
+      userId,
+      calendarUri,
+      getNewTokenFn: technicalUserHelper.getTechnicalUserToken(domainId)
     };
+
+    return _requestCaldav(requestOptions, (url, token) => ({
+      method: 'GET',
+      url: url,
+      json: true,
+      headers: {
+        ESNToken: token,
+        Accept: JSON_CONTENT_TYPE
+      }
+    }))
+      .then(calendar => {
+        const uri = calendar._links.self.href.replace('.json', '');
+
+        return {
+          id: path.basename(uri),
+          uri: uri,
+          name: calendar['dav:name'] || DEFAULT_CALENDAR_NAME,
+          description: calendar['caldav:description'],
+          color: calendar['apple:color']
+        };
+      });
   }
+
   function createEventInDefaultCalendar(user, options) {
     const eventUid = uuidV4(),
       event = _buildJCalEvent(eventUid, options);
@@ -176,9 +224,7 @@ module.exports = dependencies => {
       _buildEventUrl(userId, calendarUri, eventUid),
       getNewToken
     ])
-      .spread((eventUrl, newToken) =>
-        Q.nfcall(request, formatRequest(eventUrl, newToken.token))
-      )
+      .spread((eventUrl, newToken) => Q.nfcall(request, formatRequest(eventUrl, newToken.token)))
       .spread(response => {
         if (response.statusCode < 200 || response.statusCode >= 300) {
           return Q.reject(response.body);
@@ -189,7 +235,9 @@ module.exports = dependencies => {
   }
 
   function _buildEventUrl(userId, calendarUri, eventUid) {
-    return new Promise(resolve => davserver.getDavEndpoint(davserver => resolve(urljoin(davserver, getEventPath(userId, calendarUri, eventUid)))));
+    const path = !eventUid && calendarUri ? `/calendars/${userId}/${calendarUri}.json` : getEventPath(userId, calendarUri, eventUid);
+
+    return new Promise(resolve => davserver.getDavEndpoint(davserver => resolve(urljoin(davserver, path))));
 
   }
 

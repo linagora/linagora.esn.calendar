@@ -16,7 +16,7 @@ describe('The calendar resource module', function() {
       error: sinon.spy(),
       debug: sinon.spy(),
       info: sinon.spy(),
-      warning: sinon.spy()
+      warn: sinon.spy()
     };
 
     auth = {
@@ -174,7 +174,7 @@ describe('The calendar resource module', function() {
         }).catch(done);
       });
 
-      it('should send a email if the request return a status != 201 ', function(done) {
+      it('should send a email if the request return a status != 204', function(done) {
         const fakeResource = {
           _id: new ObjectId(),
           creator: new ObjectId(),
@@ -210,6 +210,117 @@ describe('The calendar resource module', function() {
         localpubsub.topics['resource:deleted'].handler(fakeResource).then(() => {
           expect(requestMock).to.have.been.called;
           expect(logger.info).to.have.been.calledWith(`Calendar removed for the resource: ${fakeResource._id} with the status: ${requestStatus}`);
+          done();
+        }).catch(done);
+      });
+    });
+
+    describe('The update function', function() {
+      it('should not call sabre if the resource\'s type is not calendar', function() {
+        const fakeResource = {
+          _id: new ObjectId(),
+          creator: new ObjectId(),
+          name: 'test'
+        };
+
+        localpubsub.topics['resource:updated'].handler(fakeResource);
+        expect(requestMock).to.not.have.been.called;
+      });
+
+      it('should send a email if the request return a error', function(done) {
+        const fakeResource = {
+          _id: new ObjectId(),
+          creator: new ObjectId(),
+          name: 'test',
+          description: '',
+          type: 'calendar'
+        };
+
+        requestError = new Error('Error');
+        requestBody = new Error('Error');
+        requestStatus = null;
+
+        localpubsub.topics['resource:updated'].handler(fakeResource).then(() => {
+          expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${fakeResource.creator} with the message: ${requestBody}`);
+          expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.UPDATED.SUBJECT, text: RESOURCE.ERROR.MAIL.UPDATED.MESSAGE });
+          done();
+        }).catch(done);
+      });
+
+      it('should send a email if the request return a status != 204', function(done) {
+        const fakeResource = {
+          _id: new ObjectId(),
+          creator: new ObjectId(),
+          name: 'test',
+          description: '',
+          type: 'calendar'
+        };
+
+        requestError = null;
+        requestBody = new Error('Error');
+        requestStatus = 501;
+
+        localpubsub.topics['resource:updated'].handler(fakeResource).then(() => {
+          expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${fakeResource.creator} with the message: ${requestBody}`);
+          expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.UPDATED.SUBJECT, text: RESOURCE.ERROR.MAIL.UPDATED.MESSAGE });
+          done();
+        }).catch(done);
+      });
+
+      it('should not updated calendar if resource name or description have not change', function(done) {
+        const fakeResource = {
+          _id: new ObjectId(),
+          creator: new ObjectId(),
+          name: 'test',
+          description: 'description',
+          type: 'calendar'
+        };
+
+        requestError = null;
+        requestBody = {
+          _links: {
+            self: {
+              href: 'uri'
+            }
+          },
+          'dav:name': 'test',
+          'caldav:description': 'description',
+          'apple:color': 'color'
+        };
+        requestStatus = 204;
+
+        localpubsub.topics['resource:updated'].handler(fakeResource).then(() => {
+          expect(requestMock).to.have.been.called;
+          expect(logger.warn).to.have.been.calledWith(`Calendar is already up to date for the resource: ${fakeResource._id}`);
+          done();
+        }).catch(done);
+      });
+
+      it('should call sabre and updated calendar if resource name or description have change', function(done) {
+        const fakeResource = {
+          _id: new ObjectId(),
+          creator: new ObjectId(),
+          name: 'test',
+          description: 'description',
+          type: 'calendar'
+        };
+
+        requestError = null;
+        requestBody = {
+          _links: {
+            self: {
+              href: 'uri'
+            }
+          },
+          'dav:name': 'old_test',
+          'caldav:description': 'description',
+          'apple:color': 'color'
+        };
+        requestStatus = 204;
+
+        localpubsub.topics['resource:updated'].handler(fakeResource).then(() => {
+          expect(requestMock).to.have.been.called;
+          expect(logger.info).to.have.been.calledWith(`Calendar updated for the resource: ${fakeResource._id} with the status: ${requestStatus}`);
           done();
         }).catch(done);
       });
