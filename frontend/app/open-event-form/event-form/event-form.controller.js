@@ -13,6 +13,7 @@
     calendarService,
     userUtils,
     calEventService,
+    calAttendeeService,
     calEventUtils,
     notificationFactory,
     calOpenEventForm,
@@ -138,26 +139,8 @@
             });
           })
           .then(function() {
-            var users = [];
-            var resources = [];
-
-            $scope.userAsAttendee = null;
-            $scope.editedEvent.attendees.forEach(function(attendee) {
-              if (attendee.cutype === CAL_ICAL.cutype.individual) {
-                users.push(attendee);
-              } else {
-                resources.push(attendee);
-              }
-
-              if (attendee.email in session.user.emailMap) {
-                $scope.userAsAttendee = attendee;
-              }
-            });
-
-            $scope.attendees = {
-              resources: resources,
-              users: users
-            };
+            $scope.attendees = calAttendeeService.splitAttendeesFromType($scope.editedEvent.attendees);
+            $scope.userAsAttendee = calAttendeeService.getAttendeeForUser($scope.editedEvent.attendees, session.user);
 
             if (!$scope.editedEvent.class) {
               $scope.editedEvent.class = CAL_EVENT_FORM.class.default;
