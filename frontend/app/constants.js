@@ -122,6 +122,7 @@
     .constant('CAL_RESOURCE', {
       AVATAR_URL: '/linagora.esn.resource/images/resource.png',
       type: 'calendar',
+      DEFAULT_ICON: 'mdi-desktop-mac',
       ICONS: {
         'guitar-acoustic': 'mdi-guitar-acoustic',
         home: 'mdi-home',

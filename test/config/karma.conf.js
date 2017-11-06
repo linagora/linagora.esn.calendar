@@ -92,6 +92,8 @@ module.exports = function(config) {
 
       'node_modules/linagora-rse/modules/linagora.esn.graceperiod/frontend/js/*.js',
 
+      'node_modules/linagora.esn.resource/frontend/**/*.js',
+
       'test/config/mocks/*.js',
       'frontend/app/app.js',
       'frontend/app/**/*.js',
@@ -102,6 +104,7 @@ module.exports = function(config) {
     ],
     exclude: [
       'node_modules/linagora-rse/frontend/js/**/*.spec.js',
+      'node_modules/linagora.esn.resource/frontend/**/*.spec.js',
       'node_modules/linagora-rse/frontend/js/**/*.run.js',
       'frontend/app/search/search.run.js',
       'frontend/app/services/websocket/listener.run.js'
