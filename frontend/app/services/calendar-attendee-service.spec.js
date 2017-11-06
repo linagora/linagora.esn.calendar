@@ -36,7 +36,7 @@ describe('the calendarAttendeeService', function() {
 
   describe('the getAttendeeCandidates function', function() {
     beforeEach(function() {
-      attendeesAllTypes = [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.resource];
+      attendeesAllTypes = [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.resource, CAL_ATTENDEE_OBJECT_TYPE.group];
     });
 
     it('should return a promise', function() {
@@ -71,6 +71,19 @@ describe('the calendarAttendeeService', function() {
 
     it('should add an tentative partstat to all resource attendeeCandidates', function(done) {
       attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([{_id: 'attendee1', objectType: CAL_ATTENDEE_OBJECT_TYPE.resource}, {_id: 'attendee2', objectType: CAL_ATTENDEE_OBJECT_TYPE.resource}]));
+
+      calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
+        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: 'TENTATIVE'}, {_id: 'attendee2', partstat: 'TENTATIVE'}]);
+        done();
+      }, done);
+
+      $rootScope.$apply();
+    });
+
+    it('should add an tentative partstat to all group attendeeCandidates', function(done) {
+      attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([{_id: 'attendee1', objectType: CAL_ATTENDEE_OBJECT_TYPE.group}, {_id: 'attendee2', objectType: CAL_ATTENDEE_OBJECT_TYPE.group}]));
 
       calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
@@ -128,6 +141,19 @@ describe('the calendarAttendeeService', function() {
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
         expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
         expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', cutype: 'RESOURCE'}, {_id: 'attendee2', cutype: 'RESOURCE'}]);
+        done();
+      }, done);
+
+      $rootScope.$apply();
+    });
+
+    it('should add a group cutype to all group attendeeCandidates', function(done) {
+      attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([{_id: 'attendee1', objectType: CAL_ATTENDEE_OBJECT_TYPE.group}, {_id: 'attendee2', objectType: CAL_ATTENDEE_OBJECT_TYPE.group}]));
+
+      calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes).then(function(attendeeCandidates) {
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
+        expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
+        expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', cutype: 'GROUP'}, {_id: 'attendee2', cutype: 'GROUP'}]);
         done();
       }, done);
 

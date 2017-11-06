@@ -12,7 +12,7 @@ angular.module('esn.calendar')
       showIcon: '=?',
       placeHolder: '@?',
       showResourceIcon: '=?',
-      type: '@?'
+      types: '@?'
     },
     controller: 'calEntitiesAutocompleteInputController',
     controllerAs: 'ctrl'

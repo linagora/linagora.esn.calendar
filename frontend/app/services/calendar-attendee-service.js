@@ -13,8 +13,10 @@
 
     attendeeTypeToPartstat[CAL_ATTENDEE_OBJECT_TYPE.user] = CAL_ICAL.partstat.needsaction;
     attendeeTypeToPartstat[CAL_ATTENDEE_OBJECT_TYPE.resource] = CAL_ICAL.partstat.tentative;
+    attendeeTypeToPartstat[CAL_ATTENDEE_OBJECT_TYPE.group] = CAL_ICAL.partstat.tentative;
     attendeeTypeToCUType[CAL_ATTENDEE_OBJECT_TYPE.user] = CAL_ICAL.cutype.individual;
     attendeeTypeToCUType[CAL_ATTENDEE_OBJECT_TYPE.resource] = CAL_ICAL.cutype.resource;
+    attendeeTypeToCUType[CAL_ATTENDEE_OBJECT_TYPE.group] = CAL_ICAL.cutype.group;
 
     return service;
 
