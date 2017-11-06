@@ -8,6 +8,7 @@
     $alert,
     $scope,
     $state,
+    $log,
     _,
     calendarService,
     userUtils,
@@ -16,6 +17,7 @@
     notificationFactory,
     calOpenEventForm,
     calUIAuthorizationService,
+    calAttendeesDenormalizerService,
     eventRecurringModalService,
     session,
     calPathBuilder,
@@ -184,6 +186,18 @@
           });
       }
 
+      function denormalizeAttendees() {
+        var attendees = angular.copy($scope.editedEvent.attendees);
+
+        return calAttendeesDenormalizerService($scope.editedEvent.attendees)
+          .then(function(attendees) {
+            $scope.editedEvent.attendees = attendees;
+          }).catch(function(err) {
+            $log.error('Can not denormalize attendees, defaulting to original ones', err);
+            $scope.editedEvent.attendees = attendees;
+          });
+      }
+
       function _canModifyEvent() {
         return calUIAuthorizationService.canModifyEvent($scope.calendar, $scope.editedEvent, session.user._id);
       }
@@ -212,6 +226,7 @@
 
           _hideModal();
           setOrganizer()
+            .then(denormalizeAttendees)
             .then(function() {
               return calEventService.createEvent($scope.calendar, $scope.editedEvent, {
                 graceperiod: true,

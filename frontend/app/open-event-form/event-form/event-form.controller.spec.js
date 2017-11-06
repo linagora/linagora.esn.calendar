@@ -6,7 +6,7 @@ var expect = chai.expect;
 
 describe('The event-form module controllers', function() {
   var Cache, calendarTest, canModifyEventResult, eventTest, owner, user;
-  var calEventServiceMock;
+  var calEventServiceMock, calAttendeesDenormalizerService;
   var $modal, $rootScope;
 
   beforeEach(function() {
@@ -51,6 +51,8 @@ describe('The event-form module controllers', function() {
       isSubscription: function() { return false; },
       isWritable: angular.noop
     };
+
+    calAttendeesDenormalizerService = function(attendees) {return $q.when(attendees);};
 
     this.calendars = [
       calendarTest,
@@ -149,6 +151,7 @@ describe('The event-form module controllers', function() {
       $provide.decorator('calendarUtils', function($delegate) {
         return angular.extend($delegate, calendarUtilsMock);
       });
+      $provide.value('calAttendeesDenormalizerService', calAttendeesDenormalizerService);
       $provide.value('calEventService', self.calEventServiceMock);
       $provide.value('calendarService', self.calendarServiceMock);
       $provide.value('session', sessionMock);
