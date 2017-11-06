@@ -169,13 +169,14 @@
           });
       }
 
-      function denormalizeAttendees() {
+      function processAttendees() {
         var attendees = angular.copy($scope.editedEvent.attendees);
 
         return calAttendeesDenormalizerService($scope.editedEvent.attendees)
-          .then(function(attendees) {
-            $scope.editedEvent.attendees = attendees;
-          }).catch(function(err) {
+          .then(function(denormalized) {
+            $scope.editedEvent.attendees = calAttendeeService.filterDuplicates(denormalized);
+          })
+          .catch(function(err) {
             $log.error('Can not denormalize attendees, defaulting to original ones', err);
             $scope.editedEvent.attendees = attendees;
           });
@@ -209,7 +210,7 @@
 
           _hideModal();
           setOrganizer()
-            .then(denormalizeAttendees)
+            .then(processAttendees)
             .then(function() {
               return calEventService.createEvent($scope.calendar, $scope.editedEvent, {
                 graceperiod: true,

@@ -92,4 +92,24 @@ describe('The calAttendeeService service', function() {
       expect(calAttendeeService.getAttendeeForUser(attendees, user)).to.deep.equals(attendees[1]);
     });
   });
+
+  describe('The filterDuplicates function', function() {
+    it('should keep original values', function() {
+      var attendees = [{email: 'user1@open-paas.org'}, {email: 'user2@open-paas.org'}];
+
+      expect(calAttendeeService.filterDuplicates(attendees)).to.deep.equals(attendees);
+    });
+
+    it('should keep attendees with partstat when duplicates 1', function() {
+      var attendees = [{email: 'user1@open-paas.org'}, {email: 'user2@open-paas.org', partstat: 'needs-action'}, {email: 'user2@open-paas.org'}];
+
+      expect(calAttendeeService.filterDuplicates(attendees)).to.deep.equals([attendees[0], attendees[1]]);
+    });
+
+    it('should keep attendees with partstat when duplicates 2', function() {
+      var attendees = [{email: 'user1@open-paas.org'}, {email: 'user2@open-paas.org'}, {email: 'user2@open-paas.org', partstat: 'needs-action'}];
+
+      expect(calAttendeeService.filterDuplicates(attendees)).to.deep.equals([attendees[0], attendees[2]]);
+    });
+  });
 });

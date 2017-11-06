@@ -6,10 +6,23 @@
 
   function calAttendeeService(_, userUtils, CAL_ICAL) {
     return {
+      filterDuplicates: filterDuplicates,
       getAttendeeForUser: getAttendeeForUser,
       splitAttendeesFromType: splitAttendeesFromType,
       userAsAttendee: userAsAttendee
     };
+
+    function filterDuplicates(attendees) {
+      var attendeesMap = {};
+
+      attendees.forEach(function(attendee) {
+        if (!attendeesMap[attendee.email] || !attendeesMap[attendee.email].partstat) {
+          attendeesMap[attendee.email] = attendee;
+        }
+      });
+
+      return _.values(attendeesMap);
+    }
 
     function getAttendeeForUser(attendees, user) {
       if (!user || !attendees) {
