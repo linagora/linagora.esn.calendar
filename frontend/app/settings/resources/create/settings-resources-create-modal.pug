@@ -16,7 +16,10 @@
               .col-xs-12
                 esn-form-group(label=__('Description'))
                   textarea.form-control(rows="5", ng-model="ctrl.resource.description", name="resourceDescription", required)
-            .row
+            .row.resource-icon-field
+              h6.col-xs-12 #{__('Icon')}
+              cal-resource-icon-picker(icon="ctrl.resource.icon")
+            .row.admin-field
               h6.col-xs-12 #{__('Administrators')}
               .col-xs-12
                 input(type="checkbox", ng-model="ctrl.beAdmin")

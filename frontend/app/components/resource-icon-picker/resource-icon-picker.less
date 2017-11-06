@@ -1,0 +1,40 @@
+.resource-icon-picker {
+    .modal-body {
+      .flex-horizontal-centered;
+      .flex-flow(row wrap);
+    }
+
+    .square-box {
+      .all-centered;
+
+      width: 40px;
+      height: 40px;
+      margin: 3px;
+    }
+
+    .icon-box {
+      width: 36px;
+      height: 36px;
+      font-size: 36px;
+    }
+
+    .selected {
+      border: 1px solid @m-red;
+    }
+  }  
+
+  .icon-picker-container {
+    width: 50px;
+    margin-left: 100px;
+    position: relative;
+
+    .icon-picker-value {
+      font-size: 36px;
+      width: 25px;
+      height: 25px;
+      border-radius: 2px;
+      position: absolute;
+      top: 0px;
+      z-index: 5;
+    }
+  }
