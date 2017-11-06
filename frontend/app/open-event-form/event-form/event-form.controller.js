@@ -281,16 +281,20 @@
           $scope.editedEvent.deleteAllException();
         }
 
-        calEventService.modifyEvent(
-          $scope.event.path || calPathBuilder.forCalendarPath($scope.calendarHomeId, $scope.calendar.id),
-          $scope.editedEvent,
-          $scope.event,
-          $scope.event.etag,
-          angular.noop,
-          { graceperiod: true, notifyFullcalendar: $state.is('calendar.main') }
-        ).finally(function() {
-          $scope.restActive = false;
-        });
+        processAttendees()
+          .then(function() {
+            calEventService.modifyEvent(
+              $scope.event.path || calPathBuilder.forCalendarPath($scope.calendarHomeId, $scope.calendar.id),
+              $scope.editedEvent,
+              $scope.event,
+              $scope.event.etag,
+              angular.noop,
+              { graceperiod: true, notifyFullcalendar: $state.is('calendar.main') }
+            );
+          })
+          .finally(function() {
+            $scope.restActive = false;
+          });
       }
 
       // case of selected instance of recurrent event
@@ -407,7 +411,7 @@
       }
 
       function submit() {
-        calEventUtils.isNew($scope.editedEvent) && !calEventUtils.isInvolvedInATask($scope.editedEvent) ? $scope.createEvent() : $scope.modifyEvent();
+        (calEventUtils.isNew($scope.editedEvent) && !calEventUtils.isInvolvedInATask($scope.editedEvent) ? createEvent : modifyEvent)();
       }
 
       function goToCalendar(callback) {

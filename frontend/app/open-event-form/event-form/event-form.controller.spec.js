@@ -249,6 +249,8 @@ describe('The event-form module controllers', function() {
         this.scope.editedEvent.title = 'newTitle';
         this.scope.isOrganizer = true;
         this.scope.submit();
+
+        this.rootScope.$digest();
       });
 
       it('should be modifyEvent if event has a etag property', function(done) {
@@ -273,6 +275,8 @@ describe('The event-form module controllers', function() {
           id: 'calendarId'
         };
         this.scope.submit();
+
+        this.rootScope.$digest();
       });
     });
 
@@ -509,6 +513,8 @@ describe('The event-form module controllers', function() {
           this.initController();
           this.scope.modifyEvent();
 
+          this.rootScope.$digest();
+
           expect(this.$state.is).to.have.been.calledWith('calendar.main');
         });
 
@@ -690,6 +696,8 @@ describe('The event-form module controllers', function() {
           }];
 
           this.scope.modifyEvent();
+
+          this.rootScope.$digest();
 
           expect(eventTest).to.shallowDeepEqual({
             title: 'title',
