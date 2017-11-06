@@ -100,7 +100,8 @@
       cutype: {
         individual: 'INDIVIDUAL',
         room: 'ROOM',
-        resource: 'RESOURCE'
+        resource: 'RESOURCE',
+        group: 'GROUP'
       }
     })
 
@@ -134,7 +135,8 @@
 
     .constant('CAL_ATTENDEE_OBJECT_TYPE', {
       user: 'user',
-      resource: 'resource'
+      resource: 'resource',
+      group: 'group'
     })
 
     .constant('CAL_AVAILABLE_VIEWS', ['agendaWeek', 'agendaDay', 'month', 'agendaThreeDays', 'basicDay'])
