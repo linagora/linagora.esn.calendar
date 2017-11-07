@@ -6,7 +6,7 @@ var expect = chai.expect;
 
 describe('The event-form module controllers', function() {
   var Cache, calendarTest, canModifyEventResult, eventTest, owner, user;
-  var calEventServiceMock;
+  var calEventServiceMock, calAttendeesDenormalizerService;
   var $modal, $rootScope;
 
   beforeEach(function() {
@@ -51,6 +51,8 @@ describe('The event-form module controllers', function() {
       isSubscription: function() { return false; },
       isWritable: angular.noop
     };
+
+    calAttendeesDenormalizerService = function(attendees) {return $q.when(attendees);};
 
     this.calendars = [
       calendarTest,
@@ -149,6 +151,7 @@ describe('The event-form module controllers', function() {
       $provide.decorator('calendarUtils', function($delegate) {
         return angular.extend($delegate, calendarUtilsMock);
       });
+      $provide.value('calAttendeesDenormalizerService', calAttendeesDenormalizerService);
       $provide.value('calEventService', self.calEventServiceMock);
       $provide.value('calendarService', self.calendarServiceMock);
       $provide.value('session', sessionMock);
@@ -246,6 +249,8 @@ describe('The event-form module controllers', function() {
         this.scope.editedEvent.title = 'newTitle';
         this.scope.isOrganizer = true;
         this.scope.submit();
+
+        this.rootScope.$digest();
       });
 
       it('should be modifyEvent if event has a etag property', function(done) {
@@ -270,6 +275,8 @@ describe('The event-form module controllers', function() {
           id: 'calendarId'
         };
         this.scope.submit();
+
+        this.rootScope.$digest();
       });
     });
 
@@ -506,6 +513,8 @@ describe('The event-form module controllers', function() {
           this.initController();
           this.scope.modifyEvent();
 
+          this.rootScope.$digest();
+
           expect(this.$state.is).to.have.been.calledWith('calendar.main');
         });
 
@@ -687,6 +696,8 @@ describe('The event-form module controllers', function() {
           }];
 
           this.scope.modifyEvent();
+
+          this.rootScope.$digest();
 
           expect(eventTest).to.shallowDeepEqual({
             title: 'title',

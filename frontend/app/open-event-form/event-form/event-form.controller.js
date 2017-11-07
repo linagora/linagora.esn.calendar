@@ -8,14 +8,17 @@
     $alert,
     $scope,
     $state,
+    $log,
     _,
     calendarService,
     userUtils,
     calEventService,
+    calAttendeeService,
     calEventUtils,
     notificationFactory,
     calOpenEventForm,
     calUIAuthorizationService,
+    calAttendeesDenormalizerService,
     eventRecurringModalService,
     session,
     calPathBuilder,
@@ -136,26 +139,8 @@
             });
           })
           .then(function() {
-            var users = [];
-            var resources = [];
-
-            $scope.userAsAttendee = null;
-            $scope.editedEvent.attendees.forEach(function(attendee) {
-              if (attendee.cutype === CAL_ICAL.cutype.individual) {
-                users.push(attendee);
-              } else {
-                resources.push(attendee);
-              }
-
-              if (attendee.email in session.user.emailMap) {
-                $scope.userAsAttendee = attendee;
-              }
-            });
-
-            $scope.attendees = {
-              resources: resources,
-              users: users
-            };
+            $scope.attendees = calAttendeeService.splitAttendeesFromType($scope.editedEvent.attendees);
+            $scope.userAsAttendee = calAttendeeService.getAttendeeForUser($scope.editedEvent.attendees, session.user);
 
             if (!$scope.editedEvent.class) {
               $scope.editedEvent.class = CAL_EVENT_FORM.class.default;
@@ -181,6 +166,19 @@
             // Here getOwner() work only with user. Need to defined a behaviors for resources
             // By this catch we allow event creation
             return;
+          });
+      }
+
+      function processAttendees() {
+        var attendees = angular.copy($scope.editedEvent.attendees);
+
+        return calAttendeesDenormalizerService($scope.editedEvent.attendees)
+          .then(function(denormalized) {
+            $scope.editedEvent.attendees = calAttendeeService.filterDuplicates(denormalized);
+          })
+          .catch(function(err) {
+            $log.error('Can not denormalize attendees, defaulting to original ones', err);
+            $scope.editedEvent.attendees = attendees;
           });
       }
 
@@ -212,6 +210,7 @@
 
           _hideModal();
           setOrganizer()
+            .then(processAttendees)
             .then(function() {
               return calEventService.createEvent($scope.calendar, $scope.editedEvent, {
                 graceperiod: true,
@@ -282,16 +281,20 @@
           $scope.editedEvent.deleteAllException();
         }
 
-        calEventService.modifyEvent(
-          $scope.event.path || calPathBuilder.forCalendarPath($scope.calendarHomeId, $scope.calendar.id),
-          $scope.editedEvent,
-          $scope.event,
-          $scope.event.etag,
-          angular.noop,
-          { graceperiod: true, notifyFullcalendar: $state.is('calendar.main') }
-        ).finally(function() {
-          $scope.restActive = false;
-        });
+        processAttendees()
+          .then(function() {
+            calEventService.modifyEvent(
+              $scope.event.path || calPathBuilder.forCalendarPath($scope.calendarHomeId, $scope.calendar.id),
+              $scope.editedEvent,
+              $scope.event,
+              $scope.event.etag,
+              angular.noop,
+              { graceperiod: true, notifyFullcalendar: $state.is('calendar.main') }
+            );
+          })
+          .finally(function() {
+            $scope.restActive = false;
+          });
       }
 
       // case of selected instance of recurrent event
@@ -408,7 +411,7 @@
       }
 
       function submit() {
-        calEventUtils.isNew($scope.editedEvent) && !calEventUtils.isInvolvedInATask($scope.editedEvent) ? $scope.createEvent() : $scope.modifyEvent();
+        (calEventUtils.isNew($scope.editedEvent) && !calEventUtils.isInvolvedInATask($scope.editedEvent) ? createEvent : modifyEvent)();
       }
 
       function goToCalendar(callback) {
