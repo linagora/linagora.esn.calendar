@@ -33,16 +33,24 @@ module.exports = dependencies => {
         utils.generateValidationLinks(resourceId, eventId, EMAIL_REFERER),
         resourceModule.lib.administrator.resolve(resource)
       ])
-      .spread((links, administrators) => emailModule.sender.send({
-        // from: Will be set as resourceEvent.userId/creatorId in https://ci.linagora.com/linagora/lgs/openpaas/linagora.esn.calendar/issues/945
-        to: administrators,
-        subject: { phrase: subject, parameters: { name: resource.name }},
-        ics,
-        eventPath,
-        emailTemplateName,
-        context: { links, resource },
-        headers
-      }))
+      .spread((links, administrators) => {
+        if (!administrators || !administrators.length) {
+          logger.debug('No administrator to send email to');
+
+          return;
+        }
+
+        return emailModule.sender.send({
+          // from: Will be set as resourceEvent.userId/creatorId in https://ci.linagora.com/linagora/lgs/openpaas/linagora.esn.calendar/issues/945
+          to: administrators,
+          subject: { phrase: subject, parameters: { name: resource.name }},
+          ics,
+          eventPath,
+          emailTemplateName,
+          context: { links, resource },
+          headers
+        });
+      })
       .catch(err => {
         logger.error('Error while sending email to resource administrators', err);
         throw err;
