@@ -6,6 +6,7 @@
     'angularMoment',
     'esn.aggregator',
     'esn.authentication',
+    'esn.async-action',
     'esn.avatar',
     'esn.cache',
     'esn.calMoment',
