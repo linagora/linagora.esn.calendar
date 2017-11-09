@@ -56,6 +56,14 @@
           }
         }
       })
+      .state('calendar.main.planning', {
+        url: '/planning',
+        views: {
+          'sidebar@calendar.main': {
+            template: '<cal-calendar-planning/>'
+          }
+        }
+      })
       .state('calendar.settings', {
         url: '/settings',
          deepStateRedirect: {
