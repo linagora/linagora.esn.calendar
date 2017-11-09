@@ -8,7 +8,7 @@
     $stateProvider
       .state('calendar', {
         url: '/calendar',
-        templateUrl: '/calendar/app/calendar/user-calendar',
+        templateUrl: '/calendar/app/index',
         abstract: true,
         resolve: {
           calendarHomeId: function(calendarHomeService) {

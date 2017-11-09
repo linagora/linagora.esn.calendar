@@ -28,7 +28,6 @@
 @import './calendar/calendar-header/calendar-header';
 @import './calendar/calendar-view/calendar-view';
 @import './calendar/calendar-view/fullcalendar';
-@import './calendar/user-calendar';
 
 @import './community/community-calendar';
 
@@ -66,5 +65,15 @@
     &:hover, &:focus {
       box-shadow: 0 5px 11px 0 rgba(0,0,0,0.18),0 4px 15px 0 rgba(0,0,0,0.15);
     }
+  }
+}
+
+.calendar {
+  width: 100%;
+}
+
+@media (min-width: @screen-md-min) {
+  .calendar {
+    margin-top: 15px;
   }
 }
