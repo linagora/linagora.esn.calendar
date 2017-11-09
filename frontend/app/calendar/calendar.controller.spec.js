@@ -4,7 +4,7 @@
 
 var expect = chai.expect;
 
-describe('The calCalendarMainController controller', function() {
+describe('The CalCalendarController controller', function() {
 
   var calFullUiConfiguration, $q, $controller, $rootScope, $scope, context, businessHours;
 
@@ -30,7 +30,7 @@ describe('The calCalendarMainController controller', function() {
   }));
 
   function initController() {
-    return $controller('calCalendarMainController', { $scope: $scope }, context);
+    return $controller('CalCalendarController', { $scope: $scope }, context);
   }
 
   describe('The $onInit function', function() {

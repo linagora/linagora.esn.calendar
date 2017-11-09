@@ -28,7 +28,7 @@
         url: '',
         views: {
           content: {
-            template: '<cal-calendar-main calendar-home-id="calendarHomeId" business-hours="businessHours"/>'
+            template: '<cal-calendar calendar-home-id="calendarHomeId" business-hours="businessHours"/>'
           }
         }
       })
