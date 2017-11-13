@@ -1,3 +1,5 @@
+@calPastEventOpacity: 0.38;
+
 .cal-calendar-planning {
   .fc-toolbar {
     background-color: #F2F2F2;
@@ -17,6 +19,14 @@
   }
 
   .fc-list-item {
+    &.past-event {
+      color: rgba(0, 0, 0, @calPastEventOpacity);
+
+      .fc-event-dot {
+        .opacity(@calPastEventOpacity);
+      }
+    }
+
     cursor: pointer;
   }
 

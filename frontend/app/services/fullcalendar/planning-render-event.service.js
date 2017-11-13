@@ -12,11 +12,18 @@
       return function(event, element) {
         setEventRights();
         switchTableElements();
+        setPastEventStyle();
 
         function setEventRights() {
           if (!calUIAuthorizationService.canModifyEvent(calendar, event, session.user._id)) {
             event.startEditable = false;
             event.durationEditable = false;
+          }
+        }
+
+        function setPastEventStyle() {
+          if (event.end.isBefore()) {
+            element.addClass('past-event');
           }
         }
 
