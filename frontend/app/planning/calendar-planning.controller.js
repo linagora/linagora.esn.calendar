@@ -12,68 +12,18 @@
     var eventSourcesMap = {};
 
     self.viewMode = self.viewMode || 'listDay';
-    self.$onInit = $onInit;
     self.$onDestroy = $onDestroy;
+    self.$onInit = $onInit;
 
     var rootScopeListeners = [
-      $rootScope.$on(CAL_EVENTS.CALENDAR_REFRESH, _rerenderCalendar),
-      $rootScope.$on(CAL_EVENTS.CALENDARS.ADD, _addCalendar),
-      $rootScope.$on(CAL_EVENTS.CALENDARS.REMOVE, _removeCalendar),
-      $rootScope.$on(CAL_EVENTS.CALENDARS.UPDATE, _updateCalendar),
-      $rootScope.$on(CAL_EVENTS.ITEM_ADD, _rerenderCalendar),
-      $rootScope.$on(CAL_EVENTS.ITEM_MODIFICATION, _rerenderCalendar),
-      $rootScope.$on(CAL_EVENTS.ITEM_REMOVE, _rerenderCalendar)
+      $rootScope.$on(CAL_EVENTS.CALENDAR_REFRESH, rerenderCalendar),
+      $rootScope.$on(CAL_EVENTS.CALENDARS.ADD, addCalendar),
+      $rootScope.$on(CAL_EVENTS.CALENDARS.REMOVE, removeCalendar),
+      $rootScope.$on(CAL_EVENTS.CALENDARS.UPDATE, updateCalendar),
+      $rootScope.$on(CAL_EVENTS.ITEM_ADD, rerenderCalendar),
+      $rootScope.$on(CAL_EVENTS.ITEM_MODIFICATION, rerenderCalendar),
+      $rootScope.$on(CAL_EVENTS.ITEM_REMOVE, rerenderCalendar)
     ];
-
-    function _rerenderCalendar() {
-      calendarPromise.then(function(calendar) {
-        calendar.fullCalendar('refetchEvents');
-      });
-    }
-
-    function _addCalendar(event, calendar) {
-      eventSourcesMap[calendar.getUniqueId()] = buildEventSourceForCalendar(calendar);
-
-      calendarPromise.then(function(cal) {
-        cal.fullCalendar('addEventSource', eventSourcesMap[calendar.getUniqueId()]);
-      });
-    }
-
-    function _removeCalendar(event, calendarWrapperUniqueId) {
-      _.remove(self.calendars, {uniqueId: calendarWrapperUniqueId.uniqueId});
-      var removedEventSource = eventSourcesMap[calendarWrapperUniqueId.uniqueId];
-
-      delete eventSourcesMap[calendarWrapperUniqueId.uniqueId];
-
-      calendarPromise.then(function(cal) {
-        cal.fullCalendar('removeEventSource', removedEventSource);
-      });
-    }
-
-    function _updateCalendar(event, calendar) {
-      self.calendars.forEach(function(cal, index) {
-        if (calendar.getUniqueId() === cal.getUniqueId()) {
-          self.calendars[index] = calendar;
-          _forceEventsRedraw(calendar);
-        }
-      });
-    }
-
-    function _forceEventsRedraw(calendar) {
-      // For now we force redraw when calendar color changes.
-      // There is no other way to do this in fullcalendar but 'hopefuly' we have the event cache:
-      // Removing then adding the event source costs nothing and does not 'tilt'
-      var calId = calendar.getUniqueId();
-
-      if (eventSourcesMap[calId] && calendar.color && calendar.color !== eventSourcesMap[calId].backgroundColor) {
-        eventSourcesMap[calId].backgroundColor = calendar.color;
-      }
-
-      calendarPromise.then(function(cal) {
-        cal.fullCalendar('removeEventSource', eventSourcesMap[calId]);
-        cal.fullCalendar('addEventSource', eventSourcesMap[calId]);
-      });
-    }
 
     function $onDestroy() {
       rootScopeListeners.forEach(function(unregisterFunction) {
@@ -105,6 +55,56 @@
         .catch(displayCalendarError);
 
       windowJQuery.resize(resizeCalendarHeight);
+    }
+
+    function addCalendar(event, calendar) {
+      eventSourcesMap[calendar.getUniqueId()] = buildEventSourceForCalendar(calendar);
+
+      calendarPromise.then(function(cal) {
+        cal.fullCalendar('addEventSource', eventSourcesMap[calendar.getUniqueId()]);
+      });
+    }
+
+    function removeCalendar(event, calendarWrapperUniqueId) {
+      _.remove(self.calendars, {uniqueId: calendarWrapperUniqueId.uniqueId});
+      var removedEventSource = eventSourcesMap[calendarWrapperUniqueId.uniqueId];
+
+      delete eventSourcesMap[calendarWrapperUniqueId.uniqueId];
+
+      calendarPromise.then(function(cal) {
+        cal.fullCalendar('removeEventSource', removedEventSource);
+      });
+    }
+
+    function rerenderCalendar() {
+      calendarPromise.then(function(calendar) {
+        calendar.fullCalendar('refetchEvents');
+      });
+    }
+
+    function updateCalendar(event, calendar) {
+      self.calendars.forEach(function(cal, index) {
+        if (calendar.getUniqueId() === cal.getUniqueId()) {
+          self.calendars[index] = calendar;
+          forceEventsRedraw(calendar);
+        }
+      });
+    }
+
+    function forceEventsRedraw(calendar) {
+      // For now we force redraw when calendar color changes.
+      // There is no other way to do this in fullcalendar but 'hopefuly' we have the event cache:
+      // Removing then adding the event source costs nothing and does not 'tilt'
+      var calId = calendar.getUniqueId();
+
+      if (eventSourcesMap[calId] && calendar.color && calendar.color !== eventSourcesMap[calId].backgroundColor) {
+        eventSourcesMap[calId].backgroundColor = calendar.color;
+      }
+
+      calendarPromise.then(function(cal) {
+        cal.fullCalendar('removeEventSource', eventSourcesMap[calId]);
+        cal.fullCalendar('addEventSource', eventSourcesMap[calId]);
+      });
     }
 
     function displayCalendarError(err, errorMessage) {
