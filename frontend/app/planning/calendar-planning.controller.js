@@ -103,6 +103,8 @@
           });
         })
         .catch(displayCalendarError);
+
+      windowJQuery.resize(resizeCalendarHeight);
     }
 
     function displayCalendarError(err, errorMessage) {
@@ -138,16 +140,20 @@
 
     function viewRender() {
       // if not, the planning with have a dirty small height...
+      resizeCalendarHeight();
+    }
+
+    function withCalendar(successCallback, errorCallback) {
+      return esnWithPromiseResult(calendarPromise, successCallback, errorCallback);
+    }
+
+    function resizeCalendarHeight() {
       $timeout(withCalendar(function(calendar) {
         var height = windowJQuery.height() - calendar.offset().top;
 
         height = height > CAL_MAX_CALENDAR_RESIZE_HEIGHT ? CAL_MAX_CALENDAR_RESIZE_HEIGHT : height;
         calendar.fullCalendar('option', 'height', height);
       }), 0);
-    }
-
-    function withCalendar(successCallback, errorCallback) {
-      return esnWithPromiseResult(calendarPromise, successCallback, errorCallback);
     }
   }
 })(angular);
