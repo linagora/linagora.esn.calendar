@@ -75,6 +75,20 @@
           right: 'next'
         },
         columnFormat: 'dd'
+      },
+      planning: {
+        theme: true,
+        editable: false,
+        timezone: 'local',
+        header: {
+          left: 'prev',
+          center: 'title',
+          right: 'next'
+        },
+        themeButtonIcons: {
+          prev: ' mdi mdi-chevron-left',
+          next: ' mdi mdi-chevron-right'
+        }
       }
     })
 

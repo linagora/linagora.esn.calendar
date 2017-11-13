@@ -45,6 +45,7 @@
   .mini-calendar {
     height: auto;
     .calendar {
+      margin-top: 0px;
       height: auto;
     }
   }
@@ -64,6 +65,20 @@
     background: #f7f7f7;
     opacity: 0.6;
   }
+
+  .right-sidebar {
+    height: auto;
+    padding-left: 10px;
+
+    .calendar {
+      height: auto;
+    }
+
+    .cal-calendar-planning {
+      min-width: @calendarRightPaneWidth;
+      max-width: @calendarRightPaneWidth;
+    }
+  }
 }
 
 @media (min-width: @screen-sm-min) {
@@ -75,6 +90,8 @@
     }
 
     .calendar {
+      .flex-row;
+
       margin-top: @spaceNeededForSubheader;
 
       .throbber .openpaas-logo {

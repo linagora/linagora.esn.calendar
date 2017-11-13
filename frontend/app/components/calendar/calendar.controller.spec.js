@@ -4,8 +4,7 @@
 
 var expect = chai.expect;
 
-describe('The esnCalendar component controller', function() {
-
+describe('The esnCalendarController controller', function() {
   var $rootScope, $scope, $controller, initController, element, vm, calElement, $window;
 
   beforeEach(function() {

@@ -2,9 +2,9 @@
   'use strict';
 
   angular.module('esn.calendar')
-    .controller('calCalendarMainController', calCalendarMainController);
+    .controller('CalCalendarController', CalCalendarController);
 
-  function calCalendarMainController(calFullUiConfiguration) {
+  function CalCalendarController(calFullUiConfiguration) {
     var self = this;
 
     self.$onInit = $onInit;

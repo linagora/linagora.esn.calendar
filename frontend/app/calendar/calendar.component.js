@@ -1,14 +1,14 @@
-(function() {
+(function(angular) {
   'use strict';
 
   angular.module('esn.calendar')
-    .component('calCalendarMain', {
-      templateUrl: '/calendar/app/calendar/calendar-main.html',
+    .component('calCalendar', {
+      templateUrl: '/calendar/app/calendar/calendar.html',
       bindings: {
         calendarHomeId: '=',
         businessHours: '='
       },
       controllerAs: 'ctrl',
-      controller: 'calCalendarMainController'
+      controller: 'CalCalendarController'
   });
-})();
+})(angular);

@@ -6,12 +6,16 @@
 
   function calendarCurrentView($location, $log, calMoment, matchmedia, CAL_AVAILABLE_VIEWS, ESN_MEDIA_QUERY_SM_XS) {
     var currentView = null;
+    var miniCalendarView;
+    var planningView;
 
     var service = {
       set: set,
       get: get,
       getMiniCalendarView: getMiniCalendarView,
       setMiniCalendarView: setMiniCalendarView,
+      setPlanningView: setPlanningView,
+      getPlanningView: getPlanningView,
       isCurrentViewAroundDay: isCurrentViewAroundDay
     };
 
@@ -72,14 +76,20 @@
       return currentView || restoreCurrentViewFromUrl();
     }
 
-    var miniCalendarView;
-
     function setMiniCalendarView(view) {
       miniCalendarView = view;
     }
 
     function getMiniCalendarView() {
       return miniCalendarView;
+    }
+
+    function setPlanningView(view) {
+      planningView = view;
+    }
+
+    function getPlanningView() {
+      return planningView;
     }
 
     function isCurrentViewAroundDay(day) {

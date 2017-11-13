@@ -27,8 +27,8 @@
 @import './calendar/calendar-header/calendar-header';
 @import './calendar/calendar-view/calendar-view';
 @import './calendar/calendar-view/fullcalendar';
-@import './calendar/community-calendar';
-@import './calendar/user-calendar';
+
+@import './community/community-calendar';
 
 @import './calendar-configuration/calendar-configuration';
 @import './calendar-configuration/calendar-configuration-tab-delegation/calendar-configuration-tab-delegation.less';
@@ -42,6 +42,9 @@
 
 @import './open-event-form/event-recurring-modal/instance-or-series';
 @import './open-event-form/event-form/event-form';
+
+@import './planning/calendar-planning.less';
+@import './planning/aside/calendar-planning-aside.less';
 
 @import './resource/resource-list/resource-list';
 @import './resource/resource-item/resource-item';
@@ -64,5 +67,15 @@
     &:hover, &:focus {
       box-shadow: 0 5px 11px 0 rgba(0,0,0,0.18),0 4px 15px 0 rgba(0,0,0,0.15);
     }
+  }
+}
+
+.calendar {
+  width: 100%;
+}
+
+@media (min-width: @screen-md-min) {
+  .calendar {
+    margin-top: 15px;
   }
 }
