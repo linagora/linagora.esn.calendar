@@ -89,6 +89,36 @@ describe('The Resource request handler module', function() {
         });
     });
 
+    it('should not send email when administrators can not be resolved', function(done) {
+      resourceModule.lib.resource.get.returns(Promise.resolve(resource));
+      utilsModule.generateValidationLinks.returns(Promise.resolve({}));
+      resourceModule.lib.administrator.resolve.returns(Promise.resolve());
+
+      this.requireModule().handle(payload)
+        .then(() => {
+          expect(emailModule.sender.send).to.not.have.been.called;
+          expect(resourceModule.lib.resource.get).to.have.been.calledWith(payload.resourceId);
+          expect(resourceModule.lib.administrator.resolve).to.have.been.calledWith(resource);
+          done();
+        })
+        .catch(done);
+    });
+
+    it('should not send email when there are no administrators', function(done) {
+      resourceModule.lib.resource.get.returns(Promise.resolve(resource));
+      utilsModule.generateValidationLinks.returns(Promise.resolve({}));
+      resourceModule.lib.administrator.resolve.returns(Promise.resolve([]));
+
+      this.requireModule().handle(payload)
+        .then(() => {
+          expect(emailModule.sender.send).to.not.have.been.called;
+          expect(resourceModule.lib.resource.get).to.have.been.calledWith(payload.resourceId);
+          expect(resourceModule.lib.administrator.resolve).to.have.been.calledWith(resource);
+          done();
+        })
+        .catch(done);
+    });
+
     it('should send email', function(done) {
       const links = { yes: 1, no: 2 };
       const user1 = { _id: 1 };
