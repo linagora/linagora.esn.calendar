@@ -8,6 +8,12 @@
 
     .ui-button {
       color: @secondaryTextColor;
+
+      &:hover {
+        background: inherit;
+        background-color: darken(@body-bg, 10%);
+        color: @secondaryTextColor !important; // override the color set for all the calendar headers...
+      }
     }
 
     h2 {
