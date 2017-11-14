@@ -1,4 +1,4 @@
-@cal-event-border-color: rgba(255,255,255,0.5);
+@cal-event-border-color: @m-white;
 @cal-event-fade: 0.7;
 @cal-remaining-space-to-allow-dnd: 7px;
 @cal-table-today-cell-color: #fcf8e3;
@@ -11,11 +11,16 @@
 
 .fc-view:not(.fc-month-view) {
   .fc-event {
+    border-radius: 3px;
+
     .fc-content {
       .flex-column();
       height: 100%;
       .fc-time {
-        text-align: center;
+        background: none;
+        font-size: 11px;
+        padding: 2px 6px;
+        text-align: left;
         .mdi-sync {
           font-size: 1.1em;
         }
@@ -25,18 +30,25 @@
       }
       .fc-title {
         .ellipsis();
-        padding: 2px;
+        font-size: 13px;
+        font-weight: 500;
+        padding: 2px 6px;
         overflow: hidden;
       }
       .fc-location {
         .ellipsis();
-        font-size: 0.85em;
+
+        font-size: 11px;
         margin-top: 2px;
       }
     }
     .fc-resizer {
-      color: @m-black;
+      color: @m-white;
       display: none;
+    }
+
+    .fc-bg {
+      opacity: 0;
     }
   }
 }
