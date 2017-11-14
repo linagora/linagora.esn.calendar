@@ -1,5 +1,8 @@
 .cal-resource-item
   cal-attendee-avatar(attendee='ctrl.resource')
+  .cal-participation-status
+    i.mdi.mdi(ng-class='ctrl.PARTSTAT_ICONS[ctrl.resource.partstat]')
+
   .checkbox(ng-if='ctrl.canModifyResource')
     label
       input.force-position-initial(type="checkbox", ng-checked="ctrl.resource.clicked")

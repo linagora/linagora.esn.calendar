@@ -154,6 +154,7 @@
   "Subscription": "Abonnement",
   "Successfully subscribed to calendar": "Inscription réussie au calendrier",
   "Successfully subscribed to calendars": "Inscription réussie aux calendriers",
+  "Tentative": "Provisoire",
   "Tentatively accepted: %s (%s)": "Provisoirement accepté: %s (%s)",
   "This event has been cancelled": "Cet événement a été annulé",
   "This message contains an invitation to an event": "Ce message contient une invitation à un événement",
