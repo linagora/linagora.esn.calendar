@@ -33,9 +33,12 @@
         function switchTitleAndTime() {
           var content = element.find('.fc-content');
           var children = content[0].children;
-          var title = content[0].removeChild(children[1]);
 
-          content[0].insertBefore(title, children[0]);
+          if (children[1]) {
+            var title = content[0].removeChild(children[1]);
+
+            content[0].insertBefore(title, children[0]);
+          }
         }
 
         function addTooltipToEvent() {
@@ -62,7 +65,7 @@
         function appendLocation() {
           if (event.location) {
             element.addClass('event-with-location');
-            title.append(angular.element('<div class="fc-location"><i class="mdi mdi-map-marker"/>' + escapeHtmlUtils.escapeHTML(event.location) + '</div>'));
+            timeDiv.append(angular.element('<div class="fc-location">' + escapeHtmlUtils.escapeHTML(event.location) + '</div>'));
           }
         }
 
