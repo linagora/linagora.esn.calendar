@@ -28,6 +28,15 @@
         appendDescription();
         setEventRights();
         addIcons();
+        switchTitleAndTime();
+
+        function switchTitleAndTime() {
+          var content = element.find('.fc-content');
+          var children = content[0].children;
+          var title = content[0].removeChild(children[1]);
+
+          content[0].insertBefore(title, children[0]);
+        }
 
         function addTooltipToEvent() {
           element.find('.fc-content').attr('title', event.title);
