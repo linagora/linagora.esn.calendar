@@ -28,6 +28,18 @@
         appendDescription();
         setEventRights();
         addIcons();
+        switchTitleAndTime();
+
+        function switchTitleAndTime() {
+          if (view.name === 'month') {
+            return;
+          }
+
+          if (element.find('.fc-time').length) {
+            // needs to be checked with find because element is potentially removed for all day events and 30 minutes ones
+            timeDiv.before(title.remove());
+          }
+        }
 
         function addTooltipToEvent() {
           element.find('.fc-content').attr('title', event.title);
@@ -45,15 +57,16 @@
         }
 
         function adaptTitleWhenShortEvent() {
-          if ((eventDurationInMinute <= CAL_MAX_DURATION_OF_SMALL_EVENT.DESKTOP) && element.find('.fc-time').length) {
-            element.find('.fc-time').attr('data-start', event.start.format('hh:mm') + ' - ' + event.title);
+          if ((eventDurationInMinute <= CAL_MAX_DURATION_OF_SMALL_EVENT.DESKTOP) && element.find('.fc-time').length && element.find('.fc-title').length) {
+            timeDiv.remove();
+            title.text(event.start.format('hh:mm') + ' - ' + event.title);
           }
         }
 
         function appendLocation() {
           if (event.location) {
             element.addClass('event-with-location');
-            title.append(angular.element('<div class="fc-location"><i class="mdi mdi-map-marker"/>' + escapeHtmlUtils.escapeHTML(event.location) + '</div>'));
+            timeDiv.append(angular.element('<div class="fc-location">' + escapeHtmlUtils.escapeHTML(event.location) + '</div>'));
           }
         }
 

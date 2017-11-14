@@ -34,6 +34,8 @@ describe('The calFullCalendarRenderEventService service', function() {
     return this.innerElements[aClass];
   };
 
+  Element.prototype.remove = sinon.spy();
+
   Element.prototype.append = sinon.spy();
 
   Element.prototype.prepend = sinon.spy();
@@ -96,7 +98,7 @@ describe('The calFullCalendarRenderEventService service', function() {
     fcTitle = new Element();
     fcTime = new Element();
     eventIconsDivInMobile = new Element();
-    view = {name: 'month'};
+    view = {name: 'month', type: 'month'};
     element.innerElements['.fc-content'] = fcContent;
     element.innerElements['.fc-title'] = fcTitle;
     element.innerElements['.fc-time'] = fcTime;
@@ -197,11 +199,13 @@ describe('The calFullCalendarRenderEventService service', function() {
   describe('The adaptTitleWhenShortEvent function', function() {
     it('should display event title instead of time if the event duration under the max duration of a small event', angular.mock.inject(function() {
       element.innerElements['.fc-time'].length = 1;
-      fcTime.attr = sinon.spy();
+      element.innerElements['.fc-title'].length = 1;
+      fcTitle.text = sinon.spy();
 
       this.calFullCalendarRenderEventService(agenda)(event, element, view);
 
-      expect(fcTime.attr).to.have.been.calledWith('data-start', event.start.format('hh:mm') + ' - ' + event.title);
+      expect(fcTime.remove).to.have.been.calledOnce;
+      expect(fcTitle.text).to.have.been.calledWith(event.start.format('hh:mm') + ' - ' + event.title);
     }));
   });
 
