@@ -121,7 +121,36 @@
 
     .constant('CAL_RESOURCE', {
       AVATAR_URL: '/linagora.esn.resource/images/resource.png',
-      type: 'calendar'
+      type: 'calendar',
+      ICONS: {
+        'guitar-acoustic': 'mdi-guitar-acoustic',
+        home: 'mdi-home',
+        laptop: 'mdi-laptop',
+        motorbike: 'mdi-motorbike',
+        office: 'mdi-office',
+        radio: 'mdi-radio',
+        soccer: 'mdi-soccer',
+        sofa: 'mdi-sofa',
+        umbrella: 'mdi-umbrella',
+        train: 'mdi-train',
+        video: 'mdi-video',
+        car: 'mdi-car',
+        caravan: 'mdi-caravan',
+        'credit-card': 'mdi-credit-card',
+        parking: 'mdi-parking',
+        deskphone: 'mdi-deskphone',
+        phone: 'mdi-phone',
+        cellphone: 'mdi-cellphone',
+        microphone: 'mdi-microphone',
+        tablet: 'mdi-tablet',
+        wifi: 'mdi-wifi'
+      },
+      PARTSTAT_ICONS: {
+        ACCEPTED: 'mdi-check-circle participation-status-accepted',
+        TENTATIVE: 'mdi-pause-circle participation-status-tentative',
+        'NEEDS-ACTION': 'mdi-pause-circle participation-status-needaction',
+        DECLINED: 'mdi-close-circle participation-status-declined'
+      }
     })
 
     .constant('CAL_ATTENDEE_OBJECT_TYPE', {
