@@ -7,9 +7,7 @@
           .media-body(title="{{ $ctrl.calendar.name }}")
             .lv-title
               span {{ $ctrl.calendar.name }}
-            .owner-name(ng-if="$ctrl.ownerDisplayName")
-              span {{ ::$ctrl.ownerDisplayName }}
-            .owner-name(ng-if="$ctrl.calendar.isResource()")
-              span.ellipsis {{ ::$ctrl.calendar.source.description }}
+            .details(ng-if="$ctrl.details")
+              span.ellipsis {{ ::$ctrl.details }}
       .settings.hidden-xs(ng-click="$ctrl.onOptionClick()")
         i.mdi.mdi-settings

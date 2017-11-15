@@ -202,7 +202,7 @@
      * @returns {boolean} return true if the calendar is from a resource
      */
     function isResource() {
-      return this.type === CAL_CALENDAR_TYPE.RESOURCE;
+      return this.type && this.type.toLowerCase() === CAL_CALENDAR_TYPE.RESOURCE;
     }
 
     /**
