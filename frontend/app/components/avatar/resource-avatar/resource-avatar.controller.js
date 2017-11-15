@@ -7,22 +7,15 @@
   function CalResourceAvatarController($log, esnAvatarUrlService, calResourceService, CAL_ICAL, CAL_RESOURCE) {
     var self = this;
 
-    self.$onChanges = $onChanges;
+    self.$onInit = $onInit;
     self.getDisplayName = getDisplayName;
 
-    function $onChanges() {
-      console.log(self.attendee);
-
+    function $onInit() {
       self.resourceIcon = CAL_RESOURCE.DEFAULT_ICON;
-      /*
-      calResourceService.getResourceIcon(self.calendar.source.calendarHomeId)
+      calResourceService.getResourceIcon(self.attendee.email.split('@')[0])
         .then(function(resourceIcon) {
           self.resourceIcon = resourceIcon;
-        })
-        .catch(function(err) {
-          $log.error(err);
-      });
-      */
+        });
     }
 
     function getDisplayName() {
