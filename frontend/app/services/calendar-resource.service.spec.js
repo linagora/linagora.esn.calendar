@@ -1,7 +1,11 @@
 'use strict';
 
+/* global chai */
+
+var expect = chai.expect;
+
 describe('The calResourceService service', function() {
-  var calResourceService, $httpBackend, resourceId, eventId;
+  var calResourceService, $httpBackend, CAL_RESOURCE, resourceId, eventId;
 
   beforeEach(function() {
     resourceId = '1';
@@ -9,13 +13,15 @@ describe('The calResourceService service', function() {
   });
 
   beforeEach(function() {
-    angular.mock.module('esn.calendar');
+    module('linagora.esn.resource');
+    module('esn.calendar');
   });
 
   beforeEach(function() {
-    angular.mock.inject(function(_$httpBackend_, _calResourceService_) {
+    angular.mock.inject(function(_$httpBackend_, _calResourceService_, _CAL_RESOURCE_) {
       $httpBackend = _$httpBackend_;
       calResourceService = _calResourceService_;
+      CAL_RESOURCE = _CAL_RESOURCE_;
     });
   });
 
@@ -34,6 +40,47 @@ describe('The calResourceService service', function() {
       $httpBackend.expect('GET', '/calendar/api/resources/' + resourceId + '/' + eventId + '/participation?status=DECLINED').respond({});
 
       calResourceService.declineResourceReservation(resourceId, eventId);
+
+      $httpBackend.flush();
+    });
+  });
+
+  describe('The geResourceIcon function', function() {
+    it('should call the API correctly', function() {
+      $httpBackend.expectGET('/linagora.esn.resource/api/resources/' + resourceId).respond({});
+
+      calResourceService.getResourceIcon(resourceId);
+
+      $httpBackend.flush();
+    });
+
+    it('should return a resource icon', function(done) {
+      var resource = {
+        name: 'home',
+        icon: 'home'
+      };
+
+      $httpBackend.expectGET('/linagora.esn.resource/api/resources/' + resourceId).respond(resource);
+
+      calResourceService.getResourceIcon(resourceId).then(function(icon) {
+        expect(icon).to.equal(CAL_RESOURCE.ICONS[resource.icon]);
+        done();
+      });
+
+      $httpBackend.flush();
+    });
+
+    it('should return a default resource icon when no resource icon defined', function(done) {
+      var resource = {
+        name: 'home'
+      };
+
+      $httpBackend.expectGET('/linagora.esn.resource/api/resources/' + resourceId).respond(resource);
+
+      calResourceService.getResourceIcon(resourceId).then(function(icon) {
+        expect(icon).to.equal(CAL_RESOURCE.DEFAULT_ICON);
+        done();
+      });
 
       $httpBackend.flush();
     });
