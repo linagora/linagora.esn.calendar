@@ -44,46 +44,20 @@ describe('The CalAttendeeAvatarController controller', function() {
 
       esnAvatarUrlService.generateUrlByUserEmail = sinon.stub().returns(avatarUrl);
       ctrl = initController();
-      ctrl.$onInit();
     });
 
-    it('should set the controller avatarUrl from esnAvatarUrlService service if attendee.cutype is not defined', function() {
+    it('should set the controller avatarUrl from esnAvatarUrlService service', function() {
       ctrl.$onChanges();
 
       expect(ctrl.avatarUrl).to.equal(avatarUrl);
       expect(esnAvatarUrlService.generateUrlByUserEmail).to.have.been.calledWith(attendee.email);
     });
 
-    it('should set the controller avatarUrl from esnAvatarUrlService service if attendee.cutype is a individual', function() {
-      attendee.cutype = CAL_ICAL.cutype.individual;
-      ctrl.$onChanges();
-
-      expect(ctrl.avatarUrl).to.equal(avatarUrl);
-      expect(esnAvatarUrlService.generateUrlByUserEmail).to.have.been.calledWith(attendee.email);
-    });
-
-    it('should set the controller avatarUrl from resource avatar url if attendee.cutype is a resource', function() {
-      attendee.cutype = CAL_ICAL.cutype.resource;
-      ctrl.$onChanges();
-
-      expect(ctrl.avatarUrl).to.equal(CAL_RESOURCE.AVATAR_URL);
-      expect(esnAvatarUrlService.generateUrlByUserEmail).to.not.have.been.called;
-    });
-
-    it('should return the displayName if the attendee is a user', function() {
-      attendee.cutype = CAL_ICAL.cutype.individual;
+    it('should return the displayName', function() {
       attendee.displayName = 'toto';
       ctrl.$onChanges();
 
       expect(ctrl.getDisplayName()).to.be.equal(attendee.displayName);
-    });
-
-    it('should return the name if the attendee is a resource', function() {
-      attendee.cutype = CAL_ICAL.cutype.resource;
-      attendee.name = 'toto';
-      ctrl.$onChanges();
-
-      expect(ctrl.getDisplayName()).to.be.equal(attendee.name);
     });
   });
 });

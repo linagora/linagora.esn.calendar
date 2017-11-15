@@ -4,29 +4,14 @@
   angular.module('esn.calendar')
     .controller('CalAttendeeAvatarController', CalAttendeeAvatarController);
 
-  function CalAttendeeAvatarController(esnAvatarUrlService, CAL_ICAL, CAL_RESOURCE) {
+  function CalAttendeeAvatarController(esnAvatarUrlService) {
     var self = this;
 
     self.$onChanges = $onChanges;
-    self.$onInit = $onInit;
     self.getDisplayName = getDisplayName;
 
     function $onChanges() {
-      self.avatarUrl = getAvatarUrl();
-    }
-
-    function $onInit() {
-      self.avatarResolver = {};
-      self.avatarResolver[CAL_ICAL.cutype.resource] = getResourceAvatar;
-      self.avatarResolver[CAL_ICAL.cutype.individual] = getUserAvatar;
-    }
-
-    function getAvatarUrl() {
-      return (self.attendee.cutype && self.avatarResolver[self.attendee.cutype] ? self.avatarResolver[self.attendee.cutype] : getUserAvatar)();
-    }
-
-    function getResourceAvatar() {
-      return CAL_RESOURCE.AVATAR_URL;
+      self.avatarUrl = getUserAvatar();
     }
 
     function getUserAvatar() {
