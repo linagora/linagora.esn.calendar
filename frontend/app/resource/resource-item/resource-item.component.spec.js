@@ -1,19 +1,26 @@
 'use strict';
 
-/* global chai: false */
+/* global chai, sinon: false */
 
 var expect = chai.expect;
 
 describe('The cal-resource-item component', function() {
-  var $compile, $rootScope, $scope, CAL_RESOURCE, element, partstat;
+  var $q, $compile, $rootScope, $scope, CAL_RESOURCE, element, partstat, calResourceService;
   var resource, classes;
 
   beforeEach(function() {
-    module('esn.calendar');
+    calResourceService = {
+      getResourceIcon: sinon.stub()
+    };
+
+    angular.mock.module('esn.calendar', function($provide) {
+      $provide.value('calResourceService', calResourceService);
+    });
     module('jadeTemplates');
   });
 
-  beforeEach(inject(function(_$compile_, _$rootScope_, _CAL_ICAL_, _CAL_RESOURCE_) {
+  beforeEach(inject(function(_$q_, _$compile_, _$rootScope_, _CAL_ICAL_, _CAL_RESOURCE_) {
+    $q = _$q_;
     $compile = _$compile_;
     $rootScope = _$rootScope_;
     $scope = $rootScope.$new();
@@ -23,9 +30,12 @@ describe('The cal-resource-item component', function() {
   }));
 
   beforeEach(function() {
+    calResourceService.getResourceIcon.returns($q.when({}));
+
     resource = {
       name: 'room5',
-      description: 'a resource'
+      description: 'a resource',
+      email: 'id@open-paas.org'
     };
   });
 
