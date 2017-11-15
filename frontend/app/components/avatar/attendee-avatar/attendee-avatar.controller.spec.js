@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('The CalAttendeeAvatarController controller', function() {
-  var esnAvatarUrlService, $controller, $rootScope, $scope, context, attendee, CAL_ICAL, CAL_RESOURCE;
+  var esnAvatarUrlService, $controller, $rootScope, $scope, context, attendee;
 
   beforeEach(function() {
     module('jadeTemplates');
@@ -24,11 +24,9 @@ describe('The CalAttendeeAvatarController controller', function() {
     });
   });
 
-  beforeEach(angular.mock.inject(function(_$controller_, _$rootScope_, _CAL_ICAL_, _CAL_RESOURCE_) {
+  beforeEach(angular.mock.inject(function(_$controller_, _$rootScope_) {
     $controller = _$controller_;
     $rootScope = _$rootScope_;
-    CAL_ICAL = _CAL_ICAL_;
-    CAL_RESOURCE = _CAL_RESOURCE_;
     $scope = $rootScope.$new();
   }));
 
