@@ -3,7 +3,7 @@
 
   angular.module('esn.calendar')
     .component('calAttendeeAvatar', {
-      templateUrl: '/calendar/app/components/attendee/attendee-avatar/attendee-avatar.html',
+      templateUrl: '/calendar/app/components/avatar/attendee-avatar/attendee-avatar.html',
       bindings: {
         attendee: '<',
         isOrganizer: '<'
