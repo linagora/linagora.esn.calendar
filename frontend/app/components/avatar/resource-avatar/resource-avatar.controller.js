@@ -8,18 +8,14 @@
     var self = this;
 
     self.$onInit = $onInit;
-    self.getDisplayName = getDisplayName;
 
     function $onInit() {
+      self.resourceName = self.resource.name || self.resource.displayName;
       self.resourceIcon = CAL_RESOURCE.DEFAULT_ICON;
-      calResourceService.getResourceIcon(self.attendee.email.split('@')[0])
+      calResourceService.getResourceIcon(self.resource.email.split('@')[0])
         .then(function(resourceIcon) {
           self.resourceIcon = resourceIcon;
         });
-    }
-
-    function getDisplayName() {
-      return self.attendee.name || self.attendee.displayName;
     }
   }
 })();

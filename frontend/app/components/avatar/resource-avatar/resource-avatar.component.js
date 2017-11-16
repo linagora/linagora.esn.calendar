@@ -5,7 +5,7 @@
     .component('calResourceAvatar', {
       templateUrl: '/calendar/app/components/avatar/resource-avatar/resource-avatar.html',
       bindings: {
-        attendee: '<'
+        resource: '<'
       },
       controllerAs: 'ctrl',
       controller: 'CalResourceAvatarController'
