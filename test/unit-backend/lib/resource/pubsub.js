@@ -5,11 +5,11 @@ const mockery = require('mockery');
 const sinon = require('sinon');
 const ObjectId = require('bson').ObjectId;
 const q = require('q');
-const {RESOURCE} = require('../../../../backend/lib/constants');
+const { RESOURCE } = require('../../../../backend/lib/constants');
 
 describe('The calendar resource module', function() {
   let module, requestMock, logger, pubsub, auth, technicalUser, davserver, localpubsub,
-      globalpubsub, email, requestError, requestStatus, requestBody;
+      globalpubsub, email, requestError, requestStatus, requestBody, helpers, baseUrl;
 
   beforeEach(function() {
     logger = {
@@ -45,6 +45,16 @@ describe('The calendar resource module', function() {
       }
     };
 
+    baseUrl = 'http://127.0.0.1';
+
+    helpers = {
+      config: {
+        getBaseUrl: function(arg, callback) {
+          callback(null, baseUrl);
+        }
+      }
+    };
+
     this.moduleHelpers.addDep('email', email);
     this.moduleHelpers.addDep('logger', logger);
     this.moduleHelpers.addDep('auth', auth);
@@ -52,6 +62,7 @@ describe('The calendar resource module', function() {
     this.moduleHelpers.addDep('davserver', davserver);
     this.moduleHelpers.addDep('pubsub', pubsub);
     this.moduleHelpers.addDep('pubsub', this.helpers.mock.pubsub('', localpubsub, globalpubsub));
+    this.moduleHelpers.addDep('helpers', helpers);
 
     requestMock = sinon.spy((option, cb) => cb(requestError, { statusCode: requestStatus, body: requestBody }, requestBody));
 
@@ -59,7 +70,6 @@ describe('The calendar resource module', function() {
   });
 
   describe('The listen function', function() {
-
     beforeEach(function() {
       module = require(this.moduleHelpers.backendPath + '/lib/resource/pubsub')(this.moduleHelpers.dependencies);
       module.listen();
@@ -139,6 +149,68 @@ describe('The calendar resource module', function() {
           expect(logger.info).to.have.been.calledWith(`Calendar created for the resource: ${fakeResource._id} with the status: ${requestStatus}`);
           done();
         }).catch(done);
+      });
+
+      describe('payload with image', function() {
+        let caldavClient, caldavClientLib;
+        let fakeResource, fakePayload;
+
+        beforeEach(function() {
+          caldavClient = {
+            createCalendarAsTechnicalUser: sinon.spy(function() {
+              return q.when();
+            })
+          };
+          caldavClientLib = function() {
+            return caldavClient;
+          };
+
+          mockery.registerMock('../caldav-client', caldavClientLib);
+
+          module = null;
+          module = require(this.moduleHelpers.backendPath + '/lib/resource/pubsub')(this.moduleHelpers.dependencies);
+          module.listen();
+        });
+
+        beforeEach(function() {
+          fakeResource = {
+            _id: new ObjectId(),
+            creator: new ObjectId(),
+            name: 'test',
+            description: '',
+            type: 'calendar'
+          };
+
+          fakePayload = {
+            id: fakeResource._id,
+            'dav:name': fakeResource.name,
+            'apple:color': '#F44336',
+            'caldav:description': fakeResource.description
+          };
+        });
+
+        it('should call sabre with a resource containing an image', function(done) {
+          fakeResource.icon = 'home';
+          fakePayload.image = `IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/png:${baseUrl}${RESOURCE.ICONS_PATH}home.png`;
+
+          localpubsub.topics['resource:created'].handler(fakeResource).then(() => {
+            expect(caldavClient.createCalendarAsTechnicalUser).to.have.been.calledWith(sinon.match.any, fakePayload);
+            done();
+          }).catch(done);
+        });
+
+        it('should call sabre with a resource containing a default image when no icon', function(done) {
+          fakePayload.image = `IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/png:${baseUrl}${RESOURCE.ICONS_PATH}desktop-mac.png`;
+
+          localpubsub.topics['resource:created'].handler(fakeResource).then(() => {
+            expect(caldavClient.createCalendarAsTechnicalUser).to.have.been.calledWith(sinon.match.any, fakePayload);
+            done();
+          }).catch(done);
+        });
+
+        afterEach(function() {
+          mockery.deregisterMock('../caldav-client', caldavClientLib);
+        });
       });
     });
 
@@ -323,6 +395,82 @@ describe('The calendar resource module', function() {
           expect(logger.info).to.have.been.calledWith(`Calendar updated for the resource: ${fakeResource._id} with the status: ${requestStatus}`);
           done();
         }).catch(done);
+      });
+
+      describe('payload with image', function() {
+        let caldavClient, caldavClientLib;
+        let fakeResource, updatedFakeResource, fakePayload;
+
+        beforeEach(function() {
+          fakeResource = {
+            _id: new ObjectId(),
+            creator: new ObjectId(),
+            name: 'test',
+            description: '',
+            type: 'calendar'
+          };
+
+          updatedFakeResource = {
+            _id: fakeResource._id,
+            creator: fakeResource.creator,
+            name: 'updated',
+            description: '',
+            type: 'calendar'
+          };
+
+          fakePayload = {
+            id: fakeResource._id,
+            'dav:name': updatedFakeResource.name,
+            'apple:color': '#F44336',
+            'caldav:description': fakeResource.description
+          };
+        });
+
+        beforeEach(function() {
+          caldavClient = {
+            updateCalendarAsTechnicalUser: sinon.spy(function() {
+              return q.when();
+            }),
+            getCalendarAsTechnicalUser: sinon.spy(function() {
+              return q.when(fakeResource);
+            })
+          };
+          caldavClientLib = function() {
+            return caldavClient;
+          };
+
+          mockery.registerMock('../caldav-client', caldavClientLib);
+
+          module = null;
+          module = require(this.moduleHelpers.backendPath + '/lib/resource/pubsub')(this.moduleHelpers.dependencies);
+          module.listen();
+        });
+
+        it('should call sabre with a resource containing an image', function(done) {
+          fakeResource.icon = 'home';
+          updatedFakeResource.icon = 'home';
+          fakePayload.image = `IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/png:${baseUrl}${RESOURCE.ICONS_PATH}home.png`;
+
+          localpubsub.topics['resource:updated'].handler(updatedFakeResource).then(() => {
+            expect(caldavClient.getCalendarAsTechnicalUser).to.have.been.called;
+            expect(caldavClient.updateCalendarAsTechnicalUser).to.have.been.calledWith(sinon.match.any, fakePayload);
+            done();
+          }).catch(done);
+        });
+
+        it('should call sabre with a resource containing a default image when no icon', function(done) {
+          fakePayload.image = `IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/png:${baseUrl}${RESOURCE.ICONS_PATH}desktop-mac.png`;
+
+          localpubsub.topics['resource:updated'].handler(updatedFakeResource).then(() => {
+            expect(caldavClient.getCalendarAsTechnicalUser).to.have.been.called;
+            expect(caldavClient.updateCalendarAsTechnicalUser).to.have.been.calledWith(sinon.match.any, fakePayload);
+            done();
+          }).catch(done);
+        });
+
+        afterEach(function() {
+          mockery.deregisterMock('../caldav-client', caldavClientLib);
+        });
       });
     });
   });

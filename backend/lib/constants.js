@@ -84,6 +84,8 @@ module.exports = {
     TYPE: {
       CALENDAR: 'calendar'
     },
+    DEFAULT_ICON: 'desktop-mac',
+    ICONS_PATH: '/linagora.esn.resource/images/icon/',
     ERROR: {
       MAIL: {
         CREATED: {
