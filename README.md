@@ -2,8 +2,6 @@
 
 [![build status](https://ci.linagora.com/linagora/lgs/openpaas/linagora.esn.calendar/badges/master/build.svg)](https://ci.linagora.com/linagora/lgs/openpaas/linagora.esn.calendar/commits/master)
 
-[![Build Status](https://travis-ci.org/linagora/linagora.esn.calendar.svg?branch=master)](https://travis-ci.org/linagora/linagora.esn.calendar)
-
 This repository contains source code of Calendar module for OpenPaaS ESN.
 
 ## Install
@@ -42,7 +40,22 @@ In order to run tests, you have to create a symbolic link for the `linagora.esn.
 ln -s $PWD/node_modules/linagora.esn.resource node_modules/linagora-rse/node_modules/
 ```
 
-You can now run tests from your ternminal with `grunt` (check `Gruntfile.js` for further commands).
+Make sure you have [gitlab-ci-multi-runner](https://gitlab.com/gitlab-org/gitlab-ci-multi-runner) installed locally, following the [installation instructions](https://docs.gitlab.com/runner/install/).
+Make sure you have **Docker** installed.
+
+Run tests:
+
+```
+$ gitlab-ci-multi-runner exec docker test
+```
+
+This will pull all required images, and run the whole tests suite in a Docker container.
+If you only want to run linters and unit-frontend tests, you can run them on your machine directly using:
+
+```
+$ grunt linters test-unit-frontend
+```
+
 
 ## Troubleshoot
 
