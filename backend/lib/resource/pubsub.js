@@ -1,5 +1,6 @@
 'use strict';
 
+const q = require('q');
 const { EVENTS, RESOURCE } = require('../constants');
 const RESOURCE_COLOR = '#F44336';
 
@@ -7,6 +8,8 @@ module.exports = dependencies => {
   const simpleMailModule = dependencies('email').system.simpleMail;
   const pubsub = dependencies('pubsub');
   const logger = dependencies('logger');
+  const { getBaseUrl } = dependencies('helpers').config;
+
   const caldavClient = require('../caldav-client')(dependencies);
 
   return {
@@ -41,9 +44,8 @@ module.exports = dependencies => {
       userId: resource._id,
       domainId: resource.domain
     };
-    const payload = _generateResourcePayload(resource);
-
-    return caldavClient.createCalendarAsTechnicalUser(options, payload)
+    return _generateResourcePayload(resource)
+      .then(payload => caldavClient.createCalendarAsTechnicalUser(options, payload))
       .then(response => {
         if (response.statusCode !== 201) {
           _handleError(resource, response, mailOptions);
@@ -73,13 +75,12 @@ module.exports = dependencies => {
     return caldavClient.getCalendarAsTechnicalUser(options)
       .then(calendar => {
         if (_resourceHasChange(resource, calendar)) {
-          const payload = _generateResourcePayload(resource);
-
-          return caldavClient.updateCalendarAsTechnicalUser(options, payload);
+          return _generateResourcePayload(resource);
         }
 
         return Promise.reject(NO_UPDATED);
       })
+      .then(payload => caldavClient.updateCalendarAsTechnicalUser(options, payload))
       .then(response => {
         if (response.statusCode !== 204) {
           _handleError(resource, response, mailOptions);
@@ -129,12 +130,25 @@ module.exports = dependencies => {
   }
 
   function _generateResourcePayload(resource) {
-    return {
-      id: resource._id,
-      'dav:name': resource.name,
-      'apple:color': RESOURCE_COLOR,
-      'caldav:description': resource.description
-    };
+    return _generateIcalImage(resource)
+      .then(image => ({
+        id: resource._id,
+        'dav:name': resource.name,
+        'apple:color': RESOURCE_COLOR,
+        'caldav:description': resource.description,
+        image
+      }));
   }
 
+  function _generateIcalImage(resource) {
+    return q.nfcall(getBaseUrl, null)
+      .then(baseUrl => {
+        const image = resource.icon ? resource.icon : RESOURCE.DEFAULT_ICON;
+        const icalImage = `IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/png:${baseUrl}${RESOURCE.ICONS_PATH}${image}.png`;
+
+        logger.debug(`Calendar of resource ${resource._id} with image ${icalImage}`);
+
+        return icalImage;
+    });
+  }
 };
