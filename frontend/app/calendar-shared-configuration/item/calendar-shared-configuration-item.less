@@ -12,10 +12,23 @@
       margin-right: 8px;
 
       .avatar {
-  
+
         img {
           .esn-avatar;
         }
+      }
+    }
+
+    cal-resource-avatar {
+      .all-centered;
+      .avatar(35px);
+
+      background: @lighterSecondaryTextColor;
+      font-size: 25px;
+      margin-right: 8px;
+
+      .avatar i {
+        color: @m-white;
       }
     }
 
@@ -27,6 +40,8 @@
       }
 
       .owner {
+        .ellipsis;
+
         color: @secondaryTextColor;
       }
     }
