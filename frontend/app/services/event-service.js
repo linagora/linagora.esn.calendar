@@ -203,7 +203,7 @@
               cancelFailed: 'An error has occured, the creation could not been reverted',
               cancelTooLate: 'It is too late to cancel the creation',
               gracePeriodFail: 'Event creation failed. Please refresh your calendar',
-              successText: esnI18nService.translate('Calendar - %s has been created.', event.title)
+              successText: 'Event created'
             }).then(_.constant(true), onTaskCancel);
           }, function(err) {
             notificationFactory.weakError('Event creation failed', esnI18nService.translate('%s. Please refresh your calendar', err.statusText || err));
@@ -262,7 +262,7 @@
                 cancelFailed: 'An error has occurred, can not revert the deletion',
                 cancelSuccess: esnI18nService.translate('Calendar - Deletion of %s has been cancelled', event.title),
                 cancelTooLate: 'It is too late to cancel the deletion',
-                successText: esnI18nService.translate('Calendar - %s has been deleted.', event.title),
+                successText: 'Event removed',
                 gracePeriodFail: {
                   text: 'Event deletion failed. Please refresh your calendar',
                   delay: -1,
@@ -381,7 +381,7 @@
                   $rootScope.$broadcast(CAL_EVENTS.CALENDAR_REFRESH);
                 }
                },
-              successText: esnI18nService.translate('Calendar - %s has been modified.', event.title)
+              successText: 'Event updated'
             }, options.graceperiodMessage)).then(_.constant(true), function() {
               onTaskCancel();
 
