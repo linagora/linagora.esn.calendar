@@ -19,6 +19,7 @@ module.exports = dependencies => {
   const technicalUserHelper = require('../helpers/technical-user')(dependencies);
 
   return {
+    buildEventUrlFromEventPath,
     createCalendarAsTechnicalUser,
     updateCalendarAsTechnicalUser,
     deleteCalendarsAsTechnicalUser,
@@ -36,6 +37,10 @@ module.exports = dependencies => {
     iTipRequest,
     createEventInDefaultCalendar
   };
+
+  function buildEventUrlFromEventPath(eventPath) {
+    return new Promise(resolve => davserver.getDavEndpoint(davserver => resolve(urljoin(davserver, eventPath))));
+  }
 
   function createCalendarAsTechnicalUser(options, payload) {
     const { userId, domainId } = options;
@@ -238,7 +243,6 @@ module.exports = dependencies => {
     const path = !eventUid && calendarUri ? `/calendars/${userId}/${calendarUri}.json` : getEventPath(userId, calendarUri, eventUid);
 
     return new Promise(resolve => davserver.getDavEndpoint(davserver => resolve(urljoin(davserver, path))));
-
   }
 
   function _buildJCalEvent(uid, options) {
@@ -273,7 +277,7 @@ module.exports = dependencies => {
     return new Promise((resolve, reject) => {
       request({method: 'PUT', headers: { ESNToken, 'If-Match': etag }, body: json, url, json: true}, (err, response) => {
         if (err || response.statusCode < 200 || response.statusCode >= 300) {
-          err && logger.error('Error while sending the event to the server', err);
+          err ? logger.error('Error while sending the event to the server', err) : logger.error(`Bad response code from the server ${response.statusCode}`);
 
           return reject(new Error('Can not update the event'));
         }

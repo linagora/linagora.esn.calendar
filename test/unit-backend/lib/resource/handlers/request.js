@@ -3,7 +3,7 @@ const sinon = require('sinon');
 const mockery = require('mockery');
 
 describe('The Resource request handler module', function() {
-  let resourceModule, emailModule, utilsModule, payload, resource;
+  let resourceModule, emailModule, utilsModule, attendeeModule, payload, resource;
 
   beforeEach(function() {
     payload = {
@@ -34,8 +34,13 @@ describe('The Resource request handler module', function() {
       generateValidationLinks: sinon.stub()
     };
 
+    attendeeModule = {
+      setParticipation: sinon.stub().returns(Promise.resolve())
+    };
+
     mockery.registerMock('../utils', () => utilsModule);
     mockery.registerMock('../../email', () => emailModule);
+    mockery.registerMock('../attendee', () => attendeeModule);
     this.moduleHelpers.addDep('resource', resourceModule);
     this.requireModule = function() {
       return require(`${this.moduleHelpers.modulePath}/backend/lib/resource/handlers/request`)(this.moduleHelpers.dependencies);
@@ -89,7 +94,7 @@ describe('The Resource request handler module', function() {
         });
     });
 
-    it('should not send email when administrators can not be resolved', function(done) {
+    it('should set partstat to accepted when administrators can not be resolved', function(done) {
       resourceModule.lib.resource.get.returns(Promise.resolve(resource));
       utilsModule.generateValidationLinks.returns(Promise.resolve({}));
       resourceModule.lib.administrator.resolve.returns(Promise.resolve());
@@ -99,12 +104,13 @@ describe('The Resource request handler module', function() {
           expect(emailModule.sender.send).to.not.have.been.called;
           expect(resourceModule.lib.resource.get).to.have.been.calledWith(payload.resourceId);
           expect(resourceModule.lib.administrator.resolve).to.have.been.calledWith(resource);
+          expect(attendeeModule.setParticipation).to.have.been.called;
           done();
         })
         .catch(done);
     });
 
-    it('should not send email when there are no administrators', function(done) {
+    it('should set partstat to accepted when there are no administrators', function(done) {
       resourceModule.lib.resource.get.returns(Promise.resolve(resource));
       utilsModule.generateValidationLinks.returns(Promise.resolve({}));
       resourceModule.lib.administrator.resolve.returns(Promise.resolve([]));
@@ -114,6 +120,7 @@ describe('The Resource request handler module', function() {
           expect(emailModule.sender.send).to.not.have.been.called;
           expect(resourceModule.lib.resource.get).to.have.been.calledWith(payload.resourceId);
           expect(resourceModule.lib.administrator.resolve).to.have.been.calledWith(resource);
+          expect(attendeeModule.setParticipation).to.have.been.called;
           done();
         })
         .catch(done);
