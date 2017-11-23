@@ -178,7 +178,6 @@ describe('The calCachedEventSource service', function() {
       });
 
       it('should take a modification that transform a normal event in a recurring event and apply it correctly', function() {
-
         var subEvent = {
           id: 'subevent',
           uid: self.modifiedEvent.id,
@@ -205,6 +204,7 @@ describe('The calCachedEventSource service', function() {
         var invariantSubEvent = {
           id: 'subevent',
           uid: 'parent',
+          calendarUniqueId: self.calendarUniqueId,
           start: self.start.clone().add(1, 'hour'),
           end: self.end.clone().subtract(1, 'hour'),
           isInstance: _.constant(true),
@@ -214,6 +214,7 @@ describe('The calCachedEventSource service', function() {
         var deletedSubEvent = {
           id: 'invalid subevent',
           uid: 'parent',
+          calendarUniqueId: self.calendarUniqueId,
           start: self.start.clone().add(1, 'hour'),
           end: self.end.clone().subtract(1, 'hour'),
           isInstance: _.constant(true),
@@ -240,6 +241,7 @@ describe('The calCachedEventSource service', function() {
         var invariantSubEvent = {
           id: 'subevent',
           uid: 'parent',
+          calendarUniqueId: self.calendarUniqueId,
           start: self.start.clone().add(1, 'hour'),
           end: self.end.clone().subtract(1, 'hour'),
           isInstance: _.constant(true),
@@ -249,6 +251,7 @@ describe('The calCachedEventSource service', function() {
         var modifiedSubInstanceBefore = {
           id: 'invalid subevent',
           uid: 'parent',
+          calendarUniqueId: self.calendarUniqueId,
           start: self.start.clone().add(1, 'hour'),
           end: self.end.clone().subtract(1, 'hour'),
           isInstance: _.constant(true),
@@ -590,7 +593,7 @@ describe('The calCachedEventSource service', function() {
 
   });
 
-    describe('The hideDeclinedEventsFilter function', function() {
+  describe('The hideDeclinedEventsFilter function', function() {
     beforeEach(function() {
       self.eventsMock = [{
         id: 1,

@@ -11,7 +11,6 @@
     calFullUiConfiguration,
     calEventStore,
     calEventUtils,
-    esnUserConfigurationService,
     CAL_CACHED_EVENT_SOURCE_ADD,
     CAL_CACHED_EVENT_SOURCE_DELETE,
     CAL_CACHED_EVENT_SOURCE_UPDATE,
@@ -32,18 +31,28 @@
 
     ////////////
 
+    function getChanges(calendarUniqueId) {
+      changes[calendarUniqueId] = changes[calendarUniqueId] || {};
+
+      return changes[calendarUniqueId];
+    }
+
     function deleteRegistration(event) {
-      if (changes[event.id]) {
-        (changes[event.id].instances || []).forEach(function(subEvent) {
+      var calendarChanges = getChanges(event.calendarUniqueId);
+
+      if (calendarChanges[event.id]) {
+        (calendarChanges[event.id].instances || []).forEach(function(subEvent) {
           deleteRegistration(subEvent);
         });
-        delete changes[event.id];
+        delete calendarChanges[event.id];
       }
     }
 
     function saveChange(action, event) {
+      var calendarChanges = getChanges(event.calendarUniqueId);
+
       deleteRegistration(event);
-      changes[event.id] = {
+      calendarChanges[event.id] = {
         added: new Date(),
         event: event,
         action: action,
@@ -54,16 +63,18 @@
     }
 
     function expandRecurringChange(start, end) {
-      angular.forEach(changes, function(change) {
-        if (change.event.isRecurring() && (!change.expandedUntil || change.expandedUntil.isBefore(end) || !change.expandedFrom || change.expandedFrom.isAfter(start))) {
-          change.instances = [];
-          change.event.expand(start.clone().subtract(1, 'day'), end.clone().add(1, 'day')).forEach(function(subEvent) {
-            saveChange(change.action, subEvent);
-            change.instances.push(subEvent);
-          });
-          change.expandedUntil = end;
-          change.expandedFrom = start;
-        }
+      angular.forEach(changes, function(calendarChanges) {
+        angular.forEach(calendarChanges, function(change) {
+          if (change.event.isRecurring() && (!change.expandedUntil || change.expandedUntil.isBefore(end) || !change.expandedFrom || change.expandedFrom.isAfter(start))) {
+            change.instances = [];
+            change.event.expand(start.clone().subtract(1, 'day'), end.clone().add(1, 'day')).forEach(function(subEvent) {
+              saveChange(change.action, subEvent);
+              change.instances.push(subEvent);
+            });
+            change.expandedUntil = end;
+            change.expandedFrom = start;
+          }
+        });
       });
     }
 
@@ -74,7 +85,7 @@
         });
       }
 
-      angular.forEach(customChanges || changes, function(change) {
+      angular.forEach(customChanges || changes[calendarUniqueId], function(change) {
         if (change.action === CAL_CACHED_EVENT_SOURCE_ADD && change.event.calendarUniqueId === calendarUniqueId && !change.event.isRecurring() && eventInPeriod(change.event)) {
           events.push(change.event);
         }
@@ -84,7 +95,9 @@
     }
 
     function applyUpdatedAndDeleteEvent(events, start, end, calendarUniqueId) {
-      var notAppliedChange = _.chain(changes).omit(function(change) {
+      var calendarChanges = getChanges(calendarUniqueId);
+
+      var notAppliedChange = _.chain(calendarChanges).omit(function(change) {
         return change.action !== CAL_CACHED_EVENT_SOURCE_UPDATE;
       }).mapValues(function(change) {
         var result = _.clone(change);
@@ -95,9 +108,8 @@
       }).value();
 
       var result = events.reduce(function(previousCleanedEvents, event) {
-
-        var change = changes[event.id];
-        var changeInMaster = event.isInstance() && changes[event.uid];
+        var change = calendarChanges[event.id];
+        var changeInMaster = event.isInstance() && calendarChanges[event.uid];
 
         if (!change && !changeInMaster) {
           previousCleanedEvents.push(event);
