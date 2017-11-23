@@ -284,7 +284,7 @@
       }
 
       function _updateCalendar(event, calendar) {
-        $scope.calendars.forEach(function(cal, index) {
+        _.forEach($scope.calendars, function(cal, index) {
           if (calendar.getUniqueId() === cal.getUniqueId()) {
             $scope.calendars[index] = calendar;
             _forceEventsRedraw(calendar);
