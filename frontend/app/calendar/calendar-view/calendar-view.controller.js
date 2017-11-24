@@ -28,7 +28,7 @@
     elementScrollService,
     esnWithPromiseResult,
     CAL_EVENTS,
-    CAL_DEFAULT_CALENDAR_ID,
+    calDefaultValue,
     CAL_MAX_CALENDAR_RESIZE_HEIGHT,
     CAL_SPINNER_TIMEOUT_DURATION
   ) {
@@ -159,7 +159,7 @@
 
         newEvent.start = event.start;
         newEvent.end = event.end;
-        newEvent.path = newEvent.path || '/calendars/' + $scope.calendarHomeId + '/' + CAL_DEFAULT_CALENDAR_ID;
+        newEvent.path = newEvent.path || '/calendars/' + $scope.calendarHomeId + '/' + calDefaultValue.get('calendarId');
 
         var oldEvent = newEvent.clone();
 

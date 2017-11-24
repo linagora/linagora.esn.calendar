@@ -198,6 +198,7 @@ describe('The calendarViewController', function() {
     CalendarShell,
     calMoment,
     CAL_EVENTS,
+    calDefaultValue,
     calEventUtils,
     calOpenEventForm,
     elementScrollService,
@@ -207,22 +208,25 @@ describe('The calendarViewController', function() {
     this.scope = $rootScope.$new();
     this.controller = $controller;
     this.$compile = $compile;
+    this.$q = $q;
     this.$timeout = $timeout;
     this.$window = $window;
-    this.CAL_UI_CONFIG = CAL_UI_CONFIG;
-    this.moment = moment;
-    this.CalendarShell = CalendarShell;
     this.calMoment = calMoment;
-    this.CAL_EVENTS = CAL_EVENTS;
+    this.calDefaultValue = calDefaultValue;
     this.calEventUtils = calEventUtils;
     this.elementScrollService = elementScrollService;
-    this.$q = $q;
+    this.CalendarShell = CalendarShell;
+    this.moment = moment;
+    this.CAL_UI_CONFIG = CAL_UI_CONFIG;
+    this.CAL_EVENTS = CAL_EVENTS;
     this.CAL_SPINNER_TIMEOUT_DURATION = CAL_SPINNER_TIMEOUT_DURATION;
   }));
 
   beforeEach(function() {
     this.scope.uiConfig = this.CAL_UI_CONFIG;
     this.scope.calendarHomeId = 'calendarId';
+    this.calDefaultValue.set('calendarId', 'calendarId');
+
   });
 
   afterEach(function() {
@@ -845,9 +849,8 @@ describe('The calendarViewController', function() {
 
       this.scope.calendarHomeId = calendarHomeId;
       this.scope.event = event;
-
       this.calEventServiceMock.modifyEvent = function(path, e, oldEvent, etag) { // eslint-disable-line
-        expect(path).to.equal('/calendars/' + calendarHomeId + '/events');
+        expect(path).to.equal('/calendars/' + calendarHomeId + '/' + self.calDefaultValue.get('calendarId'));
         expect(etag).to.equal(event.etag);
         done();
       };

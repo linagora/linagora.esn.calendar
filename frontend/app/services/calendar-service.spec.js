@@ -33,16 +33,20 @@ describe('The calendarService service', function() {
     });
   });
 
-  beforeEach(angular.mock.inject(function(calendarService, $httpBackend, $rootScope, calendarAPI, calCalendarSubscriptionApiService, CAL_EVENTS, CAL_DEFAULT_CALENDAR_ID, CAL_CALENDAR_SHARED_INVITE_STATUS) {
+  beforeEach(angular.mock.inject(function(calendarService, $httpBackend, $rootScope, calendarAPI, calCalendarSubscriptionApiService, calDefaultValue, CAL_EVENTS, CAL_CALENDAR_SHARED_INVITE_STATUS) {
     this.$httpBackend = $httpBackend;
     this.$rootScope = $rootScope;
     this.calendarService = calendarService;
     this.calendarAPI = calendarAPI;
     this.calCalendarSubscriptionApiService = calCalendarSubscriptionApiService;
     this.CAL_EVENTS = CAL_EVENTS;
-    this.CAL_DEFAULT_CALENDAR_ID = CAL_DEFAULT_CALENDAR_ID;
+    this.calDefaultValue = calDefaultValue;
     this.CAL_CALENDAR_SHARED_INVITE_STATUS = CAL_CALENDAR_SHARED_INVITE_STATUS;
   }));
+
+  beforeEach(function() {
+    this.calDefaultValue.set('calendarId', 'calendarId');
+  });
 
   describe('The removeAndEmit function', function() {
     it('should broadcast a CALENDARS.REMOVE event when the calendar has been created', function() {
@@ -183,7 +187,7 @@ describe('The calendarService service', function() {
     });
 
     it('should wrap each received dav:calendar in a CalendarCollectionShell', function(done) {
-      var calendarCollection = {id: this.CAL_DEFAULT_CALENDAR_ID};
+      var calendarCollection = {id: this.calDefaultValue.get('calendarId')};
 
       CalendarCollectionShellFuncMock = sinon.spy(function(davCal) {
         expect(davCal).to.deep.equal(response._embedded['dav:calendar'][0]);
@@ -236,7 +240,7 @@ describe('The calendarService service', function() {
     });
 
     it('should return an array of CalendarCollectionShell', function(done) {
-      var calendarCollection = {id: this.CAL_DEFAULT_CALENDAR_ID};
+      var calendarCollection = {id: this.calDefaultValue.get('calendarId')};
       var calendars = [
         {
           _links: {
@@ -290,7 +294,7 @@ describe('The calendarService service', function() {
     });
 
     it('should return an array of CalendarCollectionShell', function(done) {
-      var calendarCollection = {id: this.CAL_DEFAULT_CALENDAR_ID};
+      var calendarCollection = {id: this.calDefaultValue.get('calendarId')};
       var calendars = [
         {
           _links: {
@@ -363,7 +367,7 @@ describe('The calendarService service', function() {
     });
 
     it('should return an array of CalendarCollectionShell', function(done) {
-      var calendarCollection = {id: this.CAL_DEFAULT_CALENDAR_ID};
+      var calendarCollection = {id: this.calDefaultValue.get('calendarId')};
       var calendars = [
         {
           _links: {
@@ -422,7 +426,7 @@ describe('The calendarService service', function() {
     });
 
     it('should return an array of CalendarCollectionShell', function(done) {
-      var calendarCollection = {id: this.CAL_DEFAULT_CALENDAR_ID};
+      var calendarCollection = {id: this.calDefaultValue.get('calendarId')};
       var calendars = [
         {
           _links: {

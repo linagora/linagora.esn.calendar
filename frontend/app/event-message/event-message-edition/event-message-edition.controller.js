@@ -14,7 +14,7 @@
     notificationFactory,
     esnI18nService,
     CAL_EVENT_FORM,
-    CAL_DEFAULT_CALENDAR_ID
+    calDefaultValue
   ) {
 
     var self = this;
@@ -62,7 +62,7 @@
       }
 
       self.restActive = true;
-      calEventService.createEvent({ calendarHomeId: self.calendarHomeId, id: CAL_DEFAULT_CALENDAR_ID }, self.event, { graceperiod: false })
+      calEventService.createEvent({ calendarHomeId: self.calendarHomeId, id: calDefaultValue.get('calendarId') }, self.event, { graceperiod: false })
         .then(function(response) {
           emitPostedMessage(response);
           resetEvent();

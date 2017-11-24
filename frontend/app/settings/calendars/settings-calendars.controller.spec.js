@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('The CalSettingsCalendarsController controller', function() {
-  var $rootScope, $controller, $scope, $log, session, calendarService, $q, calendar, otherCalendar, calendars, userAndExternalCalendars, calCalendarDeleteConfirmationModalService;
+  var $rootScope, $controller, $scope, $log, session, calendarService, calendarHomeService, calendar, otherCalendar, calendars, userAndExternalCalendars, calCalendarDeleteConfirmationModalService;
   var CAL_EVENTS, CalSettingsCalendarsController;
 
   beforeEach(function() {
@@ -21,6 +21,11 @@ describe('The CalSettingsCalendarsController controller', function() {
       uniqueId: 1,
       calendarHomeId: 'MyId',
       name: 'MyName'
+    };
+    calendarHomeService = {
+      getUserCalendarHomeId: function() {
+        return $q.when(session.user._id);
+      }
     };
     otherCalendar = {
       uniqueId: 2,
@@ -38,6 +43,7 @@ describe('The CalSettingsCalendarsController controller', function() {
   beforeEach(function() {
     angular.mock.module('esn.calendar', function($provide) {
       $provide.value('session', session);
+      $provide.value('calendarHomeService', calendarHomeService);
       $provide.value('calendarService', calendarService);
       $provide.value('userAndExternalCalendars', userAndExternalCalendars);
       $provide.value('calCalendarDeleteConfirmationModalService', calCalendarDeleteConfirmationModalService);
@@ -45,10 +51,9 @@ describe('The CalSettingsCalendarsController controller', function() {
   });
 
   beforeEach(function() {
-    angular.mock.inject(function(_$rootScope_, _$controller_, _$q_, _$log_, _CAL_EVENTS_) {
+    angular.mock.inject(function(_$rootScope_, _$controller_, _$log_, _CAL_EVENTS_) {
       $rootScope = _$rootScope_;
       $controller = _$controller_;
-      $q = _$q_;
       $log = _$log_;
       $scope = $rootScope.$new();
       CAL_EVENTS = _CAL_EVENTS_;

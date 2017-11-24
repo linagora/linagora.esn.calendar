@@ -6,7 +6,7 @@ var expect = chai.expect;
 
 describe('The calendarsList controller', function() {
   var $rootScope, $scope, $controller, CalendarCollectionShell, session, CAL_EVENTS, CAL_CALENDAR_PUBLIC_RIGHT;
-  var calendars, CalendarsListController, calendarServiceMock, hiddenCalendar, calendarVisibilityServiceMock;
+  var calendars, CalendarsListController, calendarHomeServiceMock, calendarServiceMock, hiddenCalendar, calendarVisibilityServiceMock;
 
   function initController() {
     return $controller('CalendarsListController', { $scope: $scope });
@@ -31,10 +31,16 @@ describe('The calendarsList controller', function() {
 
     session = {
       user: {
-        id: 'userId'
+        _id: 'userId'
       },
       ready: {
         then: angular.noop
+      }
+    };
+
+    calendarHomeServiceMock = {
+      getUserCalendarHomeId: function() {
+        return $q.when(session.user._id);
       }
     };
 
@@ -42,6 +48,7 @@ describe('The calendarsList controller', function() {
 
     angular.mock.module(function($provide) {
       $provide.value('calendarService', calendarServiceMock);
+      $provide.value('calendarHomeService', calendarHomeServiceMock);
       $provide.value('calendarVisibilityService', calendarVisibilityServiceMock);
       $provide.value('session', session);
       $provide.value('Cache', function() {});

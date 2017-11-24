@@ -11,15 +11,15 @@
   angular.module('esn.calendar')
     .factory('calOpenEventForm', calOpenEventForm);
 
-  function calOpenEventForm($rootScope, $modal, calendarService, calEventUtils, calUIAuthorizationService, notificationFactory, session, CAL_DEFAULT_CALENDAR_ID, CAL_EVENTS) {
+  function calOpenEventForm($rootScope, $modal, calendarService, calDefaultValue, calEventUtils, calUIAuthorizationService, notificationFactory, session, CAL_EVENTS) {
     var modalIsOpen = false;
 
     return function calOpenEventForm(fallbackCalendarHomeId, event) {
       var calendarHomeId = calEventUtils.isNew(event) ? fallbackCalendarHomeId : event.calendarHomeId;
-      var calendarId = calEventUtils.isNew(event) ? CAL_DEFAULT_CALENDAR_ID : event.calendarId;
+      var calendarId = calEventUtils.isNew(event) ? calDefaultValue.get('calendarId') : event.calendarId;
 
       calendarService.getCalendar(calendarHomeId, calendarId).then(function(calendar) {
-        if (calUIAuthorizationService.canAccessEventDetails(calendar, event, session.user._id)) {
+        if (calUIAuthorizationService.canAccessEventDetails(calendar, event, calDefaultValue.get('calendarId'))) {
           !event.isInstance() ?
           _openForm(calendar, event) :
           event.getModifiedMaster().then(function(eventMaster) {

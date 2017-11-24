@@ -6,7 +6,7 @@ var expect = chai.expect;
 
 describe('The event-form module controllers', function() {
   var Cache, calendarTest, canModifyEventResult, eventTest, owner, user;
-  var calEventServiceMock, calAttendeesDenormalizerService;
+  var calEventServiceMock, calendarHomeServiceMock, calAttendeesDenormalizerService;
   var $modal, $rootScope;
 
   beforeEach(function() {
@@ -24,6 +24,7 @@ describe('The event-form module controllers', function() {
     };
 
     user = {
+      _id: '12354',
       firstname: 'first',
       lastname: 'last',
       emails: ['user@test.com'],
@@ -123,6 +124,12 @@ describe('The event-form module controllers', function() {
       }
     };
 
+    calendarHomeServiceMock = {
+      getUserCalendarHomeId: function() {
+        return $q.when(sessionMock.user._id);
+      }
+    };
+
     this.notificationFactory = {
       weakInfo: sinon.spy(),
       weakError: sinon.spy()
@@ -152,6 +159,7 @@ describe('The event-form module controllers', function() {
         return angular.extend($delegate, calendarUtilsMock);
       });
       $provide.value('calAttendeesDenormalizerService', calAttendeesDenormalizerService);
+      $provide.value('calendarHomeService', calendarHomeServiceMock);
       $provide.value('calEventService', self.calEventServiceMock);
       $provide.value('calendarService', self.calendarServiceMock);
       $provide.value('session', sessionMock);

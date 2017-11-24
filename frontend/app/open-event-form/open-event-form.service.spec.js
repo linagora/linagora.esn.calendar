@@ -6,7 +6,7 @@
 var expect = chai.expect;
 
 describe('The calOpenEventForm service', function() {
-  var $modal, $q, $rootScope, $state, calEventUtils, calOpenEventForm, calendarService, calUIAuthorizationService, notificationFactory, CAL_DEFAULT_CALENDAR_ID, CAL_EVENTS;
+  var $modal, $q, $rootScope, $state, calEventUtils, calOpenEventForm, calendarService, calUIAuthorizationService, notificationFactory, calDefaultValue, CAL_EVENTS;
   var calendar, calendarHomeId, instance, master, regularEvent, session;
 
   beforeEach(function() {
@@ -47,7 +47,7 @@ describe('The calOpenEventForm service', function() {
     });
   });
 
-  beforeEach(angular.mock.inject(function(_$q_, _$rootScope_, _calEventUtils_, _calOpenEventForm_, _calUIAuthorizationService_, _notificationFactory_, _session_, _CAL_DEFAULT_CALENDAR_ID_, _CAL_EVENTS_) {
+  beforeEach(angular.mock.inject(function(_$q_, _$rootScope_, _calEventUtils_, _calOpenEventForm_, _calUIAuthorizationService_, _notificationFactory_, _session_, _calDefaultValue_, _CAL_EVENTS_) {
     $rootScope = _$rootScope_;
     $q = _$q_;
     calEventUtils = _calEventUtils_;
@@ -55,9 +55,13 @@ describe('The calOpenEventForm service', function() {
     calUIAuthorizationService = _calUIAuthorizationService_;
     notificationFactory = _notificationFactory_;
     session = _session_;
-    CAL_DEFAULT_CALENDAR_ID = _CAL_DEFAULT_CALENDAR_ID_;
+    calDefaultValue = _calDefaultValue_;
     CAL_EVENTS = _CAL_EVENTS_;
   }));
+
+  beforeEach(function() {
+    calDefaultValue.set('calendarId', 'calendarId');
+  });
 
   describe('calOpenEventForm', function() {
     var canAccessEventDetail, canModifyEvent;
@@ -94,7 +98,7 @@ describe('The calOpenEventForm service', function() {
 
       calendarService.getCalendar = sinon.spy(function(_calendarHomeId, _calendarId) {
         expect(_calendarHomeId).to.equal(calendarHomeId);
-        expect(_calendarId).to.equal(CAL_DEFAULT_CALENDAR_ID);
+        expect(_calendarId).to.equal(calDefaultValue.get('calendarId'));
         done();
       });
 

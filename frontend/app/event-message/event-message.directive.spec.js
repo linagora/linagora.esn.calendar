@@ -29,12 +29,17 @@ describe('The cal-event-message Angular module directives', function() {
       };
 
       self.sessionMock = {
-        user: { emails: 'emails' },
+        user: { _id: '12345', emails: 'emails' },
         ready: {
           then: angular.noop
         }
       };
 
+      self.calendarHomeServiceMock = {
+        getUserCalendarHomeId: function() {
+          return $q.when(self.sessionMock.user._id);
+        }
+      };
       self.calEventServiceMock = {
         getEvent: sinon.spy(function() {
           return $q.when(self.event);
@@ -58,6 +63,7 @@ describe('The cal-event-message Angular module directives', function() {
       };
 
       angular.mock.module(function($provide) {
+        $provide.value('calendarHomeService', self.calendarHomeServiceMock);
         $provide.value('calEventMessageService', self.calEventMessageServiceMock);
         $provide.value('calEventService', self.calEventServiceMock);
         $provide.value('session', self.sessionMock);

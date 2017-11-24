@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .factory('calPathBuilder', calPathBuilder);
 
-  function calPathBuilder(CAL_DEFAULT_CALENDAR_ID) {
+  function calPathBuilder(calDefaultValue) {
     var service = {
       rootPath: rootPath,
       forCalendarPath: forCalendarPath,
@@ -35,7 +35,7 @@
     }
 
     function forEventId(calendarHomeId, eventId) {
-      return (rootPath() + '/' + calendarHomeId + '/' + CAL_DEFAULT_CALENDAR_ID).replace(/\/$/, '') + '/' + eventId + '.ics';
+      return (rootPath() + '/' + calendarHomeId + '/' + calDefaultValue.get('calendarId')).replace(/\/$/, '') + '/' + eventId + '.ics';
     }
 
     function forSubscriptionId(calendarHomeId, subscriptionId) {

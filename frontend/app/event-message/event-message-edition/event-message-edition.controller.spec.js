@@ -56,7 +56,7 @@ describe('The CalEventMessageEditionController controller', function() {
     });
   });
 
-  beforeEach(angular.mock.inject(function($controller, $rootScope, calMoment, CAL_EVENT_FORM, $q) {
+  beforeEach(angular.mock.inject(function($controller, $rootScope, calDefaultValue, calMoment, CAL_EVENT_FORM, $q) {
     self.activitystream = {
       activity_stream: {
         uuid: 'uuid'
@@ -67,6 +67,7 @@ describe('The CalEventMessageEditionController controller', function() {
     self.$parentScope = $rootScope.$new();
     self.$parentScope.show = angular.noop;
     self.$scope = self.$parentScope.$new();
+    self.calDefaultValue = calDefaultValue;
     self.calMoment = calMoment;
     self.CAL_EVENT_FORM = CAL_EVENT_FORM; self.start = calMoment('2015-08-17 08:00');
     self.end = calMoment('2015-08-17 09:00');
@@ -80,6 +81,7 @@ describe('The CalEventMessageEditionController controller', function() {
       });
     };
     self.$q = $q;
+    self.calDefaultValue.set('calendarId', 'calendarId');
   }));
 
   afterEach(function() {
@@ -133,10 +135,10 @@ describe('The CalEventMessageEditionController controller', function() {
       expect(controller.event.title).to.equal(title);
     });
 
-    it('should give path to default calendars "/events"', function() {
+    it('should give path to default calendars', function() {
       controller.submit();
 
-      expect(self.calEventServiceMock.createEvent).to.have.been.calledWith({ calendarHomeId: self.calendarHomeId, id: 'events' });
+      expect(self.calEventServiceMock.createEvent).to.have.been.calledWith({ calendarHomeId: self.calendarHomeId, id: self.calDefaultValue.get('calendarId') });
     });
 
     it('should path the event and option that disable graceperiod', function() {
