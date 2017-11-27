@@ -20,11 +20,11 @@
 
       calendarService.getCalendar(calendarHomeId, calendarId).then(function(calendar) {
         if (calUIAuthorizationService.canAccessEventDetails(calendar, event, calDefaultValue.get('calendarId'))) {
-          !event.isInstance() ?
-          _openForm(calendar, event) :
-          event.getModifiedMaster().then(function(eventMaster) {
-            _openForm(calendar, eventMaster, event);
-          });
+          if (!event.isInstance()) {
+            _openForm(calendar, event);
+          } else {
+            _openRecurringModal(calendar, event);
+          }
         } else {
           notificationFactory.weakInfo('Private event', 'Cannot access private event');
         }
@@ -33,12 +33,12 @@
 
     ////////////
 
-    function _openForm(calendar, event, eventInstanceRecurrent) {
+    function _openForm(calendar, event) {
       calEventUtils.setEditedEvent(event);
       if (modalIsOpen === false) {
         modalIsOpen = true;
         $modal({
-          templateUrl: '/calendar/app/open-event-form/event-form-view.html',
+          templateUrl: '/calendar/app/open-event-form/event-form-view',
           resolve: {
             event: function(calEventUtils) {
               return calEventUtils.getEditedEvent();
@@ -46,6 +46,7 @@
           },
           controller: function($scope, event) {
             var _$hide = $scope.$hide;
+
             var unregister = $rootScope.$on(CAL_EVENTS.MODAL + '.hide', function() {
               $rootScope.$broadcast(CAL_EVENTS.CALENDAR_UNSELECT);
               $scope.$hide();
@@ -59,16 +60,46 @@
 
             $scope.event = event;
             $scope.calendarHomeId = session.user._id;
-
-            if (eventInstanceRecurrent) {
-              $scope.eventInstanceRecurrent = eventInstanceRecurrent;
-            }
           },
           backdrop: 'static',
           placement: 'center',
           prefixEvent: CAL_EVENTS.MODAL
         });
       }
+    }
+
+    function _openRecurringModal(calendar, event) {
+      $modal({
+        templateUrl: '/calendar/app/open-event-form/edit-instance-or-series',
+        resolve: {
+          calendar: function() {
+            return calendar;
+          },
+          event: function() {
+            return event;
+          },
+          openForm: function() {
+            return _openForm;
+          }
+        },
+        controller: function($scope, calendar, event, openForm) {
+          $scope.event = event;
+          $scope.calendarHomeId = calendar.calendarHomeId;
+
+          $scope.editAllInstances = function() {
+            $scope.$hide();
+            event.getModifiedMaster().then(function(eventMaster) {
+              openForm(calendar, eventMaster);
+            });
+          };
+
+          $scope.editInstance = function() {
+            $scope.$hide();
+            openForm(calendar, event, event.recurrenceIdAsString);
+          };
+        },
+        placement: 'center'
+      });
     }
   }
 })();
