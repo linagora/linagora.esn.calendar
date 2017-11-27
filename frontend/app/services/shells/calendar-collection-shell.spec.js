@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('CalendarCollectionShell factory', function() {
-  var $rootScope, Cache, CalendarCollectionShell, calPathBuilder, calendarRightShell, calendar, calendarSource, CAL_DEFAULT_CALENDAR_ID, CAL_CALENDAR_PUBLIC_RIGHT,
+  var $rootScope, Cache, CalendarCollectionShell, calPathBuilder, calendarRightShell, calendar, calendarSource, calDefaultValue, CAL_CALENDAR_PUBLIC_RIGHT,
     CAL_CALENDAR_SHARED_RIGHT, calendarSharedRight, calendarPublicRight, calendarOwner, calendarOwnerId, publicCalendarOwnerId, subscriptionId, calendarHomeId, id,
     CAL_CALENDAR_PROPERTIES, calendarType;
 
@@ -78,15 +78,19 @@ describe('CalendarCollectionShell factory', function() {
   );
 
   beforeEach(function() {
-    angular.mock.inject(function(_$rootScope_, _CalendarCollectionShell_, _calPathBuilder_, _CAL_DEFAULT_CALENDAR_ID_, _CAL_CALENDAR_PUBLIC_RIGHT_, _CAL_CALENDAR_SHARED_RIGHT_, _CAL_CALENDAR_PROPERTIES_) {
+    angular.mock.inject(function(_$rootScope_, _CalendarCollectionShell_, _calPathBuilder_, _calDefaultValue_, _CAL_CALENDAR_PUBLIC_RIGHT_, _CAL_CALENDAR_SHARED_RIGHT_, _CAL_CALENDAR_PROPERTIES_) {
       $rootScope = _$rootScope_;
       CalendarCollectionShell = _CalendarCollectionShell_;
       calPathBuilder = _calPathBuilder_;
-      CAL_DEFAULT_CALENDAR_ID = _CAL_DEFAULT_CALENDAR_ID_;
+      calDefaultValue = _calDefaultValue_;
       CAL_CALENDAR_PUBLIC_RIGHT = _CAL_CALENDAR_PUBLIC_RIGHT_;
       CAL_CALENDAR_SHARED_RIGHT = _CAL_CALENDAR_SHARED_RIGHT_;
       CAL_CALENDAR_PROPERTIES = _CAL_CALENDAR_PROPERTIES_;
     });
+  });
+
+  beforeEach(function() {
+    calDefaultValue.set('calendarId', 'calendarId');
   });
 
   describe('CalendarCollectionShell constructor', function() {
@@ -420,9 +424,9 @@ describe('CalendarCollectionShell factory', function() {
       });
     });
 
-    it('should set selected on calendar with CAL_DEFAULT_CALENDAR_ID', function() {
+    it('should set selected on calendar with calDefaultValue', function() {
       expect(CalendarCollectionShell.from({
-        href: '/calendars/56095ccccbd51b7318ce6d0c/' + CAL_DEFAULT_CALENDAR_ID + '.json',
+        href: '/calendars/56095ccccbd51b7318ce6d0c/' + calDefaultValue.get('calendarId') + '.json',
         acl: 'acl',
         invite: 'invite'
       })).to.shallowDeepEqual({

@@ -327,8 +327,6 @@
 
     .constant('CAL_MASTER_EVENT_CACHE_TTL', 300000)
 
-    .constant('CAL_DEFAULT_CALENDAR_ID', 'events')
-
     .constant('CAL_SPINNER_TIMEOUT_DURATION', 2000)
 
     .constant('CAL_EVENTS', {

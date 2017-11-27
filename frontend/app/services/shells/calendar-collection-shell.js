@@ -9,10 +9,10 @@
     calPathBuilder,
     calPathParser,
     calendarUsersCache,
+    calDefaultValue,
     CalendarRightShell,
     session,
     CAL_DEFAULT_EVENT_COLOR,
-    CAL_DEFAULT_CALENDAR_ID,
     CAL_CALENDAR_PUBLIC_RIGHT,
     CAL_CALENDAR_SHARED_RIGHT,
     CAL_CALENDAR_PROPERTIES,
@@ -39,7 +39,7 @@
 
       this.id = parsedPath.calendarId;
       this.calendarHomeId = parsedPath.calendarHomeId;
-      this.selected = this.id === CAL_DEFAULT_CALENDAR_ID;
+      this.selected = this.id === calDefaultValue.get('calendarId');
 
       this.invite = calendar.invite || this.source && this.source.invite;
 

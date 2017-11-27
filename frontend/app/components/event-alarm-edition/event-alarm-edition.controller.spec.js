@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('The calEventAlarmEditionController', function() {
-  var $controller, asSession, calEventsProviders, CAL_ALARM_TRIGGER;
+  var $controller, calendarHomeService, asSession, calEventsProviders, CAL_ALARM_TRIGGER;
 
   beforeEach(function() {
 
@@ -24,6 +24,12 @@ describe('The calEventAlarmEditionController', function() {
       }
     };
 
+    calendarHomeService = {
+      getUserCalendarHomeId: function() {
+        return $q.when(asSession.user._id);
+      }
+    };
+
     calEventsProviders = function() {
       return {
         setUpSearchProviders: angular.noop
@@ -31,6 +37,7 @@ describe('The calEventAlarmEditionController', function() {
     };
 
     angular.mock.module('esn.calendar', function($provide) {
+      $provide.value('calendarHomeService', calendarHomeService);
       $provide.value('session', asSession);
       $provide.factory('calEventsProviders', calEventsProviders);
     });

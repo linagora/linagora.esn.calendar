@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('The calUIAuthorizationService service', function() {
-  var calUIAuthorizationService, calEventUtils, userId, CAL_DEFAULT_CALENDAR_ID, CAL_CALENDAR_PUBLIC_RIGHT, CAL_CALENDAR_SHARED_RIGHT;
+  var calUIAuthorizationService, calEventUtils, userId, calDefaultValue, CAL_CALENDAR_PUBLIC_RIGHT, CAL_CALENDAR_SHARED_RIGHT;
 
   beforeEach(function() {
     calEventUtils = {
@@ -20,13 +20,17 @@ describe('The calUIAuthorizationService service', function() {
       $provide.value('calEventUtils', calEventUtils);
     });
 
-    angular.mock.inject(function(___, _calUIAuthorizationService_, _calEventUtils_, _CAL_DEFAULT_CALENDAR_ID_, _CAL_CALENDAR_PUBLIC_RIGHT_, _CAL_CALENDAR_SHARED_RIGHT_) {
+    angular.mock.inject(function(___, _calUIAuthorizationService_, _calEventUtils_, _calDefaultValue_, _CAL_CALENDAR_PUBLIC_RIGHT_, _CAL_CALENDAR_SHARED_RIGHT_) {
       calUIAuthorizationService = _calUIAuthorizationService_;
       calEventUtils = _calEventUtils_;
-      CAL_DEFAULT_CALENDAR_ID = _CAL_DEFAULT_CALENDAR_ID_;
+      calDefaultValue = _calDefaultValue_;
       CAL_CALENDAR_PUBLIC_RIGHT = _CAL_CALENDAR_PUBLIC_RIGHT_;
       CAL_CALENDAR_SHARED_RIGHT = _CAL_CALENDAR_SHARED_RIGHT_;
     });
+  });
+
+  beforeEach(function() {
+    calDefaultValue.set('calendarId', 'calendarId');
   });
 
   describe('The canAccessEventDetails function', function() {
@@ -89,13 +93,13 @@ describe('The calUIAuthorizationService service', function() {
       expect(calUIAuthorizationService.canDeleteCalendar()).to.be.false;
     });
 
-    it('should return false if calendar.id is the same as CAL_DEFAULT_CALENDAR_ID', function() {
-      expect(calUIAuthorizationService.canDeleteCalendar({id: CAL_DEFAULT_CALENDAR_ID})).to.be.false;
+    it('should return false if calendar.id is the same as calDefaultValue', function() {
+      expect(calUIAuthorizationService.canDeleteCalendar({id: calDefaultValue.get('calendarId')})).to.be.false;
     });
 
     it('should return false if the user is not the owner or the calendar is not shared to the user', function() {
       var calendar = {
-        id: CAL_DEFAULT_CALENDAR_ID + 'changed',
+        id: calDefaultValue.get('calendarId') + 'changed',
         isOwner: sinon.spy(function() {
           return false;
         }),
@@ -115,7 +119,7 @@ describe('The calUIAuthorizationService service', function() {
 
     it('should return true for the non-default calendars when the user is the owner', function() {
       var calendar = {
-        id: CAL_DEFAULT_CALENDAR_ID + 'changed',
+        id: calDefaultValue.get('calendarId') + 'changed',
         isOwner: sinon.spy(function() {
           return true;
         }),
@@ -132,7 +136,7 @@ describe('The calUIAuthorizationService service', function() {
 
     it('should return true for the non-default calendars when the calendar is shared with the user', function() {
       var calendar = {
-        id: CAL_DEFAULT_CALENDAR_ID + 'changed',
+        id: calDefaultValue.get('calendarId') + 'changed',
         isOwner: sinon.spy(function() {
           return false;
         }),

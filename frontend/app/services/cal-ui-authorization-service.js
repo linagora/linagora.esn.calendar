@@ -6,7 +6,7 @@
 
   function calUIAuthorizationService(
     calEventUtils,
-    CAL_DEFAULT_CALENDAR_ID,
+    calDefaultValue,
     CAL_CALENDAR_PUBLIC_RIGHT,
     CAL_CALENDAR_SHARED_RIGHT
   ) {
@@ -29,7 +29,7 @@
     }
 
     function canDeleteCalendar(calendar, userId) {
-      return !!calendar && (calendar.id !== CAL_DEFAULT_CALENDAR_ID) && canModifyCalendarProperties(calendar, userId);
+      return !!calendar && (calendar.id !== calDefaultValue.get('calendarId')) && canModifyCalendarProperties(calendar, userId);
     }
 
     function canModifyEvent(calendar, event, userId) {

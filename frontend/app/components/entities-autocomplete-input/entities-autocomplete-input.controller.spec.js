@@ -6,7 +6,7 @@ var expect = chai.expect;
 
 describe('The calEntitiesAutocompleteInputController', function() {
 
-  var $rootScope, $scope, $controller, calendarAttendeeService, session, calEventsProviders, CAL_AUTOCOMPLETE_MAX_RESULTS;
+  var $rootScope, $scope, $controller, calendarAttendeeService, calendarHomeService, session, calEventsProviders, CAL_AUTOCOMPLETE_MAX_RESULTS;
 
   beforeEach(function() {
     session = {
@@ -22,6 +22,12 @@ describe('The calEntitiesAutocompleteInputController', function() {
       ready: {
         then: function() {
         }
+      }
+    };
+
+    calendarHomeService = {
+      getUserCalendarHomeId: function() {
+        return $q.when(session.user._id);
       }
     };
 
@@ -78,6 +84,7 @@ describe('The calEntitiesAutocompleteInputController', function() {
 
     angular.mock.module('esn.calendar', function($provide) {
       $provide.value('calendarAttendeeService', calendarAttendeeService);
+      $provide.value('calendarHomeService', calendarHomeService);
       $provide.value('session', session);
       $provide.factory('calEventsProviders', calEventsProviders);
       $provide.constant('CAL_AUTOCOMPLETE_MAX_RESULTS', CAL_AUTOCOMPLETE_MAX_RESULTS);
