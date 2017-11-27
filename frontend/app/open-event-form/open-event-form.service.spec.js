@@ -6,7 +6,7 @@
 var expect = chai.expect;
 
 describe('The calOpenEventForm service', function() {
-  var $modal, $q, $rootScope, $state, calEventUtils, calOpenEventForm, calendarService, calUIAuthorizationService, notificationFactory, calDefaultValue, CAL_EVENTS;
+  var $modal, $q, $rootScope, $state, calOpenEventForm, calendarService, calUIAuthorizationService, notificationFactory, calDefaultValue, CAL_EVENTS;
   var calendar, calendarHomeId, instance, master, regularEvent, session;
 
   beforeEach(function() {
@@ -47,10 +47,9 @@ describe('The calOpenEventForm service', function() {
     });
   });
 
-  beforeEach(angular.mock.inject(function(_$q_, _$rootScope_, _calEventUtils_, _calOpenEventForm_, _calUIAuthorizationService_, _notificationFactory_, _session_, _calDefaultValue_, _CAL_EVENTS_) {
+  beforeEach(angular.mock.inject(function(_$q_, _$rootScope_, _calOpenEventForm_, _calUIAuthorizationService_, _notificationFactory_, _session_, _calDefaultValue_, _CAL_EVENTS_) {
     $rootScope = _$rootScope_;
     $q = _$q_;
-    calEventUtils = _calEventUtils_;
     calOpenEventForm = _calOpenEventForm_;
     calUIAuthorizationService = _calUIAuthorizationService_;
     notificationFactory = _notificationFactory_;
@@ -115,7 +114,7 @@ describe('The calOpenEventForm service', function() {
       expect($modal).to.have.been.called;
       expect($state.go).to.not.have.been;
       expect($modal).to.have.been.calledWith(sinon.match({
-        templateUrl: '/calendar/app/open-event-form/event-form-view.html',
+        templateUrl: '/calendar/app/open-event-form/event-form-view',
         backdrop: 'static',
         placement: 'center'
       }));
@@ -225,6 +224,41 @@ describe('The calOpenEventForm service', function() {
       }));
     });
 
+    it('if event is a recurring event, it should ask for editing master or instance', function() {
+      calOpenEventForm(calendarHomeId, instance);
+
+      $rootScope.$digest();
+
+      expect($modal).to.have.been.calledWith(sinon.match({
+        templateUrl: '/calendar/app/open-event-form/edit-instance-or-series',
+        resolve: {
+          event: sinon.match.func.and(sinon.match(function(eventGetter) {
+            return eventGetter() === instance;
+          }))
+        },
+        controller: sinon.match.func.and(sinon.match(function(controller) {
+          var openForm = sinon.spy();
+          var $scope = {
+            $hide: sinon.spy()
+          };
+
+          controller($scope, calendar, instance, openForm);
+          instance.recurrenceIdAsString = '20170425T083000Z';
+
+          $scope.editInstance();
+          $scope.editAllInstances();
+          $rootScope.$digest();
+
+          expect(openForm.firstCall).to.have.been.calledWith(calendar, instance, instance.recurrenceIdAsString);
+          expect(openForm.secondCall).to.have.been.calledWith(calendar, master);
+          expect($scope.$hide).to.have.been.calledTwice;
+
+          return true;
+        })),
+        placement: 'center'
+      }));
+    });
+
     it('should prevent click action and display notification if event is private and current user is not the owner', function() {
       sinon.spy(notificationFactory, 'weakInfo');
       canAccessEventDetail = false;
@@ -236,33 +270,6 @@ describe('The calOpenEventForm service', function() {
       expect(regularEvent.isInstance).to.have.not.been.called;
       expect(notificationFactory.weakInfo).to.have.been.calledWith('Private event', 'Cannot access private event');
       expect(openEventForm).to.be.undefined;
-    });
-
-    describe('Recurrent event', function() {
-      it('should call $modal with master and instance of recurrent event passed as arguments', function(done) {
-        sinon.spy(calEventUtils, 'setEditedEvent');
-
-        calOpenEventForm(calendarHomeId, instance);
-        $rootScope.$digest();
-
-        expect($modal).to.have.been.calledWith(sinon.match({
-          templateUrl: '/calendar/app/open-event-form/event-form-view.html',
-          controller: sinon.match.func.and(sinon.match(function(controller) {
-            var $scope = {
-              event: null
-            };
-
-            controller($scope, instance, master);
-            $rootScope.$digest();
-
-            expect($scope.eventInstanceRecurrent).to.equal(instance);
-            expect(calEventUtils.setEditedEvent).to.have.been.calledWith(master);
-
-            done();
-            return true;
-          }))
-        }));
-      });
     });
   });
 });
