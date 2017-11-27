@@ -5,7 +5,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
   .modal-dialog
     .modal-content
       .modal-header
-        button.close(type='button', data-dismiss="modal", aria-label="Close", ng-click="$hide()")
+        button.close(type='button', data-dismiss="modal", aria-label="Close", ng-click="cancel()")
           span(aria-hidden="true") &times;
         h4.modal-title(ng-if='canModifyEvent && isNew(editedEvent)') #{__('Create a new event')}
         h4.modal-title(ng-if='canModifyEvent && !isNew(editedEvent)') #{__('Edit event')}
@@ -77,5 +77,5 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
             button.btn.btn-link.btn-icon.color-danger.delete(type='button', ng-click="deleteEvent()", ng-disabled="!canPerformCall()")
               i.mdi.mdi-delete
         .flex-vertical-centered.flex-end
-          button.btn.btn-link.color-default.close-button(type='button', ng-click="$hide()") #{__('Cancel')}
+          button.btn.btn-link.color-default.close-button(type='button', ng-click="cancel()") #{__('Cancel')}
           button.btn.btn-primary.save.save-button(ng-if='canModifyEvent' type='submit', ng-disabled="!canPerformCall()") #{__('Save')}

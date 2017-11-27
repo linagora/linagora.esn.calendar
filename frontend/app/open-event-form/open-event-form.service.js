@@ -49,7 +49,7 @@
 
             var unregister = $rootScope.$on(CAL_EVENTS.MODAL + '.hide', function() {
               $rootScope.$broadcast(CAL_EVENTS.CALENDAR_UNSELECT);
-              $scope.$hide();
+              $scope.cancel && $scope.cancel();
             });
 
             $scope.$hide = function() {

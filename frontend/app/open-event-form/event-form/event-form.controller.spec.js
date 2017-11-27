@@ -98,7 +98,7 @@ describe('The event-form module controllers', function() {
       modifyEvent: function(path, e) { // eslint-disable-line
         eventTest = e;
 
-        return $q.when();
+        return $q.when(true);
       }
     };
 
@@ -704,6 +704,43 @@ describe('The event-form module controllers', function() {
           });
         });
 
+        it('should cache attendees and resources', function() {
+          this.scope.event = this.CalendarShell.fromIncompleteShell({
+            title: 'oldtitle',
+            path: '/path/to/event',
+            attendees: [{
+              name: 'attendee1',
+              email: 'user1@test.com',
+              partstart: 'ACCEPTED'
+            }]
+          });
+          this.initController();
+
+          var attendeesCacheSpy = sinon.spy(this.calEventUtils, 'setNewAttendees');
+          var resourcesCacheSpy = sinon.spy(this.calEventUtils, 'setNewResources');
+
+          var newAttendees = [{
+            email: 'user1@test.com'
+          }, {
+            email: 'user2@test.com'
+          }];
+
+          var newResources = [{
+            email: 'resource1@test.com'
+          }, {
+            email: 'resource2@test.com'
+          }];
+
+          this.scope.newAttendees = newAttendees;
+          this.scope.newResources = newResources;
+          this.scope.modifyEvent();
+
+          this.rootScope.$digest();
+
+          expect(attendeesCacheSpy).to.have.been.calledWith(newAttendees);
+          expect(resourcesCacheSpy).to.have.been.calledWith(newResources);
+        });
+
         it('should pass along the etag', function() {
           this.scope.event = this.CalendarShell.fromIncompleteShell({
             title: 'oldtitle',
@@ -792,6 +829,61 @@ describe('The event-form module controllers', function() {
           this.scope.modifyEvent();
 
           expect(this.scope.editedEvent.deleteAllException).to.not.have.been.called;
+        });
+
+        it('should resetStoredEvents when event update is successful', function() {
+          var restoreSpy = sinon.spy(this.calEventUtils, 'resetStoredEvents');
+
+          this.scope.event = this.CalendarShell.fromIncompleteShell({
+            title: 'oldtitle',
+            path: '/calendars/' + this.calendars[1].id + '/eventID',
+            etag: '123123'
+          });
+          this.initController();
+
+          this.scope.editedEvent = this.CalendarShell.fromIncompleteShell({
+            title: 'title',
+            path: '/path/to/event',
+            etag: '123123'
+          });
+
+          this.calEventServiceMock.modifyEvent = sinon.stub().returns($q.when(true));
+          this.scope.modifyEvent();
+          this.scope.$digest();
+
+          expect(this.calEventServiceMock.modifyEvent).to.have.been.calledOnce;
+          expect(restoreSpy).to.have.been.calledOnce;
+        });
+
+        it('should restore attendees and reopen form when event update failed', function() {
+          var restoreSpy = sinon.spy(this.calEventUtils, 'resetStoredEvents');
+          var attendees = [{
+            name: 'attendee1',
+            email: 'user1@test.com',
+            partstart: 'ACCEPTED'
+          }];
+
+          this.scope.event = this.CalendarShell.fromIncompleteShell({
+            title: 'oldtitle',
+            path: '/calendars/' + this.calendars[1].id + '/eventID',
+            etag: '123123'
+          });
+          this.initController();
+
+          this.scope.editedEvent = this.CalendarShell.fromIncompleteShell({
+            title: 'title',
+            path: '/path/to/event',
+            etag: '123123',
+            attendees: attendees
+          });
+
+          this.calEventServiceMock.modifyEvent = sinon.stub().returns($q.when(false));
+          this.scope.modifyEvent();
+          this.scope.$digest();
+
+          expect(this.calEventServiceMock.modifyEvent).to.have.been.calledOnce;
+          expect(restoreSpy).to.not.have.been.called;
+          expect(this.calOpenEventForm).to.have.been.calledWith(sinon.match.any, this.scope.editedEvent);
         });
       });
 
@@ -962,6 +1054,32 @@ describe('The event-form module controllers', function() {
         });
       });
 
+      it('should cache attendees and resources', function() {
+        var attendeesCacheSpy = sinon.spy(this.calEventUtils, 'setNewAttendees');
+        var resourcesCacheSpy = sinon.spy(this.calEventUtils, 'setNewResources');
+
+        var newAttendees = [{
+          email: 'user1@test.com'
+        }, {
+          email: 'user2@test.com'
+        }];
+
+        var newResources = [{
+          email: 'resource1@test.com'
+        }, {
+          email: 'resource2@test.com'
+        }];
+
+        this.scope.newAttendees = newAttendees;
+        this.scope.newResources = newResources;
+        this.scope.createEvent();
+
+        this.rootScope.$digest();
+
+        expect(attendeesCacheSpy).to.have.been.calledWith(newAttendees);
+        expect(resourcesCacheSpy).to.have.been.calledWith(newResources);
+      });
+
       it('should return error notification when calendar is undefined', function() {
         this.scope.calendar = null;
 
@@ -1008,6 +1126,28 @@ describe('The event-form module controllers', function() {
           graceperiod: true,
           notifyFullcalendar: this.$state.is()
         });
+      });
+
+      it('should resetStoredEvents when event creation is successful', function() {
+        var restoreSpy = sinon.spy(this.calEventUtils, 'resetStoredEvents');
+
+        this.scope.createEvent();
+        this.scope.$digest();
+
+        expect(restoreSpy).to.have.been.calledOnce;
+        expect(this.calOpenEventForm).to.not.have.been.called;
+      });
+
+      it('should restore attendees and reopen form when event creation failed', function() {
+        var restoreSpy = sinon.spy(this.calEventUtils, 'resetStoredEvents');
+
+        this.calEventServiceMock.createEvent = sinon.stub().returns($q.when(false));
+        this.scope.createEvent();
+        this.scope.$digest();
+
+        expect(this.calEventServiceMock.createEvent).to.have.been.calledOnce;
+        expect(restoreSpy).to.not.have.been.called;
+        expect(this.calOpenEventForm).to.have.been.calledWith(sinon.match.any, this.scope.editedEvent);
       });
     });
 
