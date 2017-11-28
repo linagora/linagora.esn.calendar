@@ -80,6 +80,14 @@ describe('The calEventStore factory', function() {
       self.calEventStore.save('calId', createEvent('calId', 'a', 2, 2));
       expect(_.sortBy(self.calEventStore.getInPeriod('calId', createPeriod(1, 30)), 'id')).to.deep.equals(_.sortBy([event, event2], 'id'));
     });
+
+    it('should not save event with duration < 0', function() {
+      var event = createEvent('calId', 'a', 4, 2);
+
+      self.calEventStore.save('calId', event);
+
+      expect(_.sortBy(self.calEventStore.getInPeriod('calId', createPeriod(1, 30)), 'id')).to.deep.equals([]);
+    });
   });
 
   describe('The getInPeriod function', function() {
