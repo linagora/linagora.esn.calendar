@@ -1,6 +1,6 @@
 .cal-calendar-shared-configuration-item
   .meta
-    cal-attendee-avatar.attendee-avatar(ng-if="$ctrl.item.user.objectType !== 'resource'", attendee='$ctrl.item.user')
+    esn-avatar.attendee-avatar(ng-if="$ctrl.item.user.objectType !== 'resource'", user-id="$ctrl.item.user._id")
     cal-resource-avatar.attendee-avatar(ng-if="$ctrl.item.user.objectType === 'resource'", resource='$ctrl.item.user')
     .title
       .name
