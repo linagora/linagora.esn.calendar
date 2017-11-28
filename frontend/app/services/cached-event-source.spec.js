@@ -116,6 +116,24 @@ describe('The calCachedEventSource service', function() {
       expect(self.originalCallback).to.have.been.calledWithExactly(self.events);
     });
 
+    it('should ignore events where end is before start', function() {
+      self.events.push({
+        id: 3,
+        calendarUniqueId: self.calendarUniqueId,
+        uid: 3,
+        start: self.calMoment.utc('1984-01-03 08:00'),
+        end: self.calMoment.utc('1984-01-02 09:00'),
+        isRecurring: _.constant(false),
+        isInstance: _.constant(false),
+        title: 'I am ending before I start...'
+      });
+
+      self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, null, self.originalCallback);
+      self.$rootScope.$apply();
+
+      expect(self.originalCallback).to.have.been.calledWithExactly([self.events[0], self.events[1]]);
+    });
+
     it('should not fetch twice event from the save source', function() {
       var eventSource = sinon.spy(function(start, end, timezone, callback) {
         expect([start, end, timezone]).to.be.deep.equals([self.start, self.end, self.timezone]);

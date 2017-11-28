@@ -23,6 +23,11 @@
         end.add(1, 'days');
       }
 
+      // avoid infinite loop if for some nasty reason end has been set to a date before start
+      if (day.isAfter(end)) {
+        return callback(calMoment(day));
+      }
+
       //subtract one minute if the event finish at midnight to fix the condition day.isSame(end, 'day')
       if (!event.allDay && event.end && event.end.hour() === 0 && event.end.minute() === 0) {
         end.subtract(1, 'minutes');

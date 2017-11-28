@@ -38,10 +38,13 @@
         }
       }
 
-      store.eventsSortedByStart.splice(insertionIndex, 0, event);
-
       var eventDuration = event.end.unix() - event.start.unix();
 
+      if (eventDuration < 0) {
+        return;
+      }
+
+      store.eventsSortedByStart.splice(insertionIndex, 0, event);
       store.maxEventsDuration = Math.max(store.maxEventsDuration, eventDuration);
     }
 
