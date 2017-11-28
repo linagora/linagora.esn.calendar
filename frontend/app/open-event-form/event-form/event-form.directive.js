@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .directive('calEventForm', calEventForm);
 
-  function calEventForm($timeout, calEventUtils) {
+  function calEventForm($timeout) {
     var directive = {
       restrict: 'E',
       templateUrl: '/calendar/app/open-event-form/event-form/event-form.html',
@@ -19,7 +19,6 @@
 
     function link(scope, element) {
       $timeout(focusTitle, 0);
-      element.on('$destroy', calEventUtils.resetStoredEvents);
       scope.$on('$locationChangeStart', hideModal);
 
       ////////////

@@ -9,6 +9,7 @@
     $scope,
     $state,
     $log,
+    $q,
     _,
     calendarService,
     userUtils,
@@ -42,10 +43,16 @@
       $scope.submit = submit;
       $scope.canPerformCall = canPerformCall;
       $scope.goToCalendar = goToCalendar;
+      $scope.cancel = cancel;
 
       // Initialize the scope of the form. It creates a scope.editedEvent which allows us to
       // rollback to scope.event in case of a Cancel.
       $scope.initFormData();
+
+      function cancel() {
+        calEventUtils.resetStoredEvents();
+        _hideModal();
+      }
 
       ////////////
 
@@ -94,8 +101,9 @@
 
       function initFormData() {
         $scope.editedEvent = $scope.event.clone();
+        $scope.oldAttendees = angular.copy($scope.editedEvent.attendees) || [];
         $scope.newAttendees = calEventUtils.getNewAttendees();
-        $scope.newResources = [];
+        $scope.newResources = calEventUtils.getNewResources();
         $scope.isOrganizer = calEventUtils.isOrganizer($scope.editedEvent);
 
         calendarService.listPersonalAndAcceptedDelegationCalendars($scope.calendarHomeId)
@@ -140,7 +148,7 @@
           });
       }
 
-      function processAttendees() {
+      function denormalizeAttendees() {
         var attendees = angular.copy($scope.editedEvent.attendees);
 
         return calAttendeesDenormalizerService($scope.editedEvent.attendees)
@@ -165,6 +173,15 @@
         return !$scope.restActive;
       }
 
+      function cacheAttendees() {
+        calEventUtils.setNewAttendees($scope.newAttendees);
+        calEventUtils.setNewResources($scope.newResources);
+      }
+
+      function setEventAttendees() {
+        $scope.editedEvent.attendees = [].concat($scope.attendees.users, $scope.newAttendees, $scope.attendees.resources, $scope.newResources);
+      }
+
       function createEvent() {
         if (!$scope.editedEvent.title || $scope.editedEvent.title.trim().length === 0) {
           $scope.editedEvent.title = CAL_EVENT_FORM.title.default;
@@ -174,24 +191,20 @@
           $scope.editedEvent.class = CAL_EVENT_FORM.class.default;
         }
 
-        $scope.editedEvent.attendees = $scope.attendees.users.concat($scope.newAttendees, $scope.attendees.resources, $scope.newResources);
-
         if ($scope.calendar) {
           $scope.restActive = true;
           _hideModal();
+          setEventAttendees();
           setOrganizer()
-            .then(processAttendees)
+            .then(cacheAttendees)
+            .then(denormalizeAttendees)
             .then(function() {
               return calEventService.createEvent($scope.calendar, $scope.editedEvent, {
                 graceperiod: true,
                 notifyFullcalendar: $state.is('calendar.main')
               });
             })
-            .then(function(completed) {
-              if (!completed) {
-                calOpenEventForm($scope.calendarHomeId, $scope.editedEvent);
-              }
-            })
+            .then(onEventCreateUpdateResponse)
             .finally(function() {
               $scope.restActive = false;
             });
@@ -254,9 +267,11 @@
           $scope.editedEvent.deleteAllException();
         }
 
-        processAttendees()
+        return $q.when()
+          .then(cacheAttendees)
+          .then(denormalizeAttendees)
           .then(function() {
-            calEventService.modifyEvent(
+            return calEventService.modifyEvent(
               $scope.event.path || calPathBuilder.forCalendarPath($scope.calendarHomeId, $scope.calendar.id),
               $scope.editedEvent,
               $scope.event,
@@ -265,6 +280,7 @@
               { graceperiod: true, notifyFullcalendar: $state.is('calendar.main') }
             );
           })
+          .then(onEventCreateUpdateResponse)
           .finally(function() {
             $scope.restActive = false;
           });
@@ -327,6 +343,15 @@
       function goToCalendar(callback) {
         (callback || angular.noop)();
         $state.go('calendar.main');
+      }
+
+      function onEventCreateUpdateResponse(success) {
+        if (success) {
+          return calEventUtils.resetStoredEvents();
+        }
+
+        $scope.editedEvent.attendees = $scope.oldAttendees;
+        calOpenEventForm($scope.calendarHomeId, $scope.editedEvent);
       }
   }
 })();

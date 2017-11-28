@@ -13,6 +13,7 @@
   ) {
     var editedEvent = null;
     var newAttendees = [];
+    var newResources = [];
 
     var service = {
       editedEvent: editedEvent,
@@ -25,7 +26,9 @@
       getEditedEvent: getEditedEvent,
       setEditedEvent: setEditedEvent,
       getNewAttendees: getNewAttendees,
+      getNewResources: getNewResources,
       setNewAttendees: setNewAttendees,
+      setNewResources: setNewResources,
       setBackgroundColor: setBackgroundColor,
       resetStoredEvents: resetStoredEvents,
       applyReply: applyReply,
@@ -78,7 +81,15 @@
     }
 
     function setNewAttendees(attendees) {
-      newAttendees = attendees;
+      newAttendees = angular.copy(attendees);
+    }
+
+    function getNewResources() {
+      return newResources;
+    }
+
+    function setNewResources(resources) {
+      newResources = angular.copy(resources);
     }
 
     function getEditedEvent() {
@@ -92,6 +103,7 @@
     function resetStoredEvents() {
       editedEvent = {};
       newAttendees = [];
+      newResources = [];
     }
 
     function applyReply(originalEvent, reply) {

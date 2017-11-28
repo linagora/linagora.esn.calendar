@@ -169,17 +169,16 @@ describe('The calOpenEventForm service', function() {
       expect($modal).to.have.been.calledWith(sinon.match({
         controller: sinon.match.func.and(sinon.match(function(controller) {
           var openForm = sinon.spy();
-          var $hide = sinon.spy();
 
           var $scope = {
-            $hide: $hide
+            cancel: sinon.spy()
           };
 
           controller($scope, instance, openForm);
 
           $rootScope.$broadcast(CAL_EVENTS.MODAL + '.hide');
 
-          expect($hide).to.have.been.called;
+          expect($scope.cancel).to.have.been.called;
           expect($scope.calendarHomeId).to.equal(session.user._id);
           expect(calendarUnselectListenerSpy).to.have.been.called;
 
@@ -202,10 +201,9 @@ describe('The calOpenEventForm service', function() {
       expect($modal).to.have.been.calledWith(sinon.match({
         controller: sinon.match.func.and(sinon.match(function(controller) {
           var openForm = sinon.spy();
-          var $hide = sinon.spy();
 
           var $scope = {
-            $hide: $hide
+            cancel: sinon.spy()
           };
 
           controller($scope, instance, openForm);
@@ -213,9 +211,9 @@ describe('The calOpenEventForm service', function() {
           $rootScope.$broadcast(CAL_EVENTS.MODAL + '.hide');
           $rootScope.$broadcast(CAL_EVENTS.MODAL + '.hide');
 
-          expect($hide).to.have.been.calledOnce;
+          expect($scope.cancel).to.have.been.calledTwice;
           expect($scope.calendarHomeId).to.equal(session.user._id);
-          expect(calendarUnselectListenerSpy).to.have.been.calledOnce;
+          expect(calendarUnselectListenerSpy).to.have.been.calledTwice;
 
           done();
 

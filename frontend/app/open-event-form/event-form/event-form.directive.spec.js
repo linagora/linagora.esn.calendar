@@ -46,15 +46,6 @@ describe('The cal-event-form Angular module directives', function() {
     };
   }));
 
-  it('should reset calEventUtils events by calling resetStoredEvents on element $destroy', function(done) {
-    this.calEventUtilsMock.resetStoredEvents = function() {
-      done();
-    };
-    var element = this.initDirective(this.$scope);
-
-    element.remove();
-  });
-
   it('should prevent default back behavior when modal is shown', function() {
     this.$scope.$hide = sinon.spy();
     this.initDirective(this.$scope);
