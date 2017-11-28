@@ -96,7 +96,7 @@ module.exports = dependencies => {
             return res.status(500).json({error: {code: 500, message: 'Error while rendering event consultation page', details: err.message}});
           }
 
-          calendar.generateActionLinks(baseUrl, eventData).then(links => {
+          invitation.link.generateActionLinks(baseUrl, eventData).then(links => {
             res.status(200).render('../event-consultation-app/index', {
               eventJSON: JSON.stringify(vcalendar.toJSON()),
               attendeeEmail: attendeeEmail,

@@ -8,29 +8,29 @@ var q = require('q');
 var sinon = require('sinon');
 
 describe('The calendar controller', function() {
-  var userModuleMock, coreMock, helpers, self, sendMailSpy;
+  var userModuleMock, invitationMock, helpers, self, sendMailSpy;
 
   beforeEach(function() {
     self = this;
-    coreMock = {
-      generateActionLinks: function() {
-        return q.when({});
-      }
-    };
-    mockery.registerMock('./core', function() {
-      return coreMock;
-    });
+
     helpers = {
       config: {
         getBaseUrl: function(user, callback) { callback(null, 'baseUrl'); }
       }
     };
+    mockery.registerMock('./core', () => {});
     sendMailSpy = sinon.stub().returns(Promise.resolve());
-    mockery.registerMock('../../../lib/invitation', () => ({
+    invitationMock = {
       email: {
         send: sendMailSpy
+      },
+      link: {
+        generateActionLinks: function() {
+          return q.when({});
+        }
       }
-    }));
+    };
+    mockery.registerMock('../../../lib/invitation', () => invitationMock);
     this.moduleHelpers.addDep('helpers', helpers);
     userModuleMock = {
       findByEmail: function(mail, callback) {
@@ -102,6 +102,7 @@ describe('The calendar controller', function() {
       var res = {
         status: function(status) {
           expect(status).to.equal(400);
+
           return {
             json: function(err) {
               expect(err).to.exist;
@@ -110,6 +111,7 @@ describe('The calendar controller', function() {
           };
         }
       };
+
       require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies).changeParticipation(req, res);
     });
 
@@ -124,12 +126,14 @@ describe('The calendar controller', function() {
               req.eventPayload.calendarURI,
               req.eventPayload.uid + '.ics'
           ].join('/'));
+
           return callback(new Error());
         };
 
         var res = {
           status: function(status) {
             expect(status).to.equal(500);
+
             return {
               json: function(err) {
                 expect(err).to.exist;
@@ -138,6 +142,7 @@ describe('The calendar controller', function() {
             };
           }
         };
+
         require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies).changeParticipation(req, res);
       });
 
@@ -358,7 +363,7 @@ describe('The calendar controller', function() {
           it('should send 200 and render the event consultation page', function(done) {
             var links = 'links';
 
-            coreMock.generateActionLinks = sinon.spy(function(url, eventData) {
+            invitationMock.link.generateActionLinks = sinon.spy(function(url, eventData) {
               expect(url).to.equal('baseUrl');
               expect(eventData).to.deep.equal(req.eventPayload);
 
@@ -380,7 +385,7 @@ describe('The calendar controller', function() {
 
                 return {
                   render: function(template, locals) {
-                    expect(coreMock.generateActionLinks).to.have.been.called;
+                    expect(invitationMock.link.generateActionLinks).to.have.been.called;
                     expect(locals).to.shallowDeepEqual({
                       attendeeEmail: req.eventPayload.attendeeEmail,
                       links: links
