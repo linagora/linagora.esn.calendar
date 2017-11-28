@@ -19,7 +19,7 @@
       var calendarId = calEventUtils.isNew(event) ? calDefaultValue.get('calendarId') : event.calendarId;
 
       calendarService.getCalendar(calendarHomeId, calendarId).then(function(calendar) {
-        if (calUIAuthorizationService.canAccessEventDetails(calendar, event, calDefaultValue.get('calendarId'))) {
+        if (calUIAuthorizationService.canAccessEventDetails(calendar, event, session.user._id)) {
           if (!event.isInstance()) {
             _openForm(calendar, event);
           } else {
