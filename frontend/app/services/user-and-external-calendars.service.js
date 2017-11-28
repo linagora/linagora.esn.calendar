@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .factory('userAndExternalCalendars', userAndExternalCalendars);
 
-  function userAndExternalCalendars(session, _) {
+  function userAndExternalCalendars(session) {
     return function(calendars) {
       var userCalendars, sharedCalendars, publicCalendars;
 
@@ -13,11 +13,11 @@
       });
 
       sharedCalendars = calendars.filter(function(calendar) {
-        return !_.include(userCalendars, calendar) && calendar.isShared(session.user._id);
+        return !calendar.isOwner(session.user._id) && !calendar.isSubscription() && calendar.isShared(session.user._id);
       });
 
       publicCalendars = calendars.filter(function(calendar) {
-        return !_.include(userCalendars, calendar) && calendar.isSubscription();
+        return !calendar.isOwner(session.user._id) && calendar.isSubscription();
       });
 
       return {

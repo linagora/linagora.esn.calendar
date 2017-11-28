@@ -13,7 +13,7 @@ describe('the userAndExternalCalendars service', function() {
       href: 'href',
       name: 'name',
       color: 'color',
-      description: 'description',
+      description: 'Personal calendar that is public',
       rights: {
         getOwnerId: function() {
           return 'tata';
@@ -36,17 +36,17 @@ describe('the userAndExternalCalendars service', function() {
       href: 'href2',
       name: 'name2',
       color: 'color2',
-      description: 'description2',
+      description: 'Personal calendar that is shared',
       rights: {
         getOwnerId: function() {
           return 'tata';
         }
       },
       isShared: function() {
-        return false;
+        return true;
       },
       isPublic: function() {
-        return true;
+        return false;
       },
       isOwner: function() {
         return true;
@@ -59,7 +59,7 @@ describe('the userAndExternalCalendars service', function() {
       href: 'href',
       name: 'name',
       color: 'color',
-      description: 'description',
+      description: 'Personal calendar that is shared and public',
       rights: {
         getOwnerId: function() {
           return 'tata';
@@ -69,7 +69,7 @@ describe('the userAndExternalCalendars service', function() {
         return true;
       },
       isPublic: function() {
-        return false;
+        return true;
       },
       isOwner: function() {
         return true;
@@ -82,7 +82,7 @@ describe('the userAndExternalCalendars service', function() {
       href: 'href',
       name: 'name',
       color: 'color',
-      description: 'description',
+      description: 'Subscription to public calendar',
       rights: {
         getOwnerId: function() {
           return 'tata';
@@ -105,7 +105,7 @@ describe('the userAndExternalCalendars service', function() {
       href: 'href',
       name: 'name',
       color: 'color',
-      description: 'description',
+      description: 'Calendar shared to me',
       rights: {
         getOwnerId: function() {
           return 'tata';
@@ -128,7 +128,7 @@ describe('the userAndExternalCalendars service', function() {
       href: 'href',
       name: 'name',
       color: 'color',
-      description: 'description',
+      description: 'Calendar shared to me and public (not subscribed)',
       rights: {
         getOwnerId: function() {
           return 'tata';
@@ -145,6 +145,29 @@ describe('the userAndExternalCalendars service', function() {
       },
       isSubscription: function() {
         return false;
+      }
+    }, {
+      id: '7',
+      href: 'href',
+      name: 'name',
+      color: 'color',
+      description: 'Subscription to public calendar that is also shared to me',
+      rights: {
+        getOwnerId: function() {
+          return 'tata';
+        }
+      },
+      isShared: function() {
+        return true;
+      },
+      isPublic: function() {
+        return true;
+      },
+      isOwner: function() {
+        return false;
+      },
+      isSubscription: function() {
+        return true;
       }
     }];
 
@@ -175,7 +198,12 @@ describe('the userAndExternalCalendars service', function() {
     expect(userAndExternalCalendars.sharedCalendars).to.contain(calendars[4], calendars[5]);
   });
 
-  it('should initialize publicCalendars with calendars that are from subscriptions and are not shared or belong to the current user', function() {
-    expect(userAndExternalCalendars.publicCalendars).to.contain(calendars[3]);
+  it('should initialize publicCalendars with calendars that are from subscriptions', function() {
+    expect(userAndExternalCalendars.publicCalendars).to.contain(calendars[3], calendars[6]);
+  });
+
+  it('should spread calendars on personal, shared and public calendars without duplicates', function() {
+    var result = userAndExternalCalendars.publicCalendars.concat(userAndExternalCalendars.sharedCalendars).concat(userAndExternalCalendars.userCalendars);
+    expect(result).to.have.same.members(calendars);
   });
 });
