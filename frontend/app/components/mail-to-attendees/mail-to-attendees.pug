@@ -1,5 +1,5 @@
 .row.cal-mail-to-attendees.text-center
-  button.btn.btn-accent.btn-link(
+  a.btn.btn-accent.btn-link(
     ng-if="ctrl.getEmailAddressesFromUsers(ctrl.event.attendees)",
     ng-href="mailto:{{ctrl.getEmailAddressesFromUsers(ctrl.event.attendees)}}",
     op-inbox-compose
