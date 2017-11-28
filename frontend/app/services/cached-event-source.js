@@ -157,10 +157,17 @@
     function wrapEventSource(calendarUniqueId, calendarSource) {
       return function(start, end, timezone, callback) {
         fetchEventOnlyIfNeeded(start, end, timezone, calendarUniqueId, calendarSource)
+          .then(filterEndBeforeStartEvents)
           .then(function(events) {
             return callback(_handleDeclinedEvents(applySavedChange(start, end, calendarUniqueId, events)));
           });
       };
+    }
+
+    function filterEndBeforeStartEvents(events) {
+      return events.filter(function(event) {
+        return event.start.isBefore(event.end);
+      });
     }
 
     function _handleDeclinedEvents(events) {
