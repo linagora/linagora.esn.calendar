@@ -101,6 +101,17 @@ describe('The mini-calendar service', function() {
       miniCalenderService.forEachDayOfEvent(event, spy);
       expect(spy).to.have.been.calledOnce;
     });
+
+    it('should call callback on start day if end is before start', function() {
+      aDay = calMoment('2016-10-25 09:00');
+      event = {
+        start: calMoment(aDay),
+        end: calMoment('2016-10-24 00:00')
+      };
+
+      miniCalenderService.forEachDayOfEvent(event, spy);
+      expect(spy).to.have.been.calledOnce;
+    });
   });
 
   describe('miniCalendarWrapper', function() {
