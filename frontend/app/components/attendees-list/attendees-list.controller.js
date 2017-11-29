@@ -26,8 +26,16 @@
     }
 
     function deleteSelectedAttendees() {
-      self.attendees = self.attendees.filter(function(attendee) { return !attendee.selected; });
+      var removed = [];
+      var notselected = [];
+
+      self.attendees.forEach(function(attendee) {
+        attendee.selected ? removed.push(attendee) : notselected.push(attendee);
+      });
+
+      self.attendees = notselected;
       self.attendeeSelectedCount = 0;
+      self.onAttendeesRemoved && self.onAttendeesRemoved({removed: removed});
 
       updateAttendeeStats();
     }
