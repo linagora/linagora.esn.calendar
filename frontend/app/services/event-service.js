@@ -199,7 +199,7 @@
               id: taskId,
               delay: CAL_GRACE_DELAY,
               context: {id: event.uid},
-              performedAction: esnI18nService.translate('You are about to create a new event (%s).', event.title),
+              performedAction: esnI18nService.translate('You are about to create a new event (%s).', calEventUtils.getEventTitle(event)),
               cancelFailed: 'An error has occured, the creation could not been reverted',
               cancelTooLate: 'It is too late to cancel the creation',
               gracePeriodFail: 'Event creation failed. Please refresh your calendar',
@@ -228,7 +228,7 @@
           // This is a noop and the event is not created yet in sabre/dav,
           // we then should only remove the event from fullcalendar
           // and cancel the taskid corresponding on the event.
-          notificationFactory.weakInfo('Calendar', esnI18nService.translate('%s has been deleted.', event.title));
+          notificationFactory.weakInfo('Calendar', esnI18nService.translate('%s has been deleted.', calEventUtils.getEventTitle(event)));
 
           return gracePeriodService.cancel(event.gracePeriodTaskId).then(function() {
             calCachedEventSource.deleteRegistration(event);
@@ -258,9 +258,9 @@
                 id: taskId,
                 delay: CAL_GRACE_DELAY,
                 context: {id: event.uid},
-                performedAction: esnI18nService.translate('You are about to delete the event (%s).', event.title),
+                performedAction: esnI18nService.translate('You are about to delete the event (%s).', calEventUtils.getEventTitle(event)),
                 cancelFailed: 'An error has occurred, can not revert the deletion',
-                cancelSuccess: esnI18nService.translate('Calendar - Deletion of %s has been cancelled', event.title),
+                cancelSuccess: esnI18nService.translate('Calendar - Deletion of %s has been cancelled', calEventUtils.getEventTitle(event)),
                 cancelTooLate: 'It is too late to cancel the deletion',
                 successText: 'Event removed',
                 gracePeriodFail: {
@@ -367,10 +367,10 @@
               id: taskId,
               delay: CAL_GRACE_DELAY,
               context: {id: event.uid},
-              performedAction: esnI18nService.translate('You are about to modify an event (%s).', event.title),
+              performedAction: esnI18nService.translate('You are about to modify an event (%s).', calEventUtils.getEventTitle(event)),
               cancelFailed: 'An error has occured, the modification can not be reverted',
               cancelTooLate: 'It is too late to cancel the modification',
-              cancelSuccess: esnI18nService.translate('Calendar - Modification of %s has been canceled.', event.title),
+              cancelSuccess: esnI18nService.translate('Calendar - Modification of %s has been canceled.', calEventUtils.getEventTitle(event)),
               gracePeriodFail: {
                 text: 'Event modification failed, please refresh your calendar',
                 delay: -1,
