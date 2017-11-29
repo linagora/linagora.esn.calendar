@@ -27,6 +27,7 @@
     self.calendarsPerUser = [];
     self.users = [];
     self.getSelectedCalendars = getSelectedCalendars;
+    self.onAddingUser = onAddingUser;
     self.onUserAdded = onUserAdded;
     self.onUserRemoved = onUserRemoved;
     self.addSharedCalendars = addSharedCalendars;
@@ -111,7 +112,7 @@
     }
 
     function onUserAdded(user) {
-      if (!user) {
+      if (!user || !user._id) {
         return;
       }
 
@@ -130,8 +131,12 @@
         });
     }
 
+    function onAddingUser($tags) {
+      return !!$tags._id;
+    }
+
     function onUserRemoved(user) {
-      if (!user) {
+      if (!user || !user._id) {
         return;
       }
 

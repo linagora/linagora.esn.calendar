@@ -11,12 +11,12 @@
     self.originalEntities = self.originalEntities || [];
     self.placeHolder = self.placeHolder || CAL_AUTOCOMPLETE_DEFAULT_PLACEHOLDER;
     self.showIcon = self.showIcon || false;
-    self.onAddingEntity = onAddingEntity;
+    self.onAddingEntity = self.onAddingEntity || _onAddingEntity;
     self.getInvitableEntities = getInvitableEntities;
 
     ////////////
 
-    function onAddingEntity(entity) {
+    function _onAddingEntity(entity) {
       if (!entity.id) {
         entity.id = entity.displayName;
         entity.email = entity.displayName;

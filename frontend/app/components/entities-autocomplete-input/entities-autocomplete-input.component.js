@@ -8,6 +8,7 @@ angular.module('esn.calendar')
       mutableEntities: '=',
       onEntityAdded: '=?',
       onEntityRemoved: '=?',
+      onAddingEntity: '=?',
       addFromAutocompleteOnly: '=?',
       showIcon: '=?',
       placeHolder: '@?',
