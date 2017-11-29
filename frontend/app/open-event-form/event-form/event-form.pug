@@ -32,7 +32,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
                 .fg-line
                   input.input.location.form-control(type="text", ng-model='editedEvent.location', ng-model-options="{getterSetter: true}", maxlength="{{::CAL_EVENT_FORM.location.maxlength}}", placeholder=__('Location'), ng-readonly="!canModifyEvent")
           cal-entities-autocomplete-input.cal-user-autocomplete-input(ng-hide='!canModifyEventAttendees', types='[{{::CAL_ATTENDEE_OBJECT_TYPE.user}}, {{::CAL_ATTENDEE_OBJECT_TYPE.group}}]', original-entities='attendees.users', mutable-entities='newAttendees', place-holder="Attendees", show-icon='true')
-          cal-entities-autocomplete-input(ng-hide='!canModifyEventAttendees', types='{{::CAL_ATTENDEE_OBJECT_TYPE.resource}}', original-entities='editedEvent.attendees', mutable-entities='newResources', place-holder="Resources", show-icon='true', show-resource-icon='true')
+          cal-entities-autocomplete-input(ng-hide='!canModifyEventAttendees', types='{{::CAL_ATTENDEE_OBJECT_TYPE.resource}}', original-entities='attendees.resources', mutable-entities='newResources', place-holder="Resources", show-icon='true', show-resource-icon='true')
           .col-xs-12(ng-if='displayParticipationButton')
             .form-group.status.row
               .col-xs-12.text-center
@@ -47,7 +47,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
                     i.mdi.mdi-close
                     | #{__("Cannot go")}
           .col-xs-12
-            cal-resource-list(ng-if='attendees.resources.length > 0', resources='attendees.resources', can-modify-resources='::canModifyEventAttendees')
+            cal-resource-list(ng-if='attendees.resources.length > 0', resources='attendees.resources', can-modify-resources='::canModifyEventAttendees', on-resources-removed="onResourceAttendeesRemoved(removed)")
           .col-xs-12
             cal-attendees-list-condensed(ng-if='attendees.users.length > 1 || newAttendees.length > 0', attendees='attendees.users', can-modify-attendees='::canModifyEventAttendees', organizer='::editedEvent.organizer', on-attendees-removed="onUserAttendeesRemoved(removed)")
           .col-xs-12

@@ -12,8 +12,16 @@
     self.deleteSelectedResources = deleteSelectedResources;
 
     function deleteSelectedResources() {
-      self.resources = self.resources.filter(function(resource) { return !resource.selected; });
+      var removed = [];
+      var notselected = [];
+
+      self.resources.forEach(function(resource) {
+        resource.selected ? removed.push(resource) : notselected.push(resource);
+      });
+
+      self.resources = notselected;
       self.resourceSelectedCount = 0;
+      self.onResourcesRemoved && self.onResourcesRemoved({removed: removed});
     }
 
     function selectResource(resource) {

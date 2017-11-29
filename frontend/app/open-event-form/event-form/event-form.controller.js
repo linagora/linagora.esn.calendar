@@ -30,6 +30,7 @@
     CAL_ICAL) {
 
       var initialUserAttendeesRemoved = [];
+      var initialResourceAttendeesRemoved = [];
 
       $scope.restActive = false;
       $scope.CAL_EVENT_FORM = CAL_EVENT_FORM;
@@ -44,6 +45,7 @@
       $scope.updateAlarm = updateAlarm;
       $scope.submit = submit;
       $scope.onUserAttendeesRemoved = onUserAttendeesRemoved;
+      $scope.onResourceAttendeesRemoved = onResourceAttendeesRemoved;
       $scope.canPerformCall = canPerformCall;
       $scope.goToCalendar = goToCalendar;
       $scope.cancel = cancel;
@@ -355,6 +357,10 @@
         initialUserAttendeesRemoved = initialUserAttendeesRemoved.concat(removed);
       }
 
+      function onResourceAttendeesRemoved(removed) {
+        initialResourceAttendeesRemoved = initialResourceAttendeesRemoved.concat(removed);
+      }
+
       function getAttendees() {
         return [].concat($scope.attendees.users, $scope.newAttendees, $scope.attendees.resources, $scope.newResources);
       }
@@ -364,7 +370,11 @@
           return _.find(initialUserAttendeesRemoved, { email: attendee.email }) || attendee;
         });
 
-        return $scope.attendees.users.concat(attendees, $scope.attendees.resources, $scope.newResources);
+        var resources = $scope.newResources.map(function(resource) {
+          return _.find(initialResourceAttendeesRemoved, { email: resource.email }) || resource;
+        });
+
+        return $scope.attendees.users.concat(attendees, $scope.attendees.resources, resources);
       }
   }
 })();

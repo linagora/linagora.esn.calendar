@@ -45,6 +45,18 @@ describe('The CalResourceListController controller', function() {
       ]);
       expect(ctrl.resourceSelectedCount).to.be.equal(0);
     });
+
+    it('should calll onResourcesRemoved with removed resources', function() {
+      var ctrl = this.initController();
+
+      ctrl.onResourcesRemoved = sinon.spy();
+      ctrl.deleteSelectedResources();
+
+      expect(ctrl.onResourcesRemoved).to.have.been.calledWith({removed: [
+        { name: 'Resource 2', selected: true },
+        { name: 'Resource 4', selected: true }
+      ]});
+    });
   });
 
   describe('The selectResource function', function() {
