@@ -16,6 +16,7 @@ describe('The event-form module controllers', function() {
     canModifyEventResult = true;
 
     owner = {
+      _id: 'owner',
       firstname: 'owner',
       lastname: 'OWNER',
       emails: ['owner@test.com'],
@@ -49,6 +50,9 @@ describe('The event-form module controllers', function() {
         return $q.when(owner);
       },
       isSubscription: function() { return false; },
+      getUniqueId: function() {
+        return '/calendars/' + owner._id + '/id.json';
+      },
       isWritable: angular.noop
     };
 
@@ -64,6 +68,9 @@ describe('The event-form module controllers', function() {
         isSubscription: function() { return false; },
         getOwner: function() {
           return $q.when(owner);
+        },
+        getUniqueId: function() {
+          return '/calendars/' + owner._id + '/id2.json';
         }
       }, {
         href: 'href3',
@@ -73,6 +80,9 @@ describe('The event-form module controllers', function() {
         readOnly: true,
         getOwner: function() {
           return $q.when(owner);
+        },
+        getUniqueId: function() {
+          return '/calendars/' + owner._id + '/calId.json';
         },
         isSubscription: function() { return true; },
         isWritable: angular.noop,
@@ -304,7 +314,7 @@ describe('The event-form module controllers', function() {
         this.scope.event = this.CalendarShell.fromIncompleteShell({
           etag: 'i am not a new event'
         });
-        this.scope.event.path = '/calendars/' + this.calendars[1].id + '/eventID';
+        this.scope.event.path = '/' + owner._id + '/' + this.calendars[1].id + '/eventID';
         this.initController();
 
         expect(this.scope.calendar).to.equal(this.calendars[1]);
@@ -315,7 +325,7 @@ describe('The event-form module controllers', function() {
           etag: 'i am not a new event',
           path: '/calendars/calId/calendarId/eventId.ics'
         });
-        this.scope.event.path = '/calendars/' + this.calendars[2].source.id + '/eventID';
+        this.scope.event.path = '/' + owner._id + '/' + this.calendars[2].source.id + '/eventID';
         this.initController();
 
         expect(this.scope.calendar).to.equal(this.calendars[2]);

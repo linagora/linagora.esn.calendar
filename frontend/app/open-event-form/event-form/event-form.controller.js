@@ -110,11 +110,8 @@
           .then(function(calendars) {
             $scope.calendars = calendars;
             $scope.calendar = calEventUtils.isNew($scope.editedEvent) ? _.find(calendars, 'selected') : _.find(calendars, function(calendar) {
-              if (calendar.isSubscription()) {
-                return calendar.source.id === $scope.editedEvent.calendarId;
-              }
 
-              return calendar.id === $scope.editedEvent.calendarId;
+              return $scope.editedEvent.calendarUniqueId === calendar.getUniqueId();
             });
           })
           .then(function() {
