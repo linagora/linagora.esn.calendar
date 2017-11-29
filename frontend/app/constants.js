@@ -268,6 +268,7 @@
     .constant('CAL_EVENT_FORM', {
       title: {
         default: 'No title',
+        empty: '',
         maxlength: 1024
       },
       location: {

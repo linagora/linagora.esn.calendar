@@ -52,7 +52,7 @@
 
     function submit() {
       if (!self.event.title || self.event.title.trim().length === 0) {
-        self.event.title = CAL_EVENT_FORM.title.default;
+        self.event.title = CAL_EVENT_FORM.title.empty;
       }
 
       if (!self.activitystream.activity_stream || !self.activitystream.activity_stream.uuid) {
