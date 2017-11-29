@@ -41,6 +41,7 @@
       $scope.isInvolvedInATask = calEventUtils.isInvolvedInATask;
       $scope.updateAlarm = updateAlarm;
       $scope.submit = submit;
+      $scope.onAttendeesRemoved = onAttendeesRemoved;
       $scope.canPerformCall = canPerformCall;
       $scope.goToCalendar = goToCalendar;
       $scope.cancel = cancel;
@@ -54,7 +55,9 @@
         _hideModal();
       }
 
-      ////////////
+      function onAttendeesRemoved(removed) {
+        console.log('ATTENDEES REMOVED', removed);
+      }
 
       function displayCalMailToAttendeesButton() {
         function organizerIsNotTheOnlyAttendeeInEvent() {
@@ -101,7 +104,7 @@
 
       function initFormData() {
         $scope.editedEvent = $scope.event.clone();
-        $scope.oldAttendees = angular.copy($scope.editedEvent.attendees) || [];
+        $scope.initialAttendees = angular.copy($scope.editedEvent.attendees) || [];
         $scope.newAttendees = calEventUtils.getNewAttendees();
         $scope.newResources = calEventUtils.getNewResources();
         $scope.isOrganizer = calEventUtils.isOrganizer($scope.editedEvent);
@@ -350,7 +353,7 @@
           return calEventUtils.resetStoredEvents();
         }
 
-        $scope.editedEvent.attendees = $scope.oldAttendees;
+        $scope.editedEvent.attendees = $scope.initialAttendees;
         calOpenEventForm($scope.calendarHomeId, $scope.editedEvent);
       }
   }
