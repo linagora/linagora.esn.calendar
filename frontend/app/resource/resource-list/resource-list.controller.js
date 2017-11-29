@@ -7,18 +7,18 @@
   function CalResourceListController() {
     var self = this;
 
-    self.resourceClickedCount = 0;
+    self.resourceSelectedCount = 0;
     self.selectResource = selectResource;
     self.deleteSelectedResources = deleteSelectedResources;
 
     function deleteSelectedResources() {
-      self.resources = self.resources.filter(function(resource) { return !resource.clicked; });
-      self.resourceClickedCount = 0;
+      self.resources = self.resources.filter(function(resource) { return !resource.selected; });
+      self.resourceSelectedCount = 0;
     }
 
     function selectResource(resource) {
-      resource.clicked = !resource.clicked;
-      self.resourceClickedCount += resource.clicked ? 1 : -1;
+      resource.selected = !resource.selected;
+      self.resourceSelectedCount += resource.selected ? 1 : -1;
     }
   }
 

@@ -19,10 +19,10 @@ describe('The CalResourceListController controller', function() {
     this.CAL_ICAL = CAL_ICAL;
     this.context = {};
     this.context.resources = [
-      { name: 'Resource 1', clicked: false },
-      { name: 'Resource 2', clicked: true },
-      { name: 'Resource 3', clicked: false },
-      { name: 'Resource 4', clicked: true },
+      { name: 'Resource 1', selected: false },
+      { name: 'Resource 2', selected: true },
+      { name: 'Resource 3', selected: false },
+      { name: 'Resource 4', selected: true },
       { name: 'Resource 5' }
     ];
     this.context.deleteResources = sinon.spy();
@@ -33,40 +33,40 @@ describe('The CalResourceListController controller', function() {
   }));
 
   describe('The deleteSelectedResource function', function() {
-    it('should filter unclicked resources', function() {
+    it('should filter unselected resources', function() {
       var ctrl = this.initController();
 
       ctrl.deleteSelectedResources();
 
       expect(ctrl.resources).to.deep.equal([
-        { name: 'Resource 1', clicked: false },
-        { name: 'Resource 3', clicked: false },
+        { name: 'Resource 1', selected: false },
+        { name: 'Resource 3', selected: false },
         { name: 'Resource 5' }
       ]);
-      expect(ctrl.resourceClickedCount).to.be.equal(0);
+      expect(ctrl.resourceSelectedCount).to.be.equal(0);
     });
   });
 
   describe('The selectResource function', function() {
-    it('should set clicked and increase resource click count', function() {
+    it('should set selected and increase resource click count', function() {
       var resource = { name: 'Resource 1' };
       var ctrl = this.initController();
 
       ctrl.selectResource(resource);
 
-      expect(resource.clicked).to.be.true;
-      expect(ctrl.resourceClickedCount).to.equal(1);
+      expect(resource.selected).to.be.true;
+      expect(ctrl.resourceSelectedCount).to.equal(1);
     });
 
-    it('should unset clicked and decrease resource click count', function() {
+    it('should unset selected and decrease resource click count', function() {
       var resource = { name: 'Resource 1' };
       var ctrl = this.initController();
 
       ctrl.selectResource(resource);
       ctrl.selectResource(resource);
 
-      expect(resource.clicked).to.be.false;
-      expect(ctrl.resourceClickedCount).to.equal(0);
+      expect(resource.selected).to.be.false;
+      expect(ctrl.resourceSelectedCount).to.equal(0);
     });
   });
 });
