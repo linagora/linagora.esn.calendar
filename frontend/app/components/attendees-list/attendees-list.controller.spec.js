@@ -1,6 +1,6 @@
 'use strict';
 
-/* global chai: false */
+/* global chai, sinon: false */
 
 var expect = chai.expect;
 
@@ -84,6 +84,23 @@ describe('The CalAttendeesListController controller', function() {
         { email: 'other5@example.com', partstat: 'YOLO' }
       ]);
       expect(ctrl.attendeeSelectedCount).to.be.equal(0);
+    });
+
+    it('should call onAttendeesRemoved with removed attendees', function() {
+      var ctrl = this.initController();
+
+      ctrl.onAttendeesRemoved = sinon.spy();
+      ctrl.$onInit();
+      ctrl.deleteSelectedAttendees();
+
+      expect(ctrl.onAttendeesRemoved).to.have.been.calledWith(
+        {
+          removed: [
+            { email: 'other2@example.com', partstat: 'ACCEPTED', selected: true },
+            { email: 'other4@example.com', partstat: 'TENTATIVE', selected: true }
+          ]
+        }
+      );
     });
   });
 
