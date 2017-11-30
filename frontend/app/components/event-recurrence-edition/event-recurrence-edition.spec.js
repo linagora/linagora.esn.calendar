@@ -1,14 +1,24 @@
 'use strict';
 
-/* global chai: false */
+/* global chai, sinon: false */
 
 var expect = chai.expect;
 
 describe('The event-recurrence-edition component', function() {
 
+  var esnI18nService;
+
   beforeEach(function() {
+
+    esnI18nService = {
+      getLocale: sinon.stub().returns('en'),
+      translate: sinon.stub().returns({toString: function() {return '';}})
+    };
+
     module('jadeTemplates');
-    angular.mock.module('esn.calendar');
+    angular.mock.module('esn.calendar', function($provide) {
+      $provide.value('esnI18nService', esnI18nService);
+    });
   });
 
   beforeEach(inject(['$compile', '$rootScope', function($c, $r) {
@@ -45,7 +55,7 @@ describe('The event-recurrence-edition component', function() {
       };
       this.initDirective(this.$scope);
       this.eleScope.vm.event.rrule.byday = ['SU', 'WE', 'TU', 'MO'];
-      this.eleScope.vm.toggleWeekdays('W');
+      this.eleScope.vm.toggleWeekdays('WE');
       expect(this.eleScope.vm.event.rrule.byday).to.deep.equal(['MO', 'TU', 'SU']);
     });
 
@@ -56,7 +66,7 @@ describe('The event-recurrence-edition component', function() {
       };
       this.initDirective(this.$scope);
       this.eleScope.vm.event.rrule.byday = ['SU', 'WE', 'TU', 'MO'];
-      this.eleScope.vm.toggleWeekdays('F');
+      this.eleScope.vm.toggleWeekdays('FR');
       expect(this.eleScope.vm.event.rrule.byday).to.deep.equal(['MO', 'TU', 'WE', 'FR', 'SU']);
     });
   });
