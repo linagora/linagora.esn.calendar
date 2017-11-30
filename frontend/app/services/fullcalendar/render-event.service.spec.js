@@ -90,7 +90,7 @@ describe('The calFullCalendarRenderEventService service', function() {
       attendees: [],
       isInstance: function() { return false; },
       isOverOneDayOnly: sinon.spy(),
-      isPrivate: sinon.stub().returns(false)
+      isPublic: sinon.stub().returns(true)
     };
 
     element = new Element();
@@ -412,7 +412,7 @@ describe('The calFullCalendarRenderEventService service', function() {
 
       describe('The addIconInPrivateEventInMobile function', function() {
         it('should add the private event icon in the title div if the event is private and allDay', function() {
-          event.isPrivate = function() { return true; };
+          event.isPublic = function() { return false; };
           event.allDay = true;
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
@@ -421,7 +421,7 @@ describe('The calFullCalendarRenderEventService service', function() {
         });
 
         it('should add the private event icon in the title div if the event is private and not allDay and event Duration <= one hour', function() {
-          event.isPrivate = function() { return true; };
+          event.isPublic = function() { return false; };
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
 
@@ -432,7 +432,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           event.start = this.calMoment();
           event.end = event.start.clone().add(this.CAL_MAX_DURATION_OF_SMALL_EVENT.MOBILE + 1, 'minutes');
 
-          event.isPrivate = function() { return true; };
+          event.isPublic = function() { return false; };
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
 
@@ -564,7 +564,7 @@ describe('The calFullCalendarRenderEventService service', function() {
       describe('The addIconInPrivateEventInDesktop function', function() {
 
         it('should add the private event icon in the title div if the event is private and allDay', function() {
-          event.isPrivate = function() { return true; };
+          event.isPublic = function() { return false; };
           event.allDay = true;
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
@@ -573,7 +573,7 @@ describe('The calFullCalendarRenderEventService service', function() {
         });
 
         it('should add the private event icon in the time div if the event is private and not allDay', function() {
-          event.isPrivate = function() { return true; };
+          event.isPublic = function() { return false; };
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
 
