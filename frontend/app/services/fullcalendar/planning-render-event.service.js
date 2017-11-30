@@ -6,13 +6,21 @@
 
   function calFullCalendarPlanningRenderEventService(
     session,
+    calEventUtils,
     calUIAuthorizationService
   ) {
     return function(calendar) {
       return function(event, element) {
+        setEventTitle();
         setEventRights();
         switchTableElements();
         setPastEventStyle();
+
+        function setEventTitle() {
+          var title = element.find('.fc-list-item-title').find('a');
+
+          title.text(calEventUtils.getEventTitle(event));
+        }
 
         function setEventRights() {
           if (!calUIAuthorizationService.canModifyEvent(calendar, event, session.user._id)) {
