@@ -1,6 +1,6 @@
 'use strict';
 
-/* global chai: false */
+/* global chai, sinon: false */
 
 var expect = chai.expect;
 
@@ -19,10 +19,10 @@ describe('The CalAttendeesListController controller', function() {
     this.CAL_EVENTS = CAL_EVENTS;
     this.context = {};
     this.context.attendees = [
-      { email: 'other1@example.com', partstat: 'NEEDS-ACTION', clicked: false },
-      { email: 'other2@example.com', partstat: 'ACCEPTED', clicked: true },
-      { email: 'other3@example.com', partstat: 'DECLINED', clicked: false },
-      { email: 'other4@example.com', partstat: 'TENTATIVE', clicked: true },
+      { email: 'other1@example.com', partstat: 'NEEDS-ACTION', selected: false },
+      { email: 'other2@example.com', partstat: 'ACCEPTED', selected: true },
+      { email: 'other3@example.com', partstat: 'DECLINED', selected: false },
+      { email: 'other4@example.com', partstat: 'TENTATIVE', selected: true },
       { email: 'other5@example.com', partstat: 'YOLO' }
     ];
     this.context.organizer = { email: 'organizer@openpaas.org' };
@@ -50,10 +50,10 @@ describe('The CalAttendeesListController controller', function() {
     var ctrl = this.initController();
 
     ctrl.attendees = [
-      { email: 'other1@example.com', partstat: 'ACCEPTED', clicked: false },
-      { email: 'other2@example.com', partstat: 'ACCEPTED', clicked: true },
-      { email: 'other3@example.com', partstat: 'DECLINED', clicked: false },
-      { email: 'other4@example.com', partstat: 'DECLINED', clicked: true },
+      { email: 'other1@example.com', partstat: 'ACCEPTED', selected: false },
+      { email: 'other2@example.com', partstat: 'ACCEPTED', selected: true },
+      { email: 'other3@example.com', partstat: 'DECLINED', selected: false },
+      { email: 'other4@example.com', partstat: 'DECLINED', selected: true },
       { email: 'other5@example.com', partstat: 'YOLO' }
     ];
 
@@ -72,18 +72,35 @@ describe('The CalAttendeesListController controller', function() {
   });
 
   describe('The deleteSelectedAttendees function', function() {
-    it('should filter unclicked attendees', function() {
+    it('should filter unselected attendees', function() {
       var ctrl = this.initController();
 
       ctrl.$onInit();
       ctrl.deleteSelectedAttendees();
 
       expect(ctrl.attendees).to.deep.equal([
-        { email: 'other1@example.com', partstat: 'NEEDS-ACTION', clicked: false },
-        { email: 'other3@example.com', partstat: 'DECLINED', clicked: false },
+        { email: 'other1@example.com', partstat: 'NEEDS-ACTION', selected: false },
+        { email: 'other3@example.com', partstat: 'DECLINED', selected: false },
         { email: 'other5@example.com', partstat: 'YOLO' }
       ]);
-      expect(ctrl.attendeeClickedCount).to.be.equal(0);
+      expect(ctrl.attendeeSelectedCount).to.be.equal(0);
+    });
+
+    it('should call onAttendeesRemoved with removed attendees', function() {
+      var ctrl = this.initController();
+
+      ctrl.onAttendeesRemoved = sinon.spy();
+      ctrl.$onInit();
+      ctrl.deleteSelectedAttendees();
+
+      expect(ctrl.onAttendeesRemoved).to.have.been.calledWith(
+        {
+          removed: [
+            { email: 'other2@example.com', partstat: 'ACCEPTED', selected: true },
+            { email: 'other4@example.com', partstat: 'TENTATIVE', selected: true }
+          ]
+        }
+      );
     });
   });
 
@@ -151,30 +168,30 @@ describe('The CalAttendeesListController controller', function() {
   describe('The selectAttendee function', function() {
     describe('when user is organizer', function() {
       it('should do nothing if the user is organizer', function() {
-        var attendee = { email: 'organizer@openpaas.org', partstat: 'ACCEPTED', clicked: false };
+        var attendee = { email: 'organizer@openpaas.org', partstat: 'ACCEPTED', selected: false };
         var ctrl = this.initController();
 
         ctrl.$onInit();
         ctrl.selectAttendee(attendee);
 
-        expect(attendee.clicked).to.be.false;
-        expect(ctrl.attendeeClickedCount).to.equal(0);
+        expect(attendee.selected).to.be.false;
+        expect(ctrl.attendeeSelectedCount).to.equal(0);
       });
     });
 
     describe('when user is not the organizer', function() {
-      it('should set clicked and increase attendee click count', function() {
+      it('should set selected and increase attendee selected count', function() {
         var attendee = { email: 'other1@example.com', partstat: 'NEEDS-ACTION' };
         var ctrl = this.initController();
 
         ctrl.$onInit();
         ctrl.selectAttendee(attendee);
 
-        expect(attendee.clicked).to.be.true;
-        expect(ctrl.attendeeClickedCount).to.equal(1);
+        expect(attendee.selected).to.be.true;
+        expect(ctrl.attendeeSelectedCount).to.equal(1);
       });
 
-      it('should unset clicked and decrease attendee click count', function() {
+      it('should unset selected and decrease attendee click count', function() {
         var attendee = { email: 'other1@example.com', partstat: 'NEEDS-ACTION' };
         var ctrl = this.initController();
 
@@ -182,8 +199,8 @@ describe('The CalAttendeesListController controller', function() {
         ctrl.selectAttendee(attendee);
         ctrl.selectAttendee(attendee);
 
-        expect(attendee.clicked).to.be.false;
-        expect(ctrl.attendeeClickedCount).to.equal(0);
+        expect(attendee.selected).to.be.false;
+        expect(ctrl.attendeeSelectedCount).to.equal(0);
       });
     });
   });

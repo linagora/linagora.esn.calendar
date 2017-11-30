@@ -8,7 +8,7 @@
     var self = this;
 
     self.attendeesPerPartstat = {};
-    self.attendeeClickedCount = 0;
+    self.attendeeSelectedCount = 0;
     self.isOrganizer = isOrganizer;
     self.selectAttendee = selectAttendee;
     self.deleteSelectedAttendees = deleteSelectedAttendees;
@@ -26,16 +26,24 @@
     }
 
     function deleteSelectedAttendees() {
-      self.attendees = self.attendees.filter(function(attendee) { return !attendee.clicked; });
-      self.attendeeClickedCount = 0;
+      var removed = [];
+      var notselected = [];
+
+      self.attendees.forEach(function(attendee) {
+        attendee.selected ? removed.push(attendee) : notselected.push(attendee);
+      });
+
+      self.attendees = notselected;
+      self.attendeeSelectedCount = 0;
+      self.onAttendeesRemoved && self.onAttendeesRemoved({removed: removed});
 
       updateAttendeeStats();
     }
 
     function selectAttendee(attendee) {
       if (self.organizer.email !== attendee.email) {
-        attendee.clicked = !attendee.clicked;
-        self.attendeeClickedCount += attendee.clicked ? 1 : -1;
+        attendee.selected = !attendee.selected;
+        self.attendeeSelectedCount += attendee.selected ? 1 : -1;
       }
     }
 

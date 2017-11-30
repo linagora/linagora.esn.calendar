@@ -5,7 +5,7 @@
 
   .checkbox(ng-if='ctrl.canModifyResource')
     label
-      input.force-position-initial(type="checkbox", ng-checked="ctrl.resource.clicked")
+      input.force-position-initial(type="checkbox", ng-checked="ctrl.resource.selected")
       i.input-helper
   .name
     span {{::ctrl.resource.name}}

@@ -5,7 +5,8 @@
     .component('calResourceList', {
       bindings: {
         canModifyResources: '=',
-        resources: '='
+        resources: '=',
+        onResourcesRemoved: '&'
       },
       controller: 'CalResourceListController',
       controllerAs: 'ctrl',

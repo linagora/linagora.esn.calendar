@@ -29,6 +29,9 @@
     CAL_EVENT_FORM,
     CAL_ICAL) {
 
+      var initialUserAttendeesRemoved = [];
+      var initialResourceAttendeesRemoved = [];
+
       $scope.restActive = false;
       $scope.CAL_EVENT_FORM = CAL_EVENT_FORM;
       $scope.CAL_ATTENDEE_OBJECT_TYPE = CAL_ATTENDEE_OBJECT_TYPE;
@@ -41,6 +44,8 @@
       $scope.isInvolvedInATask = calEventUtils.isInvolvedInATask;
       $scope.updateAlarm = updateAlarm;
       $scope.submit = submit;
+      $scope.onUserAttendeesRemoved = onUserAttendeesRemoved;
+      $scope.onResourceAttendeesRemoved = onResourceAttendeesRemoved;
       $scope.canPerformCall = canPerformCall;
       $scope.goToCalendar = goToCalendar;
       $scope.cancel = cancel;
@@ -53,8 +58,6 @@
         calEventUtils.resetStoredEvents();
         _hideModal();
       }
-
-      ////////////
 
       function displayCalMailToAttendeesButton() {
         function organizerIsNotTheOnlyAttendeeInEvent() {
@@ -101,7 +104,7 @@
 
       function initFormData() {
         $scope.editedEvent = $scope.event.clone();
-        $scope.oldAttendees = angular.copy($scope.editedEvent.attendees) || [];
+        $scope.initialAttendees = angular.copy($scope.editedEvent.attendees) || [];
         $scope.newAttendees = calEventUtils.getNewAttendees();
         $scope.newResources = calEventUtils.getNewResources();
         $scope.isOrganizer = calEventUtils.isOrganizer($scope.editedEvent);
@@ -175,10 +178,6 @@
         calEventUtils.setNewResources($scope.newResources);
       }
 
-      function setEventAttendees() {
-        $scope.editedEvent.attendees = [].concat($scope.attendees.users, $scope.newAttendees, $scope.attendees.resources, $scope.newResources);
-      }
-
       function createEvent() {
         if (!$scope.editedEvent.title || $scope.editedEvent.title.trim().length === 0) {
           $scope.editedEvent.title = CAL_EVENT_FORM.title.default;
@@ -191,7 +190,7 @@
         if ($scope.calendar) {
           $scope.restActive = true;
           _hideModal();
-          setEventAttendees();
+          $scope.editedEvent.attendees = getAttendees();
           setOrganizer()
             .then(cacheAttendees)
             .then(denormalizeAttendees)
@@ -249,7 +248,7 @@
           return;
         }
 
-        $scope.editedEvent.attendees = $scope.attendees.users.concat($scope.newAttendees, $scope.attendees.resources, $scope.newResources);
+        $scope.editedEvent.attendees = getUpdatedAttendees();
 
         if (!calEventUtils.hasAnyChange($scope.editedEvent, $scope.event)) {
           _hideModal();
@@ -347,8 +346,32 @@
           return calEventUtils.resetStoredEvents();
         }
 
-        $scope.editedEvent.attendees = $scope.oldAttendees;
+        $scope.editedEvent.attendees = $scope.initialAttendees;
         calOpenEventForm($scope.calendarHomeId, $scope.editedEvent);
+      }
+
+      function onUserAttendeesRemoved(removed) {
+        initialUserAttendeesRemoved = initialUserAttendeesRemoved.concat(removed);
+      }
+
+      function onResourceAttendeesRemoved(removed) {
+        initialResourceAttendeesRemoved = initialResourceAttendeesRemoved.concat(removed);
+      }
+
+      function getAttendees() {
+        return [].concat($scope.attendees.users, $scope.newAttendees, $scope.attendees.resources, $scope.newResources);
+      }
+
+      function getUpdatedAttendees() {
+        var attendees = $scope.newAttendees.map(function(attendee) {
+          return _.find(initialUserAttendeesRemoved, { email: attendee.email }) || attendee;
+        });
+
+        var resources = $scope.newResources.map(function(resource) {
+          return _.find(initialResourceAttendeesRemoved, { email: resource.email }) || resource;
+        });
+
+        return $scope.attendees.users.concat(attendees, $scope.attendees.resources, resources);
       }
   }
 })();

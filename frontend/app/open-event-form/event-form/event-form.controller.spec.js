@@ -714,6 +714,63 @@ describe('The event-form module controllers', function() {
           });
         });
 
+        it('should keep initial attendees if they are removed then added again to keep initial partstat', function() {
+          var attendee = { displayName: 'attendee1', email: 'user1@test.com', partstat: 'ACCEPTED' };
+          var addedAttendee = { displayName: 'attendee1', email: 'user1@test.com', partstat: 'NEEDS-ACTION' };
+          var resource = { displayName: 'resource1', email: 'resource1@test.com', partstat: 'ACCEPTED' };
+          var addedResource = { displayName: 'resource1', email: 'resource1@test.com', partstat: 'NEEDS-ACTION' };
+
+          this.scope.event = this.CalendarShell.fromIncompleteShell({
+            title: 'oldtitle',
+            path: '/path/to/event',
+            attendees: []
+          });
+          this.initController();
+
+          this.scope.attendees.users = [attendee];
+          this.scope.attendees.resources = [resource];
+          this.scope.editedEvent = this.CalendarShell.fromIncompleteShell({
+            title: 'title',
+            attendees: this.scope.attendees.users
+          });
+          this.scope.onUserAttendeesRemoved([attendee]);
+          this.scope.onResourceAttendeesRemoved([resource]);
+          this.scope.newAttendees = [
+            addedAttendee,
+          {
+            displayName: 'attendee2',
+            email: 'user2@test.com',
+            partstat: 'ACCEPTED'
+          }, {
+            displayName: 'attendee3',
+            email: 'user3@test.com',
+            partstat: 'ACCEPTED'
+          }];
+          this.scope.newResources = [addedResource];
+          this.scope.attendees.users = [];
+          this.scope.attendees.resources = [];
+          this.scope.modifyEvent();
+
+          this.rootScope.$digest();
+
+          expect(eventTest).to.shallowDeepEqual({
+            title: 'title',
+            attendees: [
+              attendee,
+            {
+              displayName: 'attendee2',
+              email: 'user2@test.com',
+              partstat: 'ACCEPTED'
+            }, {
+              displayName: 'attendee3',
+              email: 'user3@test.com',
+              partstat: 'ACCEPTED'
+            },
+            resource
+          ]
+          });
+        });
+
         it('should cache attendees and resources', function() {
           this.scope.event = this.CalendarShell.fromIncompleteShell({
             title: 'oldtitle',

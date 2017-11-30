@@ -14,5 +14,5 @@
         cal-attendee-item-edition(attendee='attendee', can-modify-attendee='::ctrl.canModifyAttendees', is-organizer='ctrl.isOrganizer(attendee)', ng-click= "ctrl.selectAttendee(attendee)", ng-repeat="attendee in ctrl.attendees | partstat:'NEEDS-ACTION' track by $index")
         cal-attendee-item-edition(attendee='attendee', can-modify-attendee='::ctrl.canModifyAttendees', is-organizer='ctrl.isOrganizer(attendee)', ng-click= "ctrl.selectAttendee(attendee)", ng-repeat="attendee in ctrl.attendees | partstat:'TENTATIVE' track by $index")
   .cal-attendees-actions
-    .trash(ng-if='ctrl.canModifyAttendees && ctrl.attendeeClickedCount > 0', ng-click='ctrl.deleteSelectedAttendees()')
-      i.mdi.mdi-delete(ng-if='ctrl.canModifyAttendees && ctrl.attendeeClickedCount > 0', ng-click='ctrl.deleteSelectedAttendees()')
+    .trash(ng-if='ctrl.canModifyAttendees && ctrl.attendeeSelectedCount > 0', ng-click='ctrl.deleteSelectedAttendees()')
+      i.mdi.mdi-delete(ng-if='ctrl.canModifyAttendees && ctrl.attendeeSelectedCount > 0', ng-click='ctrl.deleteSelectedAttendees()')
