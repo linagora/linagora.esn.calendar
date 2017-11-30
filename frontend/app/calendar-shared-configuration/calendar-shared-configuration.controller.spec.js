@@ -127,6 +127,15 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       expect(spy).to.not.have.been.called;
     });
 
+    it('should return when user is not an OpenPaas user (no _id field)', function() {
+      var spy = sinon.stub(calendarService, 'listPublicCalendars');
+      var controller = initController();
+
+      controller.onUserAdded({name: 'unknown user'});
+
+      expect(spy).to.not.have.been.called;
+    });
+
     it('should fill controller calendarsPerUser with the user calendars', function() {
       var listPublicCalendarsStub = sinon.stub(calendarService, 'listPublicCalendars', function() {
         return $q.when([calendar]);
@@ -245,6 +254,28 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
     });
   });
 
+  describe('the onAddingUser function', function() {
+    var $tag;
+
+    it('should return false if the $tag do not contain the _id field', function() {
+      $tag = {};
+
+      var controller = initController();
+
+      expect(controller.onAddingUser($tag)).to.be.false;
+    });
+
+    it('should return true if the $tag contain the _id field', function() {
+      $tag = {
+        _id: '11111111'
+      };
+
+      var controller = initController();
+
+      expect(controller.onAddingUser($tag)).to.be.true;
+    });
+  });
+
   describe('The onUserRemoved function', function() {
     it('should not change the controller calendars when user is not defined', function() {
       var controller = initController();
@@ -256,6 +287,17 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       expect(controller.calendarsPerUser).to.have.lengthOf(1);
       expect(calendarService.listDelegationCalendars).to.have.been.calledWith(session.user._id, 'noresponse');
     });
+
+    it('should not change the controller calendars when user is not an OpenPaas user (no _id field)', function() {
+        var controller = initController();
+
+        controller.calendarsPerUser.push({calendar: calendar, user: user});
+        controller.onUserRemoved({user: 'user'});
+        $rootScope.$digest();
+
+        expect(controller.calendarsPerUser).to.have.lengthOf(1);
+        expect(calendarService.listDelegationCalendars).to.have.been.calledWith(session.user._id, 'noresponse');
+      });
 
     it('should remove all the calendars of the given user', function() {
       var controller = initController();

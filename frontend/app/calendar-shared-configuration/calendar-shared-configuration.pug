@@ -8,7 +8,7 @@
         .cal-calendar-shared-configuration
           .user-search.form-group
             .autocomplete
-              cal-entities-autocomplete-input(mutable-entities='$ctrl.users', on-entity-added='$ctrl.onUserAdded', on-entity-removed='$ctrl.onUserRemoved', add-from-autocomplete-only='true')
+              cal-entities-autocomplete-input(mutable-entities='$ctrl.users', on-entity-added='$ctrl.onUserAdded', on-adding-entity='$ctrl.onAddingUser', on-entity-removed='$ctrl.onUserRemoved', add-from-autocomplete-only='true')
 
           .calendar-list
             .empty(ng-if='!$ctrl.calendarsPerUser.length')
