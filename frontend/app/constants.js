@@ -422,15 +422,15 @@
       label: 'Repeat yearly'
     }])
 
-    .constant('CAL_WEEK_DAYS', {
-      M: 'MO',
-      T: 'TU',
-      W: 'WE',
-      Th: 'TH',
-      F: 'FR',
-      S: 'SA',
-      Su: 'SU'
-    })
+    .constant('CAL_WEEK_DAYS', [
+      {label: 'Monday', value: 'MO'},
+      {label: 'Tuesday', value: 'TU'},
+      {label: 'Wednesday', value: 'WE'},
+      {label: 'Thursday', value: 'TH'},
+      {label: 'Friday', value: 'FR'},
+      {label: 'Saturday', value: 'SA'},
+      {label: 'Sunday', value: 'SU'}
+    ])
 
     .constant('CAL_MINI_CALENDAR_DAY_FORMAT', 'YYYY-MM-DD')
 

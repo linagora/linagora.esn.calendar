@@ -42,11 +42,11 @@
     }
   }
 
-  function EventRecurrenceEditionController(CAL_RECUR_FREQ, CAL_WEEK_DAYS, CAL_MAX_RRULE_COUNT) {
+  function EventRecurrenceEditionController(moment, esnI18nService, CAL_RECUR_FREQ, CAL_WEEK_DAYS, CAL_MAX_RRULE_COUNT) {
     var self = this;
 
     self.CAL_RECUR_FREQ = CAL_RECUR_FREQ;
-    self.CAL_WEEK_DAYS = Object.keys(CAL_WEEK_DAYS);
+    self.days = generateDays();
     self.toggleWeekdays = toggleWeekdays;
     self.resetUntil = resetUntil;
     self.resetCount = resetCount;
@@ -64,28 +64,44 @@
       });
     }
 
-    function toggleWeekdays(weekday) {
-      var weekDaysValues = Object.keys(CAL_WEEK_DAYS).map(function(key) {
-        return CAL_WEEK_DAYS[key];
+    function generateDays() {
+      var localeMoment = moment().locale(esnI18nService.getLocale());
+
+      return angular.copy(CAL_WEEK_DAYS).map(function(day) {
+        day.selected = false; // TODO #1074
+        day.shortName = localeMoment.day(esnI18nService.translate(day.label).toString()).format('dd');
+
+        return day;
       });
-      var index = self.event.rrule.byday.indexOf(CAL_WEEK_DAYS[weekday]);
+    }
+
+    function toggleWeekdays(value) {
+      var index = self.event.rrule.byday.indexOf(value);
       var newDays = self.event.rrule.byday.slice();
 
       if (index > -1) {
         newDays.splice(index, 1);
       } else {
-        newDays.push(CAL_WEEK_DAYS[weekday]);
+        newDays.push(value);
       }
-      newDays.sort(function(weekdayA, weekdayB) {
-        if (weekDaysValues.indexOf(weekdayA) > weekDaysValues.indexOf(weekdayB)) {
-          return 1;
-        } else if (weekDaysValues.indexOf(weekdayA) < weekDaysValues.indexOf(weekdayB)) {
-          return -1;
-        } else {
-          return 0;
-        }
+
+      self.event.rrule.byday = sortDays(newDays);
+    }
+
+    function sortDays(days) {
+      var weekDaysValues = CAL_WEEK_DAYS.map(function(day) {
+        return day.value;
       });
-      self.event.rrule.byday = newDays;
+
+      return days.sort(function(dayA, dayB) {
+        if (weekDaysValues.indexOf(dayA) > weekDaysValues.indexOf(dayB)) {
+          return 1;
+        } else if (weekDaysValues.indexOf(dayA) < weekDaysValues.indexOf(dayB)) {
+          return -1;
+        }
+
+        return 0;
+      });
     }
 
     function resetUntil() {
