@@ -5,13 +5,17 @@
 var expect = chai.expect;
 
 describe('The calEventUtils service', function() {
-  var event, userEmail;
+  var event, userEmail, esnI18nServiceMock;
 
   beforeEach(function() {
     var emailMap = {};
 
     userEmail = 'aAttendee@open-paas.org';
     emailMap[userEmail] = true;
+
+    esnI18nServiceMock = {
+      translate: sinon.stub()
+    };
 
     var asSession = {
       user: {
@@ -32,6 +36,8 @@ describe('The calEventUtils service', function() {
 
         return asSession;
       });
+
+      $provide.constant('esnI18nService', esnI18nServiceMock);
     });
 
     var vcalendar = {};
@@ -48,12 +54,13 @@ describe('The calEventUtils service', function() {
     };
   });
 
-  beforeEach(angular.mock.inject(function(calEventUtils, $rootScope, calMoment, CalendarShell, CAL_MAX_DURATION_OF_SMALL_EVENT) {
+  beforeEach(angular.mock.inject(function(calEventUtils, $rootScope, calMoment, CalendarShell, CAL_MAX_DURATION_OF_SMALL_EVENT, CAL_EVENT_FORM) {
     this.calEventUtils = calEventUtils;
     this.$rootScope = $rootScope;
     this.calMoment = calMoment;
     this.CalendarShell = CalendarShell;
     this.CAL_MAX_DURATION_OF_SMALL_EVENT = CAL_MAX_DURATION_OF_SMALL_EVENT;
+    this.CAL_EVENT_FORM = CAL_EVENT_FORM;
     event.start = calMoment();
     event.end = event.start.add(this.CAL_MAX_DURATION_OF_SMALL_EVENT.DESKTOP, 'minutes');
   }));
@@ -346,6 +353,41 @@ describe('The calEventUtils service', function() {
       expect(this.calEventUtils.getUserAttendee({ attendees: [attendee] })).to.deep.equal(attendee);
     });
 
+  });
+
+  describe('The getEventTitle function', function() {
+    it('should send back trimmed title', function() {
+      var title = 'The title of the event';
+
+      expect(this.calEventUtils.getEventTitle({ title: '   ' + title + '       ' })).to.equal(title);
+    });
+
+    it('should send back translated "no title" when event title is only spaces', function() {
+      var title = 'translated title';
+
+      esnI18nServiceMock.translate.returns(title);
+
+      expect(this.calEventUtils.getEventTitle({ title: '       ' })).to.equal(title);
+      expect(esnI18nServiceMock.translate).to.have.been.calledWith(this.CAL_EVENT_FORM.title.default);
+    });
+
+    it('should send back translated "no title" when event title is empty string', function() {
+      var title = 'translated title';
+
+      esnI18nServiceMock.translate.returns(title);
+
+      expect(this.calEventUtils.getEventTitle({ title: '' })).to.equal(title);
+      expect(esnI18nServiceMock.translate).to.have.been.calledWith(this.CAL_EVENT_FORM.title.default);
+    });
+
+    it('should send back translated "no title" when event title is undefined', function() {
+      var title = 'translated title';
+
+      esnI18nServiceMock.translate.returns(title);
+
+      expect(this.calEventUtils.getEventTitle({})).to.equal(title);
+      expect(esnI18nServiceMock.translate).to.have.been.calledWith(this.CAL_EVENT_FORM.title.default);
+    });
   });
 
 });

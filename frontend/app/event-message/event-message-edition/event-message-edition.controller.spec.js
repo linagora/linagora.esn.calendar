@@ -117,12 +117,12 @@ describe('The CalEventMessageEditionController controller', function() {
       controller.$onInit();
     });
 
-    it('should replace empty title by default title', function() {
+    it('should replace empty title by empty title', function() {
       ['', undefined, null, '     '].forEach(function(title) {
         controller.event.title = title;
         controller.submit();
 
-        expect(controller.event.title).to.equal(self.CAL_EVENT_FORM.title.default);
+        expect(controller.event.title).to.equal(self.CAL_EVENT_FORM.title.empty);
       }, this);
     });
 

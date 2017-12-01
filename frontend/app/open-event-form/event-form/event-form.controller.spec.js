@@ -524,27 +524,6 @@ describe('The event-form module controllers', function() {
           expect(this.$state.is).to.have.been.calledWith('calendar.main');
         });
 
-        it('should display an error if the edited event has no title', function(done) {
-          this.scope.event = this.CalendarShell.fromIncompleteShell({});
-          this.calEventUtils.originalEvent = null;
-          var $alertMock = function(alertObject) {
-            expect(alertObject.show).to.be.true;
-            expect(alertObject.content).to.equal('You must define an event title');
-
-            done();
-          };
-
-          this.controller('CalEventFormController', {
-            $rootScope: this.rootScope,
-            $scope: this.scope,
-            $alert: $alertMock
-          });
-
-          this.scope.$digest();
-
-          this.scope.modifyEvent();
-        });
-
         it('should not send modify request if no change', function(done) {
           this.scope.event = this.CalendarShell.fromIncompleteShell({
             start: this.moment('2013-02-08 12:30'),
@@ -1083,10 +1062,10 @@ describe('The event-form module controllers', function() {
         expect(this.$state.is).to.have.been.calledWith('calendar.main');
       });
 
-      it('should force title to \'No title\' if the edited event has no title', function() {
+      it('should force title to empty string if the edited event has no title', function() {
         this.scope.createEvent();
 
-        expect(this.scope.editedEvent.title).to.equal('No title');
+        expect(this.scope.editedEvent.title).to.equal('');
       });
 
       it('should initialize the class with \'public\' if the edited event has no class', function() {
@@ -1108,7 +1087,7 @@ describe('The event-form module controllers', function() {
         this.rootScope.$digest();
 
         expect(this.scope.editedEvent).to.shallowDeepEqual({
-          title: 'No title',
+          title: '',
           attendees: [{
             email: 'user1@test.com'
           }, {

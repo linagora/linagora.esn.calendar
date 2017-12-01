@@ -8,8 +8,10 @@
     _,
     escapeHtmlUtils,
     session,
+    esnI18nService,
     CAL_DEFAULT_EVENT_COLOR,
-    CAL_SIGNIFICANT_CHANGE_KEYS
+    CAL_SIGNIFICANT_CHANGE_KEYS,
+    CAL_EVENT_FORM
   ) {
     var editedEvent = null;
     var newAttendees = [];
@@ -32,7 +34,8 @@
       setBackgroundColor: setBackgroundColor,
       resetStoredEvents: resetStoredEvents,
       applyReply: applyReply,
-      getUserAttendee: getUserAttendee
+      getUserAttendee: getUserAttendee,
+      getEventTitle: getEventTitle
     };
 
     return service;
@@ -128,6 +131,12 @@
       return _.find(event.attendees, function(attendee) {
         return attendee.email in session.user.emailMap;
       });
+    }
+
+    function getEventTitle(event) {
+      var title = event.title ? event.title.trim() : CAL_EVENT_FORM.title.empty;
+
+      return title.trim() === CAL_EVENT_FORM.title.empty ? esnI18nService.translate(CAL_EVENT_FORM.title.default) : title;
     }
   }
 

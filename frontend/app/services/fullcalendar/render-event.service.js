@@ -19,8 +19,11 @@
         var title = element.find('.fc-title');
         var eventDurationInMinute = event.end.diff(event.start, 'minutes');
         var userAsAttendee = calEventUtils.getUserAttendee(event);
+        var eventTitle = calEventUtils.getEventTitle(event);
         var eventIconsDivInMobile;
 
+        fixTitleDiv();
+        setEventTitle();
         addTooltipToEvent();
         changeEventColorWhenMonthView();
         adaptTitleWhenShortEvent();
@@ -29,6 +32,20 @@
         setEventRights();
         addIcons();
         switchTitleAndTime();
+
+        function fixTitleDiv() {
+          // if event does not have title, FC does not add div, so we need to...
+          var contentDiv = element.find('.fc-content');
+
+          if (!title.length) {
+            contentDiv.prepend('<div class="fc-title"></div>');
+            title = element.find('.fc-title');
+          }
+        }
+
+        function setEventTitle() {
+          title.text(calEventUtils.getEventTitle(event));
+        }
 
         function switchTitleAndTime() {
           if (view.name === 'month') {
@@ -42,7 +59,7 @@
         }
 
         function addTooltipToEvent() {
-          element.find('.fc-content').attr('title', event.title);
+          element.find('.fc-content').attr('title', eventTitle);
         }
 
         function changeEventColorWhenMonthView() {
@@ -59,7 +76,7 @@
         function adaptTitleWhenShortEvent() {
           if ((eventDurationInMinute <= CAL_MAX_DURATION_OF_SMALL_EVENT.DESKTOP) && element.find('.fc-time').length && element.find('.fc-title').length) {
             timeDiv.remove();
-            title.text(event.start.format('hh:mm') + ' - ' + event.title);
+            title.text(event.start.format('hh:mm') + ' - ' + eventTitle);
           }
         }
 

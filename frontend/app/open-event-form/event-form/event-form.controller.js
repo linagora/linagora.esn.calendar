@@ -80,18 +80,6 @@
         organizerIsNotTheOnlyAttendeeInEvent();
       }
 
-      function _displayError(err) {
-        $alert({
-          content: err.message || err.statusText,
-          type: 'danger',
-          show: true,
-          position: 'bottom',
-          container: '.event-create-error-message',
-          duration: '2',
-          animation: 'am-flip-x'
-        });
-      }
-
       function _hideModal() {
         if ($scope.$hide) {
           $scope.$hide();
@@ -180,7 +168,7 @@
 
       function createEvent() {
         if (!$scope.editedEvent.title || $scope.editedEvent.title.trim().length === 0) {
-          $scope.editedEvent.title = CAL_EVENT_FORM.title.default;
+          $scope.editedEvent.title = CAL_EVENT_FORM.title.empty;
         }
 
         if (!$scope.editedEvent.class) {
@@ -243,9 +231,7 @@
 
       function _modifyEvent() {
         if (!$scope.editedEvent.title || $scope.editedEvent.title.trim().length === 0) {
-          _displayError(new Error('You must define an event title'));
-
-          return;
+          $scope.editedEvent.title = CAL_EVENT_FORM.title.empty;
         }
 
         $scope.editedEvent.attendees = getUpdatedAttendees();

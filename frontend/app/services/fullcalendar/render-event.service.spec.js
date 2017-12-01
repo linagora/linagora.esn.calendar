@@ -103,6 +103,7 @@ describe('The calFullCalendarRenderEventService service', function() {
     element.innerElements['.fc-title'] = fcTitle;
     element.innerElements['.fc-time'] = fcTime;
     fcTitle.innerElements['.event-icons-mobile'] = eventIconsDivInMobile;
+    fcTitle.text = sinon.spy();
 
     this.escapeHTMLMockResult = {};
     this.escapeHTMLMock = {
@@ -134,6 +135,15 @@ describe('The calFullCalendarRenderEventService service', function() {
     this.recurrentEventIcon = angular.element('<i class="mdi mdi-sync"/>');
     this.maybeEventIcon = angular.element('<i class="mdi mdi-help-circle"/>');
   }));
+
+  describe('The fixTitleDiv function', function() {
+    it('should add the fc-title div is not available', function() {
+      fcTitle.length = 0;
+      this.calFullCalendarRenderEventService(agenda)(event, element, view);
+
+      expect(fcContent.prepend).to.have.been.calledWith('<div class="fc-title"></div>');
+    });
+  });
 
   describe('The addTooltipToEvent function', function() {
     it('should add a tooltip in all views', function() {
