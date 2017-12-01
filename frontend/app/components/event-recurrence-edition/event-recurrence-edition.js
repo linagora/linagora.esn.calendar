@@ -46,7 +46,6 @@
     var self = this;
 
     self.CAL_RECUR_FREQ = CAL_RECUR_FREQ;
-    self.days = generateDays();
     self.toggleWeekdays = toggleWeekdays;
     self.resetUntil = resetUntil;
     self.resetCount = resetCount;
@@ -61,14 +60,16 @@
       self._event.getModifiedMaster().then(function(master) {
         self.event = master;
         self.freq = self.event.rrule ? self.event.rrule.freq : undefined;
+        self.days = generateDays();
       });
     }
 
     function generateDays() {
       var localeMoment = moment().locale(esnI18nService.getLocale());
+      var selectedDays = (self.event.rrule && self.event.rrule.byday) ? self.event.rrule.byday : [];
 
       return angular.copy(CAL_WEEK_DAYS).map(function(day) {
-        day.selected = false; // TODO #1074
+        day.selected = selectedDays.indexOf(day.value) >= 0;
         day.shortName = localeMoment.day(esnI18nService.translate(day.label).toString()).format('dd');
 
         return day;

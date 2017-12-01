@@ -71,7 +71,7 @@
 
       get byday() {
         if (!this.__byday) {
-          this.__byday = this.rrule && this.rrule.byday ? this.rrule.byday : [];
+          this.__byday = this.rrule && this.rrule.getComponent('byday') ? this.rrule.getComponent('byday') : [];
         }
 
         return this.__byday;

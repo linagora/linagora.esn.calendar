@@ -47,6 +47,27 @@ describe('The event-recurrence-edition component', function() {
     };
   }]));
 
+  describe('activate function', function() {
+    it('should set days correctly from input event', function() {
+      this.$scope.event.rrule = {
+        freq: undefined,
+        interval: null,
+        byday: ['SA', 'SU']
+      };
+      this.initDirective(this.$scope);
+
+      expect(this.eleScope.vm.days).to.shallowDeepEqual([
+        {value: 'MO', selected: false},
+        {value: 'TU', selected: false},
+        {value: 'WE', selected: false},
+        {value: 'TH', selected: false},
+        {value: 'FR', selected: false},
+        {value: 'SA', selected: true},
+        {value: 'SU', selected: true}
+      ]);
+    });
+  });
+
   describe('scope.toggleWeekdays', function() {
     it('should splice the weekday and sort the array', function() {
       this.$scope.event.rrule = {

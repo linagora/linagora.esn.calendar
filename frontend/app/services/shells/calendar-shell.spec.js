@@ -391,6 +391,10 @@ describe('CalendarShell factory', function() {
       expect(shell.vcalendar.toJSON()).to.deep.equal(getIcalWithRrule(rrule));
     });
 
+    it('should correctly fill rrule.byday for WEEKLY recurrent event', function() {
+      expect(loadICSFixtureAsCalendarShell('recurringWeeklyEvent.ics').rrule.byday).to.deep.equal(['MO', 'SU']);
+    });
+
     it('should correctly create a recurrent event: monthly', function() {
       var shell = {
         start: calMoment.utc([2014, 11, 29, 18, 0, 0]),
