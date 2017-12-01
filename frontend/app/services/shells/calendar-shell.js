@@ -426,6 +426,8 @@
           this.vcalendar.removeSubcomponent(vevent);
         }
       }, this);
+
+      this.vevent.removeAllProperties('exdate');
     }
 
     /**
