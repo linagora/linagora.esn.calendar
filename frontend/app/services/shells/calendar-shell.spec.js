@@ -999,6 +999,24 @@ describe('CalendarShell factory', function() {
       }).length).to.equal(0);
     });
 
+    describe('The _removeOccurenceFromVcalendar function', function() {
+      function test(recurrenceId, expectedSize) {
+        var vcalendar = ICAL.parse(__FIXTURES__['frontend/app/fixtures/calendar/recurringAllDayEventWithTimeOccurance.ics']);
+        var shell = new CalendarShell(new ICAL.Component(vcalendar));
+
+        shell._removeOccurenceFromVcalendar(shell, {
+          recurrenceId: calMoment(recurrenceId)
+        });
+
+        expect(shell.vcalendar.getAllSubcomponents('vevent').filter(function(vevent) {
+          return vevent.getFirstPropertyValue('recurrence-id');
+        }).length).to.equal(expectedSize);
+      }
+
+      it('should correctly delete existing ocurrence', test.bind(null, '2017-11-27', 1));
+
+      it('should not delete unknown ocurrence', test.bind(null, '2017-11-29', 2));
+    });
   });
 
   describe('getModifiedMaster method', function() {

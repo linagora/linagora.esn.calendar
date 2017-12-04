@@ -99,6 +99,7 @@
       getExceptionByRecurrenceId: getExceptionByRecurrenceId,
       getRecurrenceType: getRecurrenceType,
       getAttendeeByEmail: getAttendeeByEmail,
+      _removeOccurenceFromVcalendar: _removeOccurenceFromVcalendar,
 
       get uid() { return this.vevent.getFirstPropertyValue('uid'); },
       get id() { return this.recurrenceId ? this.uid + '_' + this.vevent.getFirstPropertyValue('recurrence-id').convertToZone(ICAL.Timezone.utcTimezone) : this.uid; },
@@ -395,11 +396,19 @@
 
         if (recId) {
           recId.zone = that.timezones[recId.timezone] || recId.zone;
-          if (instance.recurrenceId.isSame(recId.toJSDate())) {
+          var recurenceIdAsDate = recId.toJSDate();
+
+          // all-day events have special recurrenceId which does not have TZ
+          // i.e. they are 'floating' which means we can not compare recurrence like in non all-day events
+          if ((that.allDay && isSameDay(instance.recurrenceId, new Date(recurenceIdAsDate.getFullYear(), recurenceIdAsDate.getMonth(), recurenceIdAsDate.getDate()))) || instance.recurrenceId.isSame(recId.toJSDate())) {
             that.vcalendar.removeSubcomponent(vevent);
             break;
           }
         }
+      }
+
+      function isSameDay(recurrenceId, date) {
+        return recurrenceId.date() === date.getDate() && recurrenceId.month() === date.getMonth() && recurrenceId.year() === date.getFullYear();
       }
     }
 
