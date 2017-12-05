@@ -91,18 +91,6 @@
           }
         }
       })
-      .state('calendar.edit.delegation', {
-        url: '/delegation',
-        params: {
-          newUsersGroups: null,
-          delegationTypes: null
-        },
-        views: {
-          'content@calendar': {
-            template: '<calendar-edit-delegation-add-users />'
-          }
-        }
-      })
       .state('calendar.add', {
         url: '/add',
         views: {

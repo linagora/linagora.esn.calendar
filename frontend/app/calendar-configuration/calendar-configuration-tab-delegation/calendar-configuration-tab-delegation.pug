@@ -1,15 +1,14 @@
-.hidden-xs
-  .delegation-line
-    .col-md-5.padding-left-0
+.add-delegation-users
+  .user-delegation-form
+    .user-autocomplete
       users-autocomplete-input(mutable-users='$ctrl.newUsersGroups', on-adding-user='$ctrl.onAddingUser')
-    .col-md-5
-      .select
-        select.addDelegation.form-control(ng-model='$ctrl.selectedShareeRight')
-          option(ng-repeat="delegationType in ::$ctrl.delegationTypes" value="{{delegationType.value}}" ng-selected="delegationType.value === $ctrl.selectedShareeRight") {{delegationType.name | esnI18n}}
-    .col-md-2
-      .btn.btn-primary.btn-sm(ng-click="$ctrl.addUserGroup()") #{__('Add')}
+    .select-delegation
+      select.addDelegation.form-control(ng-model='$ctrl.selectedShareeRight')
+        option(ng-repeat="delegationType in ::$ctrl.delegationTypes" value="{{delegationType.value}}" ng-selected="delegationType.value === $ctrl.selectedShareeRight") {{delegationType.name | esnI18n}}
+  .delegation-actions
+    .btn.btn-primary.btn-sm(ng-click="$ctrl.addUserGroup()") #{__('Add')}
 
-  hr
+hr
 
 .delegation-line(ng-repeat="delegation in $ctrl.delegations")
   a.attendee-avatar(href="", ng-attr-title='delegation.user.displayName')
@@ -24,5 +23,3 @@
   .col-xs-1.margin-right-10
     a(href="", ng-click='$ctrl.removeUserGroup(delegation)')
       i.mdi.mdi-delete
-
-fab.hidden-md(ui-sref='calendar.edit.delegation({ newUsersGroups: $ctrl.newUsersGroups, delegationTypes: $ctrl.delegationTypes, addUserGroup:  $ctrl.addUserGroup})')
