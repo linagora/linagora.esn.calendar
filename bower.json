@@ -22,7 +22,7 @@
     "tests"
   ],
   "dependencies": {
-    "material-admin": "https://github.com/linagora/material-admin.git#1.5.1.5"
+    "esn-material-admin": "1.5.1.5"
   },
   "devDependencies": {
     "Autolinker.js": "^0.24.1",
