@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .controller('calEventDateEditionController', calEventDateEditionController);
 
-  function calEventDateEditionController(calMoment) {
+  function calEventDateEditionController(calMoment, esnI18nDateFormatService) {
     var self = this;
 
     self.dateOnBlurFn = dateOnBlurFn;
@@ -18,6 +18,7 @@
     ////////////
 
     function activate() {
+      self.dateFormat = esnI18nDateFormatService.getDateFormat();
       self.disabled = angular.isDefined(self.disabled) ? self.disabled : false;
       self.allDayOnChange = self.allDayOnChange || angular.noop;
       self.allDay = self.event.allDay;

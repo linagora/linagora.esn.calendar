@@ -1,16 +1,22 @@
 'use strict';
 
-/* global chai: false */
+/* global chai, sinon: false */
 
 var expect = chai.expect;
 
 describe('The calEventDateEditionController', function() {
 
-  var $controller, calMoment;
+  var $controller, calMoment, esnI18nDateFormatService;
   var startTestMoment, endTestMoment;
 
   beforeEach(function() {
-    angular.mock.module('esn.calendar');
+    esnI18nDateFormatService = {
+      getDateFormat: sinon.spy()
+    };
+
+    angular.mock.module('esn.calendar', function($provide) {
+      $provide.value('esnI18nDateFormatService', esnI18nDateFormatService);
+    });
 
     angular.mock.inject(function(_$controller_, _calMoment_) {
       $controller = _$controller_;

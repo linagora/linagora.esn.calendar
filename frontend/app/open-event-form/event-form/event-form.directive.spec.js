@@ -13,11 +13,15 @@ describe('The cal-event-form Angular module directives', function() {
     this.calEventFormControllerMock = function($scope) {
       $scope.initFormData = function() {};
     };
+    this.esnI18nDateFormatService = {
+      getDateFormat: sinon.spy()
+    };
     var self = this;
 
     angular.mock.module(function($provide, $controllerProvider) {
       $controllerProvider.register('CalEventFormController', self.calEventFormControllerMock);
       $provide.value('calEventUtils', self.calEventUtilsMock);
+      $provide.value('esnI18nDateFormatService', self.esnI18nDateFormatService);
       $provide.factory('eventRecurrenceEditionDirective', function() { return {}; });
     });
   });
