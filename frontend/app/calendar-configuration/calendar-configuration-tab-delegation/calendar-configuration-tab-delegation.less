@@ -10,7 +10,7 @@ calendar-configuration-tab-delegation {
       .flex-grow(2);
 
       .user-autocomplete {
-        .flex-grow;
+        .flex-shorthand(1, 0, 30%);
 
         min-width: 350px;
       }
@@ -34,51 +34,41 @@ calendar-configuration-tab-delegation {
   }
 
   .delegation-line {
-    .flex-vertical-centered;
+    .flex-space-between;
 
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 
-    .attendee-avatar {
-      img {
-        height: 50px;
+    .user {
+      .flex;
+      .flex-shorthand(1, 0, 30%);
+
+      .user-avatar {
+        margin-right: 15px;
+
+        img {
+          height: 50px;
+        }
       }
+
+      .user-name {
+        align-self: center;
+        font-size: 15px;
+      }
+    }
+
+    .select-delegation {
+      .flex-grow;
+    }
+
+    .delegation-actions {
+      .flex-vertical-centered;
+
+      padding-left: 10px;
     }
 
     .mdi-delete {
       margin-right: 5px;
       font-size: 1.5em;
-    }
-
-    .btn {
-      margin-top: 10px;
-    }
-
-    .btn-group {
-      margin-top: 10px;
-
-      .btn {
-        margin-top: 0;
-      }
-
-      .mdi {
-        margin-right: 5px;
-      }
-
-      i {
-        vertical-align: sub;
-      }
-    }
-
-    .addDelegation {
-      margin-top: 12px;
-    }
-
-    .padding-left-0 {
-      padding-left: 0;
-    }
-
-    .margin-right-10 {
-      margin-right: 10px;
     }
   }
 }
