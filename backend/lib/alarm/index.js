@@ -1,6 +1,6 @@
 'use strict';
 
-const ICAL = require('ical.js');
+const ICAL = require('@linagora/ical.js');
 const Q = require('q');
 const moment = require('moment-timezone');
 const CONSTANTS = require('../constants');

@@ -2,7 +2,7 @@
 
 var expect = require('chai').expect;
 var fs = require('fs-extra');
-var icaljs = require('ical.js');
+var icaljs = require('@linagora/ical.js');
 
 describe('The jcal helper module', function() {
 
