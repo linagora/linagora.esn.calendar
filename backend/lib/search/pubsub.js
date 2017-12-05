@@ -2,7 +2,7 @@
 
 const {EVENTS, NOTIFICATIONS} = require('../constants');
 const eventHelper = require('../helpers/event');
-const ICAL = require('ical.js');
+const ICAL = require('@linagora/ical.js');
 
 module.exports = dependencies => {
   const pubsub = dependencies('pubsub');

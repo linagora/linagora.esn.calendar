@@ -1,4 +1,4 @@
-const ICAL = require('ical.js');
+const ICAL = require('@linagora/ical.js');
 const helpers = require('./helpers');
 const jcalHelper = require('../helpers/jcal');
 

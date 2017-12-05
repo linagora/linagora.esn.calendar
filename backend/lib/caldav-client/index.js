@@ -6,7 +6,7 @@ const Q = require('q');
 const _ = require('lodash');
 const path = require('path');
 const uuidV4 = require('uuid/v4');
-const ICAL = require('ical.js');
+const ICAL = require('@linagora/ical.js');
 
 const JSON_CONTENT_TYPE = 'application/json';
 const DEFAULT_CALENDAR_NAME = 'Events';
