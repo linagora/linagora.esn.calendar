@@ -1,9 +1,13 @@
 calendar-configuration-tab-main {
+  .field-name {
+    font-size: @calendarConfigurationLabelFontSize;
+  }
+
   .public-access-line {
     .flex-vertical-centered;
 
     margin-bottom: 20px;
-    font-size: 15px;
+    font-size: @calendarConfigurationLabelFontSize;
 
     .attendee-avatar {
       img {
@@ -66,8 +70,26 @@ calendar-configuration-tab-main {
   }
 
   .color-picker-container {
+    .select {
+      cursor: pointer;
+    }
+
     &.pointer-events-none {
       pointer-events: none;
+    }
+
+    margin-top: 10px;
+    width: 50px;
+    position: relative;
+
+    .color-picker-value {
+      cursor: pointer;
+      width: 25px;
+      height: 25px;
+      border-radius: 2px;
+      position: absolute;
+      top: 0px;
+      z-index: 5;
     }
   }
 }
