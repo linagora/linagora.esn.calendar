@@ -43,5 +43,13 @@
       .public-access-line-visibility-value.form-group.col-xs-8
         | {{ $ctrl.shareeRight }}
 
+  .calendar-links
+    .calendar-link(ng-if="$ctrl.caldavurl")
+      .settings-label
+        i.mdi.mdi-link
+        span #{__('CalDAV URL')}
+      .settings-value
+        esn-clipboard-url(url="$ctrl.caldavurl")
+
 .settings-actions
   span.delete-calendar-button(ng-if="$ctrl.canDeleteCalendar()", type="button", ng-click="$ctrl.openDeleteConfirmationDialog()") #{__('Remove this calendar')}

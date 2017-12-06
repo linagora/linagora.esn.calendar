@@ -3,6 +3,35 @@ calendar-configuration-tab-main {
     font-size: @calendarConfigurationLabelFontSize;
   }
 
+  .calendar-link {
+    .flex-column;
+    .flex-wrap;
+
+    .settings-label {
+      .flex-vertical-centered;
+      font-size: @calendarConfigurationLabelFontSize;
+
+      span {
+        padding-left: 15px;
+      }
+
+      .mdi-link {
+        margin-right: 5px;
+        font-size: 1.5em;
+      }
+    }
+
+    .settings-value {
+      .calendar-url {
+        font-size: @calendarConfigurationLabelFontSize;
+      }
+    }
+  }
+
+  .settings-actions {
+    margin-top: 15px;
+  }
+
   .public-access-line {
     .flex-vertical-centered;
 
