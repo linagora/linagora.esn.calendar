@@ -18,10 +18,7 @@
             return calBusinessHoursService.getUserBusinessHours();
           }
         },
-        controller: function($scope, calendarHomeId, businessHours) {
-          $scope.calendarHomeId = calendarHomeId;
-          $scope.businessHours = businessHours;
-        },
+        controller: 'CalCalendarRootController',
         reloadOnSearch: false
       })
       .state('calendar.main', {
