@@ -426,6 +426,231 @@ describe.skip('The Calendar events API /api/events', function() {
 
     });
 
+    describe('In english', function() {
+
+      it('should return 500 when there is an error creating the event on the DAV server', function(done) {
+        davHandlers.put = (req, res) => res.status(503).end();
+
+        request(app)
+          .post('/api/events')
+          .auth('user1@lng.net', 'secret')
+          .set('Accept-Language', 'en-US')
+          .send(quickEvent('today at 10'))
+          .expect(500, done);
+      });
+
+      it('should send a PUT to the DAV server and return 200 when event is created', function(done) {
+        davHandlers.put = (req, res) => {
+          expect(req.path).to.match(new RegExp(`^/calendars/${userId}/${calendarId}`));
+
+          res.status(201).end();
+        };
+
+        request(app)
+          .post('/api/events')
+          .auth('user1@lng.net', 'secret')
+          .set('Accept-Language', 'en-US')
+          .send(quickEvent('today at 10'))
+          .expect(200, done);
+      });
+
+      it('should support "am"', function(done) {
+        davHandlers.put = (req, res) => {
+          checkEventSentToDAVServer(req.body, moment().hour(9).minute(30).second(0).millisecond(0));
+
+          res.status(201).end();
+        };
+
+        request(app)
+          .post('/api/events')
+          .auth('user1@lng.net', 'secret')
+          .set('Accept-Language', 'en-US')
+          .send(quickEvent('today at 9:30 am'))
+          .expect(200, done);
+      });
+
+      it('should support "pm"', function(done) {
+        davHandlers.put = (req, res) => {
+          checkEventSentToDAVServer(req.body, moment().hour(21).minute(30).second(0).millisecond(0));
+
+          res.status(201).end();
+        };
+
+        request(app)
+          .post('/api/events')
+          .auth('user1@lng.net', 'secret')
+          .set('Accept-Language', 'en-US')
+          .send(quickEvent('today at 9:30 pm'))
+          .expect(200, done);
+      });
+
+      it('should support "today"', function(done) {
+        davHandlers.put = (req, res) => {
+          checkEventSentToDAVServer(req.body, moment().hour(21).minute(30).second(0).millisecond(0));
+
+          res.status(201).end();
+        };
+
+        request(app)
+          .post('/api/events')
+          .auth('user1@lng.net', 'secret')
+          .set('Accept-Language', 'en-US')
+          .send(quickEvent('today at 9:30 pm'))
+          .expect(200, done);
+      });
+
+      it('should support "tonight"', function(done) {
+        davHandlers.put = (req, res) => {
+          checkEventSentToDAVServer(req.body, moment().hour(21).minute(30).second(0).millisecond(0));
+
+          res.status(201).end();
+        };
+
+        request(app)
+          .post('/api/events')
+          .auth('user1@lng.net', 'secret')
+          .set('Accept-Language', 'en-US')
+          .send(quickEvent('tonight at 9:30 pm'))
+          .expect(200, done);
+      });
+
+      it('should support "tomorrow"', function(done) {
+        davHandlers.put = (req, res) => {
+          checkEventSentToDAVServer(req.body, moment().add(1, 'day').hour(21).minute(30).second(0).millisecond(0));
+
+          res.status(201).end();
+        };
+
+        request(app)
+          .post('/api/events')
+          .auth('user1@lng.net', 'secret')
+          .set('Accept-Language', 'en-US')
+          .send(quickEvent('tomorrow at 9:30 pm'))
+          .expect(200, done);
+      });
+
+      it('should support "monday"', function(done) {
+        davHandlers.put = (req, res) => {
+          checkEventSentToDAVServer(req.body, moment().weekday(1).hour(21).minute(30).second(0).millisecond(0));
+
+          res.status(201).end();
+        };
+
+        request(app)
+          .post('/api/events')
+          .auth('user1@lng.net', 'secret')
+          .set('Accept-Language', 'en-US')
+          .send(quickEvent('monday at 9:30 pm'))
+          .expect(200, done);
+      });
+
+      it('should support "tuesday"', function(done) {
+        davHandlers.put = (req, res) => {
+          checkEventSentToDAVServer(req.body, moment().weekday(2).hour(21).minute(30).second(0).millisecond(0));
+
+          res.status(201).end();
+        };
+
+        request(app)
+          .post('/api/events')
+          .auth('user1@lng.net', 'secret')
+          .set('Accept-Language', 'en-US')
+          .send(quickEvent('tuesday at 9:30 pm'))
+          .expect(200, done);
+      });
+
+      it('should support "wednesday"', function(done) {
+        davHandlers.put = (req, res) => {
+          checkEventSentToDAVServer(req.body, moment().weekday(3).hour(21).minute(30).second(0).millisecond(0));
+
+          res.status(201).end();
+        };
+
+        request(app)
+          .post('/api/events')
+          .auth('user1@lng.net', 'secret')
+          .set('Accept-Language', 'en-US')
+          .send(quickEvent('wednesday at 9:30 pm'))
+          .expect(200, done);
+      });
+
+      it('should support "thursday"', function(done) {
+        davHandlers.put = (req, res) => {
+          checkEventSentToDAVServer(req.body, moment().weekday(4).hour(21).minute(30).second(0).millisecond(0));
+
+          res.status(201).end();
+        };
+
+        request(app)
+          .post('/api/events')
+          .auth('user1@lng.net', 'secret')
+          .set('Accept-Language', 'en-US')
+          .send(quickEvent('thursday at 9:30 pm'))
+          .expect(200, done);
+      });
+
+      it('should support "friday"', function(done) {
+        davHandlers.put = (req, res) => {
+          checkEventSentToDAVServer(req.body, moment().weekday(5).hour(21).minute(30).second(0).millisecond(0));
+
+          res.status(201).end();
+        };
+
+        request(app)
+          .post('/api/events')
+          .auth('user1@lng.net', 'secret')
+          .set('Accept-Language', 'en-US')
+          .send(quickEvent('friday at 9:30 pm'))
+          .expect(200, done);
+      });
+
+      it('should support "saturday"', function(done) {
+        davHandlers.put = (req, res) => {
+          checkEventSentToDAVServer(req.body, moment().weekday(6).hour(21).minute(30).second(0).millisecond(0));
+
+          res.status(201).end();
+        };
+
+        request(app)
+          .post('/api/events')
+          .auth('user1@lng.net', 'secret')
+          .set('Accept-Language', 'en-US')
+          .send(quickEvent('saturday at 9:30 pm'))
+          .expect(200, done);
+      });
+
+      it('should support "sunday"', function(done) {
+        davHandlers.put = (req, res) => {
+          checkEventSentToDAVServer(req.body, moment().weekday(7).hour(21).minute(30).second(0).millisecond(0));
+
+          res.status(201).end();
+        };
+
+        request(app)
+          .post('/api/events')
+          .auth('user1@lng.net', 'secret')
+          .set('Accept-Language', 'en-US')
+          .send(quickEvent('sunday at 9:30 pm'))
+          .expect(200, done);
+      });
+
+      it('should support "next ___"', function(done) {
+        davHandlers.put = (req, res) => {
+          checkEventSentToDAVServer(req.body, moment().weekday(7).add(1, 'week').hour(21).minute(30).second(0).millisecond(0));
+
+          res.status(201).end();
+        };
+
+        request(app)
+          .post('/api/events')
+          .auth('user1@lng.net', 'secret')
+          .set('Accept-Language', 'en-US')
+          .send(quickEvent('next sunday at 9:30 pm'))
+          .expect(200, done);
+      });
+
+    });
+
   });
 
 });
