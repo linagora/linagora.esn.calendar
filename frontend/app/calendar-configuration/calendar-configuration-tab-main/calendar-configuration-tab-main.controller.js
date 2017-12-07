@@ -14,7 +14,8 @@
     CAL_CALENDAR_PUBLIC_RIGHT,
     CAL_CALENDAR_SHARED_RIGHT,
     calUIAuthorizationService,
-    calCalendarDeleteConfirmationModalService
+    calCalendarDeleteConfirmationModalService,
+    calCalDAVURLService
   ) {
     var self = this;
 
@@ -42,8 +43,11 @@
       ];
 
       !self.newCalendar && performExternalCalendarOperations(isExternalCalendar());
-
       self.canModifyPublicSelection = _canModifyPublicSelection();
+
+      if (!self.newCalendar && self.calendar) {
+        self.caldavurl = calCalDAVURLService.getCalendarURL(self.calendar);
+      }
     }
 
     function isExternalCalendar() {

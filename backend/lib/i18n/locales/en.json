@@ -211,5 +211,6 @@
   "This message contains an resource to manage": "This message contains an resource to manage",
   "User requested to book the resource": "User requested to book the resource",
   "Hide": "Hide",
-  "No title": "No title"
+  "No title": "No title",
+  "CalDAV URL": "CalDAV URL"
 }

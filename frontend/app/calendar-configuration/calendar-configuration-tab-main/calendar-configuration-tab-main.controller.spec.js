@@ -45,7 +45,8 @@ describe('The calendar configuration tab delegation controller', function() {
       isAdmin: sinon.stub().returns(false),
       isOwner: sinon.stub().returns(false),
       isPublic: sinon.stub().returns(false),
-      isSubscription: sinon.stub().returns(false)
+      isSubscription: sinon.stub().returns(false),
+      href: '/calendars/userid/id.json'
     };
 
     calCalendarDeleteConfirmationModalService = sinon.spy();

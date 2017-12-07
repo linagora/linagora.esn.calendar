@@ -1,9 +1,42 @@
 calendar-configuration-tab-main {
+  .field-name {
+    font-size: @calendarConfigurationLabelFontSize;
+  }
+
+  .calendar-link {
+    .flex-column;
+    .flex-wrap;
+
+    .settings-label {
+      .flex-vertical-centered;
+      font-size: @calendarConfigurationLabelFontSize;
+
+      span {
+        padding-left: 15px;
+      }
+
+      .mdi-link {
+        margin-right: 5px;
+        font-size: 1.5em;
+      }
+    }
+
+    .settings-value {
+      .calendar-url {
+        font-size: @calendarConfigurationLabelFontSize;
+      }
+    }
+  }
+
+  .settings-actions {
+    margin-top: 15px;
+  }
+
   .public-access-line {
     .flex-vertical-centered;
 
     margin-bottom: 20px;
-    font-size: 15px;
+    font-size: @calendarConfigurationLabelFontSize;
 
     .attendee-avatar {
       img {
@@ -66,8 +99,26 @@ calendar-configuration-tab-main {
   }
 
   .color-picker-container {
+    .select {
+      cursor: pointer;
+    }
+
     &.pointer-events-none {
       pointer-events: none;
+    }
+
+    margin-top: 10px;
+    width: 50px;
+    position: relative;
+
+    .color-picker-value {
+      cursor: pointer;
+      width: 25px;
+      height: 25px;
+      border-radius: 2px;
+      position: absolute;
+      top: 0px;
+      z-index: 5;
     }
   }
 }

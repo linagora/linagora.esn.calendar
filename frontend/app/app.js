@@ -25,6 +25,7 @@
     'esn.router',
     'esn.search',
     'esn.session',
+    'esn.clipboard',
     'esn.user-configuration',
     'esn.widget.helper',
     'linagora.esn.graceperiod',
