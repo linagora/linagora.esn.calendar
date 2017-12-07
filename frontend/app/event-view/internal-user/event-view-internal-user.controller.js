@@ -5,7 +5,6 @@
     .controller('CalEventViewInternalUserController', CalEventViewInternalUserController);
 
   function CalEventViewInternalUserController() {
-    console.log('IN CalEventViewInternalUserController ', this);
-    var self = this;
+    // TODO IN EVENT FORM REFACTOR
   }
 })();

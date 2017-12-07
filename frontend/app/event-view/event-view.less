@@ -1,0 +1,86 @@
+.cal-event-view-body {
+  .flex;
+
+  flex-direction: column;
+  min-height: ~"calc(100vh - @{header-height})";
+  font-size: 1.5rem;
+
+  .event-body {
+    .flex;
+
+    flex:1;
+    flex-direction: row;
+    padding: 25px 0 0;
+
+    .event-meta, .attendee-list {
+      flex-basis: 50%;
+      padding: 0 15px;
+    }
+  
+    .event-meta {  
+      .event-view-block {
+        padding: 5px 0;
+      }
+  
+      i {
+        font-size: 2rem;  
+        padding-right: 10px;
+      }
+    }
+  
+    .attendee-list {
+      border: 1px solid red;    
+    }
+  }
+
+  .event-participation {
+    .flex-horizontal-centered;
+    .flex-vertical-centered;
+    border-top: 1px solid @inputBorderColor;    
+    height: 50px;
+    width: 100%;
+
+    .btn {
+      font-size: 13px;
+      border-left: 1px solid;
+      border-right: 1px solid;
+      border-color: @darkenBgColor;
+      text-transform: none;
+      padding: 6px;
+
+      i.mdi {
+        margin-right: 4px;
+        font-size: 18px;
+        bottom: 2px;
+        position: relative;
+        vertical-align: middle;
+
+        &.mdi-help {
+          font-size: 15px;
+          bottom: 1px;
+        }
+      }
+
+      &.undecided {
+        margin: 0 -1px;
+      }
+
+      &.active {
+        background-color: @darkenBgColor;
+        z-index: 0;
+
+        &.accepted  {
+          color: @m-green;
+        }
+
+        &.undecided {
+          color: @m-blue;
+        }
+
+        &.declined {
+          color: @m-red;
+        }
+      }
+    }
+  }
+}

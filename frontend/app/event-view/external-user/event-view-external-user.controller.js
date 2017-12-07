@@ -5,7 +5,12 @@
     .controller('CalEventViewExternalUserController', CalEventViewExternalUserController);
 
   function CalEventViewExternalUserController() {
-    console.log('IN CalEventViewExternalUserController ', this);
     var self = this;
+
+    self.$onInit = $onInit;
+
+    function $onInit() {
+      self.userAsAttendee = Object.create(self.externalAttendee);
+    }
   }
 })();

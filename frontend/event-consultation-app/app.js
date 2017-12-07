@@ -4,6 +4,7 @@
   angular.module('esn.calendar.event-consultation', [
     'uuid4',
     'AngularJstz',
+    'ngSanitize',
     'esn.core',
     'esn.lodash-wrapper',
     'esn.calendar',
