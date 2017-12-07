@@ -4,7 +4,7 @@ const {expect} = require('chai');
 const mockery = require('mockery');
 const fs = require('fs');
 const sinon = require('sinon');
-const ICAL = require('@linagora/ical.js');
+const ICAL = require('ical.js');
 const CONSTANTS = require('../../../../backend/lib/constants');
 
 describe('The alarm module', function() {

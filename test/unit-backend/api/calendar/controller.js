@@ -3,7 +3,7 @@
 var expect = require('chai').expect;
 var mockery = require('mockery');
 var fs = require('fs');
-var ICAL = require('@linagora/ical.js');
+var ICAL = require('ical.js');
 var q = require('q');
 var sinon = require('sinon');
 

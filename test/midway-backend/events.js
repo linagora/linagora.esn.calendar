@@ -3,7 +3,7 @@
 const fs = require('fs-extra'),
       expect = require('chai').expect,
       request = require('supertest'),
-      ICAL = require('@linagora/ical.js'),
+      ICAL = require('ical.js'),
       moment = require('moment'),
       bodyParser = require('body-parser'),
       _ = require('lodash');

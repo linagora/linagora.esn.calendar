@@ -2,7 +2,7 @@
 
 const request = require('request');
 const urljoin = require('url-join');
-const ICAL = require('@linagora/ical.js');
+const ICAL = require('ical.js');
 const jcalHelper = require('../../../lib/helpers/jcal');
 const MAX_TRY_NUMBER = 12;
 
