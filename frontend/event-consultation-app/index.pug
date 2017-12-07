@@ -40,9 +40,13 @@ html
     script(src='js/modules/lodash-wrapper.js')
     script(src='js/modules/application-menu.js')
     script(src='calendar/event-consultation-app/app.js')
+    script(src='calendar/event-consultation-app/event-view-external/event-view-external.component.js')
+    script(src='calendar/event-consultation-app/event-view-external/event-view-external.controller.js')
     script(src='calendar/event-consultation-app/event-consult-form-external-user.directive.js')
     script(src='calendar/app/event-consult-form/event-consult-form-body.directive.js')
     script(src='calendar/app/event-consult-form/event-consult-form-sub-header.directive.js')
+    script(src='calendar/app/event-view/event-view.component.js')
+    script(src='calendar/app/event-view/event-view.controller.js')
     script(src='calendar/app/event-consult-form/event-consult-form.directive.js')
     //script(src='calendar/app/components/attendees-list/attendees-list.directive.js')
     //script(src='calendar/app/components/attendee-list-item/attendee-list-item.directive.js')
@@ -72,15 +76,14 @@ html
     script(src='calendar/app/components/event-date-consultation/event-date-consultation.component.js')
     script(src='calendar/app/search/event/event-search-card.component.js')
     script(src='js/constants.js')
-
     script.
-      angular.module('esn.calendar.event-consultation').controller('eventController', function($scope) {
-         $scope.eventJSON = "#{eventJSON}";
-         $scope.attendeeEmail = "#{attendeeEmail}";
-         $scope.yesLink = "#{links.yes}";
-         $scope.maybeLink = "#{links.maybe}";
-         $scope.noLink = "#{links.no}";
-      });
+      angular.module('esn.calendar.event-consultation')
+        .controller('CalEventExternalRootController', function($scope) {
+          this.eventJcal = JSON.parse("#{eventJSON}".replace(/&quot;/g, '"'));
+          this.attendeeEmail = "#{attendeeEmail}";
+          this.links = JSON.parse("#{JSON.stringify(links)}".replace(/&quot;/g, '"'));
+        });
+
   body(ng-app='esn.calendar.event-consultation')
     header#header
       div.header-inner.flex-vertical-centered.flex-space-between
@@ -91,5 +94,8 @@ html
         ul.list-inline.all-centered
           li.hover-scale-animation
             application-menu-toggler
-    .consultation-body(ng-view ng-cloak)
-      cal-event-consult-form-external-user
+    .consultation-body(ng-view, ng-cloak)
+      div(ng-controller="CalEventExternalRootController as ctrl")
+        cal-event-view-external(event-jcal="{{ctrl.eventJcal}}",
+                                attendee-email="{{ctrl.attendeeEmail}}",
+                                links="{{ctrl.links}}")
