@@ -2,14 +2,14 @@
   'use strict';
 
   angular.module('esn.calendar')
-    .component('calEventView', {
+    .component('calEventExternalUserView', {
       bindings: {
         event: '<',
         externalAttendee: '<',
         links: '<'
       },
+      controller: 'CalEventViewExternalUserController',
       controllerAs: 'ctrl',
-      controller: 'CalEventViewController',
-      templateUrl: '/calendar/app/event-view/event-view.html'
+      templateUrl: '/calendar/app/event-view/event-view-body.html'
     });
 })();

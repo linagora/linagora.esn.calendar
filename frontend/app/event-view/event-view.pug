@@ -1,2 +1,3 @@
 div
-  | My event view
+  cal-event-internal-user-view(ng-if="!ctrl.externalAttendee", event="ctrl.event")
+  cal-event-external-user-view(ng-if="ctrl.externalAttendee", event="ctrl.event", external-attendee="ctrl.externalAttendee", links="ctrl.links")
