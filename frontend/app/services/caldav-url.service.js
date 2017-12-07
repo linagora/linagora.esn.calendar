@@ -3,13 +3,52 @@
 
   angular.module('esn.calendar').factory('calCalDAVURLService', calCalDAVURLService);
 
-  function calCalDAVURLService($window, httpConfigurer, CAL_DAV_PATH) {
+  function calCalDAVURLService(_, $log, $window, esnUserConfigurationService) {
+    var DAVSERVER_CONFIGURATION = 'davserver';
+
     return {
-      getCalendarURL: getCalendarURL
+      getCalendarURL: getCalendarURL,
+      getFrontendURL: getFrontendURL
     };
 
     function getCalendarURL(calendar) {
-      return $window.location.origin + (httpConfigurer.getUrl(CAL_DAV_PATH + calendar.href)).replace('.json', '');
+      return getFrontendURL().then(function(url) {
+        return [url, calendar.href.replace('.json', '')]
+          .map(function(fragment) {
+            return fragment.replace(/^\/|\/$/g, '');
+          })
+          .join('/');
+      });
     }
+
+    function getFrontendURL() {
+      return esnUserConfigurationService.get([DAVSERVER_CONFIGURATION], 'core')
+        .then(function(configurations) {
+          if (!configurations || !configurations.length) {
+            $log.debug('No valid configurations found for davserver');
+
+            return getDefaultURL();
+          }
+
+          var davserver = _.find(configurations, {name: DAVSERVER_CONFIGURATION});
+
+          if (!davserver) {
+            $log.debug('davserver configuration is not set');
+
+            return getDefaultURL();
+          }
+
+          return davserver.value && davserver.value.frontend && davserver.value.frontend.url ? davserver.value.frontend.url : getDefaultURL();
+        }, function(err) {
+          $log.debug('Can not get davserver from configuration', err);
+
+          return getDefaultURL();
+        });
+    }
+
+    function getDefaultURL() {
+      return $window.location.origin;
+    }
+
   }
 })(angular);
