@@ -2,35 +2,38 @@
   'use strict';
 
   angular.module('esn.calendar.event-consultation', [
-    'uuid4',
     'AngularJstz',
-    'ngSanitize',
-    'esn.core',
-    'esn.lodash-wrapper',
+    'esn.application-menu',
+    'esn.avatar',
     'esn.calendar',
+    'esn.calMoment',
     'esn.constants',
+    'esn.constants',
+    'esn.core',
     'esn.header',
-    'esn.user',
     'esn.http',
     'esn.ical',
-    'esn.calMoment',
-    'esn.application-menu',
-    'esn.constants',
+    'esn.lodash-wrapper',
     'esn.object-type',
-    'restangular',
+    'esn.user',
+    'esn.url',
+    'mgcrea.ngStrap.popover',
+    'ngSanitize',
     'op.dynamicDirective',
-    'mgcrea.ngStrap.popover'
-  ])
-  .config(['dynamicDirectiveServiceProvider', function(dynamicDirectiveServiceProvider) {
-    var calendar = new dynamicDirectiveServiceProvider.DynamicDirective(true, 'application-menu-calendar', {priority: 40});
-
-    dynamicDirectiveServiceProvider.addInjection('esn-application-menu', calendar);
-  }]);
+    'restangular',
+    'uuid4'
+  ]);
 
   //mock parent calendars to be able to use the consult-form-directive
   angular.module('esn.calendar', [])
     .service('calEventAPI', angular.noop)
-    .service('calMasterEventCache', angular.noop);
-
+    .service('calMasterEventCache', angular.noop)
+    .factory('calResourceService', function($q) {
+      return {
+        getResourceIcon: function() { return $q.when(); }
+      };
+    });
+  angular.module('esn.avatar', []);
+  angular.module('esn.ui', []);
   angular.module('esn.header', []).service('headerService', function() {});
 })();
