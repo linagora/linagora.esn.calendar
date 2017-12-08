@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .controller('CalEventViewExternalUserController', CalEventViewExternalUserController);
 
-  function CalEventViewExternalUserController($http) {
+  function CalEventViewExternalUserController($http, _) {
     var self = this;
 
     self.$onInit = $onInit;
@@ -18,6 +18,8 @@
         TENTATIVE: self.links.maybe,
         DECLINED: self.links.no
       };
+      self.organizerAttendee = _.find(self.attendees.users, { email: self.event.organizer.email });
+      self.usersAttendeesList = _.reject(self.attendees.users, { email: self.event.organizer.email });
     }
 
     function changeParticipation(partstat) {
