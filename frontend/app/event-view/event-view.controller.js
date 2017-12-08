@@ -4,7 +4,13 @@
   angular.module('esn.calendar')
     .controller('CalEventViewController', CalEventViewController);
 
-  function CalEventViewController() {
-    console.log('IN CalEventViewController ', this)
+  function CalEventViewController(calAttendeeService) {
+    var self = this;
+
+    self.$onInit = $onInit;
+
+    function $onInit() {
+      self.attendees = calAttendeeService.splitAttendeesFromType(self.event.attendees);
+    }
   }
 })();

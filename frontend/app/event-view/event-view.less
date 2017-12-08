@@ -1,22 +1,21 @@
 .cal-event-view-body {
   .flex;
-
-  flex-direction: column;
+  .flex-direction(column);
+  
   min-height: ~"calc(100vh - @{header-height})";
   font-size: 1.5rem;
 
   .event-body {
     .flex;
+    .flex-direction(column);
 
     flex:1;
-    flex-direction: row;
     padding: 25px 0 0;
 
-    .event-meta, .attendee-list {
-      flex-basis: 50%;
+    .event-meta, .invitation-block {
       padding: 0 15px;
     }
-  
+
     .event-meta {  
       .event-view-block {
         padding: 5px 0;
@@ -28,14 +27,62 @@
       }
     }
   
-    .attendee-list {
-      border: 1px solid red;    
+    .invitation-block {
+      .cal-attendees-list {
+        .flex;
+        .flex-direction(column);
+
+        padding-top: 15px;
+      }
+
+      cal-resource-list, .cal-attendees-list {
+        .flex;
+
+        .attendee-item{
+          .avatar {
+            img {
+              .esn-avatar;
+            }
+          }
+        }
+
+        .name {
+          a {
+            color: @btn-default-color;
+          }
+        }
+
+        .cal-participation-status {
+          position: absolute;
+          top: 30px;
+          left: -7px;
+          .mdi {
+            .RoundedShape(50%);
+
+            font-size: 1.2em;
+            background-color: @m-white;
+          }
+
+          .participation-status-accepted  {
+            color: @m-green;
+          }
+
+          .participation-status-needaction, .participation-status-tentative {
+            color: @m-blue;
+          }
+
+          .participation-status-declined {
+            color: @m-red;
+          }
+        }
+      }
     }
   }
 
   .event-participation {
     .flex-horizontal-centered;
     .flex-vertical-centered;
+
     border-top: 1px solid @inputBorderColor;    
     height: 50px;
     width: 100%;
@@ -80,6 +127,19 @@
         &.declined {
           color: @m-red;
         }
+      }
+    }
+  }
+}
+
+
+@media (min-width: @screen-md-min) {
+  .cal-event-view-body {
+    .event-body {
+      .flex-direction(row);
+
+      .event-meta, .invitation-block {
+        flex-basis: 50%;
       }
     }
   }

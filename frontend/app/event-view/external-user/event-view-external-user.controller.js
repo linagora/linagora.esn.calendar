@@ -9,9 +9,10 @@
 
     self.$onInit = $onInit;
     self.changeParticipation = changeParticipation;
-
+    self.isExternal = true;
     function $onInit() {
       self.userAsAttendee = Object.create(self.externalAttendee);
+      self.selectedTab = 'attendees';
       self.linksMapping = {
         ACCEPTED: self.links.yes,
         TENTATIVE: self.links.maybe,

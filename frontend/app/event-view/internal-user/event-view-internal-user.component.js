@@ -4,7 +4,8 @@
   angular.module('esn.calendar')
     .component('calEventInternalUserView', {
       bindings: {
-        event: '<'
+        event: '<',
+        attendees: '<'
       },
       controller: 'CalEventViewInternalUserController',
       controllerAs: 'ctrl',

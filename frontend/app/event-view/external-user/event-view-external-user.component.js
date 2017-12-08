@@ -5,6 +5,7 @@
     .component('calEventExternalUserView', {
       bindings: {
         event: '<',
+        attendees: '<',
         externalAttendee: '<',
         links: '<'
       },
