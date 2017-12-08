@@ -1,10 +1,12 @@
-(function() {
+(function(angular) {
   'use strict';
 
   angular.module('esn.calendar.event-consultation', [
     'AngularJstz',
-    'esn.application-menu',
+    'ngSanitize',
     'esn.avatar',
+    'esn.core',
+    'esn.lodash-wrapper',
     'esn.calendar',
     'esn.calMoment',
     'esn.constants',
@@ -36,4 +38,4 @@
   angular.module('esn.avatar', []);
   angular.module('esn.ui', []);
   angular.module('esn.header', []).service('headerService', function() {});
-})();
+})(angular);
