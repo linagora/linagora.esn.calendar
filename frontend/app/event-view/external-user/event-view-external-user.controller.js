@@ -24,6 +24,14 @@
 
     function changeParticipation(partstat) {
       self.userAsAttendee.partstat = partstat;
+      self.usersAttendeesList = self.usersAttendeesList.map(function(user) {
+        if (user.email === self.externalAttendee.email) {
+          user.partstat = partstat;
+        }
+
+        return user;
+      });
+
       $http({ method: 'GET', url: self.linksMapping[partstat] });
     }
   }
