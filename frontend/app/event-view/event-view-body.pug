@@ -9,11 +9,12 @@
         cal-event-date-consultation(event="ctrl.event")
       .location.event-view-block(ng-if="ctrl.event.location")
         i.mdi.mdi-map-marker
-        .ellipsis
+        span.ellipsis
           | {{ctrl.event.location}}
       .description.event-view-block(ng-if="ctrl.event.description")
         i.mdi.mdi-format-align-justify
-        span {{event.description}}
+        div {{ctrl.event.description}}
+    hr.event-view-separator
     .invitation-block
       h4 #{__('Invitations')}
       .participation-block
