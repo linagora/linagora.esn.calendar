@@ -10,11 +10,11 @@ let initialized = false;
 module.exports = dependencies => {
   const amqpClientProvider = dependencies('amqpClientProvider');
   const logger = dependencies('logger');
+  const pubsub = dependencies('pubsub');
   const db = require('./db')(dependencies);
   const handlers = require('./handlers')(dependencies);
   const cronjob = require('./cronjob')(dependencies);
   const jobqueue = require('./jobqueue')(dependencies);
-  let amqpClient;
 
   return {
     init,
@@ -33,27 +33,23 @@ module.exports = dependencies => {
     registerAlarmHandler(require('./handlers/email')(dependencies));
     cronjob.start(processAlarms);
 
-    return initAMQPListeners();
+    return initListeners();
   }
 
-  function initAMQPListeners() {
-    const amqpClientPromise = amqpClientProvider.getClient();
+  function initListeners() {
+    pubsub.global.topic(CONSTANTS.EVENTS.ALARM.CANCEL).subscribe(messageHandler(onDelete));
+    pubsub.global.topic(CONSTANTS.EVENTS.ALARM.CREATED).subscribe(messageHandler(onCreate));
+    pubsub.global.topic(CONSTANTS.EVENTS.ALARM.DELETED).subscribe(messageHandler(onDelete));
+    pubsub.global.topic(CONSTANTS.EVENTS.ALARM.REQUEST).subscribe(messageHandler(onUpdate));
+    pubsub.global.topic(CONSTANTS.EVENTS.ALARM.UPDATED).subscribe(messageHandler(onUpdate));
 
-    return amqpClientPromise
-      .then(client => {
-        amqpClient = client;
-
-        amqpClient.subscribe(CONSTANTS.EVENTS.ALARM.CANCEL, messageHandler(onDelete));
-        amqpClient.subscribe(CONSTANTS.EVENTS.ALARM.CREATED, messageHandler(onCreate));
-        amqpClient.subscribe(CONSTANTS.EVENTS.ALARM.DELETED, messageHandler(onDelete));
-        amqpClient.subscribe(CONSTANTS.EVENTS.ALARM.REQUEST, messageHandler(onUpdate));
-        amqpClient.subscribe(CONSTANTS.EVENTS.ALARM.UPDATED, messageHandler(onUpdate));
-    });
+    return Q.when(true);
 
     function messageHandler(handler) {
       return function(jsonMessage, originalMessage) {
         return handler(jsonMessage)
-          .then(() => amqpClient.ack(originalMessage))
+          .then(amqpClientProvider.getClient)
+          .then(amqpClient => amqpClient.ack(originalMessage))
           .catch(err => {
             logger.error('calendar:alarm:init - Fail to process AMQP message', err);
             throw err;
