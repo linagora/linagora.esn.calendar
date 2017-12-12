@@ -10,6 +10,9 @@ describe('calMoment factory', function() {
     this.window = {
       $: {
         fullCalendar: {}
+      },
+      Waves: {
+        init: function() {}
       }
     };
 
