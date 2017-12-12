@@ -46,7 +46,9 @@
       self.canModifyPublicSelection = _canModifyPublicSelection();
 
       if (!self.newCalendar && self.calendar) {
-        self.caldavurl = calCalDAVURLService.getCalendarURL(self.calendar);
+        calCalDAVURLService.getCalendarURL(self.calendar).then(function(url) {
+          self.caldavurl = url;
+        });
       }
     }
 

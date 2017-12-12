@@ -17,6 +17,7 @@ describe('The calendar configuration tab delegation controller', function() {
     session,
     CalendarConfigurationTabMainController,
     calCalendarDeleteConfirmationModalService,
+    calCalDAVURLService,
     calFullUiConfiguration,
     CAL_CALENDAR_PUBLIC_RIGHT,
     CAL_CALENDAR_SHARED_RIGHT,
@@ -51,8 +52,13 @@ describe('The calendar configuration tab delegation controller', function() {
 
     calCalendarDeleteConfirmationModalService = sinon.spy();
 
+    calCalDAVURLService = {
+      getCalendarURL: sinon.stub()
+    };
+
     angular.mock.module('esn.calendar', function($provide) {
       $provide.value('calendarService', calendarService);
+      $provide.value('calCalDAVURLService', calCalDAVURLService);
       $provide.value('calCalendarDeleteConfirmationModalService', calCalendarDeleteConfirmationModalService);
       $provide.value('calFullUiConfiguration', calFullUiConfiguration);
     });
@@ -73,6 +79,7 @@ describe('The calendar configuration tab delegation controller', function() {
   });
 
   beforeEach(function() {
+    calCalDAVURLService.getCalendarURL.returns($q.when('http://localhost:8080'));
     CalendarConfigurationTabMainController = initController();
     sinon.spy($state, 'go');
   });
