@@ -44,7 +44,10 @@
 
     function _submit() {
       var configurationsArray = _.map(self.configurations, function(value, key) {
-        return { name: key, value: value };
+        return {
+          name: key,
+          value: value || false
+        };
       });
 
       return esnUserConfigurationService.set(configurationsArray, CAL_USER_CONFIGURATION.moduleName)
