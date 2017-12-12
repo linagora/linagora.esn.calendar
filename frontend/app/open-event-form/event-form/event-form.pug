@@ -49,7 +49,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
           .col-xs-12
             cal-resource-list(ng-if='attendees.resources.length > 0', resources='attendees.resources', can-modify-resources='::canModifyEventAttendees', on-resources-removed="onResourceAttendeesRemoved(removed)")
           .col-xs-12
-            cal-attendees-list-condensed(ng-if='attendees.users.length > 1 || newAttendees.length > 0', attendees='attendees.users', can-modify-attendees='::canModifyEventAttendees', organizer='::editedEvent.organizer', on-attendees-removed="onUserAttendeesRemoved(removed)")
+            cal-attendees-list-condensed(ng-if='attendees.users.length > 0 || newAttendees.length > 0', attendees='attendees.users', can-modify-attendees='::canModifyEventAttendees', organizer='::editedEvent.organizer', on-attendees-removed="onUserAttendeesRemoved(removed)")
           .col-xs-12
             cal-mail-to-attendees(ng-if='displayCalMailToAttendeesButton()', event='editedEvent')
           .col-xs-12
