@@ -28,7 +28,11 @@ describe('The calEventDateEditionController', function() {
   });
 
   function initController(bindings) {
-    return $controller('calEventDateEditionController', null, bindings);
+    var controller = $controller('calEventDateEditionController', null, bindings);
+
+    controller.$onInit();
+
+    return controller;
   }
 
   describe('The dateOnBlurFn function', function() {

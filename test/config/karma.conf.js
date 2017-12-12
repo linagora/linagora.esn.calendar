@@ -109,6 +109,7 @@ module.exports = function(config) {
       'node_modules/linagora.esn.resource/frontend/**/*.spec.js',
       'node_modules/linagora-rse/frontend/js/**/*.run.js',
       'frontend/app/search/search.run.js',
+      'frontend/app/configuration/configuration.run.js',
       'frontend/app/services/cal-default-value.run.js',
       'frontend/app/services/websocket/listener.run.js'
     ],

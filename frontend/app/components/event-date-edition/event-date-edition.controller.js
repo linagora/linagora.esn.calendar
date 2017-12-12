@@ -7,17 +7,14 @@
   function calEventDateEditionController(calMoment, esnI18nDateFormatService) {
     var self = this;
 
+    self.$onInit = $onInit;
     self.dateOnBlurFn = dateOnBlurFn;
     self.getMinDate = getMinDate;
     self.setEventDates = setEventDates;
     self.onStartDateChange = onStartDateChange;
     self.onEndDateChange = onEndDateChange;
 
-    activate();
-
-    ////////////
-
-    function activate() {
+    function $onInit() {
       self.dateFormat = esnI18nDateFormatService.getDateFormat();
       self.disabled = angular.isDefined(self.disabled) ? self.disabled : false;
       self.allDayOnChange = self.allDayOnChange || angular.noop;

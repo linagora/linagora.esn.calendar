@@ -23,7 +23,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
                   i.mdi.mdi-calendar-multiple
                 .fg-line.select
                   select.form-control(ng-disabled="!isNew(editedEvent) || !canModifyEvent", ng-model='calendar', ng-options='calendar as calendar.name for calendar in calendars | filter: (isNew(editedEvent) || canModifyEvent) ? { readOnly: false } : {}')
-          cal-event-date-edition(event="editedEvent", disabled='!canModifyEvent')
+          cal-event-date-edition(event="editedEvent", disabled='!canModifyEvent', use-24hour-format='use24hourFormat')
           .col-xs-12
             .form-group(ng-show="canModifyEvent || editedEvent.location")
               .input-group

@@ -20,6 +20,7 @@
     calOpenEventForm,
     calUIAuthorizationService,
     calAttendeesDenormalizerService,
+    calConfigurationService,
     session,
     calPathBuilder,
     esnI18nService,
@@ -91,6 +92,7 @@
       }
 
       function initFormData() {
+        $scope.use24hourFormat = calConfigurationService.use24hourFormat();
         $scope.editedEvent = $scope.event.clone();
         $scope.initialAttendees = angular.copy($scope.editedEvent.attendees) || [];
         $scope.newAttendees = calEventUtils.getNewAttendees();
