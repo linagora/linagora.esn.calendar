@@ -25,7 +25,7 @@
     ////////////
 
     function canAccessEventDetails(calendar, event, userId) {
-      return !!calendar && !!event && (calEventUtils.isOrganizer(event) || (event.isPublic() && calendar.isReadable(userId)));
+      return !!calendar && !!event && (_isOrganizerAndOwner(calendar, event, userId) || (event.isPublic() && calendar.isReadable(userId)));
     }
 
     function canDeleteCalendar(calendar, userId) {
@@ -40,10 +40,10 @@
       return _canModifyEvent(calendar, event, userId);
     }
 
-    function canModifyEventAttendees(event) {
+    function canModifyEventAttendees(calendar, event, userId) {
       //Sharees with Write permissions cannot modify attendee list according to the RFC
       //https://github.com/apple/ccs-calendarserver/blob/master/doc/Extensions/caldav-sharing.txt#L847
-      return !!event && calEventUtils.isOrganizer(event);
+      return !!event && _isOrganizerAndOwner(calendar, event, userId);
     }
 
     function canModifyEventRecurrence(calendar, event, userId) {
@@ -68,6 +68,10 @@
       return !!calendar && calendar.isAdmin(userId) && !calendar.isSubscription();
     }
 
+    function _isOrganizerAndOwner(calendar, event, userId) {
+      return calendar.isOwner(userId) && calEventUtils.isOrganizer(event);
+    }
+
     function _canModifyEvent(calendar, event, userId) {
       var publicRight, sharedRight;
 
@@ -75,7 +79,7 @@
         sharedRight = calendar.rights.getShareeRight(userId);
         publicRight = calendar.rights.getPublicRight();
 
-        return calEventUtils.isOrganizer(event) ||
+        return _isOrganizerAndOwner(calendar, event, userId) ||
         sharedRight === CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ_WRITE ||
         sharedRight === CAL_CALENDAR_SHARED_RIGHT.SHAREE_ADMIN ||
         publicRight === CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE;

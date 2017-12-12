@@ -116,7 +116,7 @@
             $scope.canModifyEvent = _canModifyEvent();
             $scope.displayParticipationButton = displayParticipationButton();
             $scope.displayCalMailToAttendeesButton = displayCalMailToAttendeesButton;
-            $scope.canModifyEventAttendees = calUIAuthorizationService.canModifyEventAttendees($scope.editedEvent);
+            $scope.canModifyEventAttendees = calUIAuthorizationService.canModifyEventAttendees($scope.calendar, $scope.editedEvent, session.user._id);
             $scope.canModifyEventRecurrence = calUIAuthorizationService.canModifyEventRecurrence($scope.calendar, $scope.editedEvent, session.user._id);
           });
       }

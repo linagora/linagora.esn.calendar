@@ -382,7 +382,7 @@ describe('The event-form module controllers', function() {
 
         this.rootScope.$digest();
 
-        expect(this.calUIAuthorizationService.canModifyEventAttendees).to.have.been.calledWith(this.scope.editedEvent);
+        expect(this.calUIAuthorizationService.canModifyEventAttendees).to.have.been.calledWith(this.scope.calendar, this.scope.editedEvent, this.session.user._id);
       });
 
       it('should leverage calUIAuthorizationService.canModifyEvent to set canModifyEvent', function() {
