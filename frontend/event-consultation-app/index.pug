@@ -111,10 +111,9 @@ html
     script.
       angular.module('esn.calendar.event-consultation')
         .controller('CalEventExternalRootController', function($scope) {
-          console.log("#{eventJSON}".replace(/&quot;/g, '"'))
-          this.eventJcal = JSON.parse("#{eventJSON}".replace(/&quot;/g, '"'));
+          this.eventJcal = !{JSON.stringify(eventJSON)};
           this.attendeeEmail = "#{attendeeEmail}";
-          this.links = JSON.parse("#{JSON.stringify(links)}".replace(/&quot;/g, '"'));
+          this.links = !{JSON.stringify(links)};
         });
 
   body(ng-app='esn.calendar.event-consultation')

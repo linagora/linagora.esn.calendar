@@ -98,7 +98,7 @@ module.exports = dependencies => {
 
           invitation.link.generateActionLinks(baseUrl, eventData).then(links => {
             res.status(200).render('../event-consultation-app/index', {
-              eventJSON: JSON.stringify(vcalendar.toJSON()),
+              eventJSON: vcalendar.toJSON(),
               attendeeEmail: attendeeEmail,
               links: links
             });
