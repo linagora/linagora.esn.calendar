@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .controller('CalEventViewExternalUserController', CalEventViewExternalUserController);
 
-  function CalEventViewExternalUserController($http, _) {
+  function CalEventViewExternalUserController($http, notificationFactory, esnI18nService, _) {
     var self = this;
 
     self.$onInit = $onInit;
@@ -32,7 +32,11 @@
         return user;
       });
 
-      $http({ method: 'GET', url: self.linksMapping[partstat] });
+      $http({ method: 'GET', url: self.linksMapping[partstat] }).then(function() {
+        var participation = partstat.charAt(0).toUpperCase() + partstat.slice(1).toLowerCase();
+
+        notificationFactory.weakInfo('Participation', esnI18nService.translate('Participation updated: %s', participation));
+      });
     }
   }
 })();

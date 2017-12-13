@@ -84,8 +84,8 @@ module.exports = dependencies => {
       });
   }
 
-  function changeParticipationSuccess(res, vcalendar, eventData) {
-    const attendeeEmail = eventData.attendeeEmail;
+  function changeParticipationSuccess(res, vcalendar, req) {
+    const attendeeEmail = req.eventPayload.attendeeEmail;
 
     userModule.findByEmail(attendeeEmail, (err, found) => {
       if (err) {
@@ -96,11 +96,12 @@ module.exports = dependencies => {
             return res.status(500).json({error: {code: 500, message: 'Error while rendering event consultation page', details: err.message}});
           }
 
-          invitation.link.generateActionLinks(baseUrl, eventData).then(links => {
+          invitation.link.generateActionLinks(baseUrl, req.eventPayload).then(links => {
             res.status(200).render('../event-consultation-app/index', {
               eventJSON: vcalendar.toJSON(),
               attendeeEmail: attendeeEmail,
-              links: links
+              links: links,
+              locale: req.getLocale()
             });
           });
         });
@@ -110,7 +111,7 @@ module.exports = dependencies => {
     });
   }
 
-  function tryUpdateParticipation(url, ESNToken, res, eventData, numTry) {
+  function tryUpdateParticipation(url, ESNToken, res, req, numTry) {
     numTry = numTry ? numTry + 1 : 1;
     if (numTry > MAX_TRY_NUMBER) {
       return res.status(500).json({error: {code: 500, message: 'Exceeded max number of try for atomic update of event'}});
@@ -124,8 +125,8 @@ module.exports = dependencies => {
       const icalendar = new ICAL.parse(response.body);
       const vcalendar = new ICAL.Component(icalendar);
       const vevent = vcalendar.getFirstSubcomponent('vevent');
-      const attendeeEmail = eventData.attendeeEmail;
-      const action = eventData.action;
+      const attendeeEmail = req.eventPayload.attendeeEmail;
+      const action = req.eventPayload.action;
       const events = [vevent].concat(vcalendar.getAllSubcomponents('vevent').filter(vevent => vevent.getFirstPropertyValue('recurrence-id')));
       const attendees = events.map(vevent => jcalHelper.getVeventAttendeeByMail(vevent, attendeeEmail)).filter(Boolean);
 
@@ -139,11 +140,11 @@ module.exports = dependencies => {
 
       request({method: 'PUT', headers: {ESNToken: ESNToken, 'If-Match': response.headers.etag}, body: vcalendar.toJSON(), url: url, json: true}, (err, response) => {
         if (!err && response.statusCode === 412) {
-          tryUpdateParticipation(url, ESNToken, res, eventData, numTry);
+          tryUpdateParticipation(url, ESNToken, res, req, numTry);
         } else if (err || response.statusCode < 200 || response.statusCode >= 300) {
           res.status(500).json({error: {code: 500, message: 'Error while modifying event', details: err ? err.message : response.body}}).end();
         } else {
-          changeParticipationSuccess(res, vcalendar, eventData);
+          changeParticipationSuccess(res, vcalendar, req);
         }
       });
     });
@@ -153,7 +154,7 @@ module.exports = dependencies => {
     const ESNToken = req.token && req.token.token ? req.token.token : '';
     const url = urljoin(req.davserver, 'calendars', req.user._id, req.eventPayload.calendarURI, req.eventPayload.uid + '.ics');
 
-    tryUpdateParticipation(url, ESNToken, res, req.eventPayload);
+    tryUpdateParticipation(url, ESNToken, res, req);
   }
 
   function searchEvents(req, res) {

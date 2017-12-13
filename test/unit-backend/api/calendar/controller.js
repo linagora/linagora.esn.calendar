@@ -42,11 +42,12 @@ describe('The calendar controller', function() {
   });
 
   describe('the changeParticipation function', function() {
-    var req, vcalendar, ics, etag, callbackAfterGetDone, requestMock, setGetRequest, url;
+    var req, vcalendar, ics, etag, callbackAfterGetDone, requestMock, setGetRequest, url, locale;
 
     function setMock() {
       ics = fs.readFileSync(self.calendarModulePath + url).toString('utf8');
       vcalendar = ICAL.Component.fromString(ics);
+      locale = 'en';
       req = {
         eventPayload: {
           event: ics,
@@ -58,6 +59,7 @@ describe('The calendar controller', function() {
         user: {
           _id: 'c3po'
         },
+        getLocale: () => locale,
         davserver: 'http://davserver',
         headers: ['header1', 'header2']
       };
@@ -388,7 +390,8 @@ describe('The calendar controller', function() {
                     expect(invitationMock.link.generateActionLinks).to.have.been.called;
                     expect(locals).to.shallowDeepEqual({
                       attendeeEmail: req.eventPayload.attendeeEmail,
-                      links: links
+                      links,
+                      locale
                     });
                     done();
                   }
