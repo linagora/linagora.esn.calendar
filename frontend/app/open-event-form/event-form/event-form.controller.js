@@ -154,7 +154,7 @@
       }
 
       function displayParticipationButton() {
-        return !!$scope.userAsAttendee;
+        return !!$scope.userAsAttendee && !$scope.calendar.readOnly;
       }
 
       function canPerformCall() {
