@@ -8,7 +8,7 @@ const ICAL = require('ical.js');
 const CONSTANTS = require('../../../../backend/lib/constants');
 
 describe('The alarm module', function() {
-  let alarms, eventUid, notifyFunctions, amqpClientProviderMock, amqpClient, attendeeEmail, eventPath, alarmDB, jobLib, jobQueue;
+  let alarms, eventUid, notifyFunctions, amqpClientProviderMock, amqpClient, attendeeEmail, eventPath, alarmDB, jobLib, jobQueue, pubsubMock;
 
   beforeEach(function() {
     this.calendarModulePath = this.moduleHelpers.modulePath;
@@ -39,16 +39,35 @@ describe('The alarm module', function() {
     mockery.registerMock('./db', () => alarmDB);
 
     amqpClient = {
-      subscribe: sinon.spy((exchange, notifyFn) => {
-        notifyFunctions[exchange] = notifyFn;
-      }),
       ack: sinon.spy()
     };
 
     amqpClientProviderMock = {
       getClient: () => Promise.resolve(amqpClient)
     };
+
+    pubsubMock = {
+      local: {
+        topic: function() {
+          return {
+            forward: function() {}
+          };
+        }
+      },
+      global: {
+        topic: topic => {
+          pubsubMock.global.currentTopic = topic;
+
+          return pubsubMock.global;
+        },
+        subscribe: sinon.spy(notifyFn => {
+          notifyFunctions[pubsubMock.global.currentTopic] = notifyFn;
+        })
+      }
+    };
+
     this.moduleHelpers.addDep('amqpClientProvider', amqpClientProviderMock);
+    this.moduleHelpers.addDep('pubsub', pubsubMock);
 
     mockery.registerMock('./handlers/email', function() {return {handle: function() {}, uniqueId: 'foo.bar.baz', action: 'EMAIL'};});
 
@@ -75,14 +94,14 @@ describe('The alarm module', function() {
     done && done();
   }
 
-  describe('The init function', function() {
+  describe('init function', function() {
     it('should be callable once', function(done) {
       const module = this.requireModule();
 
       module.init()
         .then(() => {
           expect(module.init).to.throw(/Already initialized/);
-          expect(amqpClient.subscribe.callCount).to.equals(5);
+          expect(pubsubMock.global.subscribe.callCount).to.equals(5);
           done();
         })
         .catch(done);
