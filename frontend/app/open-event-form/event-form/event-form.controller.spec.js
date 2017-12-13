@@ -382,7 +382,7 @@ describe('The event-form module controllers', function() {
 
         this.rootScope.$digest();
 
-        expect(this.calUIAuthorizationService.canModifyEventAttendees).to.have.been.calledWith(this.scope.editedEvent);
+        expect(this.calUIAuthorizationService.canModifyEventAttendees).to.have.been.calledWith(this.scope.calendar, this.scope.editedEvent, this.session.user._id);
       });
 
       it('should leverage calUIAuthorizationService.canModifyEvent to set canModifyEvent', function() {
@@ -399,43 +399,6 @@ describe('The event-form module controllers', function() {
         this.initController();
 
         expect(this.calUIAuthorizationService.canModifyEvent).to.have.been.calledWith(this.scope.calendar, this.scope.editedEvent, this.session.user._id);
-      });
-
-      it('should initialize displayParticipationButton with false if calendar.readOnly is true and editedEvent.attendees.length > 1 and newAttendees.length > 0', function() {
-        this.scope.event = this.CalendarShell.fromIncompleteShell({});
-
-        this.initController();
-
-        this.rootScope.$digest();
-
-        expect(this.scope.displayParticipationButton).to.equal(false);
-      });
-
-      it('should initialize displayParticipationButton with false if calendar.readOnly is true', function() {
-        this.scope.event = this.CalendarShell.fromIncompleteShell({
-          _id: '123456',
-          start: this.moment('2013-02-08 12:30'),
-          end: this.moment('2013-02-08 13:30'),
-          attendees: [{
-            name: 'attendee1',
-            email: 'attendee1@openpaas.org',
-            partstart: 'ACCEPTED'
-          }, {
-            name: 'attendee2',
-            email: 'attendee2@openpaas.org',
-            partstart: 'ACCEPTED'
-          }]
-        });
-
-        this.calEventUtils.getNewAttendees = function() {
-          return ['user', 'user1'];
-        };
-
-        this.initController();
-
-        this.rootScope.$digest();
-
-        expect(this.scope.displayParticipationButton).to.equal(false);
       });
 
       it('should detect if organizer', function() {
@@ -493,6 +456,47 @@ describe('The event-form module controllers', function() {
 
         expect(this.scope.attendees.users).to.shallowDeepEqual([{displayName: 'attendee1'}]);
         expect(this.scope.attendees.resources).to.shallowDeepEqual([{displayName: 'resource1'}]);
+      });
+    });
+
+    describe('displayParticipation function', function() {
+      beforeEach(function() {
+        this.scope.event = this.CalendarShell.fromIncompleteShell({
+          _id: '123456',
+          start: this.moment('2013-02-08 12:30'),
+          end: this.moment('2013-02-08 13:30'),
+          attendees: [this.session.user]
+        });
+      });
+
+      it('should initialize displayParticipationButton with false if user is attendee and calendar.readOnly is true', function() {
+        this.calendarServiceMock.listPersonalAndAcceptedDelegationCalendars = sinon.spy(function() {
+          return $q.when([{
+            readOnly: true,
+            selected: true
+          }]);
+        });
+
+        this.initController();
+
+        this.rootScope.$digest();
+
+        expect(this.scope.displayParticipationButton).to.equal(false);
+      });
+
+      it('should initialize displayParticipationButton with true if user is attendee and calendar.readOnly is false', function() {
+        this.calendarServiceMock.listPersonalAndAcceptedDelegationCalendars = sinon.spy(function() {
+            return $q.when([{
+              readOnly: false,
+              selected: true
+            }]);
+          });
+
+        this.initController();
+
+        this.rootScope.$digest();
+
+        expect(this.scope.displayParticipationButton).to.equal(true);
       });
     });
 
