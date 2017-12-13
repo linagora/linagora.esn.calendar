@@ -191,6 +191,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-i18n-checker');
   grunt.loadNpmTasks('grunt-puglint');
   grunt.loadNpmTasks('grunt-swagger-generate');
+  grunt.loadNpmTasks('grunt-release');
 
   grunt.loadTasks('tasks');
   grunt.registerTask('i18n', 'Check the translation files', ['i18n_checker']);
