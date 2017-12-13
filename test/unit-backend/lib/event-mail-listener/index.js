@@ -6,7 +6,7 @@ const Q = require('q');
 const mockery = require('mockery');
 
 describe('EventMailListener module', function() {
-  let amqpClient, amqpClientProviderMock, userMock, loggerMock, caldavClientMock, caldavClientLib;
+  let amqpClient, amqpClientProviderMock, userMock, loggerMock, caldavClientMock, caldavClientLib, pubsubMock;
   let notifyFunction, jsonMessage, calendarModulePath, moduleConfig, esnConfigMock, getConfig;
   let exchanges, defaultExchange;
 
@@ -26,9 +26,6 @@ describe('EventMailListener module', function() {
     };
 
     amqpClient = {
-      subscribe: (exchange, notifyFn) => {
-        notifyFunction = notifyFn;
-      },
       ack: sinon.spy()
     };
 
@@ -43,7 +40,7 @@ describe('EventMailListener module', function() {
     };
 
     loggerMock = {
-      debug: function() {},
+      debug: () => {},
       error: sinon.spy(),
       warn: sinon.spy()
     };
@@ -74,12 +71,29 @@ describe('EventMailListener module', function() {
       return caldavClientMock;
     };
 
+    pubsubMock = {
+      local: {
+        topic: function() {
+          return {
+            forward: function() {}
+          };
+        }
+      },
+      global: {
+        topic: () => pubsubMock.global,
+        subscribe: notifyFn => {
+          notifyFunction = notifyFn;
+        }
+      }
+    };
+
     mockery.registerMock('../caldav-client', caldavClientLib);
 
     this.moduleHelpers.addDep('amqpClientProvider', amqpClientProviderMock);
     this.moduleHelpers.addDep('user', userMock);
     this.moduleHelpers.addDep('logger', loggerMock);
     this.moduleHelpers.addDep('esn-config', esnConfigMock);
+    this.moduleHelpers.addDep('pubsub', pubsubMock);
 
     this.requireModule = function() {
       return require(calendarModulePath + '/backend/lib/event-mail-listener')(this.moduleHelpers.dependencies);
@@ -90,14 +104,15 @@ describe('EventMailListener module', function() {
         .init()
         .then(function() {
 
-          expect(loggerMock.warn).to.have.been.calledWith('CAlEventMailListener : Missing configuration in mongoDB');
-          expect(amqpClient.subscribe).to.have.been.calledWith(defaultExchange);
+          expect(loggerMock.warn).to.have.been.calledWith('CalEventMailListener : Missing configuration in mongoDB');
+          expect(pubsubMock.global.topic).to.have.been.calledWith(defaultExchange);
 
           done();
         })
         .catch(function(err) {
           done(err || 'Err');
-        });
+        })
+        .done();
     };
   });
 
@@ -121,30 +136,24 @@ describe('EventMailListener module', function() {
         });
     });
 
-    it('should log a warning messege and call the subscribe function with the default exchange if no mongoDB configuration', function(done) {
+    it('should log a warning message and call the global pubsub subscribe function with the default exchange if no mongoDB configuration', function(done) {
       getConfig = sinon.stub().returns(Q.when(undefined));
 
-      amqpClient = {
-        subscribe: sinon.spy()
-      };
+      pubsubMock.global.topic = sinon.spy(() => pubsubMock.global);
 
       this.checksIfNoMongoConfiguration(done);
     });
 
-    it('should log a warning messege and call the subscribe function with the default exchange if mongoDB configuration does not contain the exchanges', function(done) {
-      amqpClient = {
-        subscribe: sinon.spy()
-      };
+    it('should log a warning message and call the global pubsub subscribe function with the default exchange if mongoDB configuration does not contain the exchanges', function(done) {
+      pubsubMock.global.topic = sinon.spy(() => pubsubMock.global);
 
       getConfig = sinon.stub().returns(Q.when({}));
 
       this.checksIfNoMongoConfiguration(done);
     });
 
-    it('should log a warning messege and call the subscribe function with the default exchange if mongoDB configuration contains an empty array for the exchanges field', function(done) {
-      amqpClient = {
-        subscribe: sinon.spy()
-      };
+    it('should log a warning message and call the global pubsub subscribe function with the default exchange if mongoDB configuration contains an empty array for the exchanges field', function(done) {
+      pubsubMock.global.topic = sinon.spy(() => pubsubMock.global);
 
       moduleConfig = {
         exchanges: []
@@ -156,15 +165,13 @@ describe('EventMailListener module', function() {
     });
 
     it('should call the subscribe function with the right exchange from the mongoDB configuration', function(done) {
-      amqpClient = {
-        subscribe: sinon.spy()
-      };
+      pubsubMock.global.topic = sinon.spy(() => pubsubMock.global);
 
       this.requireModule()
         .init()
         .then(function() {
 
-          expect(amqpClient.subscribe).to.have.been.calledTwice;
+          expect(pubsubMock.global.topic).to.have.been.calledTwice;
 
           done();
         })
@@ -183,7 +190,7 @@ describe('EventMailListener module', function() {
         .then(function() {
           notifyFunction(jsonMessage);
 
-          expect(loggerMock.warn).to.have.been.calledWith('CAlEventMailListener : Missing mandatory field => Event ignored');
+          expect(loggerMock.warn).to.have.been.calledWith('CalEventMailListener : Missing mandatory field => Event ignored');
           expect(caldavClientMock.iTipRequest).to.not.have.been.called;
 
           done();
@@ -201,7 +208,7 @@ describe('EventMailListener module', function() {
         .then(function() {
           notifyFunction(jsonMessage);
 
-          expect(loggerMock.warn).to.have.been.calledWith('CAlEventMailListener : Missing mandatory field => Event ignored');
+          expect(loggerMock.warn).to.have.been.calledWith('CalEventMailListener : Missing mandatory field => Event ignored');
           expect(caldavClientMock.iTipRequest).to.not.have.been.called;
 
           done();
@@ -219,7 +226,7 @@ describe('EventMailListener module', function() {
         .then(function() {
           notifyFunction(jsonMessage);
 
-          expect(loggerMock.warn).to.have.been.calledWith('CAlEventMailListener : Missing mandatory field => Event ignored');
+          expect(loggerMock.warn).to.have.been.calledWith('CalEventMailListener : Missing mandatory field => Event ignored');
           expect(caldavClientMock.iTipRequest).to.not.have.been.called;
 
           done();
@@ -237,7 +244,7 @@ describe('EventMailListener module', function() {
         .then(function() {
           notifyFunction(jsonMessage);
 
-          expect(loggerMock.warn).to.have.been.calledWith('CAlEventMailListener : Missing mandatory field => Event ignored');
+          expect(loggerMock.warn).to.have.been.calledWith('CalEventMailListener : Missing mandatory field => Event ignored');
           expect(caldavClientMock.iTipRequest).to.not.have.been.called;
 
           done();
@@ -261,10 +268,9 @@ describe('EventMailListener module', function() {
         .then(function() {
           notifyFunction(jsonMessage, originalMessage);
 
-          expect(loggerMock.warn).to.have.been.calledWith('CAlEventMailListener[Test] : Recipient user unknown in OpenPaas => Event ignored');
-          expect(caldavClientMock.iTipRequest).to.not.have.been.called;
-
           setTimeout(function() {
+            expect(loggerMock.warn).to.have.been.calledWith('CalEventMailListener[Test] : Recipient user unknown in OpenPaas => Event ignored');
+            expect(caldavClientMock.iTipRequest).to.not.have.been.called;
             expect(amqpClient.ack).to.have.been.calledWith(originalMessage);
 
             done();
@@ -285,7 +291,7 @@ describe('EventMailListener module', function() {
         .then(function() {
           notifyFunction(jsonMessage);
 
-          expect(loggerMock.error).to.have.been.calledWith('CAlEventMailListener[Test] : Could not connect to UserModule => Event ignored');
+          expect(loggerMock.error).to.have.been.calledWith('CalEventMailListener[Test] : Could not connect to UserModule => Event ignored');
           expect(caldavClientMock.iTipRequest).to.not.have.been.called;
 
           done();

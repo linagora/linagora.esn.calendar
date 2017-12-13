@@ -93,7 +93,7 @@ describe('The Calendar calendars API /api/calendars', function() {
         }
         var req = requestAsMember(request(self.app).post('/api/calendars/community/' + community._id + '/events'));
         req.send({
-          event_id: '123',
+          event_id: '1234',
           type: 'updated',
           event: 'ICS'
         });
