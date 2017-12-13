@@ -7,4 +7,4 @@
   .name
     a.send-email(ng-href="mailto:{{::ctrl.attendee.email}}" op-inbox-compose op-inbox-compose-display-name="{{::ctrl.attendee.name}}") {{::ctrl.attendee.name}}
     small(ng-if='ctrl.isOrganizer')
-      | Organizer
+      | #{__('Organizer')}
