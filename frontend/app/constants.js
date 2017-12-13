@@ -490,6 +490,9 @@
       moduleName: 'linagora.esn.calendar',
       keys: ['workingDays', 'hideDeclinedEvents']
     })
+    .constant('CAL_CORE_CONFIGURATION', {
+      keys: ['datetime']
+    })
     // See https://github.com/fullcalendar/fullcalendar/tree/master/locale
     .constant('CAL_FULLCALENDAR_LOCALE', {
       default: 'en',

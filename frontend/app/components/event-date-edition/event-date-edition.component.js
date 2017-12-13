@@ -9,6 +9,7 @@ angular.module('esn.calendar')
       event: '=',
       disabled: '=?',
       dateOnBlur: '=?',
-      allDayOnChange: '=?'
+      allDayOnChange: '=?',
+      use24hourFormat: '<'
     }
   });
