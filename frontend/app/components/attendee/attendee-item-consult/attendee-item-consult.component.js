@@ -3,11 +3,13 @@
 
   angular.module('esn.calendar')
     .component('calAttendeeItemConsult', {
-      templateUrl: '/calendar/app/components/attendee/attendee-item-consult/attendee-item-consult.html',
       bindings: {
         attendee: '=',
-        isOrganizer: '<'
+        isOrganizer: '<',
+        isExternal: '<'
       },
-      controllerAs: 'ctrl'
+      controllerAs: 'ctrl',
+      controller: 'CalAttendeeItemConsultController',
+      templateUrl: '/calendar/app/components/attendee/attendee-item-consult/attendee-item-consult.html'
     });
 })();

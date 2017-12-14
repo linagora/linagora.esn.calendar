@@ -1,11 +1,11 @@
 .cal-resource-item
-  cal-resource-avatar(resource='ctrl.resource')
-  .cal-participation-status
-    i.mdi.mdi(ng-class='ctrl.PARTSTAT_ICONS[ctrl.resource.partstat]')
-
-  .checkbox(ng-if='ctrl.canModifyResource')
-    label
-      input.force-position-initial(type="checkbox", ng-checked="ctrl.resource.selected")
-      i.input-helper
+  .cal-resource-avatar-block
+    cal-resource-avatar(resource='ctrl.resource')
+    .cal-participation-status
+      i.mdi.mdi(ng-class='ctrl.PARTSTAT_ICONS[ctrl.resource.partstat]')
+    .checkbox(ng-if='ctrl.canModifyResource')
+      label
+        input.force-position-initial(type="checkbox", ng-checked="ctrl.resource.selected")
+        i.input-helper
   .name
     span {{::ctrl.resource.name}}

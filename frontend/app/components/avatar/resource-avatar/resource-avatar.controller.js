@@ -14,7 +14,7 @@
       self.resourceIcon = CAL_RESOURCE.DEFAULT_ICON;
       calResourceService.getResourceIcon(self.resource.email.split('@')[0])
         .then(function(resourceIcon) {
-          self.resourceIcon = resourceIcon;
+          self.resourceIcon = resourceIcon || self.resourceIcon;
         });
     }
   }

@@ -33,6 +33,7 @@
       var initialUserAttendeesRemoved = [];
       var initialResourceAttendeesRemoved = [];
 
+      $scope.selectedTab = 'attendees';
       $scope.restActive = false;
       $scope.CAL_EVENT_FORM = CAL_EVENT_FORM;
       $scope.CAL_ATTENDEE_OBJECT_TYPE = CAL_ATTENDEE_OBJECT_TYPE;

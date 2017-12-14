@@ -100,6 +100,8 @@ module.exports = function(config) {
       'frontend/app/app.js',
       'frontend/app/**/*.js',
       'frontend/app/**/*.pug',
+      'frontend/event-consultation-app/**/*.js',
+      'frontend/event-consultation-app/**/*.pug',
 
       'test/unit-frontend/fixtures/**',
       'frontend/app/fixtures/**'
@@ -111,7 +113,8 @@ module.exports = function(config) {
       'frontend/app/search/search.run.js',
       'frontend/app/configuration/configuration.run.js',
       'frontend/app/services/cal-default-value.run.js',
-      'frontend/app/services/websocket/listener.run.js'
+      'frontend/app/services/websocket/listener.run.js',
+      'frontend/event-consultation-app/app.js'
     ],
     frameworks: ['mocha'],
     colors: true,
