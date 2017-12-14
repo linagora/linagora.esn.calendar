@@ -158,6 +158,7 @@
     })
 
     .constant('CAL_ATTENDEE_OBJECT_TYPE', {
+      contact: 'contact',
       user: 'user',
       resource: 'resource',
       group: 'group'
