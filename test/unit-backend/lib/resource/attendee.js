@@ -2,7 +2,7 @@ const sinon = require('sinon');
 const mockery = require('mockery');
 const fs = require('fs');
 const { expect } = require('chai');
-const ICAL = require('ical.js');
+const ICAL = require('@linagora/ical.js');
 
 describe('The resource attendee module', function() {
   let technicalUserHelper, caldavClient, token;

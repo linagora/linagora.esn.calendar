@@ -2,7 +2,7 @@
 
 const expect = require('chai').expect;
 const fs = require('fs');
-const ICAL = require('ical.js');
+const ICAL = require('@linagora/ical.js');
 const CONSTANTS = require('../../../../backend/lib/constants');
 
 describe('The calendar search pubsub module', function() {

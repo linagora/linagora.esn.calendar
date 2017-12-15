@@ -1,4 +1,4 @@
-const ICAL = require('ical.js');
+const ICAL = require('@linagora/ical.js');
 const Q = require('q');
 const path = require('path');
 const extend = require('extend');

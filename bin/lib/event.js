@@ -1,4 +1,4 @@
-const ICAL = require('ical.js');
+const ICAL = require('@linagora/ical.js');
 const _ = require('lodash');
 const Chance = require('chance');
 const moment = require('moment');
