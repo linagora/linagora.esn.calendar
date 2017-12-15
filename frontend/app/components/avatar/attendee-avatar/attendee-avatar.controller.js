@@ -15,7 +15,7 @@
     }
 
     function getUserAvatar() {
-      return esnAvatarUrlService.generateUrlByUserEmail(self.attendee.email);
+      return esnAvatarUrlService.generateUrl(self.attendee.email);
     }
 
     function getDisplayName() {

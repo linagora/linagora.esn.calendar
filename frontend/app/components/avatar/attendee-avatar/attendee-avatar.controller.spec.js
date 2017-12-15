@@ -40,7 +40,7 @@ describe('The CalAttendeeAvatarController controller', function() {
     beforeEach(function() {
       avatarUrl = '/foo/bar/baz.png';
 
-      esnAvatarUrlService.generateUrlByUserEmail = sinon.stub().returns(avatarUrl);
+      esnAvatarUrlService.generateUrl = sinon.stub().returns(avatarUrl);
       ctrl = initController();
     });
 
@@ -48,7 +48,7 @@ describe('The CalAttendeeAvatarController controller', function() {
       ctrl.$onChanges();
 
       expect(ctrl.avatarUrl).to.equal(avatarUrl);
-      expect(esnAvatarUrlService.generateUrlByUserEmail).to.have.been.calledWith(attendee.email);
+      expect(esnAvatarUrlService.generateUrl).to.have.been.calledWith(attendee.email);
     });
 
     it('should return the displayName', function() {
