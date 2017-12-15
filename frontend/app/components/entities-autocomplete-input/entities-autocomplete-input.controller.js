@@ -4,7 +4,15 @@
   angular.module('esn.calendar')
     .controller('calEntitiesAutocompleteInputController', calEntitiesAutocompleteInputController);
 
-  function calEntitiesAutocompleteInputController(calendarAttendeeService, naturalService, session, CAL_ATTENDEE_OBJECT_TYPE, CAL_AUTOCOMPLETE_MAX_RESULTS, CAL_AUTOCOMPLETE_DEFAULT_PLACEHOLDER) {
+  function calEntitiesAutocompleteInputController(
+    emailService,
+    naturalService,
+    session,
+    calendarAttendeeService,
+    CAL_ATTENDEE_OBJECT_TYPE,
+    CAL_AUTOCOMPLETE_MAX_RESULTS,
+    CAL_AUTOCOMPLETE_DEFAULT_PLACEHOLDER
+  ) {
     var self = this;
 
     self.mutableEntities = self.mutableEntities || [];
@@ -22,7 +30,7 @@
         entity.email = entity.displayName;
       }
 
-      return !_isDuplicateEntity(entity, _getAddedEntitiesEmails());
+      return emailService.isValidEmail(entity.email) && !_isDuplicateEntity(entity, _getAddedEntitiesEmails());
     }
 
     function getInvitableEntities(query) {

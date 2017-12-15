@@ -244,7 +244,7 @@ describe('The calEntitiesAutocompleteInputController', function() {
   });
 
   describe('onAddingEntity', function() {
-    it('should work with entity having an email', function() {
+    it('should return true with entity having an email', function() {
       var entity, response;
       var ctrl = initController();
 
@@ -254,15 +254,24 @@ describe('The calEntitiesAutocompleteInputController', function() {
       expect(response).to.be.true;
     });
 
-    it('should work with entity without an email', function() {
+    it('should return false with entity without an email', function() {
       var entity, response;
       var ctrl = initController();
 
       entity = {displayName: 'eric cartman'};
       response = ctrl.onAddingEntity(entity);
 
-      expect(response).to.be.true;
-      expect(entity.email).to.be.equal('eric cartman');
+      expect(response).to.be.false;
+    });
+
+    it('should return false when entity email is not an email', function() {
+      var entity, response;
+      var ctrl = initController();
+
+      entity = {displayName: 'eric cartman', email: 'this is not an email'};
+      response = ctrl.onAddingEntity(entity);
+
+      expect(response).to.be.false;
     });
 
     describe('adding plain email entity', function() {

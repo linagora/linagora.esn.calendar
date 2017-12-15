@@ -76,6 +76,7 @@
     "bootstrap-switch": "~3.3.2",
     "char-api": "https://github.com/linagora/char-api.git",
     "dynamic-directive": "3.0.0",
+    "email-addresses": "3.0.0",
     "fullcalendar": "3.0.1",
     "ical.js": "linagora/ical.js#v1.0.4-2",
     "iframe-resizer": "3.5.5",
