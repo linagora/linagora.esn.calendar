@@ -1,7 +1,7 @@
 .add-delegation-users
   .user-delegation-form
     .user-autocomplete
-      users-autocomplete-input(mutable-users='$ctrl.newUsersGroups', on-adding-user='$ctrl.onAddingUser')
+      users-autocomplete-input(mutable-users='$ctrl.newUsersGroups', ignored-users='$ctrl.ignoredUsers', on-adding-user='$ctrl.onAddingUser')
     .select-delegation
       select.addDelegation.form-control(ng-model='$ctrl.selectedShareeRight')
         option(ng-repeat="delegationType in ::$ctrl.delegationTypes" value="{{delegationType.value}}" ng-selected="delegationType.value === $ctrl.selectedShareeRight") {{delegationType.name | esnI18n}}

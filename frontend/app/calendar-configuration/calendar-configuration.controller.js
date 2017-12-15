@@ -54,6 +54,12 @@
         .then(function(calendar) {
           self.calendar = calendar;
 
+          if (calendar) {
+            return self.calendar.getOwner();
+          }
+        }).then(function(owner) {
+          self.calendarOwner = owner;
+
           return self.activate();
         })
         .then(function() {

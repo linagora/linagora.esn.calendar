@@ -28,6 +28,8 @@
           value: CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ,
           name: CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ_LABEL_LONG
         }];
+
+      self.ignoredUsers = [self.calendarOwner];
     }
 
     function onAddingUser($tags) {
