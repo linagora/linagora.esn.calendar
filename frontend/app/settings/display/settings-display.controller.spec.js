@@ -100,11 +100,13 @@ describe('The CalSettingsDisplayController', function() {
       var controller = initController();
       var updatedConfigs = {
         key1: 'updatedValue1',
-        key2: 'updatedValue2'
+        key2: 'updatedValue2',
+        key3: undefined
       };
       var expectedConfigs = [
         { name: 'key1', value: 'updatedValue1' },
-        { name: 'key2', value: 'updatedValue2' }
+        { name: 'key2', value: 'updatedValue2' },
+        { name: 'key3', value: false }
       ];
 
       controller.$onInit();
