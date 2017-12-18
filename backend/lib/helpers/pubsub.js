@@ -1,6 +1,6 @@
 const jcalHelper = require('./jcal');
 const eventHelper = require('./event');
-const ICAL = require('ical.js');
+const ICAL = require('@linagora/ical.js');
 
 module.exports = {
   parseMessage
