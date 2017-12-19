@@ -1,12 +1,3 @@
-mixin attendeeDisplay(mail, details)
-  div
-    if (details.cn)
-      span #{details.cn} <
-        span.small #{mail}
-      | >,
-    else
-      span.small #{mail}
-
 mixin resourceDisplay(resource)
   div
     span #{resource.cn}
@@ -78,9 +69,8 @@ html.mail
             td.indent
               img(src="cid:account-multiple", alt=translate('Attendees'))
             td(colspan="5")
-              each details, mail in content.event.attendees
-                span
-                  +attendeeDisplay(mail, details)
+              include ../mixins/attendees
+              +displayAttendees(content.event.attendees)
           if (content.event.hasResources)
             tr
               td.indent

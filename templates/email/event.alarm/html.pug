@@ -60,6 +60,13 @@ html.mail
               td(colspan="3").indent
                 | #{content.event.location}
 
+          tr
+            td.indent
+              img(src="cid:account-multiple", alt=translate('Attendees'))
+            td(colspan="5")
+              include ../mixins/attendees
+              +displayAttendees(content.event.attendees)
+
           if (content.event.description)
             tr
               td
