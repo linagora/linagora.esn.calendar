@@ -1,7 +1,3 @@
-mixin resourceDisplay(resource)
-  div
-    span #{resource.cn}
-
 doctype html
 html.mail
   head
@@ -76,9 +72,8 @@ html.mail
               td.indent
                 img(src="cid:resource", alt=translate('Resources'))
               td(colspan="5")
-                each resource in content.event.resources
-                  span
-                    +resourceDisplay(resource)
+                include ../mixins/resources
+                +displayResources(content.event.resources)
           if (content.event.description)
             tr
               td
