@@ -106,5 +106,6 @@ module.exports = {
   USER: {
     CREATED: 'users:user:add'
   },
-  DEFAULT_CALENDAR_NAME: 'Events'
+  DEFAULT_CALENDAR_NAME: 'Events',
+  DEFAULT_EVENT_SUMMARY: 'No title'
 };

@@ -87,7 +87,7 @@ function getIcalEvent(icalendar) {
 }
 
 /**
- * Return a formatted, easily usable data for an email template from a jcal object
+ * Return a formatted, easily usable data from a jcal object
  * @param {String} icalendar Representation of a icalendar object as a string.
  * @return {Object} content
  * {

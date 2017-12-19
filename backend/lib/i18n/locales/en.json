@@ -196,6 +196,7 @@
   "weeks": "weeks",
   "years": "years",
   "Notification": "Notification",
+  "Notification: {{summary}}": "Notification: {{summary}}",
   "Resources": "Resources",
   "Create a new calendar resource": "Create a new calendar resource",
   "Creating resource...": "Creating resource...",

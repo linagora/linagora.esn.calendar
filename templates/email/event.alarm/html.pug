@@ -27,9 +27,10 @@ html.mail
               img(src=content.event.organizer.avatar, alt=translate('Organizer Avatar'), width="45px", height="42px")
           tr
             td(colspan="6").indent
-              span.title #{content.event.summary}
-              span #{translate('will start in')} #{content.alarm.triggerDisplay}
-
+              if (content.event.summary)
+                span.title #{content.event.summary}
+              else
+                span.title #{translate('No title')}
           tr
             td.indent
               if (content.event.end)
