@@ -14,17 +14,10 @@ html.mail
 
         table
           tr.table-header
-            td.logo(colspan="2")
+            td.logo(colspan="6")
               div
                 a(href=content.baseUrl)
                   img(src="cid:logo", alt=translate('OpenPaas Logo'))
-            td.organizer(colspan="2")
-              h5
-                p
-                  a(href=`mailto:${content.event.organizer.email}`) #{content.event.organizer.cn}
-                p.big #{translate('Event Reminder')}
-            td.avatar.indent-right(colspan="2")
-              img(src=content.event.organizer.avatar, alt=translate('Organizer Avatar'), width="45px", height="42px")
           tr
             td(colspan="6").indent
               if (content.event.summary)
