@@ -30,7 +30,7 @@
       }
 
       return _.find(attendees, function(attendee) {
-        return attendee.email in (user.emailMap || []);
+        return _.contains(attendee.email, user.emails);
       });
     }
 

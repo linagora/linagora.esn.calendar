@@ -262,7 +262,7 @@ describe('The event-form module controllers', function() {
 
       it('should be modifyEvent if event has a etag property', function(done) {
         this.scope.event = this.CalendarShell.fromIncompleteShell({
-          path: '/calendars/' + this.calendars[1].id + '/eventID',
+          path: '/calendars/' + owner._id + '/' + this.calendars[1].id + '/eventID',
           title: 'title',
           start: this.moment('2013-02-08 12:30'),
           end: this.moment('2013-02-08 13:30'),
@@ -473,7 +473,10 @@ describe('The event-form module controllers', function() {
         this.calendarServiceMock.listPersonalAndAcceptedDelegationCalendars = sinon.spy(function() {
           return $q.when([{
             readOnly: true,
-            selected: true
+            selected: true,
+            getOwner: function() {
+              return $q.when(owner);
+            }
           }]);
         });
 
@@ -488,7 +491,10 @@ describe('The event-form module controllers', function() {
         this.calendarServiceMock.listPersonalAndAcceptedDelegationCalendars = sinon.spy(function() {
             return $q.when([{
               readOnly: false,
-              selected: true
+              selected: true,
+              getOwner: function() {
+                return $q.when(user);
+              }
             }]);
           });
 
@@ -794,7 +800,7 @@ describe('The event-form module controllers', function() {
         it('should pass along the etag', function() {
           this.scope.event = this.CalendarShell.fromIncompleteShell({
             title: 'oldtitle',
-            path: '/calendars/' + this.calendars[1].id + '/eventID',
+            path: '/calendars/' + owner._id + '/' + this.calendars[1].id + '/eventID',
             etag: '123123'
           });
           this.initController();
@@ -810,7 +816,7 @@ describe('The event-form module controllers', function() {
           this.calEventServiceMock.modifyEvent = sinon.spy(function(path, event, oldEvent, etag) {
             expect(event.title).to.equal('title');
             expect(oldEvent.title).to.equal('oldtitle');
-            expect(path).to.equal('/calendars/' + self.calendars[1].id + '/eventID');
+            expect(path).to.equal('/calendars/' + owner._id + '/' + self.calendars[1].id + '/eventID');
             expect(etag).to.equal('123123');
 
             return $q.when();
@@ -826,7 +832,7 @@ describe('The event-form module controllers', function() {
         it('should removeAllException if rrule has been changed', function() {
           var editedEvent = this.CalendarShell.fromIncompleteShell({
             title: 'title',
-            path: '/calendars/' + this.calendars[1].id + '/eventID',
+            path: '/calendars/' + owner._id + '/' + this.calendars[1].id + '/eventID',
             etag: '123123',
             getOrganizerPartStat: _.constant(),
             attendees: [],
@@ -855,7 +861,7 @@ describe('The event-form module controllers', function() {
         it('should not removeAllException if rrule has not been changed', function() {
           var editedEvent = this.CalendarShell.fromIncompleteShell({
             title: 'title',
-            path: '/calendars/' + this.calendars[1].id + '/eventID',
+            path: '/calendars/' + owner._id + '/' + this.calendars[1].id + '/eventID',
             etag: '123123',
             getOrganizerPartStat: _.constant(),
             attendees: [],
@@ -886,7 +892,7 @@ describe('The event-form module controllers', function() {
 
           this.scope.event = this.CalendarShell.fromIncompleteShell({
             title: 'oldtitle',
-            path: '/calendars/' + this.calendars[1].id + '/eventID',
+            path: '/calendars/' + owner._id + '/' + this.calendars[1].id + '/eventID',
             etag: '123123'
           });
           this.initController();
@@ -915,7 +921,7 @@ describe('The event-form module controllers', function() {
 
           this.scope.event = this.CalendarShell.fromIncompleteShell({
             title: 'oldtitle',
-            path: '/calendars/' + this.calendars[1].id + '/eventID',
+            path: '/calendars/' + owner._id + '/' + this.calendars[1].id + '/eventID',
             etag: '123123'
           });
           this.initController();
@@ -997,14 +1003,12 @@ describe('The event-form module controllers', function() {
       beforeEach(function() {
         this.scope.event = this.CalendarShell.fromIncompleteShell({
           _id: '123456',
+          path: '/calendars/' + owner._id + '/' + calendarTest.id + '/eventID',
+          etag: 'etag',
           start: this.moment('2013-02-08 12:30'),
           end: this.moment('2013-02-08 13:30'),
-          organizer: {
-            email: 'user@test.com'
-          },
-          attendees: [{
-            email: 'user@test.com'
-          }],
+          organizer: user,
+          attendees: [owner],
           otherProperty: 'aString'
         });
         canModifyEventResult = false;
@@ -1257,11 +1261,13 @@ describe('The event-form module controllers', function() {
         });
       });
 
-      describe('when isOrganizer is true', function() {
+      describe('when calendar owner is event organizer', function() {
         beforeEach(function() {
           this.session.user = owner;
 
-          this.scope.isOrganizer = true;
+          this.scope.userAsAttendee = {
+            email: 'owner@test.com'
+          };
         });
 
         it('should modify attendees list and broadcast on CAL_EVENTS.EVENT_ATTENDEES_UPDATE', function(done) {
@@ -1278,9 +1284,6 @@ describe('The event-form module controllers', function() {
             done();
           }.bind(this));
 
-          this.scope.userAsAttendee = {
-            email: 'owner@test.com'
-          };
           this.scope.changeParticipation('ACCEPTED');
         });
 
@@ -1290,9 +1293,6 @@ describe('The event-form module controllers', function() {
           this.scope.$on(this.CAL_EVENTS.EVENT_ATTENDEES_UPDATE, broadcastSpy);
 
           this.scope.editedEvent.changeParticipation = sinon.spy();
-          this.scope.userAsAttendee = {
-            email: 'user@test.com'
-          };
 
           this.scope.changeParticipation('DECLINED');
 
@@ -1315,6 +1315,7 @@ describe('The event-form module controllers', function() {
           end: this.moment('2016-12-08 13:30'),
           location: 'aLocation',
           etag: '123456',
+          path: '/calendars/' + owner._id + '/' + calendarTest.id + '/eventID',
           alarm: {
             trigger: this.CAL_ALARM_TRIGGER[1].value,
             attendee: 'test@open-paas.org'
@@ -1334,7 +1335,7 @@ describe('The event-form module controllers', function() {
       it('should call calEventService.modifyEvent with updateAlarm when alarm is changed', function() {
         this.scope.event = this.CalendarShell.fromIncompleteShell({
           title: 'title',
-          path: '/path/to/event',
+          path: '/calendars/' + owner._id + '/' + calendarTest.id + '/eventID',
           start: this.moment('2016-12-08 12:30'),
           end: this.moment('2016-12-08 13:30'),
           location: 'aLocation',
@@ -1352,7 +1353,7 @@ describe('The event-form module controllers', function() {
         };
 
         this.calEventServiceMock.modifyEvent = sinon.spy(function(path, event, oldEvent, etag, onCancel) { // eslint-disable-line
-          expect(path).to.equal('/path/to/event');
+          expect(path).to.equal('/calendars/' + owner._id + '/' + calendarTest.id + '/eventID');
           expect(etag).to.equal('123456');
           expect(event.alarm.trigger.toICALString()).to.equal('-P2D');
           expect(oldEvent.alarm.trigger.toICALString()).to.equal('-PT1M');
@@ -1373,6 +1374,7 @@ describe('The event-form module controllers', function() {
 
       it('should return true if the event has attendees and it is not in the grace periode and it is an old event', function() {
         this.scope.event = this.CalendarShell.fromIncompleteShell({
+          path: '/calendars/' + owner._id + '/' + this.calendars[1].id + '/eventID',
           organizer: {
             name: 'organiser',
             email: 'organiser@openpaas.org',
@@ -1402,6 +1404,7 @@ describe('The event-form module controllers', function() {
       it('should return false if the event has no individual attendees', function() {
         this.scope.event = this.CalendarShell.fromIncompleteShell({
           gracePeriodTaskId: '0000',
+          path: '/calendars/' + owner._id + '/' + this.calendars[1].id + '/eventID',
           organizer: {
             name: 'organiser',
             email: 'organiser@openpaas.org',
@@ -1422,6 +1425,7 @@ describe('The event-form module controllers', function() {
 
       it('should return false if the event is in the grace periode', function() {
         this.scope.event = this.CalendarShell.fromIncompleteShell({
+          path: '/calendars/' + owner._id + '/' + this.calendars[1].id + '/eventID',
           organizer: {
             name: 'organiser',
             email: 'organiser@openpaas.org',
@@ -1451,6 +1455,7 @@ describe('The event-form module controllers', function() {
 
       it('should return false if the event is a new event(not yet in the calendar)', function() {
         this.scope.event = this.CalendarShell.fromIncompleteShell({
+          path: '/calendars/' + owner._id + '/' + this.calendars[1].id + '/eventID',
           organizer: {
             name: 'organiser',
             email: 'organiser@openpaas.org',
@@ -1479,6 +1484,7 @@ describe('The event-form module controllers', function() {
 
       it('should return false if we have the organizer as the only attendee', function() {
         this.scope.event = this.CalendarShell.fromIncompleteShell({
+          path: '/calendars/' + owner._id + '/' + this.calendars[1].id + '/eventID',
           organizer: {
             name: 'organiser',
             email: 'organiser@openpaas.org',

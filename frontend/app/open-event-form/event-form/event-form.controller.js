@@ -109,8 +109,11 @@
             });
           })
           .then(function() {
+            return $scope.calendar.getOwner();
+          })
+          .then(function(owner) {
             $scope.attendees = calAttendeeService.splitAttendeesFromType($scope.editedEvent.attendees);
-            $scope.userAsAttendee = calAttendeeService.getAttendeeForUser($scope.editedEvent.attendees, session.user);
+            $scope.userAsAttendee = calAttendeeService.getAttendeeForUser($scope.editedEvent.attendees, owner);
 
             if (!$scope.editedEvent.class) {
               $scope.editedEvent.class = CAL_EVENT_FORM.class.default;
@@ -308,7 +311,7 @@
 
       function changeParticipation(status) {
         $scope.userAsAttendee.partstat = status;
-        if ($scope.isOrganizer) {
+        if ($scope.editedEvent.organizer && $scope.userAsAttendee.email === $scope.editedEvent.organizer.email) {
           if (status !== $scope.editedEvent.getOrganizerPartStat()) {
             $scope.editedEvent.setOrganizerPartStat(status);
             $scope.$broadcast(CAL_EVENTS.EVENT_ATTENDEES_UPDATE);
