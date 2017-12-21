@@ -960,7 +960,7 @@ describe('The event-form module controllers', function() {
           };
           this.initController();
 
-          this.scope.userAsAttendee = {
+          this.scope.calendarOwnerAsAttendee = {
             partstat: 'ACCEPTED'
           };
           this.scope.modifyEvent();
@@ -984,7 +984,7 @@ describe('The event-form module controllers', function() {
           };
           this.initController();
 
-          this.scope.userAsAttendee = {
+          this.scope.calendarOwnerAsAttendee = {
             partstat: 'DECLINED'
           };
           this.scope.isOrganizer = false;
@@ -1244,7 +1244,7 @@ describe('The event-form module controllers', function() {
 
         it('should call changeParticipation and broadcast on CAL_EVENTS.EVENT_ATTENDEES_UPDATE', function(done) {
           this.scope.$on(this.CAL_EVENTS.EVENT_ATTENDEES_UPDATE, function() {
-            expect(this.scope.userAsAttendee).to.deep.equal({
+            expect(this.scope.calendarOwnerAsAttendee).to.deep.equal({
               email: 'user@test.com',
               partstat: 'ACCEPTED'
             });
@@ -1254,7 +1254,7 @@ describe('The event-form module controllers', function() {
           }.bind(this));
 
           this.scope.editedEvent.changeParticipation = sinon.spy();
-          this.scope.userAsAttendee = {
+          this.scope.calendarOwnerAsAttendee = {
             email: 'user@test.com'
           };
           this.scope.changeParticipation('ACCEPTED');
@@ -1265,7 +1265,7 @@ describe('The event-form module controllers', function() {
         beforeEach(function() {
           this.session.user = owner;
 
-          this.scope.userAsAttendee = {
+          this.scope.calendarOwnerAsAttendee = {
             email: 'owner@test.com'
           };
         });
@@ -1276,7 +1276,7 @@ describe('The event-form module controllers', function() {
               email: 'owner@test.com',
               partstat: 'ACCEPTED'
             }]);
-            expect(this.scope.userAsAttendee).shallowDeepEqual({
+            expect(this.scope.calendarOwnerAsAttendee).shallowDeepEqual({
               email: 'owner@test.com',
               partstat: 'ACCEPTED'
             });

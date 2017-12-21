@@ -113,7 +113,7 @@
           })
           .then(function(owner) {
             $scope.attendees = calAttendeeService.splitAttendeesFromType($scope.editedEvent.attendees);
-            $scope.userAsAttendee = calAttendeeService.getAttendeeForUser($scope.editedEvent.attendees, owner);
+            $scope.calendarOwnerAsAttendee = calAttendeeService.getAttendeeForUser($scope.editedEvent.attendees, owner);
 
             if (!$scope.editedEvent.class) {
               $scope.editedEvent.class = CAL_EVENT_FORM.class.default;
@@ -160,7 +160,7 @@
       }
 
       function displayParticipationButton() {
-        return !!$scope.userAsAttendee && !$scope.calendar.readOnly;
+        return !!$scope.calendarOwnerAsAttendee && !$scope.calendar.readOnly;
       }
 
       function canPerformCall() {
@@ -212,7 +212,7 @@
       }
 
       function _changeParticipationAsAttendee() {
-        var status = $scope.userAsAttendee.partstat;
+        var status = $scope.calendarOwnerAsAttendee.partstat;
 
         $scope.restActive = true;
         calEventService.changeParticipation($scope.editedEvent.path, $scope.event, session.user.emails, status).then(function(response) {
@@ -310,14 +310,14 @@
       }
 
       function changeParticipation(status) {
-        $scope.userAsAttendee.partstat = status;
-        if ($scope.editedEvent.organizer && $scope.userAsAttendee.email === $scope.editedEvent.organizer.email) {
+        $scope.calendarOwnerAsAttendee.partstat = status;
+        if ($scope.editedEvent.organizer && $scope.calendarOwnerAsAttendee.email === $scope.editedEvent.organizer.email) {
           if (status !== $scope.editedEvent.getOrganizerPartStat()) {
             $scope.editedEvent.setOrganizerPartStat(status);
             $scope.$broadcast(CAL_EVENTS.EVENT_ATTENDEES_UPDATE);
           }
         } else {
-          $scope.editedEvent.changeParticipation(status, [$scope.userAsAttendee.email]);
+          $scope.editedEvent.changeParticipation(status, [$scope.calendarOwnerAsAttendee.email]);
           $scope.$broadcast(CAL_EVENTS.EVENT_ATTENDEES_UPDATE);
 
           _changeParticipationAsAttendee();
