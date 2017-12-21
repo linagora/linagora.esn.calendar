@@ -333,7 +333,7 @@ describe('The alarm module', function() {
       this.requireModule().registerNextAlarm(alarm)
         .then(() => {
           expect(alarmDB.create).to.not.have.been.called;
-          expect(loggerSpy).to.have.been.calledWithMatch(/Event is not recurring, skipping/);
+          expect(loggerSpy).to.have.been.calledWithMatch(/No next alarm to register/);
           done();
         })
         .catch(done);
