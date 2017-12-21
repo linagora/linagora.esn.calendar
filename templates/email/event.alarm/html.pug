@@ -14,22 +14,16 @@ html.mail
 
         table
           tr.table-header
-            td.logo(colspan="2")
+            td.logo(colspan="6")
               div
                 a(href=content.baseUrl)
                   img(src="cid:logo", alt=translate('OpenPaas Logo'))
-            td.organizer(colspan="2")
-              h5
-                p
-                  a(href=`mailto:${content.event.organizer.email}`) #{content.event.organizer.cn}
-                p.big #{translate('Event Reminder')}
-            td.avatar.indent-right(colspan="2")
-              img(src=content.event.organizer.avatar, alt=translate('Organizer Avatar'), width="45px", height="42px")
           tr
             td(colspan="6").indent
-              span.title #{content.event.summary}
-              span #{translate('will start in')} #{content.alarm.triggerDisplay}
-
+              if (content.event.summary)
+                span.title #{content.event.summary}
+              else
+                span.title #{translate('No title')}
           tr
             td.indent
               if (content.event.end)
@@ -65,6 +59,13 @@ html.mail
                 img(src="cid:map-marker", alt=translate('Location'))
               td(colspan="3").indent
                 | #{content.event.location}
+
+          tr
+            td.indent
+              img(src="cid:account-multiple", alt=translate('Attendees'))
+            td(colspan="5")
+              include ../mixins/attendees.pug
+              +displayAttendees(content.event.attendees)
 
           if (content.event.description)
             tr

@@ -1,16 +1,13 @@
-const CONSTANTS = require('../../constants');
-const path = require('path');
+const emailTemplateName = 'event.alarm';
 const Q = require('q');
-const jcalHelper = require('../../helpers/jcal');
-const template = { name: 'event.alarm', path: path.resolve(__dirname, '../../../../templates/email') };
+const CONSTANTS = require('../../constants');
 
 module.exports = dependencies => {
-  const helpers = dependencies('helpers');
-  const emailModule = dependencies('email');
   const logger = dependencies('logger');
   const userModule = dependencies('user');
-  const i18nLib = require('../../i18n')(dependencies);
-  const linksHelper = require('../../helpers/links')(dependencies);
+  const jcalHelper = require('../../helpers/jcal');
+  const i18nHelper = require('../../helpers/i18n')(dependencies);
+  const emailModule = require('../../email')(dependencies);
 
   return {
     uniqueId: 'linagora.esn.calendar.alarm.email',
@@ -19,6 +16,9 @@ module.exports = dependencies => {
   };
 
   function handle({ ics, attendee, eventPath }) {
+    logger.debug(`Sending alarm by email to ${attendee} for event ${eventPath}`);
+    const event = jcalHelper.jcal2content(ics);
+
     return Q.denodeify(userModule.findByEmail)(attendee)
       .then(user => {
         if (!user) {
@@ -27,32 +27,23 @@ module.exports = dependencies => {
 
         return user;
       })
-      .then(user => Q.all([
-        Q.nfcall(helpers.config.getBaseUrl, null),
-        i18nLib.getI18nForMailer(user),
-        linksHelper.getEventDetails(eventPath),
-        linksHelper.getEventInCalendar(ics)
-      ]))
-    .spread((baseUrl, i18nConf, eventDetailsLink, seeInCalendarLink) => {
-      const event = jcalHelper.jcal2content(ics, baseUrl);
-      const alarm = event.alarm;
-      const message = {
+      .then(user => i18nHelper.getEventSummaryForUser(event.summary, user))
+      .then(summary => ({
+        phrase: 'Notification: {{summary}}',
+        parameters: {
+          summary
+        }
+      }))
+      .then(subject => emailModule.sender.send({
         to: attendee,
-        subject: `${i18nConf.translate('Notification')} : ${event.alarm.summary}`
-      };
-
-      return emailModule.getMailer().sendHTML(message, template, {
-        content: {
-          baseUrl,
-          event,
-          alarm,
-          seeInCalendarLink
-        },
-        translate: i18nConf.translate
+        subject,
+        ics,
+        eventPath,
+        emailTemplateName
+      }))
+      .catch(err => {
+        logger.error('Can not send alarm email', err);
+        throw err;
       });
-    }).catch(err => {
-      logger.error('Can not send alarm email', err);
-      throw err;
-    });
   }
 };
