@@ -65,7 +65,7 @@ describe('The calAttendeeService service', function() {
     var user;
 
     beforeEach(function() {
-      user = {_id: 1, emailMap: {'user1@open-paas.org': true}};
+      user = {_id: 1, emails: ['user1@open-paas.org'], emailMap: {'user1@open-paas.org': true}};
     });
 
     it('should return undefined when user is not defined', function() {

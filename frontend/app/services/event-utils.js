@@ -61,10 +61,11 @@
       return !angular.isUndefined(event.gracePeriodTaskId);
     }
 
-    function isOrganizer(event) {
+    function isOrganizer(event, user) {
       var organizerMail = event && event.organizer && (event.organizer.email || event.organizer.emails[0]);
+      user = user || session.user;
 
-      return !organizerMail || (organizerMail in session.user.emailMap);
+      return !organizerMail || _.contains(organizerMail, user.emails);
     }
 
     function hasSignificantChange(oldEvent, newEvent) {
