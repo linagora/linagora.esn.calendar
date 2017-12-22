@@ -10,6 +10,7 @@ before(function() {
   chai.use(require('chai-shallow-deep-equal'));
   chai.use(require('sinon-chai'));
   chai.use(require('chai-as-promised'));
+  chai.use(require('chai-datetime'));
 
   const basePath = path.resolve(__dirname + '/../../node_modules/linagora-rse');
 

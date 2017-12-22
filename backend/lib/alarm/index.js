@@ -1,8 +1,7 @@
-'use strict';
-
 const ICAL = require('@linagora/ical.js');
 const Q = require('q');
 const moment = require('moment-timezone');
+const { getNextAlarm } = require('./utils');
 const CONSTANTS = require('../constants');
 const jcalHelper = require('../helpers/jcal');
 let initialized = false;
@@ -136,45 +135,28 @@ module.exports = dependencies => {
 
     const vcalendar = ICAL.Component.fromString(previousAlarm.ics);
     const vevent = vcalendar.getFirstSubcomponent('vevent');
-
-    if (!new ICAL.Event(vevent).isRecurring()) {
-      logger.debug(`calendar:alarm ${previousAlarm.eventPath} - Event is not recurring, skipping`);
-
-      return Promise.resolve({});
-    }
-
     const valarm = vevent.getFirstSubcomponent('valarm');
-    const trigger = valarm.getFirstPropertyValue('trigger');
-    const triggerDuration = moment.duration(trigger);
+    const lastFireDate = previousAlarm.dueDate;
 
-    const expand = new ICAL.RecurExpansion({
-      component: vevent,
-      dtstart: getStartTimeForNextRecurringEvent(triggerDuration)
-    });
-    const nextInstance = expand.next();
+    const nextDueDate = getNextAlarm(vevent, valarm, lastFireDate);
 
-    if (!nextInstance) {
-      logger.debug(`calendar:alarm ${previousAlarm.eventPath} - Alarm is recurring but does not have next alarm to register`);
+    if (!nextDueDate) {
+      logger.debug(`calendar:alarm ${previousAlarm.eventPath} - No next alarm to register`);
 
       return Promise.resolve({});
     }
+
+    logger.debug(`calendar:alarm ${previousAlarm.eventPath} - Previous alarm: ${moment(previousAlarm.dueDate).utc().format()} / next alarm ${moment(nextDueDate).utc().format()}`);
 
     const nextAlarm = previousAlarm.toJSON();
 
     delete nextAlarm._id;
     delete nextAlarm.id;
-    nextAlarm.dueDate = moment(nextInstance.clone()).add(triggerDuration).format();
+    delete nextAlarm.state;
+    delete nextAlarm.timestamps;
+    nextAlarm.dueDate = nextDueDate;
 
     return registerNewAlarm(nextAlarm);
-
-    function getStartTimeForNextRecurringEvent(triggerDuration) {
-      const start = moment().add(triggerDuration).format();
-      let result = new Date(start);
-
-      result = new Date(result.getTime() + 60000);
-
-      return new ICAL.Time.fromDateTimeString(result.toISOString());
-    }
   }
 
   function submitAlarms(alarms) {
