@@ -18,7 +18,6 @@
         var timeDiv = element.find('.fc-time');
         var title = element.find('.fc-title');
         var eventDurationInMinute = event.end.diff(event.start, 'minutes');
-        var userAsAttendee = calEventUtils.getUserAttendee(event);
         var eventTitle = calEventUtils.getEventTitle(event);
         var eventIconsDivInMobile;
 
@@ -101,22 +100,26 @@
         }
 
         function addIcons() {
-          if (matchmedia.is(ESN_MEDIA_QUERY_SM_XS)) {
-            title.append(angular.element('<div class="event-icons-mobile"></div>'));
-            eventIconsDivInMobile = title.find('.event-icons-mobile');
+          calendar.getOwner().then(function(owner) {
+            var userAsAttendee = calEventUtils.getUserAttendee(event, owner);
 
-            addIconInEventInstanceInMobile();
+            if (matchmedia.is(ESN_MEDIA_QUERY_SM_XS)) {
+              title.append(angular.element('<div class="event-icons-mobile"></div>'));
+              eventIconsDivInMobile = title.find('.event-icons-mobile');
 
-            addIconForAttendeesInMobile();
+              addIconInEventInstanceInMobile();
 
-            addIconInPrivateEventInMobile();
-          } else {
-            addIconInEventInstanceInDesktop();
+              addIconForAttendeesInMobile(userAsAttendee);
 
-            addIconForAttendeesInDesktop();
+              addIconInPrivateEventInMobile();
+            } else {
+              addIconInEventInstanceInDesktop();
 
-            addIconInPrivateEventInDesktop();
-          }
+              addIconForAttendeesInDesktop(userAsAttendee);
+
+              addIconInPrivateEventInDesktop();
+            }
+          });
         }
 
         function addIconInPrivateEventInMobile() {
@@ -153,7 +156,7 @@
           }
         }
 
-        function addIconForAttendeesInMobile() {
+        function addIconForAttendeesInMobile(userAsAttendee) {
           if (userAsAttendee) {
             if (userAsAttendee.partstat === 'NEEDS-ACTION') {
               element.addClass('event-needs-action');
@@ -181,7 +184,7 @@
           }
         }
 
-        function addIconForAttendeesInDesktop() {
+        function addIconForAttendeesInDesktop(userAsAttendee) {
           if (userAsAttendee) {
             if (userAsAttendee.partstat === 'NEEDS-ACTION') {
               element.addClass('event-needs-action');

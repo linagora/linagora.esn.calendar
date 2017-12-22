@@ -128,9 +128,11 @@
       return event;
     }
 
-    function getUserAttendee(event) {
+    function getUserAttendee(event, user) {
+      user = user || session.user;
+
       return _.find(event.attendees, function(attendee) {
-        return attendee.email in session.user.emailMap;
+        return _.contains(attendee.email, user.emails);
       });
     }
 

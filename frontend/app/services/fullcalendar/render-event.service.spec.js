@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('The calFullCalendarRenderEventService service', function() {
-  var element, session, agenda, fcTitle, fcTime, fcContent, eventIconsDivInMobile, event, calendarService, calUIAuthorizationService, view, self;
+  var $q, element, session, agenda, fcTitle, fcTime, fcContent, eventIconsDivInMobile, event, calendarService, calUIAuthorizationService, view, self;
 
   function Element() {
     this.innerElements = {};
@@ -48,7 +48,6 @@ describe('The calFullCalendarRenderEventService service', function() {
     self = this;
     var emailMap = {};
 
-    agenda = {};
     emailMap[userEmail] = true;
     session = {
       user: {
@@ -59,6 +58,12 @@ describe('The calFullCalendarRenderEventService service', function() {
       domain: {
         company_name: 'test'
       }
+    };
+
+    agenda = {
+      getOwner: sinon.spy(function() {
+        return $q.when(session.user);
+      })
     };
 
     calendarService = {};
@@ -120,9 +125,10 @@ describe('The calFullCalendarRenderEventService service', function() {
     });
   });
 
-  beforeEach(angular.mock.inject(function(calFullCalendarRenderEventService, calEventUtils, $rootScope, calMoment, CalendarShell, escapeHtmlUtils, matchmedia, ESN_MEDIA_QUERY_SM_XS, CAL_MAX_DURATION_OF_SMALL_EVENT) {
+  beforeEach(angular.mock.inject(function(_$q_, calFullCalendarRenderEventService, calEventUtils, $rootScope, calMoment, CalendarShell, escapeHtmlUtils, matchmedia, ESN_MEDIA_QUERY_SM_XS, CAL_MAX_DURATION_OF_SMALL_EVENT) {
     this.calFullCalendarRenderEventService = calFullCalendarRenderEventService;
     this.calEventUtils = calEventUtils;
+    $q = _$q_;
     this.$rootScope = $rootScope;
     this.calMoment = calMoment;
     this.CalendarShell = CalendarShell;
@@ -140,6 +146,7 @@ describe('The calFullCalendarRenderEventService service', function() {
     it('should add the fc-title div is not available', function() {
       fcTitle.length = 0;
       this.calFullCalendarRenderEventService(agenda)(event, element, view);
+      this.$rootScope.$digest();
 
       expect(fcContent.prepend).to.have.been.calledWith('<div class="fc-title"></div>');
     });
@@ -149,6 +156,7 @@ describe('The calFullCalendarRenderEventService service', function() {
     it('should add a tooltip in all views', function() {
       fcContent.attr = sinon.spy();
       this.calFullCalendarRenderEventService(agenda)(event, element, view);
+      this.$rootScope.$digest();
 
       expect(fcContent.attr).to.have.been.calledWith('title', event.title);
     });
@@ -167,6 +175,7 @@ describe('The calFullCalendarRenderEventService service', function() {
       event.isOverOneDayOnly = sinon.stub().returns(true);
 
       this.calFullCalendarRenderEventService(agenda)(event, element, view);
+      this.$rootScope.$digest();
 
       expect(element.css).to.have.been.calledWith('color', backgroundColor);
       expect(element.css).to.have.been.calledWith('background-color', 'transparent');
@@ -186,6 +195,7 @@ describe('The calFullCalendarRenderEventService service', function() {
       event.isOverOneDayOnly = sinon.stub().returns(false);
 
       this.calFullCalendarRenderEventService(agenda)(event, element, view);
+      this.$rootScope.$digest();
 
       expect(element.css).to.have.not.been.called;
     }));
@@ -201,6 +211,7 @@ describe('The calFullCalendarRenderEventService service', function() {
         }
       });
       this.calFullCalendarRenderEventService(agenda)(event, element, view);
+      this.$rootScope.$digest();
 
       expect(element.css).to.have.not.been.called;
     });
@@ -213,6 +224,7 @@ describe('The calFullCalendarRenderEventService service', function() {
       fcTitle.text = sinon.spy();
 
       this.calFullCalendarRenderEventService(agenda)(event, element, view);
+      this.$rootScope.$digest();
 
       expect(fcTime.remove).to.have.been.calledOnce;
       expect(fcTitle.text).to.have.been.calledWith(event.start.format('hh:mm') + ' - ' + event.title);
@@ -224,6 +236,7 @@ describe('The calFullCalendarRenderEventService service', function() {
       event.location = 'location';
 
       this.calFullCalendarRenderEventService(agenda)(event, element, view);
+      this.$rootScope.$digest();
 
       expect(this.escapeHTMLMock.escapeHTML).to.have.been.calledWith(event.location);
       expect(element.class).to.include('event-with-location');
@@ -241,6 +254,7 @@ describe('The calFullCalendarRenderEventService service', function() {
       event.description = 'aDescription';
 
       this.calFullCalendarRenderEventService(agenda)(event, element, view);
+      this.$rootScope.$digest();
 
       expect(this.escapeHTMLMock.escapeHTML).to.have.been.calledWith(event.description);
       expect(element.attributes.title).to.equal(this.escapeHTMLMockResult);
@@ -248,6 +262,7 @@ describe('The calFullCalendarRenderEventService service', function() {
 
     it('should not add a title attribute if description is not defined', function() {
       this.calFullCalendarRenderEventService(agenda)(event, element, view);
+      this.$rootScope.$digest();
 
       expect(element.attributes.title).to.deep.equal({});
     });
@@ -262,6 +277,7 @@ describe('The calFullCalendarRenderEventService service', function() {
       };
 
       this.calFullCalendarRenderEventService(agenda)(event, element, view);
+      this.$rootScope.$digest();
 
       expect(event.startEditable).to.not.exist;
       expect(event.durationEditable).to.not.exist;
@@ -279,6 +295,7 @@ describe('The calFullCalendarRenderEventService service', function() {
       });
 
       this.calFullCalendarRenderEventService(agenda)(event, element, view);
+      this.$rootScope.$digest();
 
       expect(event.startEditable).to.be.false;
       expect(event.durationEditable).to.be.false;
@@ -308,6 +325,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           event.isInstance = function() { return true; };
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(element.class).to.include('event-is-instance');
         });
@@ -316,6 +334,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           event.isInstance = function() { return false; };
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(element.class).to.not.include('event-is-instance');
         });
@@ -325,6 +344,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           event.allDay = true;
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(fcTitle.prepend).to.have.been.calledWith('<i class="mdi mdi-sync"/>');
         });
@@ -333,6 +353,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           event.isInstance = function() { return true; };
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(fcTitle.prepend).to.have.been.calledWith('<i class="mdi mdi-sync"/>');
         });
@@ -344,6 +365,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           event.isInstance = function() { return true; };
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(eventIconsDivInMobile.append).to.have.been.calledWith('<i class="mdi mdi-sync"/>');
         });
@@ -357,6 +379,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           });
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(element.class).to.deep.equal(['event-declined']);
         });
@@ -368,6 +391,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           });
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(element.class).to.deep.equal(['event-accepted']);
         });
@@ -379,6 +403,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           });
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(element.class).to.deep.equal(['event-needs-action']);
         });
@@ -391,6 +416,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           event.allDay = true;
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(fcTitle.prepend).to.have.been.calledWith('<i class="mdi mdi-help-circle"/>');
         });
@@ -402,6 +428,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           });
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(fcTitle.prepend).to.have.been.calledWith('<i class="mdi mdi-help-circle"/>');
         });
@@ -415,6 +442,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           });
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(eventIconsDivInMobile.append).to.have.been.calledWith('<i class="mdi mdi-help-circle"/>');
         });
@@ -426,6 +454,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           event.allDay = true;
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(fcTitle.prepend).to.have.been.calledWith('<i class="mdi mdi-lock"/>');
         });
@@ -434,6 +463,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           event.isPublic = function() { return false; };
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(fcTitle.prepend).to.have.been.calledWith('<i class="mdi mdi-lock"/>');
         });
@@ -445,6 +475,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           event.isPublic = function() { return false; };
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(eventIconsDivInMobile.append).to.have.been.calledWith('<i class="mdi mdi-lock"/>');
         });
@@ -471,6 +502,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           event.allDay = true;
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(element.class).to.include('event-is-instance');
         });
@@ -479,6 +511,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           event.isInstance = function() { return false; };
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(element.class).to.not.include('event-is-instance');
         });
@@ -488,6 +521,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           event.allDay = true;
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(fcTitle.prepend).to.have.been.calledWith('<i class="mdi mdi-sync"/>');
         });
@@ -496,6 +530,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           event.isInstance = function() { return true; };
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(fcTime.prepend).to.have.been.calledWith('<i class="mdi mdi-sync"/>');
         });
@@ -509,6 +544,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           });
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(element.class).to.deep.equal(['event-declined']);
         });
@@ -520,6 +556,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           });
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(element.class).to.deep.equal(['event-accepted']);
         });
@@ -531,6 +568,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           });
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(element.class).to.deep.equal(['event-needs-action']);
         });
@@ -543,6 +581,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           event.allDay = true;
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(element.class).to.deep.equal(['event-tentative']);
         });
@@ -555,6 +594,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           event.allDay = true;
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(fcTitle.prepend).to.have.been.calledWith('<i class="mdi mdi-help-circle"/>');
         });
@@ -566,6 +606,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           });
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(fcTime.prepend).to.have.been.calledWith('<i class="mdi mdi-help-circle"/>');
         });
@@ -578,6 +619,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           event.allDay = true;
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(fcTitle.prepend).to.have.been.calledWith('<i class="mdi mdi-lock"/>');
         });
@@ -586,6 +628,7 @@ describe('The calFullCalendarRenderEventService service', function() {
           event.isPublic = function() { return false; };
 
           this.calFullCalendarRenderEventService(agenda)(event, element, view);
+          this.$rootScope.$digest();
 
           expect(fcTime.prepend).to.have.been.calledWith('<i class="mdi mdi-lock"/>');
         });
