@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .factory('miniCalendarService', miniCalendarService);
 
-  function miniCalendarService($q, _, calMoment, CAL_MINI_CALENDAR_DAY_FORMAT) {
+  function miniCalendarService($q, $log, _, calCachedEventSource, calMoment, calendarEventSource, CAL_MINI_CALENDAR_DAY_FORMAT) {
     var service = {
       forEachDayOfEvent: forEachDayOfEvent,
       getWeekAroundDay: getWeekAroundDay,
@@ -59,12 +59,37 @@
       };
     }
 
-    function miniCalendarWrapper(calendar, eventSources) {
+    function miniCalendarWrapper(calendar, calendars) {
       var originalEvents = {};
       var fakeEvents = {};
+      var eventSourcesMap = buildEventSources(calendars);
+      var eventSource = getEventSource();
+
+      calendar.fullCalendar('addEventSource', eventSource);
+
+      function getEventSource() {
+        return {
+          events: groupByDayEventSources
+        };
+      }
+
+      function buildEventSources(calendars) {
+        var eventSources = {};
+
+        calendars.forEach(function(calendar) {
+          eventSources[calendar.getUniqueId()] = buildEventSource(calendar);
+        });
+
+        return eventSources;
+      }
+
+      function buildEventSource(calendar) {
+        return calCachedEventSource.wrapEventSource(calendar.getUniqueId(), calendarEventSource(calendar, function(error) {
+          $log.error('Could not retrieve event sources', error);
+        }));
+      }
 
       function addOrDeleteEvent(add, event) {
-
         if (add) {
           originalEvents[event.id] = {
             id: event.id,
@@ -99,7 +124,7 @@
 
         originalEvents = {};
         fakeEvents = {};
-        eventSources.forEach(function(calendarEventSource) {
+        _.forEach(eventSourcesMap, function(calendarEventSource) {
           var deferred = $q.defer();
 
           eventsPromise.push(deferred.promise);
@@ -113,16 +138,29 @@
         });
       }
 
-      calendar.fullCalendar('addEventSource', {
-        events: groupByDayEventSources
-      });
-
       function rerender() {
         calendar.fullCalendar('refetchEvents');
       }
 
+      function addCalendar(calendarShell) {
+        eventSourcesMap[calendarShell.getUniqueId()] = buildEventSource(calendarShell);
+        calendar.fullCalendar('removeEventSource', eventSource);
+        eventSource = getEventSource();
+        calendar.fullCalendar('addEventSource', eventSource);
+      }
+
+      function removeCalendar(calendarUniqueIdWrapper) {
+        delete eventSourcesMap[calendarUniqueIdWrapper.uniqueId];
+
+        calendar.fullCalendar('removeEventSource', eventSource);
+        eventSource = getEventSource();
+        calendar.fullCalendar('addEventSource', eventSource);
+      }
+
       return {
-        rerender: rerender
+        rerender: rerender,
+        addCalendar: addCalendar,
+        removeCalendar: removeCalendar
       };
     }
   }

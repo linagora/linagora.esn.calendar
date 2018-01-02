@@ -16,12 +16,13 @@
     calendarService,
     miniCalendarService,
     notificationFactory,
+    calendarHomeService,
     calendarCurrentView,
     calCachedEventSource,
     userAndExternalCalendars,
-    calFullUiConfiguration,
-    _) {
+    calFullUiConfiguration) {
 
+      var calendarWrapperPromise;
       var calendarDeffered = $q.defer();
       var calendarPromise = calendarDeffered.promise;
       var currentView = calendarCurrentView.get();
@@ -42,6 +43,66 @@
 
       $scope.swipeLeft = next;
       $scope.swipeRight = prev;
+
+      calendarPromise.then(selectPeriod.bind(null, currentView.start || calMoment()));
+
+      //this is because of a fullCalendar bug about dayClick on touch that block swipe
+      //https://github.com/fullcalendar/fullcalendar/issues/3332
+      $scope.miniCalendarConfig.longPressDelay = 0;
+      $scope.miniCalendarConfig.dayClick = function(day) { // eslint-disable-line
+        calendarPromise.then(selectPeriod.bind(null, day));
+        $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.DATE_CHANGE, day);
+        $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.TOGGLE);
+      };
+
+      $scope.miniCalendarConfig.viewRender = function(view) {
+        calendarCurrentView.setMiniCalendarView(view);
+        $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.VIEW_CHANGE, view);
+      };
+
+      $scope.miniCalendarConfig.eventClick = function(event) {
+        $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.DATE_CHANGE, event.start);
+        $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.TOGGLE);
+      };
+
+      $scope.miniCalendarConfig.eventRender = function(event, element) {
+        if (event.start.isSame(calMoment(), 'day')) {
+          element.addClass('fc-event-color');
+        }
+      };
+
+      calendarWrapperPromise = buildCalendarWrapper();
+
+      var miniCalendarDisplay = false;
+      var unregisterFunctions = [
+        $rootScope.$on(CAL_EVENTS.CALENDARS.ADD, addCalendar),
+        $rootScope.$on(CAL_EVENTS.CALENDARS.REMOVE, removeCalendar),
+        $rootScope.$on(CAL_EVENTS.ITEM_ADD, rerender),
+        $rootScope.$on(CAL_EVENTS.ITEM_REMOVE, rerender),
+        $rootScope.$on(CAL_EVENTS.ITEM_MODIFICATION, rerender),
+        $rootScope.$on(CAL_EVENTS.REVERT_MODIFICATION, rerender),
+        $rootScope.$on(CAL_EVENTS.CALENDAR_REFRESH, rerender),
+        $rootScope.$on(CAL_EVENTS.HOME_CALENDAR_VIEW_CHANGE, function(event, view) {
+          $scope.homeCalendarViewMode = view.name;
+          var start = view.name === 'month' ? calMoment(view.start).add(15, 'days') : view.start;
+
+          calendarPromise.then(selectPeriod.bind(null, start));
+        }),
+        $rootScope.$on(CAL_EVENTS.MINI_CALENDAR.TOGGLE, function() {
+          miniCalendarDisplay = !miniCalendarDisplay;
+        }),
+        $rootScope.$on(CAL_EVENTS.VIEW_TRANSLATION, function(event, action) {
+          if (miniCalendarDisplay) {
+            (action === 'prev' ? prev : next)();
+          }
+        })
+      ];
+
+      $scope.$on('$destroy', function() {
+        unregisterFunctions.forEach(function(unregisterFunction) {
+          unregisterFunction();
+        });
+      });
 
       function selectPeriod(_day, calendar) {
         var day = calMoment(_day).stripTime();
@@ -76,92 +137,42 @@
         }
       }
 
-      calendarPromise.then(selectPeriod.bind(null, currentView.start || calMoment()));
-
-      //this is because of a fullCalendar bug about dayClick on touch that block swipe
-      //https://github.com/fullcalendar/fullcalendar/issues/3332
-      $scope.miniCalendarConfig.longPressDelay = 0;
-      $scope.miniCalendarConfig.dayClick = function(day) { // eslint-disable-line
-        calendarPromise.then(selectPeriod.bind(null, day));
-        $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.DATE_CHANGE, day);
-        $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.TOGGLE);
-      };
-
-      $scope.miniCalendarConfig.viewRender = function(view) {
-        calendarCurrentView.setMiniCalendarView(view);
-        $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.VIEW_CHANGE, view);
-      };
-
-      $scope.miniCalendarConfig.eventClick = function(event) {
-        $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.DATE_CHANGE, event.start);
-        $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.TOGGLE);
-      };
-
-      $scope.miniCalendarConfig.eventRender = function(event, element) {
-        if (event.start.isSame(calMoment(), 'day')) {
-          element.addClass('fc-event-color');
-        }
-      };
-
-      var calendarWrapperPromise = $q.all({
-        calendar: calendarPromise,
-        calendars: getOwnCalendars()
-      }).then(function(resolved) {
-        var eventSources = resolved.calendars.map(function(cal) {
-          var rawSource = calendarEventSource(cal, function(error) {
-            notificationFactory.weakError('Could not retrieve event sources', error.message);
-            $log.error('Could not retrieve event sources', error);
-          });
-
-          return calCachedEventSource.wrapEventSource(cal.uniqueId, rawSource);
-        });
-
-        return miniCalendarService.miniCalendarWrapper(resolved.calendar, _.flatten(eventSources));
-
-      }, function(error) {
-        notificationFactory.weakError('Could not retrive user calendars', error.message);
-        $log.error('Could not retrieve user calendars', error);
-      });
-
-      function rerenderMiniCalendar() {
+      function rerender() {
         calendarWrapperPromise.then(function(calendarWrapper) {
           calendarWrapper.rerender();
         });
       }
 
-      function getOwnCalendars() {
-        return calendarService.listPersonalAndAcceptedDelegationCalendars($scope.calendarHomeId).then(function(calendars) {
-          return userAndExternalCalendars(calendars).userCalendars || [];
+      function buildCalendarWrapper() {
+        return $q.all({
+          calendar: calendarPromise,
+          calendars: getOwnCalendars()
+        }).then(function(resolved) {
+          return miniCalendarService.miniCalendarWrapper(resolved.calendar, resolved.calendars);
+        }, function(error) {
+          notificationFactory.weakError('Could not retrive user calendars', error.message);
+          $log.error('Could not retrieve user calendars', error);
         });
       }
 
-      var miniCalendarDisplay = false;
-      var unregisterFunctions = [
-        $rootScope.$on(CAL_EVENTS.ITEM_ADD, rerenderMiniCalendar),
-        $rootScope.$on(CAL_EVENTS.ITEM_REMOVE, rerenderMiniCalendar),
-        $rootScope.$on(CAL_EVENTS.ITEM_MODIFICATION, rerenderMiniCalendar),
-        $rootScope.$on(CAL_EVENTS.REVERT_MODIFICATION, rerenderMiniCalendar),
-        $rootScope.$on(CAL_EVENTS.CALENDAR_REFRESH, rerenderMiniCalendar),
-        $rootScope.$on(CAL_EVENTS.HOME_CALENDAR_VIEW_CHANGE, function(event, view) { // eslint-disable-line
-          $scope.homeCalendarViewMode = view.name;
-          var start = view.name === 'month' ? calMoment(view.start).add(15, 'days') : view.start;
+      function getOwnCalendars() {
+        return calendarHomeService.getUserCalendarHomeId()
+          .then(calendarService.listPersonalAndAcceptedDelegationCalendars)
+          .then(function(calendars) {
+            return userAndExternalCalendars(calendars).userCalendars || [];
+          });
+      }
 
-          calendarPromise.then(selectPeriod.bind(null, start));
-        }),
-        $rootScope.$on(CAL_EVENTS.MINI_CALENDAR.TOGGLE, function() {
-          miniCalendarDisplay = !miniCalendarDisplay;
-        }),
-        $rootScope.$on(CAL_EVENTS.VIEW_TRANSLATION, function(event, action) { // eslint-disable-line
-          if (miniCalendarDisplay) {
-            (action === 'prev' ? prev : next)();
-          }
-        })
-      ];
-
-      $scope.$on('$destroy', function() {
-        unregisterFunctions.forEach(function(unregisterFunction) {
-          unregisterFunction();
+      function addCalendar(event, calendar) {
+        calendarWrapperPromise.then(function(calendarWrapper) {
+          calendarWrapper.addCalendar(calendar);
         });
-      });
+      }
+
+      function removeCalendar(event, calendar) {
+        calendarWrapperPromise.then(function(calendarWrapper) {
+          calendarWrapper.removeCalendar(calendar);
+        });
+      }
     }
 })();
