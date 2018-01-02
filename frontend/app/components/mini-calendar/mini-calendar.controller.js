@@ -22,58 +22,22 @@
     userAndExternalCalendars,
     calFullUiConfiguration) {
 
+      var miniCalendarDisplay = false;
       var calendarWrapperPromise;
       var calendarDeffered = $q.defer();
       var calendarPromise = calendarDeffered.promise;
       var currentView = calendarCurrentView.get();
-      var calendarUiConfig = calFullUiConfiguration.configureLocaleForCalendar(CAL_UI_CONFIG);
 
-      $scope.miniCalendarConfig = angular.extend({}, calendarUiConfig.calendar, CAL_UI_CONFIG.miniCalendar);
+      $scope.miniCalendarConfig = buildCalendarConfiguration();
       $scope.events = [];
       $scope.homeCalendarViewMode = currentView.name || CAL_UI_CONFIG.calendar.defaultView;
       $scope.calendarReady = calendarDeffered.resolve.bind(calendarDeffered);
-
-      var prev = calendarPromise.then.bind(calendarPromise, function(cal) {
-        cal.fullCalendar('prev');
-      });
-
-      var next = calendarPromise.then.bind(calendarPromise, function(cal) {
-        cal.fullCalendar('next');
-      });
-
       $scope.swipeLeft = next;
-      $scope.swipeRight = prev;
+      $scope.swipeRight = previous;
 
       calendarPromise.then(selectPeriod.bind(null, currentView.start || calMoment()));
-
-      //this is because of a fullCalendar bug about dayClick on touch that block swipe
-      //https://github.com/fullcalendar/fullcalendar/issues/3332
-      $scope.miniCalendarConfig.longPressDelay = 0;
-      $scope.miniCalendarConfig.dayClick = function(day) { // eslint-disable-line
-        calendarPromise.then(selectPeriod.bind(null, day));
-        $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.DATE_CHANGE, day);
-        $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.TOGGLE);
-      };
-
-      $scope.miniCalendarConfig.viewRender = function(view) {
-        calendarCurrentView.setMiniCalendarView(view);
-        $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.VIEW_CHANGE, view);
-      };
-
-      $scope.miniCalendarConfig.eventClick = function(event) {
-        $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.DATE_CHANGE, event.start);
-        $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.TOGGLE);
-      };
-
-      $scope.miniCalendarConfig.eventRender = function(event, element) {
-        if (event.start.isSame(calMoment(), 'day')) {
-          element.addClass('fc-event-color');
-        }
-      };
-
       calendarWrapperPromise = buildCalendarWrapper();
 
-      var miniCalendarDisplay = false;
       var unregisterFunctions = [
         $rootScope.$on(CAL_EVENTS.CALENDARS.ADD, addCalendar),
         $rootScope.$on(CAL_EVENTS.CALENDARS.REMOVE, removeCalendar),
@@ -93,7 +57,7 @@
         }),
         $rootScope.$on(CAL_EVENTS.VIEW_TRANSLATION, function(event, action) {
           if (miniCalendarDisplay) {
-            (action === 'prev' ? prev : next)();
+            (action === 'prev' ? previous : next)();
           }
         })
       ];
@@ -103,6 +67,39 @@
           unregisterFunction();
         });
       });
+
+      function buildCalendarConfiguration() {
+        var calendarUiConfig = calFullUiConfiguration.configureLocaleForCalendar(CAL_UI_CONFIG);
+        var configuration = angular.extend({}, calendarUiConfig.calendar, CAL_UI_CONFIG.miniCalendar);
+
+        //this is because of a fullCalendar bug about dayClick on touch that block swipe
+        //https://github.com/fullcalendar/fullcalendar/issues/3332
+        configuration.longPressDelay = 0;
+
+        configuration.dayClick = function(day) {
+          calendarPromise.then(selectPeriod.bind(null, day));
+          $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.DATE_CHANGE, day);
+          $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.TOGGLE);
+        };
+
+        configuration.viewRender = function(view) {
+          calendarCurrentView.setMiniCalendarView(view);
+          $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.VIEW_CHANGE, view);
+        };
+
+        configuration.eventClick = function(event) {
+          $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.DATE_CHANGE, event.start);
+          $rootScope.$broadcast(CAL_EVENTS.MINI_CALENDAR.TOGGLE);
+        };
+
+        configuration.eventRender = function(event, element) {
+          if (event.start.isSame(calMoment(), 'day')) {
+            element.addClass('fc-event-color');
+          }
+        };
+
+        return configuration;
+      }
 
       function selectPeriod(_day, calendar) {
         var day = calMoment(_day).stripTime();
@@ -172,6 +169,18 @@
       function removeCalendar(event, calendar) {
         calendarWrapperPromise.then(function(calendarWrapper) {
           calendarWrapper.removeCalendar(calendar);
+        });
+      }
+
+      function next() {
+        return calendarPromise.then.bind(calendarPromise, function(cal) {
+          cal.fullCalendar('next');
+        });
+      }
+
+      function previous() {
+        return calendarPromise.then.bind(calendarPromise, function(cal) {
+          cal.fullCalendar('prev');
         });
       }
     }
