@@ -15,7 +15,7 @@
     calendarEventSource,
     calendarService,
     miniCalendarService,
-    calMiniCalendarWrapperService,
+    calMiniCalendarEventSourceBuilderService,
     notificationFactory,
     calendarHomeService,
     calendarCurrentView,
@@ -24,12 +24,10 @@
     calFullUiConfiguration) {
 
       var miniCalendarDisplay = false;
-      var calendarWrapperPromise;
       var calendarDeffered = $q.defer();
       var calendarPromise = calendarDeffered.promise;
       var currentView = calendarCurrentView.get();
 
-      $scope.events = [];
       $scope.miniCalendarConfig = buildCalendarConfiguration();
       $scope.homeCalendarViewMode = currentView.name || CAL_UI_CONFIG.calendar.defaultView;
       $scope.calendarReady = calendarDeffered.resolve.bind(calendarDeffered);
@@ -37,11 +35,12 @@
       $scope.swipeRight = previous;
 
       calendarPromise.then(selectPeriod.bind(null, currentView.start || calMoment()));
-      calendarWrapperPromise = buildCalendarWrapper();
+
+      buildUserCalendarsEventSource();
 
       var unregisterFunctions = [
-        $rootScope.$on(CAL_EVENTS.CALENDARS.ADD, addCalendar),
-        $rootScope.$on(CAL_EVENTS.CALENDARS.REMOVE, removeCalendar),
+        $rootScope.$on(CAL_EVENTS.CALENDARS.ADD, onCalendarsChange),
+        $rootScope.$on(CAL_EVENTS.CALENDARS.REMOVE, onCalendarsChange),
         $rootScope.$on(CAL_EVENTS.ITEM_ADD, rerender),
         $rootScope.$on(CAL_EVENTS.ITEM_REMOVE, rerender),
         $rootScope.$on(CAL_EVENTS.ITEM_MODIFICATION, rerender),
@@ -136,21 +135,20 @@
       }
 
       function rerender() {
-        calendarWrapperPromise.then(function(calendarWrapper) {
-          calendarWrapper.rerender();
+        return calendarPromise.then(function(cal) {
+          cal.fullCalendar('refetchEvents');
         });
       }
 
-      function buildCalendarWrapper() {
-        return $q.all({
-          calendar: calendarPromise,
-          calendars: getOwnCalendars()
-        }).then(function(resolved) {
-          return calMiniCalendarWrapperService(resolved.calendar, resolved.calendars);
-        }, function(error) {
-          notificationFactory.weakError('Could not retrieve user calendars', error.message);
-          $log.error('Could not retrieve user calendars', error);
-        });
+      function buildUserCalendarsEventSource() {
+        return getOwnCalendars()
+          .then(buildEventSource)
+          .then(addEventSource)
+          .catch(function(error) {
+            notificationFactory.weakError('Could not retrieve user calendars', error.message);
+            $log.error('Could not retrieve user calendars for user minicalendar', error);
+          }
+        );
       }
 
       function getOwnCalendars() {
@@ -161,16 +159,26 @@
           });
       }
 
-      function addCalendar(event, calendar) {
-        calendarWrapperPromise.then(function(calendarWrapper) {
-          calendarWrapper.addCalendar(calendar);
+      function buildEventSource(calendars) {
+        return calendarPromise.then(function(cal) {
+          return calMiniCalendarEventSourceBuilderService(cal, calendars);
         });
       }
 
-      function removeCalendar(event, calendar) {
-        calendarWrapperPromise.then(function(calendarWrapper) {
-          calendarWrapper.removeCalendar(calendar);
+      function addEventSource(eventSource) {
+        return calendarPromise.then(function(cal) {
+          cal.fullCalendar('addEventSource', eventSource);
         });
+      }
+
+      function removeEventSources() {
+        return calendarPromise.then(function(cal) {
+          cal.fullCalendar('removeEventSources');
+        });
+      }
+
+      function onCalendarsChange() {
+        return removeEventSources().then(buildUserCalendarsEventSource);
       }
 
       function next() {
