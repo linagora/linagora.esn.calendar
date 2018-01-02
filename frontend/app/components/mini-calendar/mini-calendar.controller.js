@@ -15,6 +15,7 @@
     calendarEventSource,
     calendarService,
     miniCalendarService,
+    calMiniCalendarWrapperService,
     notificationFactory,
     calendarHomeService,
     calendarCurrentView,
@@ -28,8 +29,8 @@
       var calendarPromise = calendarDeffered.promise;
       var currentView = calendarCurrentView.get();
 
-      $scope.miniCalendarConfig = buildCalendarConfiguration();
       $scope.events = [];
+      $scope.miniCalendarConfig = buildCalendarConfiguration();
       $scope.homeCalendarViewMode = currentView.name || CAL_UI_CONFIG.calendar.defaultView;
       $scope.calendarReady = calendarDeffered.resolve.bind(calendarDeffered);
       $scope.swipeLeft = next;
@@ -145,7 +146,7 @@
           calendar: calendarPromise,
           calendars: getOwnCalendars()
         }).then(function(resolved) {
-          return miniCalendarService.miniCalendarWrapper(resolved.calendar, resolved.calendars);
+          return calMiniCalendarWrapperService(resolved.calendar, resolved.calendars);
         }, function(error) {
           notificationFactory.weakError('Could not retrieve user calendars', error.message);
           $log.error('Could not retrieve user calendars', error);
