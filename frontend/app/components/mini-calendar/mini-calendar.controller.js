@@ -147,7 +147,7 @@
         }).then(function(resolved) {
           return miniCalendarService.miniCalendarWrapper(resolved.calendar, resolved.calendars);
         }, function(error) {
-          notificationFactory.weakError('Could not retrive user calendars', error.message);
+          notificationFactory.weakError('Could not retrieve user calendars', error.message);
           $log.error('Could not retrieve user calendars', error);
         });
       }
