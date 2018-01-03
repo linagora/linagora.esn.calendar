@@ -182,13 +182,13 @@
       }
 
       function next() {
-        return calendarPromise.then.bind(calendarPromise, function(cal) {
+        return calendarPromise.then(function(cal) {
           cal.fullCalendar('next');
         });
       }
 
       function previous() {
-        return calendarPromise.then.bind(calendarPromise, function(cal) {
+        return calendarPromise.then(function(cal) {
           cal.fullCalendar('prev');
         });
       }
