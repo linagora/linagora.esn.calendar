@@ -1,4 +1,4 @@
-(function() {
+(function(angular) {
   'use strict';
 
   angular.module('esn.calendar')
@@ -9,9 +9,8 @@
     $log,
     _,
     miniCalendarService,
-    calCachedEventSource,
+    calendarEventSourceBuilder,
     calMoment,
-    calendarEventSource,
     CAL_MINI_CALENDAR_DAY_FORMAT
   ) {
 
@@ -22,13 +21,14 @@
     };
 
     function groupByDay(calendar, calendars) {
+      var eventSources = calendarEventSourceBuilder(calendars);
+
       return function(start, end, timezone, callback) {
         var eventsPromise = [];
         var originalEvents = {};
         var fakeEvents = {};
-        var eventSourcesMap = _buildEventSources(calendars);
 
-        _.forEach(eventSourcesMap, function(calendarEventSource) {
+        _.forEach(eventSources, function(calendarEventSource) {
           var deferred = $q.defer();
 
           eventsPromise.push(deferred.promise);
@@ -72,21 +72,5 @@
         }
       };
     }
-
-    function _buildEventSource(calendar) {
-      return calCachedEventSource.wrapEventSource(calendar.getUniqueId(), calendarEventSource(calendar, function(error) {
-        $log.error('Could not retrieve event sources for calendar', calendar.getUniqueId(), error);
-      }));
-    }
-
-    function _buildEventSources(calendars) {
-      var eventSources = {};
-
-      calendars.forEach(function(calendar) {
-        eventSources[calendar.getUniqueId()] = _buildEventSource(calendar);
-      });
-
-      return eventSources;
-    }
   }
-})();
+})(angular);

@@ -12,8 +12,6 @@
 
     return service;
 
-    ////////////
-
     function forEachDayOfEvent(event, callback) {
       var day = calMoment(event.start);
       var end = calMoment(event.end || event.start);
