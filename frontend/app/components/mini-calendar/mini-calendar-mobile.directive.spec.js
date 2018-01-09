@@ -14,8 +14,7 @@ describe('The miniCalendar component', function() {
   });
 
   describe('miniCalendarMobile directive', function() {
-    beforeEach(angular.mock.inject(function($rootScope, $compile, $httpBackend, CAL_EVENTS) {
-      this.$httpBackend = $httpBackend;
+    beforeEach(angular.mock.inject(function($rootScope, $compile, CAL_EVENTS) {
       this.$rootScope = $rootScope;
       this.$scope = this.$rootScope.$new();
       this.$compile = $compile;
@@ -30,15 +29,12 @@ describe('The miniCalendar component', function() {
 
         return element;
       };
-
-      this.$httpBackend.expectGET('/dav/api/calendars/undefined.json?personal=true&sharedDelegationStatus=accepted&sharedPublicSubscription=true&withRights=true').respond(null);
     }));
 
     it('should remove toggle the mini-calendar on CAL_EVENTS.MINI_CALENDAR.TOGGLE', function() {
       var element = this.initDirective(this.$scope);
 
       this.$rootScope.$broadcast(this.CAL_EVENTS.MINI_CALENDAR.TOGGLE);
-      this.$httpBackend.flush();
       expect(element.hasClass('initial-state')).to.be.false;
       expect(element.hasClass('display-none')).to.be.true;
     });

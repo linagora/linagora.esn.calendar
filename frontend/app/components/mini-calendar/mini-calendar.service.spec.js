@@ -1,12 +1,11 @@
 'use strict';
 
-/* global chai: false */
-/* global sinon: false */
-/* global moment: false */
+/* global chai, sinon, moment: false */
 
 var expect = chai.expect;
 
-describe('The mini-calendar service', function() {
+describe('The miniCalendarService service', function() {
+  var calMoment, miniCalenderService;
 
   beforeEach(function() {
     angular.mock.module('esn.calendar', 'linagora.esn.graceperiod');
@@ -17,16 +16,12 @@ describe('The mini-calendar service', function() {
     moment.tz.setDefault(null);
   });
 
-  var calMoment, miniCalenderService, $rootScope;
-
-  beforeEach(angular.mock.inject(function(_calMoment_, _miniCalendarService_, _$rootScope_) {
+  beforeEach(angular.mock.inject(function(_calMoment_, _miniCalendarService_) {
     calMoment = _calMoment_;
     miniCalenderService = _miniCalendarService_;
-    $rootScope = _$rootScope_;
   }));
 
-  describe('getWeekAroundDay', function() {
-
+  describe('The getWeekAroundDay function', function() {
     it('should return the week around a day depending of the miniCalendarConfig', function() {
       function forEachDayInEachPossibleWeek(callback) {
         var start = calMoment('2015-11-16');
@@ -53,11 +48,9 @@ describe('The mini-calendar service', function() {
         expect(nextWeekStart.isSame(week.nextFirstWeekDay, 'day')).to.be.true;
       });
     });
-
   });
 
-  describe('forEachDayOfEvent', function() {
-
+  describe('The forEachDayOfEvent function', function() {
     var event, aDay, spy;
 
     beforeEach(function() {
@@ -74,11 +67,13 @@ describe('The mini-calendar service', function() {
     it('should iter on each day where the event is present', function() {
       event.end = calMoment('2015-12-02T11:39:00.376Z');
       miniCalenderService.forEachDayOfEvent(event, spy);
+
       expect(spy).to.have.been.calledThrice;
     });
 
     it('should call callback only on start day if no end day', function() {
       miniCalenderService.forEachDayOfEvent(event, spy);
+
       expect(spy).to.have.been.calledOnce;
     });
 
@@ -86,8 +81,8 @@ describe('The mini-calendar service', function() {
       event.start = calMoment('2015-11-30');
       event.end = calMoment('2015-12-01');
       event.allDay = true;
-
       miniCalenderService.forEachDayOfEvent(event, spy);
+
       expect(spy).to.have.been.calledOnce;
     });
 
@@ -111,123 +106,6 @@ describe('The mini-calendar service', function() {
 
       miniCalenderService.forEachDayOfEvent(event, spy);
       expect(spy).to.have.been.calledOnce;
-    });
-  });
-
-  describe('miniCalendarWrapper', function() {
-
-    var calendar, calWrapper, eventSources, initWrapper, fcMethodMock; // eslint-disable-line
-
-    beforeEach(function() {
-      fcMethodMock = {
-        addEventSource: sinon.spy(),
-        renderEvent: sinon.spy(),
-        updateEvent: sinon.spy(),
-        removeEvents: sinon.spy(),
-        clientEvents: sinon.stub().returns([])
-      };
-      calendar = {
-        fullCalendar: function(name) {
-          return fcMethodMock[name].apply(this, Array.prototype.slice.call(arguments, 1));
-        }
-      };
-      eventSources = [];
-
-      initWrapper = function() {
-        calWrapper = miniCalenderService.miniCalendarWrapper(calendar, eventSources);
-      };
-    });
-
-    it('should aggregate event from event sources in a event per day with the number of real event as title', function(done) {
-      var start = calMoment('2015-01-01');
-      var end = calMoment('2015-01-30');
-      var timezone = 'tm';
-
-      var sourceEvents = [{
-        id: 'a',
-        start: calMoment('2015-01-01T14:31:25.724Z'),
-        end: calMoment('2015-01-01T15:31:25.724Z')
-      }, {
-        id: 'b',
-        start: calMoment('2015-01-01T17:31:25.724Z'),
-        end: calMoment('2015-01-01T18:31:25.724Z')
-      }, {
-        id: 'c',
-        start: calMoment('2015-01-01T14:31:25.724Z'),
-        end: calMoment('2015-01-02T15:31:25.724Z')
-      }];
-
-      eventSources = [function(_start, _end, _timezone, callback) {
-        expect(_start).to.equals(start);
-        expect(_end).to.equals(end);
-        expect(_timezone).to.equals(timezone);
-        callback(sourceEvents);
-      }];
-
-      fcMethodMock.addEventSource = function(eventSource) {
-        eventSource.events(start, end, timezone, function(fakeEvents) {
-          var numFakeEvent = 0;
-          var fakeEvent = {};
-
-          fakeEvents.forEach(function(event) {
-            expect(event.allDay).to.be.true;
-            fakeEvent[event.start] = parseInt(event.title, 10);
-            numFakeEvent++;
-          });
-
-          expect(fakeEvent['2015-01-01']).to.equals(3);
-          expect(fakeEvent['2015-01-02']).to.equals(1);
-          expect(numFakeEvent).to.equals(2);
-          expect(fcMethodMock.removeEvents).to.have.been.called;
-          done();
-        });
-      };
-
-      fcMethodMock.removeEvents = sinon.spy(angular.noop);
-
-      initWrapper();
-      $rootScope.$digest();
-    });
-
-    it('should not recount event twice when event source is called twice on the same period', function(done) {
-      var start = calMoment('2015-01-01');
-      var end = calMoment('2015-01-30');
-      var timezone = 'who cares';
-
-      var sourceEvents = [{
-        id: 'a',
-        start: calMoment('2015-01-01T14:31:25.724Z'),
-        end: calMoment('2015-01-01T15:31:25.724Z')
-      }];
-
-      eventSources = [function(_start, _end, _timezone, callback) { // eslint-disable-line
-        callback(sourceEvents);
-      }];
-
-      fcMethodMock.addEventSource = function(eventSource) {
-        var numTest = 0;
-        var testEventSource = eventSource.events.bind(null, start, end, timezone, function(fakeEvents) {
-          numTest++;
-          var numFakeEvent = 0;
-          var fakeEvent = {};
-
-          fakeEvents.forEach(function(event) {
-            expect(event.allDay).to.be.true;
-            fakeEvent[event.start] = parseInt(event.title, 10);
-            numFakeEvent++;
-          });
-
-          expect(fakeEvent['2015-01-01']).to.equals(1);
-          expect(numFakeEvent).to.equals(1);
-          (numTest === 2 ? done : testEventSource)();
-        });
-
-        testEventSource();
-      };
-
-      fcMethodMock.removeEvents = sinon.spy(angular.noop);
-      initWrapper();
-      $rootScope.$digest();
     });
   });
 });

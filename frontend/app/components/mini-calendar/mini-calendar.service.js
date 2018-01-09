@@ -4,16 +4,13 @@
   angular.module('esn.calendar')
     .factory('miniCalendarService', miniCalendarService);
 
-  function miniCalendarService($q, _, calMoment, CAL_MINI_CALENDAR_DAY_FORMAT) {
+  function miniCalendarService($q, calMoment) {
     var service = {
       forEachDayOfEvent: forEachDayOfEvent,
-      getWeekAroundDay: getWeekAroundDay,
-      miniCalendarWrapper: miniCalendarWrapper
+      getWeekAroundDay: getWeekAroundDay
     };
 
     return service;
-
-    ////////////
 
     function forEachDayOfEvent(event, callback) {
       var day = calMoment(event.start);
@@ -58,73 +55,5 @@
         nextFirstWeekDay: nextFirstWeekDay
       };
     }
-
-    function miniCalendarWrapper(calendar, eventSources) {
-      var originalEvents = {};
-      var fakeEvents = {};
-
-      function addOrDeleteEvent(add, event) {
-
-        if (add) {
-          originalEvents[event.id] = {
-            id: event.id,
-            start: calMoment(event.start),
-            end: event.end && calMoment(event.end),
-            allDay: event.allDay
-          };
-        } else {
-          delete originalEvents[event.id];
-        }
-
-        forEachDayOfEvent(event, function(day) {
-          var date = day.format(CAL_MINI_CALENDAR_DAY_FORMAT);
-          var dayEvent = fakeEvents[date];
-
-          if (!dayEvent) {
-            dayEvent = fakeEvents[date] = {
-              start: date,
-              id: date,
-              _num: 0,
-              allDay: true
-            };
-          }
-
-          dayEvent._num = dayEvent._num + (add ? 1 : -1);
-          dayEvent.title = dayEvent._num > 99 ? '99+' : ('' + dayEvent._num);
-        });
-      }
-
-      function groupByDayEventSources(start, end, timezone, callback) {
-        var eventsPromise = [];
-
-        originalEvents = {};
-        fakeEvents = {};
-        eventSources.forEach(function(calendarEventSource) {
-          var deferred = $q.defer();
-
-          eventsPromise.push(deferred.promise);
-          calendarEventSource(start, end, timezone, deferred.resolve);
-        });
-
-        $q.all(eventsPromise).then(function(listOfEvents) {
-          _.flatten(listOfEvents).forEach(addOrDeleteEvent.bind(null, true));
-          calendar.fullCalendar('removeEvents');
-          callback(_.values(fakeEvents));
-        });
-      }
-
-      calendar.fullCalendar('addEventSource', {
-        events: groupByDayEventSources
-      });
-
-      function rerender() {
-        calendar.fullCalendar('refetchEvents');
-      }
-
-      return {
-        rerender: rerender
-      };
-    }
   }
-
 })();
