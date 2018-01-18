@@ -12,17 +12,15 @@
 
       calendarService.getCalendar(calendarHomeId, CAL_DEFAULT_OLD_CALENDAR_ID)
         .then(function(calendar) {
-          return calendar && CAL_DEFAULT_OLD_CALENDAR_ID;
+          return calendar && calendar.calendarHomeId;
         })
         .catch(function(err) {
           if (err && err.status === 404) {
             return calendarHomeId;
           }
-
-          return CAL_DEFAULT_OLD_CALENDAR_ID;
         })
         .then(function(defaultCalId) {
-          calDefaultValue.set('calendarId', defaultCalId);
+          calDefaultValue.set('calendarId', defaultCalId || CAL_DEFAULT_OLD_CALENDAR_ID);
         });
     }
 })();
