@@ -12,7 +12,7 @@
 
       calendarService.getCalendar(calendarHomeId, CAL_DEFAULT_OLD_CALENDAR_ID)
         .then(function(calendar) {
-          return calendar && calendar.calendarHomeId;
+          return calendar && calendar.id;
         })
         .catch(function(err) {
           if (err && err.status === 404) {
