@@ -160,7 +160,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
     it('should report an invalid meeting if the current user is not involved in the event', function() {
       var ctrl = initCtrl('REQUEST', '1234', '0'); // This occurrence does not exist
 
-      session.user.emailMap = {};
+      session.user.emails = {};
       calEventService.getEventByUID = qResolve(shells.recurringEventWithTwoExceptions);
       ctrl.$onInit();
       $rootScope.$digest();
@@ -171,7 +171,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
     it('should report an invalid meeting if the sequence is outdated', function() {
       var ctrl = initCtrl('REQUEST', '1234', '0'); // Event sequence is 2
 
-      session.user.emailMap = { 'admin@linagora.com': true };
+      session.user.emails = ['admin@linagora.com'];
       calEventService.getEventByUID = qResolve(shells.recurringEventWithTwoExceptions);
       ctrl.$onInit();
       $rootScope.$digest();
@@ -182,7 +182,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
     it('should expose the event', function() {
       var ctrl = initCtrl('REQUEST', '1234', '2');
 
-      session.user.emailMap = { 'admin@linagora.com': true };
+      session.user.emails = ['admin@linagora.com'];
       calEventService.getEventByUID = qResolve(shells.recurringEventWithTwoExceptions);
       ctrl.$onInit();
       $rootScope.$digest();
@@ -194,7 +194,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
     it('should expose a loaded=true when event loading process is successful', function() {
       var ctrl = initCtrl('REQUEST', '1234', '2');
 
-      session.user.emailMap = { 'admin@linagora.com': true };
+      session.user.emails = ['admin@linagora.com'];
       calEventService.getEventByUID = qResolve(shells.recurringEventWithTwoExceptions);
       ctrl.$onInit();
       $rootScope.$digest();
@@ -215,7 +215,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
     it('should not expose the replyAttendee when the meeting is not a reply', function() {
       var ctrl = initCtrl('REQUEST', '1234', '2');
 
-      session.user.emailMap = { 'admin@linagora.com': true };
+      session.user.emails = ['admin@linagora.com'];
       calEventService.getEventByUID = qResolve(shells.recurringEventWithTwoExceptions);
       ctrl.$onInit();
       $rootScope.$digest();
@@ -226,7 +226,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
     it('should not expose the replyAttendee when the meeting is a reply but the attendee is not found', function() {
       var ctrl = initCtrl('REQUEST', '1234', '2', null, 'another@open-paas.org');
 
-      session.user.emailMap = { 'admin@linagora.com': true };
+      session.user.emails = ['admin@linagora.com'];
       calEventService.getEventByUID = qResolve(shells.recurringEventWithTwoExceptions);
       ctrl.$onInit();
       $rootScope.$digest();
@@ -237,7 +237,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
     it('should expose the replyAttendee when the meeting is a reply and the attendee is found', function() {
       var ctrl = initCtrl('REPLY', '1234', '2', null, 'ddolcimascolo@linagora.com');
 
-      session.user.emailMap = { 'admin@linagora.com': true };
+      session.user.emails = ['admin@linagora.com'];
       calEventService.getEventByUID = qResolve(shells.recurringEventWithTwoExceptions);
       ctrl.$onInit();
       $rootScope.$digest();
@@ -255,7 +255,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
     it('should return btn-default if the user is NEEDS-ACTION', function() {
       var ctrl = initCtrl('REQUEST', '1234', '2');
 
-      session.user.emailMap = { 'ddolcimascolo@linagora.com': true };
+      session.user.emails = ['ddolcimascolo@linagora.com'];
       ctrl.event = shells.recurringEventWithTwoExceptions;
       ctrl.event.changeParticipation('NEED-ACTION');
 
@@ -267,7 +267,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
     it('should return btn-success for ACCEPTED if the user is ACCEPTED', function() {
       var ctrl = initCtrl('REQUEST', '1234', '2');
 
-      session.user.emailMap = { 'ddolcimascolo@linagora.com': true };
+      session.user.emails = ['ddolcimascolo@linagora.com'];
       ctrl.event = shells.recurringEventWithTwoExceptions;
       ctrl.event.changeParticipation('ACCEPTED');
 
@@ -277,7 +277,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
     it('should return btn-danger for DECLINED if the user is DECLINED', function() {
       var ctrl = initCtrl('REQUEST', '1234', '2');
 
-      session.user.emailMap = { 'ddolcimascolo@linagora.com': true };
+      session.user.emails = ['ddolcimascolo@linagora.com'];
       ctrl.event = shells.recurringEventWithTwoExceptions;
       ctrl.event.changeParticipation('DECLINED');
 
@@ -287,7 +287,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
     it('should return btn-primary for TENTATIVE if the user is TENTATIVE', function() {
       var ctrl = initCtrl('REQUEST', '1234', '2');
 
-      session.user.emailMap = { 'ddolcimascolo@linagora.com': true };
+      session.user.emails = ['ddolcimascolo@linagora.com'];
       ctrl.event = shells.recurringEventWithTwoExceptions;
       ctrl.event.changeParticipation('TENTATIVE');
 
@@ -301,7 +301,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
     it('should call calEventService.changeParticipation with the correct options and partstat', function() {
       var ctrl = initCtrl('REQUEST', '1234', '2');
 
-      session.user.emailMap = { 'ddolcimascolo@linagora.com': true };
+      session.user.emails = ['ddolcimascolo@linagora.com'];
       ctrl.event = shells.recurringEventWithTwoExceptions;
 
       ctrl.changeParticipation('ACCEPTED');
@@ -312,7 +312,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
     it('should not call calEventService.changeParticipation if partstat is already correct', function() {
       var ctrl = initCtrl('REQUEST', '1234', '2');
 
-      session.user.emailMap = { 'ddolcimascolo@linagora.com': true };
+      session.user.emails = ['ddolcimascolo@linagora.com'];
       ctrl.event = shells.recurringEventWithTwoExceptions;
       ctrl.event.changeParticipation('DECLINED', ['ddolcimascolo@linagora.com']);
 
@@ -325,7 +325,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
       var ctrl = initCtrl('REQUEST', '1234', '2');
 
       calEventService.getEventByUID = qResolve(shells.recurringEventWithTwoExceptions);
-      session.user.emailMap = { 'ddolcimascolo@linagora.com': true };
+      session.user.emails = ['ddolcimascolo@linagora.com'];
 
       ctrl.$onInit();
       $rootScope.$digest();
@@ -341,7 +341,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
       var ctrl = initCtrl('REQUEST', '1234', '2', '20170114T100000Z');
 
       calEventService.getEventByUID = qResolve(shells.recurringEventWithTwoExceptions);
-      session.user.emailMap = { 'ddolcimascolo@linagora.com': true };
+      session.user.emails = ['ddolcimascolo@linagora.com'];
 
       ctrl.$onInit();
       $rootScope.$digest();
