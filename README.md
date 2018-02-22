@@ -1,5 +1,15 @@
 # linagora.esn.calendar
 
+<!-- TOC -->
+
+- [linagora.esn.calendar](#linagoraesncalendar)
+  - [Install](#install)
+  - [Develop](#develop)
+  - [Troubleshoot](#troubleshoot)
+  - [Debugging](#debugging)
+
+<!-- /TOC -->
+
 [![build status](https://ci.linagora.com/linagora/lgs/openpaas/linagora.esn.calendar/badges/master/build.svg)](https://ci.linagora.com/linagora/lgs/openpaas/linagora.esn.calendar/commits/master)
 
 This repository contains source code of Calendar module for OpenPaaS ESN.
@@ -252,3 +262,19 @@ this can be easily done using [Scripting](https://www.elastic.co/guide/en/elasti
 * This step is optional. You can keep the `events-tmp.idx` as a backup if you want, or simply delete it if you are sure that you do not need it any more:
 
         DELETE /events-tmp.idx
+
+## Debugging
+
+**I want to reproduce locally the UseCases tests that I perform on the production platform**
+
+The thing to know is that all the ics sent from Exchange/Gmail pass in JAMES. Then JAMES sends them to OP through RabbitMQ using the **james:events** exchange (please do not confuse between exchange of RabbitMQ and Exchange ;-) )
+
+Before starting, ask an OP member for the RabbitMQ URL, name and password. (I cannot write it here, you know it is on Github... Yolo!!)
+
+To get the message from the **james:events** exchange, we can create a DURABLE queue (let us call it SuperQueue) and then bind it to the **james:events** exchange. Once you do so you will get benefit from the fact that the **james:events** exchange has the type **fanout**. That is, it will forward all its message to **all** bound queue. So the SuperQueue will receive a copy of all messages the original queue receives.
+
+Now go to your SuperQueue and press on **Get messages** and so you can get all messages from it. Do not forget to **purge** this queue manually cause it is durable. So you do not have to store useless messages.
+
+Once you get the message from your SuperQueue, you can go to your local RabbitMQ. Then go to the **james:events** exchange and publish the messages you got from the production here. The corresponding events are then displayed in OP.
+
+If you want to restart the debugging with the same ics, you can publish the same ics again. By doing so the status of the corresponding events go back to NEED_ACTION. So you can restart your debugging.
