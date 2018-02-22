@@ -692,7 +692,7 @@
       var fromCache = calMasterEventCache.get(this.path);
 
       if (fromCache) {
-        fromCache.modifyOccurrence(this);
+        !skipAddingModifiedOccurence && fromCache.modifyOccurrence(this);
 
         return $q.when(fromCache);
       }

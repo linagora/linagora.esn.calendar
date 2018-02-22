@@ -1055,6 +1055,48 @@ describe('CalendarShell factory', function() {
       $rootScope.$apply();
     });
 
+    it('should return the cached master if it exists and not modifyOccurence when skipAddingModifiedOccurence is set to true', function(done) {
+      var date = calMoment('1999-05-19 01:01');
+      var shell = CalendarShell.fromIncompleteShell({
+        recurrenceId: date
+      });
+
+      var masterFromCache = CalendarShell.fromIncompleteShell({start: date});
+      sinon.spy(masterFromCache, 'modifyOccurrence');
+
+      this.calMasterEventCache.get = sinon.stub().returns(masterFromCache);
+
+      shell.getModifiedMaster(true).then(function(masterShell) {
+        expect(masterShell).to.equal(masterFromCache);
+        expect(masterFromCache.modifyOccurrence).to.not.have.been.called;
+
+        done();
+      }, done);
+
+      $rootScope.$apply();
+    });
+
+    it('should return the cached master if it exists and call modifyOccurence when skipAddingModifiedOccurence is set to false', function(done) {
+      var date = calMoment('1999-05-19 01:01');
+      var shell = CalendarShell.fromIncompleteShell({
+        recurrenceId: date
+      });
+
+      var masterFromCache = CalendarShell.fromIncompleteShell({start: date});
+      sinon.spy(masterFromCache, 'modifyOccurrence');
+
+      this.calMasterEventCache.get = sinon.stub().returns(masterFromCache);
+
+      shell.getModifiedMaster(false).then(function(masterShell) {
+        expect(masterShell).to.equal(masterFromCache);
+        expect(masterFromCache.modifyOccurrence).to.have.been.called;
+
+        done();
+      }, done);
+
+      $rootScope.$apply();
+    });
+
     it('should fetch the master on the server if not already cached', function(done) {
       var path = 'this is a path';
       var date = calMoment('2005-05-19 01:01');
