@@ -684,7 +684,7 @@
      *
      * @return {Promise}      Promise resolving with the master shell.
      */
-    function getModifiedMaster() {
+    function getModifiedMaster(skipAddingModifiedOccurence) {
       if (!this.isInstance()) {
         return $q.when(this);
       }
@@ -701,7 +701,7 @@
       return calEventAPI.get(this.path).then(function(response) {
         var mastershell = new CalendarShell(new ICAL.Component(response.data), _getExtendedProperties(this));
 
-        mastershell.modifyOccurrence(this);
+        !skipAddingModifiedOccurence && mastershell.modifyOccurrence(this);
 
         return mastershell;
       }.bind(this));

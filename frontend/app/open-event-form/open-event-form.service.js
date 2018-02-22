@@ -88,7 +88,7 @@
 
           $scope.editAllInstances = function() {
             $scope.$hide();
-            event.getModifiedMaster().then(function(eventMaster) {
+            event.getModifiedMaster(true).then(function(eventMaster) {
               openForm(calendar, eventMaster);
             });
           };

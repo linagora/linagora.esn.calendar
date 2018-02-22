@@ -1081,11 +1081,43 @@ describe('CalendarShell factory', function() {
       var self = this;
 
       shell.getModifiedMaster().then(function(masterShell) {
+        expect(masterShell.vcalendar.getAllSubcomponents('vevent').length).to.equal(2);
         expect(masterShell.vcalendar.toJSON()).to.deep.equal(vcalendar.toJSON());
         expect(masterShell.etag).to.equal(etag);
         expect(masterShell.gracePeriodTaskId).to.equal(gracePeriodTaskId);
         expect(self.calMasterEventCache.get).to.have.been.calledWith(shell.path);
         expect(self.calMasterEventCache.save).to.have.been.calledWith(masterShell);
+        done();
+      }, done);
+
+      $rootScope.$apply();
+    });
+
+    it('should skip adding modified occurrence when skipAddingModifiedOccurence is set to true', function(done) {
+      var path = 'this is a path';
+      var date = calMoment('2005-05-19 01:01');
+      var vcalendar = CalendarShell.fromIncompleteShell({start: date}).vcalendar;
+      var gracePeriodTaskId = 'gracePeriodID';
+      var etag = 'eta';
+
+      var shell = CalendarShell.fromIncompleteShell({
+        recurrenceId: calMoment(),
+        path: path,
+        etag: etag,
+        gracePeriodTaskId: gracePeriodTaskId
+      });
+
+      this.calMasterEventCache.get = sinon.stub().returns(null);
+
+      this.calEventAPIMock.get = function(_path) {
+        expect(_path).to.equal(path);
+
+        return $q.when({data: vcalendar.toJSON()});
+      };
+
+      shell.getModifiedMaster(true).then(function(masterShell) {
+        expect(masterShell.vcalendar.getAllSubcomponents('vevent').length).to.equal(1);
+
         done();
       }, done);
 
