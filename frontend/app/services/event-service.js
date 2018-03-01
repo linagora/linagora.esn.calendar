@@ -412,7 +412,7 @@
           return $q.when(null);
         }
 
-        return $q.when(event.isInstance() ? event.getModifiedMaster() : event).then(function(masterEvent) {
+        return $q.when(event.getModifiedMaster()).then(function(masterEvent) {
 
           return calEventAPI.changeParticipation(eventPath, masterEvent.vcalendar, etag)
             .then(function(response) {
