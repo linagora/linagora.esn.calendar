@@ -69,6 +69,8 @@ $ grunt linters test-unit-frontend
 
 ## Troubleshoot
 
+Please have a look on the [issue](./ISSUE.md) document.
+
 **I can only search events from my default calendar "Events", the events from other calendars are not reachable!**
 
 This may be due the fact that Elasticsearch is not will indexed. To verify please do the following in your terminal (or maybe in [Sense](https://www.elastic.co/guide/en/sense/current/installing.html))
