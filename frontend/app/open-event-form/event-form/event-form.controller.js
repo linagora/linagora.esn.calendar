@@ -51,7 +51,6 @@
       $scope.canPerformCall = canPerformCall;
       $scope.goToCalendar = goToCalendar;
       $scope.cancel = cancel;
-      $scope.canSuggestTime = canSuggestTime;
 
       // Initialize the scope of the form. It creates a scope.editedEvent which allows us to
       // rollback to scope.event in case of a Cancel.
@@ -100,6 +99,7 @@
         $scope.newAttendees = calEventUtils.getNewAttendees();
         $scope.newResources = calEventUtils.getNewResources();
         $scope.isOrganizer = calEventUtils.isOrganizer($scope.editedEvent);
+        $scope.canSuggestTime = !!(!$scope.isOrganizer && calEventUtils.getUserAttendee($scope.editedEvent, session.user));
 
         calendarService.listPersonalAndAcceptedDelegationCalendars($scope.calendarHomeId)
           .then(function(calendars) {
@@ -365,10 +365,6 @@
         });
 
         return $scope.attendees.users.concat(attendees, $scope.attendees.resources, resources);
-      }
-
-      function canSuggestTime() {
-        return true;
       }
   }
 })();
