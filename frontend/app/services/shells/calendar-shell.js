@@ -444,15 +444,20 @@
      * @return {CalendarShell}
      */
     function _computeNonExceptionnalInstance(instanceDetails) {
-      var instance = this.clone();
+      var temporaryShell = this.clone();
+      /*
+        We found a huge problem with iCal.js and the way we use it,
+        especially in this **non-tested** part of our code.
+        We tried to document it well in ISSUE.md#ical.js
+      */
+      temporaryShell.vevent.removeProperty('rrule');
+
+      var instance = temporaryShell.clone();
 
       instance.deleteAllException();
-      instance.vevent.removeProperty('rrule');
-      instance.vevent.removeProperty('exdate');
-
-      _setDatetimePropertyFromIcalTime(instance.vevent, 'recurrence-id', instanceDetails.recurrenceId.convertToZone(ICAL.Timezone.utcTimezone));
       _setDatetimePropertyFromIcalTime(instance.vevent, 'dtstart', instanceDetails.startDate);
       _setDatetimePropertyFromIcalTime(instance.vevent, 'dtend', instanceDetails.endDate);
+      _setDatetimePropertyFromIcalTime(instance.vevent, 'recurrence-id', instanceDetails.recurrenceId.convertToZone(ICAL.Timezone.utcTimezone));
 
       return instance;
     }
