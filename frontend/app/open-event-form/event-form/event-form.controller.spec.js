@@ -431,6 +431,90 @@ describe('The event-form module controllers', function() {
         expect(this.scope.isOrganizer).to.equal(false);
       });
 
+      it('should set canSuggestTime to true when user is not organizer but attendee', function() {
+        this.scope.event = this.CalendarShell.fromIncompleteShell({
+          _id: '123456',
+          start: this.moment('2013-02-08 12:30'),
+          end: this.moment('2013-02-08 13:30'),
+          organizer: {
+            email: 'notorg@test.com'
+          },
+          attendees: [
+            {
+              displayName: 'attendee1',
+              email: this.session.user.emails[0],
+              cutype: this.CAL_ICAL.cutype.individual
+            }
+          ]
+        });
+        this.initController();
+
+        expect(this.scope.canSuggestTime).to.be.true;
+      });
+
+      it('should set canSuggestTime to false when user is not organizer and not attendee', function() {
+        this.scope.event = this.CalendarShell.fromIncompleteShell({
+          _id: '123456',
+          start: this.moment('2013-02-08 12:30'),
+          end: this.moment('2013-02-08 13:30'),
+          organizer: {
+            email: 'notorg@test.com'
+          },
+          attendees: [
+            {
+              displayName: 'attendee1',
+              email: 'notattendee@test.com',
+              cutype: this.CAL_ICAL.cutype.individual
+            }
+          ]
+        });
+        this.initController();
+
+        expect(this.scope.canSuggestTime).to.be.false;
+      });
+
+      it('should set canSuggestTime to false when user is organizer and not attendee', function() {
+        this.scope.event = this.CalendarShell.fromIncompleteShell({
+          _id: '123456',
+          start: this.moment('2013-02-08 12:30'),
+          end: this.moment('2013-02-08 13:30'),
+          organizer: {
+            email: this.session.user.emails[0]
+          },
+          attendees: [
+            {
+              displayName: 'attendee1',
+              email: 'notattendee@test.com',
+              cutype: this.CAL_ICAL.cutype.individual
+            }
+          ]
+        });
+        this.initController();
+
+        expect(this.scope.canSuggestTime).to.be.false;
+      });
+
+      it('should set canSuggestTime to false when user is organizer and attendee', function() {
+        this.scope.event = this.CalendarShell.fromIncompleteShell({
+          _id: '123456',
+          start: this.moment('2013-02-08 12:30'),
+          end: this.moment('2013-02-08 13:30'),
+          organizer: {
+            email: this.session.user.emails[0]
+          },
+          attendees: [
+            {
+              displayName: 'attendee1',
+              email: this.session.user.emails[0],
+              cutype: this.CAL_ICAL.cutype.individual
+            }
+          ]
+        });
+        this.initController();
+
+        expect(this.scope.canSuggestTime).to.be.false;
+      });
+
       it('should initialize the class property with the default value if it is a new event', function() {
         this.scope.event = this.CalendarShell.fromIncompleteShell({});
 
