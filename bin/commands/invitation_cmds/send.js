@@ -1,7 +1,7 @@
-// Send Reply invitation Email with valid data
+// Send invitation Email with valid data + attached ICS file
 // From the repository root:
 //
-// node bin/cli.js invitation reply --from you@linagora.com --password "supersecret" --smtp smtp.linagora.com --to someone@mail.com --file ./thefile.ics
+// node bin/cli.js invitation send --from you@linagora.com --password "supersecret" --smtp smtp.linagora.com --to someone@mail.com --method REPLY --file ./thefile.ics
 
 const ora = require('ora');
 const fs = require('fs-extra');
@@ -9,8 +9,8 @@ const nodemailer = require('nodemailer');
 const { commons } = require('../../lib');
 
 module.exports = {
-  command: 'reply',
-  desc: 'Reply to an event invitation with an ICS file',
+  command: 'send',
+  desc: 'Send email to a recipient with attached ICS file',
   builder: {
     from: {
       alias: 'f',
@@ -36,10 +36,15 @@ module.exports = {
     file: {
       describe: 'The ICS file to send',
       demand: true
+    },
+    method: {
+      describe: 'The ICS method',
+      demand: true,
+      default: 'REPLY'
     }
   },
   handler: argv => {
-    const {from, password, smtp, to, file} = argv;
+    const {from, password, smtp, to, file, method} = argv;
     let ics;
 
     try {
@@ -62,11 +67,11 @@ module.exports = {
         encoding: 'base64',
         from: `<${from}>`,
         to: to,
-        subject: 'OpenPaaS Reply to Event Invitation',
-        text: 'This is a reply to an invitation 🐼',
+        subject: `OpenPaaS ${method} to Event Invitation`,
+        text: `This is a ${method} to an event 🐼`,
         alternatives: [{
           content: ics,
-          contentType: 'text/calendar; charset=UTF-8; method=REPLY'
+          contentType: `text/calendar; charset=UTF-8; method=${method}`
         }],
         attachments: [{
           filename: 'meeting.ics',

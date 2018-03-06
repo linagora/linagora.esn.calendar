@@ -76,6 +76,11 @@ module.exports = dependencies => {
             template.name = 'event.cancel';
             inviteMessage = _i18nHelper('has canceled a meeting');
             break;
+          case 'COUNTER':
+            subject = _i18nHelper('New changes proposed to event {{summary}}', true, true);
+            template.name = 'event.counter';
+            inviteMessage = _i18nHelper('has proposed changes to the event');
+            break;
         }
 
         // This is a temporary fix since sabre does not send method in ICS and James needs it.

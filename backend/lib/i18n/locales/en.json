@@ -214,5 +214,7 @@
   "User requested to book the resource": "User requested to book the resource",
   "Hide": "Hide",
   "No title": "No title",
-  "CalDAV URL": "CalDAV URL"
+  "CalDAV URL": "CalDAV URL",
+  "New changes proposed to event {{summary}}": "New changes proposed to event {{summary}}",
+  "has proposed changes to the event": "has proposed changes to the event"
 }

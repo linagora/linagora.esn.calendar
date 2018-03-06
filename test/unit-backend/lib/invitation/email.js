@@ -535,6 +535,98 @@ describe('The invitation email module', function() {
       });
     });
 
+    describe('when method is COUNTER', function() {
+      let method;
+
+      beforeEach(function() {
+        method = 'COUNTER';
+      });
+
+      it('should send email with reply event subject and template', function(done) {
+        const ics = fs.readFileSync(__dirname + '/../../fixtures/counter.ics', 'utf-8');
+
+        userMock.findByEmail = function(email, callback) {
+          callback(null, attendee1);
+        };
+
+        emailMock.getMailer = function() {
+          return {
+            sendHTML: function(email, template) {
+              expect(template.name).to.equal('event.counter');
+              expect(template.path).to.match(/templates\/email/);
+              expect(email.subject).to.equal('New changes proposed to event Démo OPENPAAS');
+
+              return Promise.resolve();
+            }
+          };
+        };
+
+        this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
+        this.module.send(organizer, attendeeEmail, method, ics, 'calendarURI').then(() => done(), done);
+      });
+
+      it('should send email with correct content', function(done) {
+        const ics = fs.readFileSync(__dirname + '/../../fixtures/counter.ics', 'utf-8');
+
+        attendee1.domains = [{ domain_id: 'domain_id' }];
+        userMock.findByEmail = function(email, callback) {
+          callback(null, attendee1);
+        };
+
+        const editor = {
+          displayName: attendee1.firstname + ' ' + attendee1.lastname,
+          email: attendee1.emails[0]
+        };
+
+        emailMock.getMailer = function() {
+          return {
+            sendHTML: function(email, template, locals) {
+              expect(template.name).to.equal('event.counter');
+              expect(template.path).to.match(/templates\/email/);
+              expect(email.subject).to.equal('New changes proposed to event Démo OPENPAAS');
+              expect(locals.content.editor).to.deep.equal(editor);
+
+              return Promise.resolve();
+            }
+          };
+        };
+
+        this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
+        this.module.send(attendee1, organizer.emails[0], method, ics, 'calendarURI').then(() => done(), done);
+      });
+
+      it('should only send messages to organizer', function(done) {
+        let called = 0;
+        const ics = fs.readFileSync(__dirname + '/../../fixtures/counter.ics', 'utf-8');
+
+        userMock.findByEmail = function(email, callback) {
+          if (email === 'organizer@open-paas.org') {
+            return callback(null, organizer);
+          }
+          callback(null, otherAttendee);
+        };
+
+        emailMock.getMailer = function() {
+          return {
+            sendHTML: function(email) {
+              called++;
+              if (called === 1) {
+                expect(email.to).to.deep.equal(organizer.emails[0]);
+              }
+
+              return Promise.resolve();
+            }
+          };
+        };
+
+        this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
+        this.module.send(attendee1, organizer.emails[0], method, ics, 'calendarURI').then(() => {
+          expect(called).to.equal(1);
+          done();
+        }, done);
+      });
+    });
+
     describe('when method is CANCEL', function() {
       let method;
 
