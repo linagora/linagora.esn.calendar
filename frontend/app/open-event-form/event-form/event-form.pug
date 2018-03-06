@@ -16,6 +16,22 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
             .form-group
               .fg-line
                 input.input.title.form-control(type="text", ng-model='editedEvent.title', ng-model-options="{getterSetter: true}", maxlength="{{::CAL_EVENT_FORM.title.maxlength}}", placeholder=__('Title'), ng-readonly="!canModifyEvent")
+          .col-xs-12(ng-if='displayParticipationButton')
+            .form-group.status.row
+              .col-xs-12.text-center
+                .buttons
+                  button.btn.btn-link.accepted(type='button', ng-click='changeParticipation("ACCEPTED")', ng-class='{ "active": calendarOwnerAsAttendee.partstat === "ACCEPTED" }')
+                    i.mdi.mdi-check
+                    | #{__('Accept')}
+                  button.btn.btn-link.undecided(type='button', ng-click='changeParticipation("TENTATIVE")', ng-class='{ "active": calendarOwnerAsAttendee.partstat === "TENTATIVE" }')
+                    i.mdi.mdi-help
+                    | #{__('Maybe')}
+                  button.btn.btn-link.declined(type='button', ng-click='changeParticipation("DECLINED")', ng-class='{ "active": calendarOwnerAsAttendee.partstat === "DECLINED" }')
+                    i.mdi.mdi-close
+                    | #{__("Decline")}
+                  button.btn.btn-link.suggest(ng-if="canSuggestTime" type='button', ng-click='suggestTime()')
+                    i.mdi.mdi-clock
+                    | #{__("Suggest")}
           .col-xs-12
             .form-group
               .input-group
@@ -33,19 +49,6 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
                   input.input.location.form-control(type="text", ng-model='editedEvent.location', ng-model-options="{getterSetter: true}", maxlength="{{::CAL_EVENT_FORM.location.maxlength}}", placeholder=__('Location'), ng-readonly="!canModifyEvent")
           cal-entities-autocomplete-input.cal-user-autocomplete-input(ng-hide='!canModifyEventAttendees', types='[{{::CAL_ATTENDEE_OBJECT_TYPE.user}}, {{::CAL_ATTENDEE_OBJECT_TYPE.group}}, {{::CAL_ATTENDEE_OBJECT_TYPE.contact}}]', original-entities='attendees.users', mutable-entities='newAttendees', place-holder="Attendees", show-icon='true')
           cal-entities-autocomplete-input(ng-hide='!canModifyEventAttendees', types='[{{::CAL_ATTENDEE_OBJECT_TYPE.resource}}]', original-entities='attendees.resources', mutable-entities='newResources', place-holder="Resources", show-icon='true', show-resource-icon='true')
-          .col-xs-12(ng-if='displayParticipationButton')
-            .form-group.status.row
-              .col-xs-12.text-center
-                .btn-group(role="group")
-                  button.btn.btn-link.accepted(type='button', ng-click='changeParticipation("ACCEPTED")', ng-class='{ "active": calendarOwnerAsAttendee.partstat === "ACCEPTED" }')
-                    i.mdi.mdi-check
-                    | #{__('Going')}
-                  button.btn.btn-link.undecided(type='button', ng-click='changeParticipation("TENTATIVE")', ng-class='{ "active": calendarOwnerAsAttendee.partstat === "TENTATIVE" }')
-                    i.mdi.mdi-help
-                    | #{__('Maybe')}
-                  button.btn.btn-link.declined(type='button', ng-click='changeParticipation("DECLINED")', ng-class='{ "active": calendarOwnerAsAttendee.partstat === "DECLINED" }')
-                    i.mdi.mdi-close
-                    | #{__("Cannot go")}
           .col-xs-12
             cal-attendee-tabs(
               ng-show="selectedTab && attendees.users.length > 0",

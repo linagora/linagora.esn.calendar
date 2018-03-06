@@ -51,6 +51,7 @@
       $scope.canPerformCall = canPerformCall;
       $scope.goToCalendar = goToCalendar;
       $scope.cancel = cancel;
+      $scope.canSuggestTime = canSuggestTime;
 
       // Initialize the scope of the form. It creates a scope.editedEvent which allows us to
       // rollback to scope.event in case of a Cancel.
@@ -364,6 +365,10 @@
         });
 
         return $scope.attendees.users.concat(attendees, $scope.attendees.resources, resources);
+      }
+
+      function canSuggestTime() {
+        return true;
       }
   }
 })();
