@@ -31,9 +31,6 @@
       //this is used to re-update views from the model in case the view is cleared
       self.event.start = self.event.start.clone();
       self.event.end = self.event.end.clone();
-      if (angular.isFunction(self.dateOnBlur)) {
-        self.dateOnBlur.apply(this, arguments);
-      }
     }
 
     function getMinDate() {

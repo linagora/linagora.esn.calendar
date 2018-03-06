@@ -7,8 +7,6 @@ angular.module('esn.calendar')
     controllerAs: 'ctrl',
     bindings: {
       event: '<',
-      dateOnBlur: '=?',
-      allDayOnChange: '=?',
       use24hourFormat: '<',
       onSubmit: '&?'
     }
