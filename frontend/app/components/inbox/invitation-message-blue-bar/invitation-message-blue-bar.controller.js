@@ -4,17 +4,27 @@
   angular.module('esn.calendar')
     .controller('calInboxInvitationMessageBlueBarController', calInboxInvitationMessageBlueBarController);
 
-  function calInboxInvitationMessageBlueBarController($q, $log, calEventService, calendarHomeService, calEventUtils, notificationFactory, INVITATION_MESSAGE_HEADERS) {
+  function calInboxInvitationMessageBlueBarController(
+    $q,
+    $log,
+    calEventService,
+    calendarHomeService,
+    calEventUtils,
+    notificationFactory,
+    INVITATION_MESSAGE_HEADERS,
+    CAL_EVENT_METHOD
+  ) {
     var self = this;
     var defaultParticipationButtonClass = 'btn-default';
 
     self.$onInit = $onInit;
+    self.CAL_EVENT_METHOD = CAL_EVENT_METHOD;
     self.changeParticipation = changeParticipation;
     self.getParticipationButtonClass = getParticipationButtonClass;
 
     function $onInit() {
       self.meeting = {
-        method: self.message.headers[INVITATION_MESSAGE_HEADERS.METHOD] || 'REQUEST',
+        method: self.message.headers[INVITATION_MESSAGE_HEADERS.METHOD] || CAL_EVENT_METHOD.REQUEST,
         uid: self.message.headers[INVITATION_MESSAGE_HEADERS.UID],
         recurrenceId: self.message.headers[INVITATION_MESSAGE_HEADERS.RECURRENCE_ID],
         sequence: self.message.headers[INVITATION_MESSAGE_HEADERS.SEQUENCE] || '0'
@@ -111,7 +121,7 @@
     }
 
     function bindReplyAttendeeToController() {
-      if (self.meeting.method === 'REPLY') {
+      if (self.meeting.method === CAL_EVENT_METHOD.REPLY) {
         self.replyAttendee = self.event.getAttendeeByEmail(self.message.from.email);
       }
     }
