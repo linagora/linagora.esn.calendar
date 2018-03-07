@@ -811,6 +811,8 @@
         });
       }
 
+      this.etag = replyEvent.etag || this.etag;
+
       if (!replyEvent.isInstance()) {
         updateAttendee(this);
       } else {
