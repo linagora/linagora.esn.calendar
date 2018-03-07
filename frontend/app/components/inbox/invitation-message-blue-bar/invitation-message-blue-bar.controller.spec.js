@@ -5,10 +5,9 @@
 var expect = chai.expect;
 
 describe('The calInboxInvitationMessageBlueBarController', function() {
+  var $componentController, $rootScope, $q, calEventService, session, shells = {}, CalendarShell, ICAL, INVITATION_MESSAGE_HEADERS;
 
-  var $componentController, $rootScope, calEventService, session, shells = {}, CalendarShell, ICAL, INVITATION_MESSAGE_HEADERS;
-
-  function initCtrl(method, uid, sequence, recurrenceId, sender) {
+  function initCtrl(method, uid, sequence, recurrenceId, sender, attachments) {
     var headers = {};
 
     headers[INVITATION_MESSAGE_HEADERS.METHOD] = method;
@@ -18,6 +17,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
 
     return $componentController('calInboxInvitationMessageBlueBar', null, {
       message: {
+        attachments: attachments || [],
         from: {
           email: sender
         },
@@ -62,9 +62,10 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
     });
   });
 
-  beforeEach(inject(function(_$componentController_, _$rootScope_, _CalendarShell_, _calEventService_, _session_,
+  beforeEach(inject(function(_$componentController_, _$q_, _$rootScope_, _CalendarShell_, _calEventService_, _session_,
                              _ICAL_, _INVITATION_MESSAGE_HEADERS_) {
     $componentController = _$componentController_;
+    $q = _$q_;
     $rootScope = _$rootScope_;
     CalendarShell = _CalendarShell_;
     calEventService = _calEventService_;
@@ -248,6 +249,20 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
       });
     });
 
+    it('should expose the replyAttendee when the meeting is a counter and the attendee is found', function() {
+      var ctrl = initCtrl('COUNTER', '1234', '2', null, 'ddolcimascolo@linagora.com');
+
+      session.user.emails = ['admin@linagora.com'];
+      calEventService.getEventByUID = qResolve(shells.recurringEventWithTwoExceptions);
+      ctrl.$onInit();
+      $rootScope.$digest();
+
+      expect(ctrl.replyAttendee).to.shallowDeepEqual({
+        email: 'ddolcimascolo@linagora.com',
+        partstat: 'NEEDS-ACTION'
+      });
+    });
+
   });
 
   describe('The getParticipationButtonClass method', function() {
@@ -353,6 +368,35 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
       expect(ctrl.event.isInstance()).to.equal(true);
     });
 
-  });
+    describe('When method is COUNTER', function() {
+      it('should fetch the ICS from attachment and set it in context', function() {
+        var url = 'http://localhost:1080/jmap/attachment/2';
+        var attachments = [{
+          type: 'foo',
+          getSignedDownloadUrl: sinon.stub().returns($q.reject(new Error('Should not be called')))
+        }, {
+          type: 'application/ics',
+          getSignedDownloadUrl: sinon.stub().returns($q.when(url))
+        }, {
+          type: 'application/ics',
+          getSignedDownloadUrl: sinon.stub().returns($q.reject(new Error('Should not be called')))
+        }];
+        var ctrl = initCtrl('COUNTER', '1234', '2', null, null, attachments);
 
+        calEventService.getEventByUID = sinon.stub().returns($q.when(shells.recurringEventWithTwoExceptions));
+        calEventService.getEventFromICSUrl = sinon.stub().returns($q.when(shells.recurringEventWithTwoExceptions));
+        session.user.emails = ['admin@linagora.com'];
+
+        ctrl.$onInit();
+        $rootScope.$digest();
+
+        expect(ctrl.additionalEvent).to.be.defined;
+        expect(attachments[0].getSignedDownloadUrl).to.not.have.been.called;
+        expect(attachments[1].getSignedDownloadUrl).to.have.been.calledOnce;
+        expect(attachments[2].getSignedDownloadUrl).to.not.have.been.called;
+        expect(calEventService.getEventFromICSUrl).to.have.been.calledWith(url);
+        expect(ctrl.meeting.error).to.not.be.defined;
+      });
+    });
+  });
 });

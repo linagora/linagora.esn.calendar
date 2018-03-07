@@ -217,5 +217,6 @@
   "CalDAV URL": "CalDAV URL",
   "New changes proposed to event {{summary}}": "Thay đổi mới được đề xuất cho sự kiện {{summary}}",
   "has proposed changes to the event": "đã đề xuất thay đổi cho sự kiện",
-  "Propose new time": "Đề xuất thời gian mới"
+  "Propose new time": "Đề xuất thời gian mới",
+  "%s suggested some changes": "%s đề xuất một số thay đổi"
 }

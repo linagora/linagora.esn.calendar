@@ -20,6 +20,7 @@
     self.$onInit = $onInit;
     self.CAL_EVENT_METHOD = CAL_EVENT_METHOD;
     self.changeParticipation = changeParticipation;
+    self.acceptChanges = acceptChanges;
     self.getParticipationButtonClass = getParticipationButtonClass;
 
     function $onInit() {
@@ -37,6 +38,7 @@
         .then(assertInvitationSequenceIsNotOutdated)
         .then(bindEventToController)
         .then(bindReplyAttendeeToController)
+        .then(fetchAdditionalData)
         .catch(handleErrorOrInvalidMeeting)
         .finally(function() {
           self.meeting.loaded = true;
@@ -121,9 +123,35 @@
     }
 
     function bindReplyAttendeeToController() {
-      if (self.meeting.method === CAL_EVENT_METHOD.REPLY) {
+      if (self.meeting.method === CAL_EVENT_METHOD.REPLY || self.meeting.method === CAL_EVENT_METHOD.COUNTER) {
         self.replyAttendee = self.event.getAttendeeByEmail(self.message.from.email);
       }
+    }
+
+    function fetchAdditionalData() {
+      if (self.meeting.method === CAL_EVENT_METHOD.COUNTER) {
+        return bindAttachedICS();
+      }
+    }
+
+    function bindAttachedICS() {
+      var icsFiles = self.message.attachments.filter(function(attachment) {
+        return attachment.type === 'application/ics';
+      });
+
+      if (!icsFiles || !icsFiles.length) {
+        return $q.when();
+      }
+
+      return icsFiles[0].getSignedDownloadUrl()
+        .then(calEventService.getEventFromICSUrl)
+        .then(function(shell) {
+          self.additionalEvent = shell;
+        });
+    }
+
+    function acceptChanges() {
+      $log.debug('TODO #1154');
     }
 
     function InvalidMeetingError(message) {
