@@ -21,6 +21,7 @@
     self.showIcon = self.showIcon || false;
     self.onAddingEntity = self.onAddingEntity || _onAddingEntity;
     self.getInvitableEntities = getInvitableEntities;
+    self.defaultTypes = [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.resource, CAL_ATTENDEE_OBJECT_TYPE.contact];
 
     ////////////
 
@@ -35,7 +36,7 @@
 
     function getInvitableEntities(query) {
       self.query = query;
-      var types = self.types ? self.types : [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.resource, CAL_ATTENDEE_OBJECT_TYPE.contact];
+      var types = self.types ? self.types : self.defaultTypes;
 
       return calendarAttendeeService.getAttendeeCandidates(query, CAL_AUTOCOMPLETE_MAX_RESULTS * 2, types).then(function(entityCandidates) {
         entityCandidates = _fillNonDuplicateEntities(entityCandidates);

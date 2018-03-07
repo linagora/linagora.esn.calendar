@@ -19,6 +19,7 @@
     CalendarCollectionShell,
     userAndExternalCalendars,
     CAL_CALENDAR_SHARED_INVITE_STATUS,
+    CAL_ATTENDEE_OBJECT_TYPE,
     CAL_CALENDAR_SHARED_TYPE) {
 
     var self = this;
@@ -32,6 +33,7 @@
     self.onUserRemoved = onUserRemoved;
     self.addSharedCalendars = addSharedCalendars;
     self.sessionUser = session.user;
+    self.CAL_ATTENDEE_OBJECT_TYPE = CAL_ATTENDEE_OBJECT_TYPE;
 
     $onInit();
 

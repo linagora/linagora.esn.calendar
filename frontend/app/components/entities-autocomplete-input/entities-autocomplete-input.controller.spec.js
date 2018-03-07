@@ -1,12 +1,12 @@
 'use strict';
 
-/* global chai: false */
+/* global chai, sinon: false */
 
 var expect = chai.expect;
 
 describe('The calEntitiesAutocompleteInputController', function() {
 
-  var $rootScope, $scope, $controller, calendarAttendeeService, calendarHomeService, session, calEventsProviders, CAL_AUTOCOMPLETE_MAX_RESULTS;
+  var $rootScope, $scope, $controller, calendarAttendeeService, calendarHomeService, session, calEventsProviders, CAL_AUTOCOMPLETE_MAX_RESULTS, CAL_ATTENDEE_OBJECT_TYPE;
 
   beforeEach(function() {
     session = {
@@ -89,13 +89,14 @@ describe('The calEntitiesAutocompleteInputController', function() {
       $provide.factory('calEventsProviders', calEventsProviders);
       $provide.constant('CAL_AUTOCOMPLETE_MAX_RESULTS', CAL_AUTOCOMPLETE_MAX_RESULTS);
     });
-    angular.mock.inject(function(_$rootScope_, _$controller_, _calendarAttendeeService_, _session_, _CAL_AUTOCOMPLETE_MAX_RESULTS_) {
+    angular.mock.inject(function(_$rootScope_, _$controller_, _calendarAttendeeService_, _session_, _CAL_AUTOCOMPLETE_MAX_RESULTS_, _CAL_ATTENDEE_OBJECT_TYPE_) {
       $rootScope = _$rootScope_;
       $scope = $rootScope.$new();
       $controller = _$controller_;
       calendarAttendeeService = _calendarAttendeeService_;
       session = _session_;
       CAL_AUTOCOMPLETE_MAX_RESULTS = _CAL_AUTOCOMPLETE_MAX_RESULTS_;
+      CAL_ATTENDEE_OBJECT_TYPE = _CAL_ATTENDEE_OBJECT_TYPE_;
     });
   });
 
@@ -240,6 +241,27 @@ describe('The calEntitiesAutocompleteInputController', function() {
       });
 
       $scope.$digest();
+    });
+
+    it('should call the calendarAttendeeService with default types', function() {
+      calendarAttendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([]));
+      ctrl.getInvitableEntities();
+
+      $scope.$digest();
+
+      expect(calendarAttendeeService.getAttendeeCandidates).to.have.been.calledWith(sinon.match.any, sinon.match.any, [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.resource, CAL_ATTENDEE_OBJECT_TYPE.contact]);
+    });
+
+    it('should call the calendarAttendeeService with defined types', function() {
+      var types = ['twitter', 'facebook', 'github'];
+
+      ctrl = initController({types: types});
+      calendarAttendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([]));
+      ctrl.getInvitableEntities();
+
+      $scope.$digest();
+
+      expect(calendarAttendeeService.getAttendeeCandidates).to.have.been.calledWith(sinon.match.any, sinon.match.any, types);
     });
   });
 
