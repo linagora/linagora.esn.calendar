@@ -324,15 +324,6 @@
       function modifyEvent(path, event, oldEvent, etag, onCancel, options) {
         oldEvent = oldEventStore[event.uid] = oldEventStore[event.uid] || oldEvent;
         options = options || {};
-        if (event.isInstance()) {
-          return event.getModifiedMaster().then(function(newMasterEvent) {
-            var oldMasterEvent = newMasterEvent.clone();
-
-            oldMasterEvent.modifyOccurrence(oldEvent, true);
-
-            return modifyEvent(path, newMasterEvent, oldMasterEvent, etag, onCancel, options);
-          });
-        }
 
         if (calEventUtils.hasSignificantChange(event, oldEvent)) {
           event.changeParticipation('NEEDS-ACTION');
@@ -356,7 +347,9 @@
           calendarEventEmitter.emitModifiedEvent(oldEvent);
         }
 
-        return calEventAPI.modify(path, event.vcalendar, etag)
+        return event.getModifiedMaster().then(function(masterEvent) {
+          return calEventAPI.modify(path, masterEvent.vcalendar, etag);
+        })
           .then(function(id) {
             event.gracePeriodTaskId = taskId = id;
             calCachedEventSource.registerUpdate(event);
@@ -419,7 +412,7 @@
           return $q.when(null);
         }
 
-        return $q.when(event.isInstance() ? event.getModifiedMaster() : event).then(function(masterEvent) {
+        return $q.when(event.getModifiedMaster()).then(function(masterEvent) {
 
           return calEventAPI.changeParticipation(eventPath, masterEvent.vcalendar, etag)
             .then(function(response) {
