@@ -99,6 +99,18 @@ describe('CalendarShell factory', function() {
       expect(ical.equals(expectedResult)).to.be.true;
       expect(ical.expand()[2].equals(expectedResult.expand()[2])).to.be.true; //because for the moment ical.equals does not check instance
     });
+
+    it('should correctly update ETAG', function() {
+      var etag = 'etag';
+      var ical = getShellFromFixture('before.json');
+      var reply = getShellFromFixture('reply.json');
+
+      reply.etag = etag;
+
+      ical.applyReply(reply);
+
+      expect(ical.etag).to.equal(etag);
+    });
   });
 
   describe('set date', function() {
