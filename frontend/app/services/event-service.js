@@ -6,6 +6,7 @@
 
   function calEventService(
     $q,
+    $http,
     $rootScope,
     _,
     ICAL,
@@ -36,6 +37,7 @@
       self.removeEvent = removeEvent;
       self.searchEvents = searchEvents;
       self.getEventByUID = getEventByUID;
+      self.getEventFromICSUrl = getEventFromICSUrl;
 
       ////////////
 
@@ -440,6 +442,12 @@
           }
 
           return $q.reject(response);
+        });
+      }
+
+      function getEventFromICSUrl(url) {
+        return $http.get(url).then(function(response) {
+          return new CalendarShell(ICAL.Component.fromString(response.data));
         });
       }
   }

@@ -217,5 +217,6 @@
   "CalDAV URL": "CalDAV URL",
   "New changes proposed to event {{summary}}": "New changes proposed to event {{summary}}",
   "has proposed changes to the event": "a proposé des changements à l'évènement",
-  "Propose new time": "Proposer un nouvel horaire"
+  "Propose new time": "Proposer un nouvel horaire",
+  "%s suggested some changes": "%s a proposé des modifications"
 }

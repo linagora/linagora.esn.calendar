@@ -245,6 +245,13 @@
       PRIVATE: 'PRIVATE'
     })
 
+    .constant('CAL_EVENT_METHOD', {
+      COUNTER: 'COUNTER',
+      REQUEST: 'REQUEST',
+      REPLY: 'REPLY',
+      CANCEL: 'CANCEL'
+    })
+
     .constant('CAL_CALENDAR_PROPERTIES', {
       color: 'apple:color',
       description: 'caldav:description',
