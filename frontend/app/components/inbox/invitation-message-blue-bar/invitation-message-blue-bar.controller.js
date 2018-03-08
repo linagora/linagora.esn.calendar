@@ -33,6 +33,10 @@
         sequence: self.message.headers[INVITATION_MESSAGE_HEADERS.SEQUENCE] || '0'
       };
 
+      load();
+    }
+
+    function load() {
       calendarHomeService.getUserCalendarHomeId()
         .then(bindCalendarHomeId)
         .then(getEventByUID)
@@ -158,7 +162,13 @@
     }
 
     function acceptChanges() {
-      $log.debug('TODO #1154');
+      return calEventService.acceptChanges(self.event.path, self.event, self.additionalEvent, self.event.etag, ['start', 'end', 'allDay'])
+        .then(notify('Event updated'))
+        .then(function() {
+          self.meeting.loaded = false;
+          load();
+        })
+        .catch(notify('Event modification failed'));
     }
 
     function openEvent() {
