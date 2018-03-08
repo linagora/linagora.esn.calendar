@@ -29,9 +29,11 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
                   button.btn.btn-link.declined(type='button', ng-click='changeParticipation("DECLINED")', ng-class='{ "active": calendarOwnerAsAttendee.partstat === "DECLINED" }')
                     i.mdi.mdi-close
                     | #{__("Decline")}
-                  button.btn.btn-link.suggest(ng-if="canSuggestTime" type='button', ng-click='suggestTime()')
+                  button.btn.btn-link.suggest(ng-if="canSuggestTime" type='button', ng-click='toggleSuggestedEvent()')
                     i.mdi.mdi-clock
                     | #{__("Propose new time")}
+          .col-xs-12(ng-if="suggestedEvent")
+            cal-event-date-suggestion(event="suggestedEvent", use-24hour-format='use24hourFormat', on-submit='onSuggestSubmit()')
           .col-xs-12
             .form-group
               .input-group
