@@ -7,7 +7,6 @@ angular.module('esn.calendar')
     controllerAs: 'ctrl',
     bindings: {
       event: '<',
-      use24hourFormat: '<',
-      onSubmit: '&?'
+      use24hourFormat: '<'
     }
   });

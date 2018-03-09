@@ -32,8 +32,10 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
                   button.btn.btn-link.suggest(ng-if="canSuggestTime" type='button', ng-click='toggleSuggestedEvent()')
                     i.mdi.mdi-clock
                     | #{__("Propose new time")}
-          .col-xs-12(ng-if="suggestedEvent")
-            cal-event-date-suggestion(event="suggestedEvent", use-24hour-format='use24hourFormat', on-submit='onSuggestSubmit()')
+          .col-xs-12.suggestion-container(ng-if="suggestedEvent")
+            cal-event-date-suggestion(event="suggestedEvent", use-24hour-format='use24hourFormat')
+            .text-center
+              button.btn.btn-primary(type='button', ng-click='submitSuggestion()') #{__("Send")}
           .col-xs-12
             .form-group
               .input-group

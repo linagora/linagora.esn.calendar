@@ -13,18 +13,12 @@
     self.setEventDates = setEventDates;
     self.onStartDateChange = onStartDateChange;
     self.onEndDateChange = onEndDateChange;
-    self.submit = submit;
 
     function $onInit() {
       self.dateFormat = esnI18nDateFormatService.getDateFormat();
       self.allDay = self.event.allDay;
       // on load, ensure that duration between start and end is stored inside editedEvent
       self.onEndDateChange();
-    }
-
-    function submit() {
-      // TODO: Send is implemented in #1150
-      self.onSubmit && self.onSubmit();
     }
 
     function dateOnBlurFn() {
