@@ -79,6 +79,11 @@ html.mail
               td
                 img(src="cid:format-align-justify", alt=translate('Description'))
               td(colspan="5") #{content.event.description}
+          if (content.event.comment)
+            tr
+              td
+                img(src="cid:comment-text", alt=translate('Comment'))
+              td(colspan="5") #{content.event.comment}
           if (content.event.files)
             tr
               td

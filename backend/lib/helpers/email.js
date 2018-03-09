@@ -13,6 +13,8 @@ function filterEventAttachments(event) {
         return !!event.files;
       case 'check.png':
         return !(event.allDay && event.durationInDays === 1);
+      case 'comment-text.png':
+        return !!event.comment;
       default:
         return true;
     }

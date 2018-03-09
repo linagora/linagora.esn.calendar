@@ -57,5 +57,14 @@ describe('The email helper', function() {
       event.durationInDays = 1;
       expect(this.module.filterEventAttachments(event)('check.png')).to.be.false;
     });
+
+    it('should return comment-text.png when comment is specified', function() {
+      event.comment = 'I love BBQ <3!';
+      expect(this.module.filterEventAttachments(event)('comment-text.png')).to.be.true;
+    });
+
+    it('should not return comment-text.png when comment is not specified', function() {
+      expect(this.module.filterEventAttachments(event)('comment-text.png')).to.be.false;
+    });
   });
 });
