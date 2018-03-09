@@ -12,11 +12,11 @@
     calEventUtils,
     notificationFactory,
     calOpenEventForm,
+    session,
     INVITATION_MESSAGE_HEADERS,
     CAL_EVENT_METHOD
   ) {
     var self = this;
-    var defaultParticipationButtonClass = 'btn-default';
 
     self.$onInit = $onInit;
     self.CAL_EVENT_METHOD = CAL_EVENT_METHOD;
@@ -45,6 +45,7 @@
         .then(assertInvitationSequenceIsNotOutdated)
         .then(bindEventToController)
         .then(bindReplyAttendeeToController)
+        .then(bindCanSuggestChanges)
         .then(fetchAdditionalData)
         .catch(handleErrorOrInvalidMeeting)
         .finally(function() {
@@ -54,6 +55,10 @@
 
     function bindCalendarHomeId(calendarId) {
       self.userCalendarHomeId = calendarId;
+    }
+
+    function bindCanSuggestChanges() {
+      self.canSuggestChanges = calEventUtils.canSuggestChanges(self.event, session.user);
     }
 
     function changeParticipation(partstat) {

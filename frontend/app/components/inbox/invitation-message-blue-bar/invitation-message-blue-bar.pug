@@ -31,7 +31,7 @@
           span.cal-blue-bar-value #{__('Recurs %s', '{{ $ctrl.event.getRecurrenceType() | lowercase }}')}
 
       .cal-blue-bar-actions-container.cal-blue-bar-labelled-value(ng-if="$ctrl.meeting.method === $ctrl.CAL_EVENT_METHOD.REQUEST")
-        .cal-blue-bar-actions.cal-blue-bar-value
+        .cal-blue-bar-actions
           button.cal-blue-bar-action-button.btn.btn-link.accepted(type='button', ng-click='$ctrl.changeParticipation("ACCEPTED")', ng-class='{ "active": $ctrl.isCurrentAttendeePartstat("ACCEPTED") }')
             i.mdi.mdi-check
             | #{__('Accept')}
@@ -41,7 +41,7 @@
           button.cal-blue-bar-action-button.btn.btn-link.declined(type='button', ng-click='$ctrl.changeParticipation("DECLINED")', ng-class='{ "active": $ctrl.isCurrentAttendeePartstat("DECLINED") }')
             i.mdi.mdi-close
             | #{__("Decline")}
-          button.cal-blue-bar-action-button.btn.btn-link.suggest(ng-if="$ctrl.canSuggestTime" type='button', ng-click='$ctrl.showSuggestion()')
+          button.cal-blue-bar-action-button.btn.btn-link.suggest(ng-if="$ctrl.canSuggestChanges" type='button', ng-click='$ctrl.showSuggestion()')
             i.mdi.mdi-clock
             | #{__("Propose new time")}
 

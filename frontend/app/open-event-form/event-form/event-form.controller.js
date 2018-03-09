@@ -101,7 +101,7 @@
         $scope.newAttendees = calEventUtils.getNewAttendees();
         $scope.newResources = calEventUtils.getNewResources();
         $scope.isOrganizer = calEventUtils.isOrganizer($scope.editedEvent);
-        $scope.canSuggestTime = !!(!$scope.isOrganizer && calEventUtils.getUserAttendee($scope.editedEvent, session.user));
+        $scope.canSuggestTime = calEventUtils.canSuggestChanges($scope.editedEvent, session.user);
 
         calendarService.listPersonalAndAcceptedDelegationCalendars($scope.calendarHomeId)
           .then(function(calendars) {

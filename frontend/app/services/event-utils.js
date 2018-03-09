@@ -35,7 +35,8 @@
       resetStoredEvents: resetStoredEvents,
       applyReply: applyReply,
       getUserAttendee: getUserAttendee,
-      getEventTitle: getEventTitle
+      getEventTitle: getEventTitle,
+      canSuggestChanges: canSuggestChanges
     };
 
     return service;
@@ -140,6 +141,10 @@
       var title = event.title ? event.title.trim() : CAL_EVENT_FORM.title.empty;
 
       return title.trim() === CAL_EVENT_FORM.title.empty ? esnI18nService.translate(CAL_EVENT_FORM.title.default) : title;
+    }
+
+    function canSuggestChanges(event, user) {
+      return !!(!isOrganizer(event, user) && getUserAttendee(event, user));
     }
   }
 
