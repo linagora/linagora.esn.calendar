@@ -109,7 +109,10 @@ describe('The event-form module controllers', function() {
         eventTest = e;
 
         return $q.when(true);
-      }
+      },
+      sendCounter: sinon.spy(function() {
+        return $q.when(true);
+      })
     };
 
     this.calendarHomeId = 'calendarHomeId';
@@ -1301,6 +1304,41 @@ describe('The event-form module controllers', function() {
           done();
         });
       });
+    });
+
+    describe('The submitSuggestion function', function() {
+
+      it('Should trigger a success toaster when sending worked', function() {
+        var suggestedEvent = this.scope.suggestedEvent = this.CalendarShell.fromIncompleteShell({});
+
+        this.scope.event = this.CalendarShell.fromIncompleteShell({});
+        this.initController();
+
+        this.scope.submitSuggestion();
+        this.scope.$digest();
+
+        expect(this.calEventServiceMock.sendCounter).to.have.been.calledWith(suggestedEvent);
+        expect(this.notificationFactory.weakInfo).to.have.been.calledWith('Calendar -', 'Your proposal has been sent');
+      });
+
+      it('Should trigger an error toaster when sending did not work', function(done) {
+        var self = this;
+        var suggestedEvent = this.scope.suggestedEvent = this.CalendarShell.fromIncompleteShell({});
+
+        this.calEventServiceMock.sendCounter = sinon.stub().returns($q.reject(new Error('Pouet')));
+
+        this.scope.event = this.CalendarShell.fromIncompleteShell({});
+        this.initController();
+
+        this.scope.submitSuggestion().then(function() {
+          expect(self.calEventServiceMock.sendCounter).to.have.been.calledWith(suggestedEvent);
+          expect(self.notificationFactory.weakError).to.have.been.calledWith('Calendar -', 'An error occurred, please try again');
+          done();
+        });
+
+        this.scope.$digest();
+      });
+
     });
 
     describe('updateAlarm function', function() {

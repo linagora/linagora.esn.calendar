@@ -21,7 +21,8 @@
       create: create,
       modify: modify,
       remove: remove,
-      changeParticipation: changeParticipation
+      changeParticipation: changeParticipation,
+      sendCounter: sendCounter
     };
 
     return service;
@@ -113,6 +114,22 @@
       var body = vcalendar.toJSON();
 
       return calDavRequest('put', eventPath, headers, body).then(calHttpResponseHandler([200, 204]));
+    }
+
+    /**
+     * POST request to make a counter proposal for an event
+     * @param  {String}         eventPath path of the event. The form is /<calendar_path>/<uuid>.ics
+     * @param  {Object}         requestBody body of the COUNTER request.
+     * @return {Object}                   the http response.
+     */
+    function sendCounter(eventPath, requestBody) {
+      var headers = {
+          'Content-Type': CALENDAR_CONTENT_TYPE_HEADER,
+          Prefer: CALENDAR_PREFER_HEADER,
+          'X-Http-Method-Override': 'ITIP'
+      };
+
+      return calDavRequest('post', eventPath, headers, requestBody).then(calHttpResponseHandler([200, 204]));
     }
   }
 })();

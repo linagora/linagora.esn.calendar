@@ -24,12 +24,14 @@
     esnI18nService,
     CAL_GRACE_DELAY,
     CAL_GRACE_DELAY_IS_ACTIVE,
-    CAL_EVENTS) {
+    CAL_EVENTS,
+    session) {
 
       var self = this;
       var oldEventStore = {};
 
       self.changeParticipation = changeParticipation;
+      self.sendCounter = sendCounter;
       self.getInvitedAttendees = getInvitedAttendees;
       self.getEvent = getEvent;
       self.listEvents = listEvents;
@@ -419,10 +421,10 @@
       }
 
       /**
-       * Change the status of participation of all emails (attendees) of an event
+       * Change the status of participation of all or part of attendees (emails) of an event
        * @param  {String}                   eventPath       the event path. it should be something like /calendars/<homeId>/<id>/<eventId>.ics
        * @param  {CalendarShell}            event      the event in which we seek the attendees
-       * @param  {[String]}                 emails     an array of emails
+       * @param  {[String]}                 emails     an array of emails to change the participation status for
        * @param  {String}                   status     the status in which attendees status will be set
        * @param  {String}                   etag       the etag
        * @param  {Boolean}                  emitEvents true if you want to emit the event to the fullcalendar false if not
@@ -468,6 +470,41 @@
 
           return $q.reject(response);
         });
+      }
+
+      /**
+       * Answers to an invite with a counter proposal (suggesting another time)
+       * @param  {CalendarShell}            suggestedEvent      the event in which we seek the attendees
+       * See https://tools.ietf.org/html/rfc5546#page-86
+       */
+      function sendCounter(suggestedEvent) {
+        if (!suggestedEvent || !suggestedEvent.vcalendar) {
+          return $q.when();
+        }
+
+        var requestBody = _generateCounterRequestBody(suggestedEvent, session.user.preferredEmail);
+
+        return calEventAPI.sendCounter(suggestedEvent.path, requestBody);
+      }
+
+      function _generateCounterRequestBody(sourceEvent, senderEmail) {
+        var counterEvent = sourceEvent.clone(),
+            vcalendar = counterEvent.vcalendar;
+
+        if (vcalendar.hasProperty('method')) {
+          vcalendar.updatePropertyWithValue('method', 'COUNTER');
+        } else {
+          vcalendar.addPropertyWithValue('method', 'COUNTER');
+        }
+
+        return {
+          ical: vcalendar.toString(),
+          sender: senderEmail,
+          recipient: counterEvent.organizer.email,
+          uid: counterEvent.uid,
+          sequence: counterEvent.sequence,
+          method: vcalendar.getFirstPropertyValue('method')
+        };
       }
 
       function getEventFromICSUrl(url) {

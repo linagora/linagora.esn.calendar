@@ -99,10 +99,11 @@ describe('The calEventService service', function() {
     });
   });
 
-  beforeEach(angular.mock.inject(function(calEventService, $httpBackend, $rootScope, _ICAL_, CalendarShell, calMoment, CAL_EVENTS, CAL_GRACE_DELAY, $window, esnI18nService) {
+  beforeEach(angular.mock.inject(function(calEventService, $httpBackend, $rootScope, _ICAL_, CalendarShell, calMoment, CAL_EVENTS, CAL_GRACE_DELAY, $window, esnI18nService, calEventAPI) {
     self.$httpBackend = $httpBackend;
     self.$rootScope = $rootScope;
     self.calEventService = calEventService;
+    self.calEventAPI = calEventAPI;
     self.CalendarShell = CalendarShell;
     self.calMoment = calMoment;
     ICAL = _ICAL_;
@@ -1710,5 +1711,77 @@ describe('The calEventService service', function() {
         expect(self.notificationFactoryMock.weakSuccess).to.have.been.calledWith('modifyEvent', self.esnI18nService.translate('Event updated'));
       });
     });
+  });
+
+  describe('The sendCounter fn', function() {
+    beforeEach(function() {
+      sinon.spy(self.calEventAPI, 'sendCounter');
+    });
+
+    it('should return undefined if suggested event is undefined', function(done) {
+      self.calEventService.sendCounter().then(function(response) {
+        expect(response).to.be.undefined;
+
+        done();
+      }).catch(done);
+
+      self.$rootScope.$digest();
+    });
+
+    it('should return undefined if suggested event is incomplete', function(done) {
+      var fakeEvent = new self.CalendarShell(new ICAL.Component(ICAL.parse(__FIXTURES__['frontend/app/fixtures/calendar/event.ics'])), {path: '/path/to/uid.ics'});
+
+      delete fakeEvent.vcalendar;
+
+      self.calEventService.sendCounter(fakeEvent).then(function(response) {
+        expect(response).to.be.undefined;
+
+        done();
+      }).catch(done);
+
+      self.$rootScope.$digest();
+    });
+
+    it('should call calEventAPI with correct event path', function(done) {
+      var fakePath = '/path/to/uid.ics';
+      var fakeEvent = new self.CalendarShell(new ICAL.Component(ICAL.parse(__FIXTURES__['frontend/app/fixtures/calendar/recurringEventWithTwoExceptions.ics'])), {path: fakePath});
+
+      this.$httpBackend.expect('POST', '/dav/api' + fakePath).respond(200, 'aResponse');
+
+      self.calEventService.sendCounter(fakeEvent).then(function() {
+        expect(self.calEventAPI.sendCounter).to.have.been.calledWith(fakePath);
+
+        done();
+      }).catch(done);
+
+      self.$httpBackend.flush();
+    });
+
+    it('should call calEventAPI with a correctly formatted request body', function(done) {
+      var fakePath = '/path/to/uid.ics';
+      var icalRequestParsed = ICAL.parse(__FIXTURES__['frontend/app/fixtures/calendar/eventRequestRegular.ics']);
+      var eventRequest = new self.CalendarShell(new ICAL.Component(icalRequestParsed), {path: fakePath});
+
+      var expectedCounter = new self.CalendarShell(new ICAL.Component(JSON.parse(__FIXTURES__['frontend/app/fixtures/calendar/counter_test/counter.json'])));
+      var expectedBody = {
+            ical: expectedCounter.vcalendar.toString(),
+            sender: undefined,
+            recipient: 'a@example.com',
+            uid: 'calsrv.example.com-873970198738777a@example.com',
+            sequence: 0,
+            method: 'COUNTER'
+          };
+
+      this.$httpBackend.expect('POST', '/dav/api' + fakePath).respond(200, 'aResponse');
+
+      self.calEventService.sendCounter(eventRequest).then(function() {
+        expect(self.calEventAPI.sendCounter).to.have.been.calledWith(eventRequest.path, expectedBody);
+
+        done();
+      }).catch(done);
+
+      self.$httpBackend.flush();
+    });
+
   });
 });
