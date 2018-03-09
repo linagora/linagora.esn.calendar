@@ -37,7 +37,7 @@ describe('The calFriendlifyEndDate directive', function() {
     var element = this.initDirective(this.$scope);
     var controller = element.controller('ngModel');
 
-    expect(controller.$viewValue).to.deep.equal('2015/07/02');
+    expect(this.calMoment(controller.$viewValue).toISOString()).to.equal(this.calMoment('2015/07/02').toISOString());
   });
 
   it('should have a first formatters that do nothing if event is not allday', function() {
@@ -48,7 +48,7 @@ describe('The calFriendlifyEndDate directive', function() {
     var element = this.initDirective(this.$scope);
     var formatter = element.controller('ngModel').$formatters[0];
 
-    expect(formatter('2015/07/03')).to.deep.equal('2015/07/03');
+    expect(formatter('2015/07/03')).to.equal('2015/07/03');
   });
 
   it('should have a last parsers that add 1 day if event is allday', function() {
