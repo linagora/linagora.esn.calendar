@@ -23,7 +23,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
                   button.btn.btn-link.accepted(type='button', ng-click='changeParticipation("ACCEPTED")', ng-class='{ "active": calendarOwnerAsAttendee.partstat === "ACCEPTED" }')
                     i.mdi.mdi-check
                     | #{__('Accept')}
-                  button.btn.btn-link.undecided(type='button', ng-click='changeParticipation("TENTATIVE")', ng-class='{ "active": calendarOwnerAsAttendee.partstat === "TENTATIVE" }')
+                  button.btn.btn-link.tentative(type='button', ng-click='changeParticipation("TENTATIVE")', ng-class='{ "active": calendarOwnerAsAttendee.partstat === "TENTATIVE" }')
                     i.mdi.mdi-help
                     | #{__('Maybe')}
                   button.btn.btn-link.declined(type='button', ng-click='changeParticipation("DECLINED")', ng-class='{ "active": calendarOwnerAsAttendee.partstat === "DECLINED" }')
