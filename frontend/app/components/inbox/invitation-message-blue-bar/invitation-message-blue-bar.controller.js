@@ -11,6 +11,7 @@
     calendarHomeService,
     calEventUtils,
     notificationFactory,
+    calOpenEventForm,
     INVITATION_MESSAGE_HEADERS,
     CAL_EVENT_METHOD
   ) {
@@ -22,6 +23,7 @@
     self.changeParticipation = changeParticipation;
     self.acceptChanges = acceptChanges;
     self.getParticipationButtonClass = getParticipationButtonClass;
+    self.openEvent = openEvent;
 
     function $onInit() {
       self.meeting = {
@@ -32,6 +34,7 @@
       };
 
       calendarHomeService.getUserCalendarHomeId()
+        .then(bindCalendarHomeId)
         .then(getEventByUID)
         .then(selectMasterEventOrException, handleNonExistentEvent)
         .then(assertEventInvolvesCurrentUser)
@@ -43,6 +46,10 @@
         .finally(function() {
           self.meeting.loaded = true;
         });
+    }
+
+    function bindCalendarHomeId(calendarId) {
+      self.userCalendarHomeId = calendarId;
     }
 
     function changeParticipation(partstat) {
@@ -80,8 +87,8 @@
       return calEventUtils.getUserAttendee(event);
     }
 
-    function getEventByUID(userCalendarHomeId) {
-      return calEventService.getEventByUID(userCalendarHomeId, self.meeting.uid);
+    function getEventByUID() {
+      return calEventService.getEventByUID(self.userCalendarHomeId, self.meeting.uid);
     }
 
     function selectMasterEventOrException(event) {
@@ -152,6 +159,10 @@
 
     function acceptChanges() {
       $log.debug('TODO #1154');
+    }
+
+    function openEvent() {
+      calOpenEventForm(self.userCalendarHomeId, self.event);
     }
 
     function InvalidMeetingError(message) {
