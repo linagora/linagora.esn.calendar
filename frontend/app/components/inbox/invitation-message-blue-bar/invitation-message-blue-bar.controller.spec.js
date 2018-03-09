@@ -265,52 +265,6 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
 
   });
 
-  describe('The getParticipationButtonClass method', function() {
-
-    it('should return btn-default if the user is NEEDS-ACTION', function() {
-      var ctrl = initCtrl('REQUEST', '1234', '2');
-
-      session.user.emails = ['ddolcimascolo@linagora.com'];
-      ctrl.event = shells.recurringEventWithTwoExceptions;
-      ctrl.event.changeParticipation('NEED-ACTION');
-
-      ['ACCEPTED', 'TENTATIVE', 'DECLINED'].forEach(function(partstat) {
-        expect(ctrl.getParticipationButtonClass('btn-success', partstat)).to.equal('btn-default');
-      });
-    });
-
-    it('should return btn-success for ACCEPTED if the user is ACCEPTED', function() {
-      var ctrl = initCtrl('REQUEST', '1234', '2');
-
-      session.user.emails = ['ddolcimascolo@linagora.com'];
-      ctrl.event = shells.recurringEventWithTwoExceptions;
-      ctrl.event.changeParticipation('ACCEPTED');
-
-      expect(ctrl.getParticipationButtonClass('btn-success', 'ACCEPTED')).to.equal('btn-success');
-    });
-
-    it('should return btn-danger for DECLINED if the user is DECLINED', function() {
-      var ctrl = initCtrl('REQUEST', '1234', '2');
-
-      session.user.emails = ['ddolcimascolo@linagora.com'];
-      ctrl.event = shells.recurringEventWithTwoExceptions;
-      ctrl.event.changeParticipation('DECLINED');
-
-      expect(ctrl.getParticipationButtonClass('btn-danger', 'DECLINED')).to.equal('btn-danger');
-    });
-
-    it('should return btn-primary for TENTATIVE if the user is TENTATIVE', function() {
-      var ctrl = initCtrl('REQUEST', '1234', '2');
-
-      session.user.emails = ['ddolcimascolo@linagora.com'];
-      ctrl.event = shells.recurringEventWithTwoExceptions;
-      ctrl.event.changeParticipation('TENTATIVE');
-
-      expect(ctrl.getParticipationButtonClass('btn-primary', 'TENTATIVE')).to.equal('btn-primary');
-    });
-
-  });
-
   describe('The changeParticipation method', function() {
 
     it('should call calEventService.changeParticipation with the correct options and partstat', function() {

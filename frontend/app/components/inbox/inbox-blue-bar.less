@@ -95,27 +95,49 @@
       .cal-blue-bar-actions {
         box-shadow: none;
 
-        .btn + .btn {
-          margin-left: -1px;
-        }
-
         .cal-blue-bar-action-button {
-          border: 1px solid @cal-blue-bar-border-color;
+          i {
+            margin-right: 5px;
+            font-size: 15px;
+          }
 
-          &.btn-default {
+          &.btn {
+            text-transform: none;
+            margin-right: 2px;
+          }
+
+          &.active {
             background-color: @darkenBgColor;
+
+            &.accepted {
+              color: @m-green;
+            }
+
+            &.tentative {
+              color: @m-purple;
+            }
+
+            &.declined {
+              color: @m-red;
+            }
           }
 
-          &.btn-success {
-            border-color: @btn-success-border;
+          &.accepted {
+            i {
+              color: @m-green;
+            }
           }
 
-          &.btn-primary {
-            border-color: @btn-primary-border;
+          &.tentative {
+            i {
+              color: @m-purple;
+            }
           }
 
-          &.btn-danger {
-            border-color: @btn-danger-border;
+          &.declined {
+            i {
+              color: @m-red;
+            }
           }
         }
       }

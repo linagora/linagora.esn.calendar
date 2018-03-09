@@ -22,7 +22,7 @@
     self.CAL_EVENT_METHOD = CAL_EVENT_METHOD;
     self.changeParticipation = changeParticipation;
     self.acceptChanges = acceptChanges;
-    self.getParticipationButtonClass = getParticipationButtonClass;
+    self.isCurrentAttendeePartstat = isCurrentAttendeePartstat;
     self.openEvent = openEvent;
 
     function $onInit() {
@@ -69,8 +69,8 @@
         .then(notify('Participation updated!'), notify('Cannot change your participation to this event'));
     }
 
-    function getParticipationButtonClass(cls, partstat) {
-      return getUserAttendee(self.event).partstat === partstat ? cls : defaultParticipationButtonClass;
+    function isCurrentAttendeePartstat(partstat) {
+      return getUserAttendee(self.event).partstat === partstat;
     }
 
     function handleErrorOrInvalidMeeting(err) {
