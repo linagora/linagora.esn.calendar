@@ -41,7 +41,7 @@
           button.cal-blue-bar-action-button.btn.btn-link.declined(type='button', ng-click='$ctrl.changeParticipation("DECLINED")', ng-class='{ "active": $ctrl.isCurrentAttendeePartstat("DECLINED") }')
             i.mdi.mdi-close
             | #{__("Decline")}
-          button.cal-blue-bar-action-button.btn.btn-link.suggest(ng-if="$ctrl.canSuggestChanges" type='button', ng-click='$ctrl.showSuggestion()')
+          button.cal-blue-bar-action-button.btn.btn-link.suggest(ng-if="$ctrl.canSuggestChanges" type='button', ng-click='$ctrl.showDateSuggestionWindow()')
             i.mdi.mdi-clock
             | #{__("Propose new time")}
 

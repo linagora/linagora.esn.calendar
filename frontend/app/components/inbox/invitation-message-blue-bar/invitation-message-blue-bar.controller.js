@@ -12,6 +12,7 @@
     calEventUtils,
     notificationFactory,
     calOpenEventForm,
+    calEventDateSuggestionModal,
     session,
     INVITATION_MESSAGE_HEADERS,
     CAL_EVENT_METHOD
@@ -23,6 +24,7 @@
     self.changeParticipation = changeParticipation;
     self.acceptChanges = acceptChanges;
     self.isCurrentAttendeePartstat = isCurrentAttendeePartstat;
+    self.showDateSuggestionWindow = showDateSuggestionWindow;
     self.openEvent = openEvent;
 
     function $onInit() {
@@ -59,6 +61,10 @@
 
     function bindCanSuggestChanges() {
       self.canSuggestChanges = calEventUtils.canSuggestChanges(self.event, session.user);
+    }
+
+    function showDateSuggestionWindow() {
+      calEventDateSuggestionModal(self.event);
     }
 
     function changeParticipation(partstat) {
