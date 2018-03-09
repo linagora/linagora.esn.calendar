@@ -42,9 +42,7 @@
 
       function subtractOneDayToView(value) {
         if (value && $parse(attrs.isAllDay)(scope)) {
-          var valueToMoment = calMoment(new Date(value));
-
-          value = valueToMoment.subtract(1, 'days').format('YYYY/MM/DD');
+          value = calMoment(new Date(value)).subtract(1, 'days');
         }
 
         return value;
