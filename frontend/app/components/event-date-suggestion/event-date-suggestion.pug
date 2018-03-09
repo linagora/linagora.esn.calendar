@@ -27,3 +27,10 @@
                 input(type="checkbox", ng-model='ctrl.allDay', ng-change="ctrl.setEventDates();")
                 i.input-helper
                 span #{__('All day')}
+      .col-xs-12
+        .form-group
+          .input-group.full-width
+            .fg-line
+              textarea.form-control(type="text", ng-model='ctrl.event.comment', placeholder=__('Comment...'))
+        .text-center
+          button.btn.btn-primary(type='button', ng-click='ctrl.submit()') #{__("Send")}
