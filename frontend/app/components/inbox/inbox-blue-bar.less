@@ -56,6 +56,7 @@
 
   .cal-blue-bar-content {
     .flex-column;
+    .flex-grow;
   }
 
   .cal-blue-bar-message {
@@ -92,30 +93,28 @@
 
       margin-top: 5px;
 
+      cal-partstat-buttons {
+        .flex-grow;
+      }
+
       .cal-blue-bar-actions {
+        .flex-column;
+        .flex-wrap;
+        .flex-grow;
+
         box-shadow: none;
 
-        .btn + .btn {
-          margin-left: -1px;
-        }
-
         .cal-blue-bar-action-button {
-          border: 1px solid @cal-blue-bar-border-color;
+          .flex-grow;
 
-          &.btn-default {
-            background-color: @darkenBgColor;
+          i {
+            margin-right: 5px;
+            font-size: 15px;
           }
 
-          &.btn-success {
-            border-color: @btn-success-border;
-          }
-
-          &.btn-primary {
-            border-color: @btn-primary-border;
-          }
-
-          &.btn-danger {
-            border-color: @btn-danger-border;
+          &.btn {
+            text-transform: none;
+            margin-right: 2px;
           }
         }
       }
@@ -123,6 +122,14 @@
       .cal-blue-bar-action-icon {
         font-size: 20px;
       }
+    }
+  }
+}
+
+@media (min-width: @screen-xs-min) {
+  .cal-blue-bar .cal-blue-bar-info-and-actions .cal-blue-bar-actions-container {
+    cal-partstat-buttons {
+      .flex-grow(unset);
     }
   }
 }

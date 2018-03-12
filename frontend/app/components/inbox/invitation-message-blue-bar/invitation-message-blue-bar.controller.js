@@ -12,18 +12,20 @@
     calEventUtils,
     notificationFactory,
     calOpenEventForm,
+    calEventDateSuggestionModal,
+    session,
     INVITATION_MESSAGE_HEADERS,
     CAL_EVENT_METHOD
   ) {
     var self = this;
-    var defaultParticipationButtonClass = 'btn-default';
 
     self.$onInit = $onInit;
     self.CAL_EVENT_METHOD = CAL_EVENT_METHOD;
-    self.changeParticipation = changeParticipation;
     self.acceptChanges = acceptChanges;
-    self.getParticipationButtonClass = getParticipationButtonClass;
+    self.showDateSuggestionWindow = showDateSuggestionWindow;
     self.openEvent = openEvent;
+    self.onPartstatChangeSuccess = onPartstatChangeSuccess;
+    self.onPartstatChangeError = onPartstatChangeError;
 
     function $onInit() {
       self.meeting = {
@@ -45,6 +47,7 @@
         .then(assertInvitationSequenceIsNotOutdated)
         .then(bindEventToController)
         .then(bindReplyAttendeeToController)
+        .then(bindCanSuggestChanges)
         .then(fetchAdditionalData)
         .catch(handleErrorOrInvalidMeeting)
         .finally(function() {
@@ -56,21 +59,23 @@
       self.userCalendarHomeId = calendarId;
     }
 
-    function changeParticipation(partstat) {
-      var attendee = getUserAttendee(self.event);
-
-      if (attendee.partstat === partstat) {
-        return;
-      }
-
-      calEventService.changeParticipation(self.event.path, self.event, [attendee.email], partstat, self.event.etag)
-        .then(selectMasterEventOrException)
-        .then(bindEventToController)
-        .then(notify('Participation updated!'), notify('Cannot change your participation to this event'));
+    function bindCanSuggestChanges() {
+      self.canSuggestChanges = calEventUtils.canSuggestChanges(self.event, session.user);
     }
 
-    function getParticipationButtonClass(cls, partstat) {
-      return getUserAttendee(self.event).partstat === partstat ? cls : defaultParticipationButtonClass;
+    function showDateSuggestionWindow() {
+      calEventDateSuggestionModal(self.event);
+    }
+
+    function onPartstatChangeSuccess(event) {
+      $q.when(event)
+        .then(selectMasterEventOrException)
+        .then(bindEventToController)
+        .then(notify('Participation updated!'), notify('Error while getting updated event'));
+    }
+
+    function onPartstatChangeError() {
+      notify('Cannot change your participation to this event');
     }
 
     function handleErrorOrInvalidMeeting(err) {

@@ -52,7 +52,7 @@
       $scope.goToCalendar = goToCalendar;
       $scope.cancel = cancel;
       $scope.toggleSuggestedEvent = toggleSuggestedEvent;
-      $scope.onSuggestSubmit = onSuggestSubmit;
+      $scope.submitSuggestion = submitSuggestion;
 
       // Initialize the scope of the form. It creates a scope.editedEvent which allows us to
       // rollback to scope.event in case of a Cancel.
@@ -101,7 +101,7 @@
         $scope.newAttendees = calEventUtils.getNewAttendees();
         $scope.newResources = calEventUtils.getNewResources();
         $scope.isOrganizer = calEventUtils.isOrganizer($scope.editedEvent);
-        $scope.canSuggestTime = !!(!$scope.isOrganizer && calEventUtils.getUserAttendee($scope.editedEvent, session.user));
+        $scope.canSuggestTime = calEventUtils.canSuggestChanges($scope.editedEvent, session.user);
 
         calendarService.listPersonalAndAcceptedDelegationCalendars($scope.calendarHomeId)
           .then(function(calendars) {
@@ -374,7 +374,8 @@
         $scope.suggestedEvent = $scope.suggestedEvent ? null : $scope.editedEvent.clone();
       }
 
-      function onSuggestSubmit() {
+      function submitSuggestion() {
+        $log.error('TODO: Implement #1150');
         delete $scope.suggestedEvent;
       }
   }

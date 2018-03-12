@@ -17,7 +17,7 @@ describe('The calEventUtils service', function() {
       translate: sinon.stub()
     };
 
-    var asSession = {
+    var session = {
       user: {
         _id: '123456',
         emails: [userEmail],
@@ -32,9 +32,9 @@ describe('The calEventUtils service', function() {
     angular.mock.module('esn.ical');
     angular.mock.module(function($provide) {
       $provide.factory('session', function($q) {
-        asSession.ready = $q.when(asSession);
+        session.ready = $q.when(session);
 
-        return asSession;
+        return session;
       });
 
       $provide.constant('esnI18nService', esnI18nServiceMock);
@@ -54,13 +54,15 @@ describe('The calEventUtils service', function() {
     };
   });
 
-  beforeEach(angular.mock.inject(function(calEventUtils, $rootScope, calMoment, CalendarShell, CAL_MAX_DURATION_OF_SMALL_EVENT, CAL_EVENT_FORM) {
+  beforeEach(angular.mock.inject(function(calEventUtils, $rootScope, calMoment, CalendarShell, session, CAL_MAX_DURATION_OF_SMALL_EVENT, CAL_EVENT_FORM, CAL_ICAL) {
     this.calEventUtils = calEventUtils;
     this.$rootScope = $rootScope;
     this.calMoment = calMoment;
     this.CalendarShell = CalendarShell;
+    this.session = session;
     this.CAL_MAX_DURATION_OF_SMALL_EVENT = CAL_MAX_DURATION_OF_SMALL_EVENT;
     this.CAL_EVENT_FORM = CAL_EVENT_FORM;
+    this.CAL_ICAL = CAL_ICAL;
     event.start = calMoment();
     event.end = event.start.add(this.CAL_MAX_DURATION_OF_SMALL_EVENT.DESKTOP, 'minutes');
   }));
@@ -390,4 +392,85 @@ describe('The calEventUtils service', function() {
     });
   });
 
+  describe('The canSuggestChanges function', function() {
+    it('should return true when user is not organizer but attendee', function() {
+      var event = this.CalendarShell.fromIncompleteShell({
+        _id: '123456',
+        start: this.calMoment('2013-02-08 12:30'),
+        end: this.calMoment('2013-02-08 13:30'),
+        organizer: {
+          email: 'notorg@test.com'
+        },
+        attendees: [
+          {
+            displayName: 'attendee1',
+            email: this.session.user.emails[0],
+            cutype: this.CAL_ICAL.cutype.individual
+          }
+        ]
+      });
+
+      expect(this.calEventUtils.canSuggestChanges(event, this.session.user)).to.be.true;
+    });
+
+    it('should return false when user is not organizer and not attendee', function() {
+      var event = this.CalendarShell.fromIncompleteShell({
+        _id: '123456',
+        start: this.calMoment('2013-02-08 12:30'),
+        end: this.calMoment('2013-02-08 13:30'),
+        organizer: {
+          email: 'notorg@test.com'
+        },
+        attendees: [
+          {
+            displayName: 'attendee1',
+            email: 'notattendee@test.com',
+            cutype: this.CAL_ICAL.cutype.individual
+          }
+        ]
+      });
+
+      expect(this.calEventUtils.canSuggestChanges(event, this.session.user)).to.be.false;
+    });
+
+    it('should return false when user is organizer and not attendee', function() {
+      var event = this.CalendarShell.fromIncompleteShell({
+        _id: '123456',
+        start: this.calMoment('2013-02-08 12:30'),
+        end: this.calMoment('2013-02-08 13:30'),
+        organizer: {
+          email: this.session.user.emails[0]
+        },
+        attendees: [
+          {
+            displayName: 'attendee1',
+            email: 'notattendee@test.com',
+            cutype: this.CAL_ICAL.cutype.individual
+          }
+        ]
+      });
+
+      expect(this.calEventUtils.canSuggestChanges(event, this.session.user)).to.be.false;
+    });
+
+    it('should return false when user is organizer and attendee', function() {
+      var event = this.CalendarShell.fromIncompleteShell({
+        _id: '123456',
+        start: this.calMoment('2013-02-08 12:30'),
+        end: this.calMoment('2013-02-08 13:30'),
+        organizer: {
+          email: this.session.user.emails[0]
+        },
+        attendees: [
+          {
+            displayName: 'attendee1',
+            email: this.session.user.emails[0],
+            cutype: this.CAL_ICAL.cutype.individual
+          }
+        ]
+      });
+
+      expect(this.calEventUtils.canSuggestChanges(event, this.session.user)).to.be.false;
+    });
+  });
 });
