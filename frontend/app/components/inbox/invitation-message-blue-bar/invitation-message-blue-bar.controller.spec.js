@@ -262,95 +262,36 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
         partstat: 'NEEDS-ACTION'
       });
     });
-
   });
 
-  describe('The changeParticipation method', function() {
+  describe('When method is COUNTER', function() {
+    it('should fetch the ICS from attachment and set it in context', function() {
+      var url = 'http://localhost:1080/jmap/attachment/2';
+      var attachments = [{
+        type: 'foo',
+        getSignedDownloadUrl: sinon.stub().returns($q.reject(new Error('Should not be called')))
+      }, {
+        type: 'application/ics',
+        getSignedDownloadUrl: sinon.stub().returns($q.when(url))
+      }, {
+        type: 'application/ics',
+        getSignedDownloadUrl: sinon.stub().returns($q.reject(new Error('Should not be called')))
+      }];
+      var ctrl = initCtrl('COUNTER', '1234', '2', null, null, attachments);
 
-    it('should call calEventService.changeParticipation with the correct options and partstat', function() {
-      var ctrl = initCtrl('REQUEST', '1234', '2');
-
-      session.user.emails = ['ddolcimascolo@linagora.com'];
-      ctrl.event = shells.recurringEventWithTwoExceptions;
-
-      ctrl.changeParticipation('ACCEPTED');
-
-      expect(calEventService.changeParticipation).to.have.been.calledWith('path', ctrl.event, ['ddolcimascolo@linagora.com'], 'ACCEPTED', 'etag');
-    });
-
-    it('should not call calEventService.changeParticipation if partstat is already correct', function() {
-      var ctrl = initCtrl('REQUEST', '1234', '2');
-
-      session.user.emails = ['ddolcimascolo@linagora.com'];
-      ctrl.event = shells.recurringEventWithTwoExceptions;
-      ctrl.event.changeParticipation('DECLINED', ['ddolcimascolo@linagora.com']);
-
-      ctrl.changeParticipation('DECLINED');
-
-      expect(calEventService.changeParticipation).to.have.not.been.calledWith();
-    });
-
-    it('should update the bound event with an updated event', function() {
-      var ctrl = initCtrl('REQUEST', '1234', '2');
-
-      calEventService.getEventByUID = qResolve(shells.recurringEventWithTwoExceptions);
-      session.user.emails = ['ddolcimascolo@linagora.com'];
+      calEventService.getEventByUID = sinon.stub().returns($q.when(shells.recurringEventWithTwoExceptions));
+      calEventService.getEventFromICSUrl = sinon.stub().returns($q.when(shells.recurringEventWithTwoExceptions));
+      session.user.emails = ['admin@linagora.com'];
 
       ctrl.$onInit();
       $rootScope.$digest();
 
-      ctrl.changeParticipation('ACCEPTED');
-      $rootScope.$digest();
-
-      expect(ctrl.event.etag).to.equal('updatedEtag');
-      expect(ctrl.event.isInstance()).to.equal(false);
-    });
-
-    it('should update the bound event with an updated occurrence event when the blue bar handles an occurrence', function() {
-      var ctrl = initCtrl('REQUEST', '1234', '2', '20170114T100000Z');
-
-      calEventService.getEventByUID = qResolve(shells.recurringEventWithTwoExceptions);
-      session.user.emails = ['ddolcimascolo@linagora.com'];
-
-      ctrl.$onInit();
-      $rootScope.$digest();
-
-      ctrl.changeParticipation('ACCEPTED');
-      $rootScope.$digest();
-
-      expect(ctrl.event.etag).to.equal('updatedEtag');
-      expect(ctrl.event.isInstance()).to.equal(true);
-    });
-
-    describe('When method is COUNTER', function() {
-      it('should fetch the ICS from attachment and set it in context', function() {
-        var url = 'http://localhost:1080/jmap/attachment/2';
-        var attachments = [{
-          type: 'foo',
-          getSignedDownloadUrl: sinon.stub().returns($q.reject(new Error('Should not be called')))
-        }, {
-          type: 'application/ics',
-          getSignedDownloadUrl: sinon.stub().returns($q.when(url))
-        }, {
-          type: 'application/ics',
-          getSignedDownloadUrl: sinon.stub().returns($q.reject(new Error('Should not be called')))
-        }];
-        var ctrl = initCtrl('COUNTER', '1234', '2', null, null, attachments);
-
-        calEventService.getEventByUID = sinon.stub().returns($q.when(shells.recurringEventWithTwoExceptions));
-        calEventService.getEventFromICSUrl = sinon.stub().returns($q.when(shells.recurringEventWithTwoExceptions));
-        session.user.emails = ['admin@linagora.com'];
-
-        ctrl.$onInit();
-        $rootScope.$digest();
-
-        expect(ctrl.additionalEvent).to.be.defined;
-        expect(attachments[0].getSignedDownloadUrl).to.not.have.been.called;
-        expect(attachments[1].getSignedDownloadUrl).to.have.been.calledOnce;
-        expect(attachments[2].getSignedDownloadUrl).to.not.have.been.called;
-        expect(calEventService.getEventFromICSUrl).to.have.been.calledWith(url);
-        expect(ctrl.meeting.error).to.not.be.defined;
-      });
+      expect(ctrl.additionalEvent).to.be.defined;
+      expect(attachments[0].getSignedDownloadUrl).to.not.have.been.called;
+      expect(attachments[1].getSignedDownloadUrl).to.have.been.calledOnce;
+      expect(attachments[2].getSignedDownloadUrl).to.not.have.been.called;
+      expect(calEventService.getEventFromICSUrl).to.have.been.calledWith(url);
+      expect(ctrl.meeting.error).to.not.be.defined;
     });
   });
 });

@@ -21,11 +21,11 @@
 
     self.$onInit = $onInit;
     self.CAL_EVENT_METHOD = CAL_EVENT_METHOD;
-    self.changeParticipation = changeParticipation;
     self.acceptChanges = acceptChanges;
-    self.isCurrentAttendeePartstat = isCurrentAttendeePartstat;
     self.showDateSuggestionWindow = showDateSuggestionWindow;
     self.openEvent = openEvent;
+    self.onPartstatChangeSuccess = onPartstatChangeSuccess;
+    self.onPartstatChangeError = onPartstatChangeError;
 
     function $onInit() {
       self.meeting = {
@@ -67,21 +67,15 @@
       calEventDateSuggestionModal(self.event);
     }
 
-    function changeParticipation(partstat) {
-      var attendee = getUserAttendee(self.event);
-
-      if (attendee.partstat === partstat) {
-        return;
-      }
-
-      calEventService.changeParticipation(self.event.path, self.event, [attendee.email], partstat, self.event.etag)
+    function onPartstatChangeSuccess(event) {
+      $q.when(event)
         .then(selectMasterEventOrException)
         .then(bindEventToController)
-        .then(notify('Participation updated!'), notify('Cannot change your participation to this event'));
+        .then(notify('Participation updated!'), notify('Error while getting updated event'));
     }
 
-    function isCurrentAttendeePartstat(partstat) {
-      return getUserAttendee(self.event).partstat === partstat;
+    function onPartstatChangeError() {
+      notify('Cannot change your participation to this event');
     }
 
     function handleErrorOrInvalidMeeting(err) {

@@ -93,6 +93,10 @@
 
       margin-top: 5px;
 
+      cal-partstat-buttons {
+        .flex-grow;
+      }
+
       .cal-blue-bar-actions {
         .flex-column;
         .flex-wrap;
@@ -112,40 +116,6 @@
             text-transform: none;
             margin-right: 2px;
           }
-
-          &.active {
-            background-color: @darkenBgColor;
-
-            &.accepted {
-              color: @m-green;
-            }
-
-            &.tentative {
-              color: @m-orange;
-            }
-
-            &.declined {
-              color: @m-red;
-            }
-          }
-
-          &.accepted {
-            i {
-              color: @m-green;
-            }
-          }
-
-          &.tentative {
-            i {
-              color: @m-orange;
-            }
-          }
-
-          &.declined {
-            i {
-              color: @m-red;
-            }
-          }
         }
       }
 
@@ -157,8 +127,9 @@
 }
 
 @media (min-width: @screen-xs-min) {
-  .cal-blue-bar .cal-blue-bar-info-and-actions .cal-blue-bar-actions-container .cal-blue-bar-actions {
-    .flex-row;
-    .flex-grow(unset);
+  .cal-blue-bar .cal-blue-bar-info-and-actions .cal-blue-bar-actions-container {
+    cal-partstat-buttons {
+      .flex-grow(unset);
+    }
   }
 }
