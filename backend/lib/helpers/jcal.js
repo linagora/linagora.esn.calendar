@@ -224,9 +224,13 @@ function jcal2content(icalendar, baseUrl = '') {
     durationInDays
   };
   const valarm = vevent.getFirstSubcomponent('valarm');
+  const comment = vevent.getFirstPropertyValue('comment');
 
   if (valarm) {
     content.alarm = getVAlarmAsObject(valarm, dtstart);
+  }
+  if (comment) {
+    content.comment = comment;
   }
 
   return content;

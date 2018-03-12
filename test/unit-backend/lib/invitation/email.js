@@ -584,6 +584,7 @@ describe('The invitation email module', function() {
               expect(template.name).to.equal('event.counter');
               expect(template.path).to.match(/templates\/email/);
               expect(email.subject).to.equal('New changes proposed to event Démo OPENPAAS');
+              expect(locals.content.event.comment).to.contains('This demo is going to be awesome!');
               expect(locals.content.editor).to.deep.equal(editor);
 
               return Promise.resolve();

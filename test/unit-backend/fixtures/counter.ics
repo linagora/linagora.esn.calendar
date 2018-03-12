@@ -13,6 +13,7 @@ TRANSP:OPAQUE
 SEQUENCE:1
 SUMMARY:Démo OPENPAAS
 DESCRIPTION:Présentation de OPENPAAS
+COMMENT:This demo is going to be awesome!
 CLASS:PUBLIC
 PRIORITY:5
 ORGANIZER;CN=organizerFirstname organizerLastname:MAILTO:organizer@open-paas.
