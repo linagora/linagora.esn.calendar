@@ -218,5 +218,8 @@
   "New changes proposed to event {{summary}}": "New changes proposed to event {{summary}}",
   "has proposed changes to the event": "a proposé des changements à l'évènement",
   "Propose new time": "Proposer un nouvel horaire",
-  "%s suggested some changes": "%s a proposé des modifications"
+  "%s suggested some changes": "%s a proposé des modifications",
+  "%s has accepted this event": "%s a accepté cet évènement",
+  "%s has tentatively accepted this event": "%s a provisoirement accepté cet évènement",
+  "%s has declined this event": "%s à décliné cet évènement"
 }

@@ -218,5 +218,8 @@
   "New changes proposed to event {{summary}}": "New changes proposed to event {{summary}}",
   "has proposed changes to the event": "has proposed changes to the event",
   "Propose new time": "Propose new time",
-  "%s suggested some changes": "%s suggested some changes"
+  "%s suggested some changes": "%s suggested some changes",
+  "%s has accepted this event": "%s has accepted this event",
+  "%s has tentatively accepted this event": "%s has tentatively accepted this event",
+  "%s has declined this event": "%s has declined this event"
 }

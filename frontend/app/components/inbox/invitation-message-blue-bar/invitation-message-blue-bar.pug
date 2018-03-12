@@ -34,12 +34,16 @@
         cal-partstat-buttons(event="$ctrl.event", on-participation-change-success="$ctrl.onPartstatChangeSuccess(event)", on-participation-change-error="$ctrl.onPartstatChangeError(err)", show-date-suggestion="$ctrl.showDateSuggestionWindow()")
 
       .cal-blue-bar-actions-container.cal-blue-bar-labelled-value(ng-if="$ctrl.replyAttendee")
-        .cal-blue-bar-action-icon.cal-blue-bar-label(ng-switch="$ctrl.replyAttendee.partstat")
-          i.text-success.mdi.mdi-account-check(ng-switch-when="$ctrl.CAL_EVENT_METHOD.ACCEPTED")
-          i.text-danger.mdi.mdi-account-remove(ng-switch-when="$ctrl.CAL_EVENT_METHOD.DECLINED")
-          i.text-primary.mdi.mdi-account(ng-switch-default)
-        .cal-blue-bar-value
-          inbox-emailer(emailer="$ctrl.message.from")
+        .cal-blue-bar-action-icon.cal-blue-bar-label.replypartstat(ng-switch="$ctrl.replyAttendee.partstat")
+          .accepted(ng-switch-when="ACCEPTED")
+            i.mdi.mdi-check
+            a(ng-href="mailto:{{ $ctrl.replyAttendee.email }}", op-inbox-compose op-inbox-compose-display-name="{{ $ctrl.replyAttendee.displayName }}") #{__('%s has accepted this event', '{{ $ctrl.replyAttendee.displayName || $ctrl.replyAttendee.email }}')}
+          .tentative(ng-switch-when="TENTATIVE")
+            i.tentative.mdi.mdi-help
+            a(ng-href="mailto:{{ $ctrl.replyAttendee.email }}", op-inbox-compose op-inbox-compose-display-name="{{ $ctrl.replyAttendee.displayName }}") #{__('%s has tentatively accepted this event', '{{ $ctrl.replyAttendee.displayName || $ctrl.replyAttendee.email }}')}
+          .declined(ng-switch-when="DECLINED")
+            i.declined.mdi.mdi-close
+            a(ng-href="mailto:{{ $ctrl.replyAttendee.email }}", op-inbox-compose op-inbox-compose-display-name="{{ $ctrl.replyAttendee.displayName }}") #{__('%s has declined this event', '{{ $ctrl.replyAttendee.displayName || $ctrl.replyAttendee.email }}')}
 
       .cal-blue-bar-actions-container.cal-blue-bar-labelled-value(ng-if="$ctrl.meeting.method === $ctrl.CAL_EVENT_METHOD.CANCEL")
         .cal-blue-bar-action-icon.cal-blue-bar-label

@@ -218,5 +218,8 @@
   "New changes proposed to event {{summary}}": "Thay đổi mới được đề xuất cho sự kiện {{summary}}",
   "has proposed changes to the event": "đã đề xuất thay đổi cho sự kiện",
   "Propose new time": "Đề xuất thời gian mới",
-  "%s suggested some changes": "%s đề xuất một số thay đổi"
+  "%s suggested some changes": "%s đề xuất một số thay đổi",
+  "%s has accepted this event": "%s đã chấp nhận sự kiện này",
+  "%s has tentatively accepted this event": "%s đã tạm thời chấp nhận sự kiện này",
+  "%s has declined this event": "%s đã từ chối sự kiện này"
 }
