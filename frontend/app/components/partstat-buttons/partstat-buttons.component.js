@@ -5,6 +5,7 @@
     templateUrl: '/calendar/app/components/partstat-buttons/partstat-buttons.html',
     bindings: {
       event: '=',
+      changePartstat: '&?',
       onParticipationChangeSuccess: '&',
       onParticipationChangeError: '&',
       showDateSuggestion: '&'

@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .controller('CalPartstatButtonsController', CalPartstatButtonsController);
 
-  function CalPartstatButtonsController(calEventService, calEventUtils, session) {
+  function CalPartstatButtonsController($attrs, calEventService, calEventUtils, session) {
     var self = this;
 
     self.$onInit = $onInit;
@@ -16,6 +16,14 @@
     }
 
     function changeParticipation(partstat) {
+      if ($attrs.changePartstat) {
+        self.changePartstat({partstat: partstat});
+      } else {
+        _changeParticipation(partstat);
+      }
+    }
+
+    function _changeParticipation(partstat) {
       var attendee = calEventUtils.getUserAttendee(self.event);
 
       if (!attendee || attendee.partstat === partstat) {

@@ -79,64 +79,13 @@ body  {
     padding: 6px 12px;
   }
 
-  .status {
+  .partstat {
+    .flex-horizontal-centered;
+
     margin-top: 10px;
 
-    .btn {
-      margin: 4px;
-      font-size: 13px;
-      text-transform: none;
-      padding: 6px;
-
-      i.mdi {
-        margin-right: 4px;
-        font-size: 18px;
-        bottom: 2px;
-        position: relative;
-        vertical-align: middle;
-
-        &.mdi-help {
-          font-size: 15px;
-          bottom: 1px;
-        }
-      }
-
-      &.accepted {
-        i {
-          color: @m-green;
-        }
-      }
-
-      &.tentative {
-        margin: 0 -1px;
-
-        i {
-          color: @m-orange;
-        }
-      }
-
-      &.declined {
-        i {
-          color: @m-red;
-        }
-      }
-
-      &.active {
-        background-color: @darkenBgColor;
-        z-index: 0;
-
-        &.accepted  {
-          color: @m-green;
-        }
-
-        &.tentative {
-          color: @m-orange;
-        }
-
-        &.declined {
-          color: @m-red;
-        }
-      }
+    cal-partstat-buttons {
+      .flex-grow;
     }
   }
 
@@ -238,6 +187,14 @@ body  {
         cursor: default;
         background-image: none;
       }
+    }
+  }
+}
+
+@media (min-width: @screen-xs-min) {
+  .event-form .partstat {
+    cal-partstat-buttons {
+      .flex-grow(unset);
     }
   }
 }

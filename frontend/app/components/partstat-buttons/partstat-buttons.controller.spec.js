@@ -14,6 +14,7 @@ describe('The CalPartstatButtonsController', function() {
   beforeEach(function() {
     module('esn.calendar');
     module(function($provide) {
+      $provide.value('$attrs', {});
       $provide.value('calEventService', {
         changeParticipation: sinon.spy(function() {
           return $q.when(new CalendarShell(shells.recurringEventWithTwoExceptions.vcalendar, { etag: 'updatedEtag' }));
