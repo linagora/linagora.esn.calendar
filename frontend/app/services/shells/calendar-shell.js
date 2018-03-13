@@ -465,7 +465,7 @@
     function _getException(recurrenceId) {
       var icalEvent = _.find(this.icalEvent.exceptions, function(exception) {
         if (angular.isString(recurrenceId)) {
-          return exception.recurrenceId.toICALString() === recurrenceId;
+          return exception.recurrenceId.convertToZone(ICAL.Timezone.utcTimezone).toICALString() === recurrenceId;
         }
 
         return exception.recurrenceId.compare(recurrenceId) === 0;

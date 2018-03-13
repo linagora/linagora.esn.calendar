@@ -2029,11 +2029,13 @@ describe('CalendarShell factory', function() {
       expect(loadICSFixtureAsCalendarShell('recurringEventWithTwoExceptions.ics').getExceptionByRecurrenceId('123')).to.equal(undefined);
     });
 
+    it('should return nothing when the exception date is not in UTC', function() {
+      expect(loadICSFixtureAsCalendarShell('recurringEventWithTwoExceptions.ics').getExceptionByRecurrenceId('20170113T100000')).to.equal(undefined);
+    });
+
     it('should return the exception when the exception is found', function() {
       expect(loadICSFixtureAsCalendarShell('recurringEventWithTwoExceptions.ics').getExceptionByRecurrenceId('20170113T100000Z').uid)
         .to.equal('cbdf2ff0-c6e0-413f-8984-0f70a86e9866');
     });
-
   });
-
 });
