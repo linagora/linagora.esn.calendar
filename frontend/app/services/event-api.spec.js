@@ -5,13 +5,17 @@
 var expect = chai.expect;
 
 describe('The calendar module apis', function() {
+  var CAL_GRACE_DELAY_IS_ACTIVE;
 
   function headerContentTypeJsonChecker(header) {
     return header['Content-Type'] === 'application/json';
   }
 
   beforeEach(function() {
-    angular.mock.module('esn.calendar');
+    angular.mock.module('esn.calendar', function($provide) {
+      $provide.constant('CAL_GRACE_DELAY_IS_ACTIVE', CAL_GRACE_DELAY_IS_ACTIVE);
+    });
+
     angular.mock.inject(function($httpBackend, calMoment, calendarAPI, calEventAPI, CALENDAR_CONTENT_TYPE_HEADER, CAL_ACCEPT_HEADER, CAL_GRACE_DELAY) {
       this.$httpBackend = $httpBackend;
       this.calMoment = calMoment;
@@ -38,6 +42,7 @@ describe('The calendar module apis', function() {
 
   describe('calEventAPI', function() {
     beforeEach(function() {
+      CAL_GRACE_DELAY_IS_ACTIVE = true;
       this.vcalendar.toJSON = angular.identity.bind(null, JSON.stringify(this.vcalendar));
     });
 
@@ -291,6 +296,68 @@ describe('The calendar module apis', function() {
         this.calEventAPI.changeParticipation('/dav/api/calendars/test.json', this.vcalendar, 'etag')
           .catch(function(err) {
             expect(err).to.exist;
+            done();
+          });
+
+        this.$httpBackend.flush();
+      });
+    });
+  });
+
+  describe('calEventApi with graceperiod desactivated', function() {
+    var vcalendar;
+
+    beforeEach(function() {
+      CAL_GRACE_DELAY_IS_ACTIVE = false;
+      vcalendar = {
+        id: 'id'
+      };
+
+      vcalendar.toJSON = angular.identity.bind(null, JSON.stringify(vcalendar));
+    });
+
+    describe('create', function() {
+      it('should return a http response if graceperiod is false', function(done) {
+        this.$httpBackend.expectPUT('/dav/api/calendars/test.json', vcalendar.toJSON()).respond(201, 'aReponse');
+
+        this.calEventAPI.create('/dav/api/calendars/test.json', vcalendar, { })
+          .then(function(response) {
+            expect(response.data).to.equal('aReponse');
+
+            done();
+          });
+
+        this.$httpBackend.flush();
+      });
+    });
+
+    describe('modify', function() {
+      it('should return a http response if graceperiod is false', function(done) {
+        var body = { id: 'anId' };
+
+        this.$httpBackend.expectPUT('/dav/api/calendars/test.json', vcalendar.toJSON()).respond(204, body);
+
+        this.calEventAPI.modify('/dav/api/calendars/test.json', vcalendar, 'etag')
+          .then(function(response) {
+            expect(response.data).to.deep.equal(body);
+
+            done();
+          });
+
+        this.$httpBackend.flush();
+      });
+    });
+
+    describe('remove', function() {
+      it('should return a http response if graceperiod is false', function(done) {
+        var body = { id: 'anId' };
+
+        this.$httpBackend.expectDELETE('/dav/api/calendars/test.json', {'If-Match': 'etag', Accept: 'application/json, text/plain, */*' }).respond(204, body);
+
+        this.calEventAPI.remove('/dav/api/calendars/test.json', 'etag')
+          .then(function(response) {
+            expect(response.data).to.deep.equal(body);
+
             done();
           });
 

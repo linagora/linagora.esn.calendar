@@ -305,6 +305,8 @@
 
     .constant('CAL_GRACE_DELAY', 10000)
 
+    .constant('CAL_GRACE_DELAY_IS_ACTIVE', false)
+
     .constant('CAL_ERROR_DISPLAY_DELAY', 8000)
 
     .constant('CAL_RESIZE_DEBOUNCE_DELAY', 250)

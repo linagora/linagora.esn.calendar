@@ -13,6 +13,7 @@
     CAL_ACCEPT_HEADER,
     CALENDAR_CONTENT_TYPE_HEADER,
     CAL_GRACE_DELAY,
+    CAL_GRACE_DELAY_IS_ACTIVE,
     CALENDAR_PREFER_HEADER
   ) {
     var service = {
@@ -47,7 +48,7 @@
       var headers = {'Content-Type': CALENDAR_CONTENT_TYPE_HEADER};
       var body = vcalendar.toJSON();
 
-      if (options.graceperiod) {
+      if (CAL_GRACE_DELAY_IS_ACTIVE && options.graceperiod) {
         return calDavRequest('put', eventPath, headers, body, {graceperiod: CAL_GRACE_DELAY}).then(calGracePeriodResponseHandler);
       }
 
@@ -72,7 +73,10 @@
       }
       var body = vcalendar.toJSON();
 
-      return calDavRequest('put', eventPath, headers, body, { graceperiod: CAL_GRACE_DELAY }).then(calGracePeriodResponseHandler);
+      var options = CAL_GRACE_DELAY_IS_ACTIVE ? { graceperiod: CAL_GRACE_DELAY } : null;
+      var responseHandler = CAL_GRACE_DELAY_IS_ACTIVE ? calGracePeriodResponseHandler : calHttpResponseHandler([200, 204]);
+
+      return calDavRequest('put', eventPath, headers, body, options).then(responseHandler);
     }
 
     /**
@@ -84,7 +88,10 @@
     function remove(eventPath, etag) {
       var headers = {'If-Match': etag};
 
-      return calDavRequest('delete', eventPath, headers, null, { graceperiod: CAL_GRACE_DELAY }).then(calGracePeriodResponseHandler);
+      var options = CAL_GRACE_DELAY_IS_ACTIVE ? { graceperiod: CAL_GRACE_DELAY } : null;
+      var responseHandler = CAL_GRACE_DELAY_IS_ACTIVE ? calGracePeriodResponseHandler : calHttpResponseHandler([200, 204]);
+
+      return calDavRequest('delete', eventPath, headers, null, options).then(responseHandler);
     }
 
     /**

@@ -47,7 +47,8 @@ describe('The calEventService service', function() {
 
     self.notificationFactoryMock = {
       weakInfo: sinon.spy(),
-      weakError: sinon.spy()
+      weakError: sinon.spy(),
+      weakSuccess: sinon.spy()
     };
 
     self.jstz = {
@@ -85,6 +86,7 @@ describe('The calEventService service', function() {
       $provide.value('esnI18nService', {
         translate: function(input) { return input; }
       });
+      $provide.constant('CAL_GRACE_DELAY_IS_ACTIVE', self.CAL_GRACE_DELAY_IS_ACTIVE_MOCK);
       $provide.decorator('calMasterEventCache', function($delegate) {
         self.calMasterEventCache = {
           get: $delegate.get,
@@ -97,7 +99,7 @@ describe('The calEventService service', function() {
     });
   });
 
-  beforeEach(angular.mock.inject(function(calEventService, $httpBackend, $rootScope, _ICAL_, CalendarShell, calMoment, CAL_EVENTS, CAL_GRACE_DELAY, $window) {
+  beforeEach(angular.mock.inject(function(calEventService, $httpBackend, $rootScope, _ICAL_, CalendarShell, calMoment, CAL_EVENTS, CAL_GRACE_DELAY, $window, esnI18nService) {
     self.$httpBackend = $httpBackend;
     self.$rootScope = $rootScope;
     self.calEventService = calEventService;
@@ -107,6 +109,9 @@ describe('The calEventService service', function() {
     self.CAL_EVENTS = CAL_EVENTS;
     self.CAL_GRACE_DELAY = CAL_GRACE_DELAY;
     self.$window = $window;
+    self.esnI18nService = esnI18nService;
+
+    self.CAL_GRACE_DELAY_IS_ACTIVE_MOCK = true;
   }));
 
   function getEventPath(home, id) {
@@ -1510,6 +1515,200 @@ describe('The calEventService service', function() {
       }, done);
 
       self.$rootScope.$digest();
+    });
+  });
+
+  describe('graceperiod is deactivated', function() {
+
+    beforeEach(function() {
+      self.CAL_GRACE_DELAY_IS_ACTIVE_MOCK = false;
+    });
+
+    describe('createEvent', function() {
+      var calendar, event, vcalendar, vevent;
+
+      beforeEach(function() {
+        calendar = {
+          calendarHomeId: calendarHomeId,
+          id: calendarId,
+          isSubscription: function() {
+            return false;
+          }
+        };
+
+        vcalendar = new ICAL.Component('vcalendar');
+        vevent = new ICAL.Component('vevent');
+
+        vevent.addPropertyWithValue('uid', eventUUID);
+        vevent.addPropertyWithValue('dtstart', dtstart);
+        vcalendar.addSubcomponent(vevent);
+        event = new self.CalendarShell(vcalendar);
+
+        sinon.spy(self.gracePeriodService, 'grace');
+
+        self.$httpBackend.expectPUT(getEventPath()).respond(201, { id: '123456789' });
+      });
+
+      it('should not call calCachedEventSource.registerAdd', function() {
+        self.calEventService.createEvent(calendar, event, {});
+
+        self.$httpBackend.flush();
+
+        expect(calCachedEventSourceMock.registerAdd).to.not.have.been.called;
+      });
+
+      it('should not call calMasterEventCache.save', function() {
+        self.calEventService.createEvent(calendar, event, { graceperiod: true });
+
+        self.$httpBackend.flush();
+
+        expect(self.calMasterEventCache.save).to.not.have.been.called;
+      });
+
+      it('should not call calendarEventEmitterMock.emitCreatedEvent', function() {
+        self.calEventService.createEvent(calendar, event, { graceperiod: true });
+
+        self.$httpBackend.flush();
+
+        expect(self.calendarEventEmitterMock.emitCreatedEvent).to.not.have.been.called;
+      });
+
+      it('should call notificationFactory.weakSuccess', function() {
+        self.calEventService.createEvent(calendar, event, { graceperiod: true });
+
+        self.$httpBackend.flush();
+
+        expect(self.notificationFactoryMock.weakSuccess).to.have.been.calledWith('createEvent', self.esnI18nService.translate('Event created'));
+      });
+
+      it('should not call gracePeriodService.grace', function() {
+        self.calEventService.createEvent(calendar, event, { graceperiod: true });
+
+        self.$httpBackend.flush();
+
+        expect(self.gracePeriodService.grace).to.not.have.been.called;
+      });
+    });
+
+    describe('removeEvent', function() {
+      var event;
+
+      beforeEach(function() {
+        event = {
+          id: eventUUID,
+          title: 'test event',
+          start: self.calMoment(),
+          end: self.calMoment(),
+          isInstance: _.constant(false)
+        };
+
+        sinon.spy(self.gracePeriodService, 'grace');
+
+        self.$httpBackend.expectDELETE('/dav/api/path/to/00000000-0000-4000-a000-000000000000.ics').respond(204, { id: '123456789' });
+      });
+
+      it('should not call calCachedEventSource.registerDelete', function() {
+        self.calEventService.removeEvent('/path/to/00000000-0000-4000-a000-000000000000.ics', event, 'etag');
+
+        self.$httpBackend.flush();
+
+        expect(calCachedEventSourceMock.registerDelete).to.not.have.been.called;
+      });
+
+      it('should not call calendarEventEmitter.emitRemovedEvent', function() {
+        self.calEventService.removeEvent('/path/to/00000000-0000-4000-a000-000000000000.ics', event, 'etag');
+
+        self.$httpBackend.flush();
+
+        expect(self.calendarEventEmitterMock.emitRemovedEvent).to.not.have.been.called;
+      });
+
+      it('should not call gracePeriodService.grace', function() {
+        self.calEventService.removeEvent('/path/to/00000000-0000-4000-a000-000000000000.ics', event, 'etag');
+
+        self.$httpBackend.flush();
+
+        expect(self.gracePeriodService.grace).to.not.have.been.called;
+      });
+
+      it('should call notificationFactory.weakSuccess', function() {
+        self.calEventService.removeEvent('/path/to/00000000-0000-4000-a000-000000000000.ics', event, 'etag');
+
+        self.$httpBackend.flush();
+
+        expect(self.notificationFactoryMock.weakSuccess).to.have.been.calledWith('performRemove', self.esnI18nService.translate('Event removed'));
+      });
+    });
+
+    describe('modifyEvent', function() {
+      var event;
+
+      beforeEach(function() {
+        var attendees = [
+          { emails: ['user1@lng.com'], partstat: 'ACCEPTED' },
+          { emails: ['user2@lng.com'], partstat: 'NEEDS-ACTION' }
+        ];
+        var vcalendar = new ICAL.Component('vcalendar');
+        var vevent = new ICAL.Component('vevent');
+
+        vevent.addPropertyWithValue('uid', eventUUID);
+        vevent.addPropertyWithValue('summary', 'test event');
+        vevent.addPropertyWithValue('dtstart', ICAL.Time.fromJSDate(new Date())).setParameter('tzid', 'Europe/Paris');
+        vevent.addPropertyWithValue('dtend', ICAL.Time.fromJSDate(new Date())).setParameter('tzid', 'Europe/Paris');
+        vevent.addPropertyWithValue('transp', 'OPAQUE');
+        attendees.forEach(function(attendee) {
+          var mailto = 'mailto:' + attendee.emails[0];
+          var property = vevent.addPropertyWithValue('attendee', mailto);
+
+          property.setParameter('partstat', attendee.partstat);
+          property.setParameter('rsvp', 'TRUE');
+          property.setParameter('role', 'REQ-PARTICIPANT');
+        });
+        vcalendar.addSubcomponent(vevent);
+
+        event = new self.CalendarShell(vcalendar, {
+          path: '/path/to/uid.ics'
+        });
+
+        self.oldEvent = event.clone();
+        self.oldEvent.start = event.start.clone().add(1, 'hour');
+
+        sinon.spy(self.gracePeriodService, 'grace');
+
+        self.$httpBackend.expectPUT('/dav/api/path/to/uid.ics').respond(204, { id: '123456789' });
+      });
+
+      it('should not call calendarEventEmitterMock.emitModifiedEvent', function() {
+        self.calEventService.modifyEvent('/path/to/uid.ics', event, event, 'etag', angular.noop, { notifyFullcalendar: true });
+
+        self.$httpBackend.flush();
+
+        expect(self.calendarEventEmitterMock.emitModifiedEvent).to.not.have.been.called;
+      });
+
+      it('should not call calCachedEventSource.registerUpdate', function() {
+        self.calEventService.modifyEvent('/path/to/uid.ics', event, event, 'etag', angular.noop, { notifyFullcalendar: true });
+
+        self.$httpBackend.flush();
+
+        expect(calCachedEventSourceMock.registerUpdate).to.not.have.been.called;
+      });
+
+      it('should not call gracePeriodService.grace', function() {
+        self.calEventService.modifyEvent('/path/to/uid.ics', event, event, 'etag', angular.noop, { notifyFullcalendar: true });
+
+        self.$httpBackend.flush();
+
+        expect(self.gracePeriodService.grace).to.not.have.been.called;
+      });
+
+      it('should call notificationFactoryMock.weakSuccess', function() {
+        self.calEventService.modifyEvent('/path/to/uid.ics', event, event, 'etag', angular.noop, { notifyFullcalendar: true });
+
+        self.$httpBackend.flush();
+
+        expect(self.notificationFactoryMock.weakSuccess).to.have.been.calledWith('modifyEvent', self.esnI18nService.translate('Event updated'));
+      });
     });
   });
 });

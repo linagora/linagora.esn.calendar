@@ -18,14 +18,10 @@
     CAL_ACCEPT_HEADER,
     CAL_DAV_DATE_FORMAT,
     CALENDAR_PREFER_HEADER,
-    CALENDAR_CONTENT_TYPE_HEADER,
-    CAL_GRACE_DELAY
+    CALENDAR_CONTENT_TYPE_HEADER
   ) {
 
     return {
-      create: create,
-      modify: modify,
-      remove: remove,
       listEvents: listEvents,
       searchEvents: searchEvents,
       getEventByUID: getEventByUID,
@@ -251,62 +247,6 @@
       var path = calPathBuilder.forCalendarId(calendarHomeId, calendarId);
 
       return calDavRequest('post', path, null, body).then(calHttpResponseHandler(200));
-    }
-
-    /**
-     * PUT request used to create a new event in a specific calendar.
-     * @param  {String}         eventPath path of the event. The form is /<calendar_path>/<uuid>.ics
-     * @param  {ICAL.Component} vcalendar a vcalendar object including the vevent to create.
-     * @param  {Object}         options   {graceperiod: true||false} specify if we want to use the graceperiod or not.
-     * @return {String||Object}           a taskId if with use the graceperiod, the http response otherwise.
-     */
-    function create(eventPath, vcalendar, options) {
-      var headers = {'Content-Type': CALENDAR_CONTENT_TYPE_HEADER};
-      var body = vcalendar.toJSON();
-
-      if (options.graceperiod) {
-        return calDavRequest('put', eventPath, headers, body, {graceperiod: CAL_GRACE_DELAY})
-        .then(calGracePeriodResponseHandler);
-      }
-
-      return calDavRequest('put', eventPath, headers, body)
-      .then(calHttpResponseHandler(201));
-      }
-
-    /**
-     * PUT request used to modify an event in a specific calendar.
-     * @param  {String}         eventPath path of the event. The form is /<calendar_path>/<uuid>.ics
-     * @param  {ICAL.Component} vcalendar a vcalendar object including the vevent to create.
-     * @param  {String}         etag      set the If-Match header to this etag before sending the request
-     * @return {String}                   the taskId which will be used to create the grace period.
-     */
-    function modify(eventPath, vcalendar, etag) {
-      var headers = {
-        'Content-Type': CALENDAR_CONTENT_TYPE_HEADER,
-        Prefer: CALENDAR_PREFER_HEADER
-      };
-
-      if (etag) {
-        headers['If-Match'] = etag;
-      }
-
-      var body = vcalendar.toJSON();
-
-      return calDavRequest('put', eventPath, headers, body, { graceperiod: CAL_GRACE_DELAY })
-      .then(calGracePeriodResponseHandler);
-    }
-
-    /**
-     * DELETE request used to remove an event in a specific calendar.
-     * @param  {String} eventPath path of the event. The form is /<calendar_path>/<uuid>.ics
-     * @param  {String} etag      set the If-Match header to this etag before sending the request
-     * @return {String}           the taskId which will be used to create the grace period.
-     */
-    function remove(eventPath, etag) {
-      var headers = {'If-Match': etag};
-
-      return calDavRequest('delete', eventPath, headers, null, { graceperiod: CAL_GRACE_DELAY })
-      .then(calGracePeriodResponseHandler);
     }
 
     /**

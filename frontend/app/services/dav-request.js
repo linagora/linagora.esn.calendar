@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .factory('calDavRequest', calDavRequest);
 
-  function calDavRequest($http, $q, httpConfigurer, CAL_DAV_PATH) {
+  function calDavRequest($http, $q, httpConfigurer, CAL_DAV_PATH, CAL_GRACE_DELAY_IS_ACTIVE) {
     return request;
 
     ////////////
@@ -19,6 +19,10 @@
 
     function _configureRequest(method, path, headers, body, params) {
       var url = CAL_DAV_PATH;
+
+      if (!CAL_GRACE_DELAY_IS_ACTIVE) {
+        params && delete params.graceperiod;
+      }
 
       headers = headers || {};
 

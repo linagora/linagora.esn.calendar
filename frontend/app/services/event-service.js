@@ -23,6 +23,7 @@
     notificationFactory,
     esnI18nService,
     CAL_GRACE_DELAY,
+    CAL_GRACE_DELAY_IS_ACTIVE,
     CAL_EVENTS) {
 
       var self = this;
@@ -189,7 +190,7 @@
 
         return calEventAPI.create(eventPath, event.vcalendar, options)
           .then(function(response) {
-            if (typeof response !== 'string') {
+            if (!CAL_GRACE_DELAY_IS_ACTIVE || typeof response !== 'string') {
               return response;
             }
 
@@ -212,6 +213,11 @@
             notificationFactory.weakError('Event creation failed', esnI18nService.translate('%s. Please refresh your calendar', err.statusText || err));
 
             return $q.reject(err);
+          })
+          .then(function(response) {
+            !CAL_GRACE_DELAY_IS_ACTIVE && notificationFactory.weakSuccess('createEvent', esnI18nService.translate('Event created'));
+
+            return response;
           })
           .finally(function() {
             event.gracePeriodTaskId = undefined;
@@ -253,6 +259,10 @@
         function performRemove() {
           return calEventAPI.remove(eventPath, etag)
             .then(function(id) {
+              if (!CAL_GRACE_DELAY_IS_ACTIVE) {
+                return id;
+              }
+
               event.gracePeriodTaskId = taskId = id;
               calCachedEventSource.registerDelete(event);
               calendarEventEmitter.emitRemovedEvent(event.id);
@@ -286,6 +296,11 @@
               notificationFactory.weakError(esnI18nService.translate('Event deletion failed', '%s. Please refresh your calendar', err.statusText || err));
 
               return $q.reject(err);
+            })
+            .then(function(response) {
+              !CAL_GRACE_DELAY_IS_ACTIVE && notificationFactory.weakSuccess('performRemove', esnI18nService.translate('Event removed'));
+
+              return CAL_GRACE_DELAY_IS_ACTIVE ? response : true;
             })
             .finally(function() {
               event.gracePeriodTaskId = undefined;
@@ -354,6 +369,10 @@
           return calEventAPI.modify(path, masterEvent.vcalendar, etag);
         })
           .then(function(id) {
+            if (!CAL_GRACE_DELAY_IS_ACTIVE) {
+              return id;
+            }
+
             event.gracePeriodTaskId = taskId = id;
             calCachedEventSource.registerUpdate(event);
             event.isRecurring() && calMasterEventCache.save(event);
@@ -387,6 +406,11 @@
             notificationFactory.weakError('Event modification failed', esnI18nService.translate('%s, Please refresh your calendar', err.statusText || err));
 
             return $q.reject(err);
+          })
+          .then(function(response) {
+            !CAL_GRACE_DELAY_IS_ACTIVE && notificationFactory.weakSuccess('modifyEvent', esnI18nService.translate('Event updated'));
+
+            return CAL_GRACE_DELAY_IS_ACTIVE ? response : true;
           })
           .finally(function() {
             delete oldEventStore[event.uid];
