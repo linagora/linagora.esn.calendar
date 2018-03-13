@@ -144,7 +144,7 @@
     }
 
     function canSuggestChanges(event, user) {
-      return !!(!isOrganizer(event, user) && getUserAttendee(event, user));
+      return !!(!event.isRecurring() && !isOrganizer(event, user) && getUserAttendee(event, user));
     }
   }
 
