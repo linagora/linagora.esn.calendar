@@ -472,5 +472,30 @@ describe('The calEventUtils service', function() {
 
       expect(this.calEventUtils.canSuggestChanges(event, this.session.user)).to.be.false;
     });
+
+    it('should return false when event is recurring', function() {
+      var event = this.CalendarShell.fromIncompleteShell({
+        _id: '123456',
+        start: this.calMoment('2013-02-08 12:30'),
+        end: this.calMoment('2013-02-08 13:30'),
+        organizer: {
+          email: 'notorg@test.com'
+        },
+        attendees: [
+          {
+            displayName: 'attendee1',
+            email: this.session.user.emails[0],
+            cutype: this.CAL_ICAL.cutype.individual
+          }
+        ],
+        rrule: {
+          freq: 'DAILY',
+          interval: 2,
+          count: 3
+        }
+      });
+
+      expect(this.calEventUtils.canSuggestChanges(event, this.session.user)).to.be.false;
+    });
   });
 });
