@@ -72,6 +72,38 @@
       .cal-blue-bar-label {
         margin-right: 5px;
         color: @secondaryTextColor;
+
+        &.replypartstat {
+          div {
+            .flex-vertical-centered;
+          }
+
+          a {
+            font-size: 13px;
+          }
+
+          i {
+            font-size: 20px;
+          }
+
+          .accepted {
+            i {
+              color: @m-green;
+            }
+          }
+
+          .tentative {
+            i {
+              color: @m-orange;
+            }
+          }
+
+          .declined {
+            i {
+              color: @m-red;
+            }
+          }
+        }
       }
 
       .cal-blue-bar-bold-label {
