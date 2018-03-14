@@ -152,7 +152,7 @@
 
     function bindAttachedICS() {
       var icsFiles = self.message.attachments.filter(function(attachment) {
-        return attachment.type === 'application/ics';
+        return attachment.type === 'application/ics' || attachment.type === 'text/calendar';
       });
 
       if (!icsFiles || !icsFiles.length) {

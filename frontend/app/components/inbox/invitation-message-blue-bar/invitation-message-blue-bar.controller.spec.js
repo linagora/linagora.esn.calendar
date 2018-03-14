@@ -265,7 +265,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
   });
 
   describe('When method is COUNTER', function() {
-    it('should fetch the ICS from attachment and set it in context', function() {
+    it('should fetch the ICS from application/ics attachment and set it in context', function() {
       var url = 'http://localhost:1080/jmap/attachment/2';
       var attachments = [{
         type: 'foo',
@@ -275,6 +275,35 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
         getSignedDownloadUrl: sinon.stub().returns($q.when(url))
       }, {
         type: 'application/ics',
+        getSignedDownloadUrl: sinon.stub().returns($q.reject(new Error('Should not be called')))
+      }];
+      var ctrl = initCtrl('COUNTER', '1234', '2', null, null, attachments);
+
+      calEventService.getEventByUID = sinon.stub().returns($q.when(shells.recurringEventWithTwoExceptions));
+      calEventService.getEventFromICSUrl = sinon.stub().returns($q.when(shells.recurringEventWithTwoExceptions));
+      session.user.emails = ['admin@linagora.com'];
+
+      ctrl.$onInit();
+      $rootScope.$digest();
+
+      expect(ctrl.additionalEvent).to.be.defined;
+      expect(attachments[0].getSignedDownloadUrl).to.not.have.been.called;
+      expect(attachments[1].getSignedDownloadUrl).to.have.been.calledOnce;
+      expect(attachments[2].getSignedDownloadUrl).to.not.have.been.called;
+      expect(calEventService.getEventFromICSUrl).to.have.been.calledWith(url);
+      expect(ctrl.meeting.error).to.not.be.defined;
+    });
+
+    it('should fetch the ICS from text/calendar attachment and set it in context', function() {
+      var url = 'http://localhost:1080/jmap/attachment/2';
+      var attachments = [{
+        type: 'foo',
+        getSignedDownloadUrl: sinon.stub().returns($q.reject(new Error('Should not be called')))
+      }, {
+        type: 'text/calendar',
+        getSignedDownloadUrl: sinon.stub().returns($q.when(url))
+      }, {
+        type: 'text/calendar',
         getSignedDownloadUrl: sinon.stub().returns($q.reject(new Error('Should not be called')))
       }];
       var ctrl = initCtrl('COUNTER', '1234', '2', null, null, attachments);
