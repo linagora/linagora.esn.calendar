@@ -375,10 +375,62 @@ describe('The invitation email module', function() {
               expect(locals).to.be.an('object');
               expect(locals.filter).is.a.function;
               expect(locals.content.method).to.equal(method);
+              expect(locals.content.seeInCalendarLink).to.be.defined;
               expect(locals.content.baseUrl).to.equal('http://localhost:8888');
               expect(locals.content.yes).to.equal('http://localhost:8888/calendar/api/calendars/event/participation?jwt=token');
               expect(locals.content.no).to.equal('http://localhost:8888/calendar/api/calendars/event/participation?jwt=token');
               expect(locals.content.maybe).to.equal('http://localhost:8888/calendar/api/calendars/event/participation?jwt=token');
+
+              return Promise.resolve();
+            }
+          };
+        };
+
+        this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
+        this.module.send(organizer, attendeeEmail, method, ics, 'calendarURI').then(() => done(), done);
+      });
+
+      it('should not include calendar link when attendee is external user', function(done) {
+        const method = 'REQUEST';
+
+        helpersMock.config.getBaseUrl = function(user, callback) {
+          callback(null, 'http://localhost:8888');
+        };
+        mockery.registerMock('./../helpers/jcal', {
+          jcal2content: function() {
+            return {};
+          }
+        });
+
+        userMock.findByEmail = function(email, callback) {
+          return callback();
+        };
+
+        emailMock.getMailer = function() {
+          return {
+            sendHTML: function(email, template, locals) {
+              expect(email.from).to.equal(organizer.emails[0]);
+
+              expect(email.to).to.equal(attendeeEmail);
+              expect(email).to.shallowDeepEqual({
+                subject: 'New event from ' + organizer.firstname + ' ' + organizer.lastname + ': description',
+                encoding: 'base64',
+                alternatives: [{
+                  content: ics,
+                  contentType: `text/calendar; charset=UTF-8; method=${method}`
+                }],
+                attachments: [{
+                  filename: 'meeting.ics',
+                  content: ics,
+                  contentType: 'application/ics'
+                }]
+              });
+              expect(template.name).to.equal('event.invitation');
+              expect(template.path).to.match(/templates\/email/);
+              expect(locals).to.be.an('object');
+              expect(locals.filter).is.a.function;
+              expect(locals.content.seeInCalendarLink).to.not.be.defined;
+              expect(locals.content.method).to.equal(method);
 
               return Promise.resolve();
             }

@@ -46,6 +46,7 @@ module.exports = dependencies => {
     .then(result => {
       const [baseUrl, attendee, , seeInCalendarLink] = result;
       const attendeePreferedEmail = attendee ? attendee.email || attendee.emails[0] : attendeeEmail;
+      const isExternalUser = !attendee;
 
       return i18nLib.getI18nForMailer(attendee).then(i18nConf => {
         let subject = 'Unknown method';
@@ -117,9 +118,12 @@ module.exports = dependencies => {
             displayName: userModule.getDisplayName(user),
             email: user.email || user.emails[0]
           },
-          calendarHomeId: user._id,
-          seeInCalendarLink
+          calendarHomeId: user._id
         };
+
+        if (!isExternalUser) {
+          content.seeInCalendarLink = seeInCalendarLink;
+        }
 
         let userIsInvolved = attendeeEmail === event.organizer.email;
 
