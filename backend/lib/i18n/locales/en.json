@@ -222,5 +222,7 @@
   "%s suggested some changes": "%s suggested some changes",
   "%s has accepted this event": "%s has accepted this event",
   "%s has tentatively accepted this event": "%s has tentatively accepted this event",
-  "%s has declined this event": "%s has declined this event"
+  "%s has declined this event": "%s has declined this event",
+  "Your proposal has been sent": "Your proposal has been sent",
+  "An error occurred, please try again": "An error occurred, please try again"
 }

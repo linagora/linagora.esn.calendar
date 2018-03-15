@@ -375,8 +375,17 @@
       }
 
       function submitSuggestion() {
-        $log.error('TODO: Implement #1150');
-        delete $scope.suggestedEvent;
+        return calEventService.sendCounter($scope.suggestedEvent).then(function(response) {
+          if (!response) {
+            return;
+          }
+
+          toggleSuggestedEvent();
+          _displayNotification(notificationFactory.weakInfo, 'Calendar -', 'Your proposal has been sent');
+        })
+        .catch(function() {
+          _displayNotification(notificationFactory.weakError, 'Calendar -', 'An error occurred, please try again');
+        });
       }
   }
 })();

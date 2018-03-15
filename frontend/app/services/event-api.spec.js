@@ -302,6 +302,50 @@ describe('The calendar module apis', function() {
         this.$httpBackend.flush();
       });
     });
+
+    describe('sendCounter request', function() {
+      var eventPath = '/dav/api/calendars/test.json',
+          requestBody = 'UCantTouchThis';
+
+      it('should return a http response if status is 200', function(done) {
+        this.$httpBackend.expect('POST', eventPath, requestBody).respond(200, 'aResponse');
+
+        this.calEventAPI.sendCounter(eventPath, requestBody)
+          .then(function(response) {
+            expect(response.data).to.equal('aResponse');
+
+            done();
+          });
+
+        this.$httpBackend.flush();
+      });
+
+      it('should return a http response if status is 204', function(done) {
+        this.$httpBackend.expect('POST', eventPath, requestBody).respond(204, 'aResponse');
+
+        this.calEventAPI.sendCounter(eventPath, requestBody)
+          .then(function(response) {
+            expect(response.data).to.equal('aResponse');
+
+            done();
+          });
+
+        this.$httpBackend.flush();
+      });
+
+      it('should return an Error if response.status is not 200', function(done) {
+        this.$httpBackend.expect('POST', eventPath, requestBody).respond(500, 'Error');
+
+        this.calEventAPI.sendCounter(eventPath, requestBody)
+          .catch(function(err) {
+            expect(err).to.exist;
+
+            done();
+          });
+
+        this.$httpBackend.flush();
+      });
+    });
   });
 
   describe('calEventApi with graceperiod desactivated', function() {

@@ -222,5 +222,7 @@
   "%s suggested some changes": "%s đề xuất một số thay đổi",
   "%s has accepted this event": "%s đã chấp nhận sự kiện này",
   "%s has tentatively accepted this event": "%s đã tạm thời chấp nhận sự kiện này",
-  "%s has declined this event": "%s đã từ chối sự kiện này"
+  "%s has declined this event": "%s đã từ chối sự kiện này",
+  "Your proposal has been sent": "Đề xuất của bạn đã được gửi đi",
+  "An error occurred, please try again": "Có lỗi xảy ra, hãy thử lại"
 }
