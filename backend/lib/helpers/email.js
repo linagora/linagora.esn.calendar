@@ -15,6 +15,8 @@ function filterEventAttachments(event) {
         return !(event.allDay && event.durationInDays === 1);
       case 'comment-text.png':
         return !!event.comment;
+      case 'resource.png':
+        return event.hasResources;
       default:
         return true;
     }
