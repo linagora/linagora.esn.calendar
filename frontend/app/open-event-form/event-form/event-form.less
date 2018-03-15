@@ -79,6 +79,18 @@ body  {
     padding: 6px 12px;
   }
 
+  .suggestion-container {
+    .suggestion-buttons {
+      .flex-horizontal-centered;
+
+      .btn {
+        .flex-grow;
+
+        margin-bottom: 6px;
+      }
+    }
+  }
+
   .partstat {
     .flex-horizontal-centered;
 
@@ -195,6 +207,14 @@ body  {
   .event-form .partstat {
     cal-partstat-buttons {
       .flex-grow(unset);
+    }
+  }
+
+  .event-form .suggestion-container {
+    .suggestion-buttons {
+      .btn {
+        .flex-grow(unset);
+      }
     }
   }
 }

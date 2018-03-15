@@ -167,7 +167,7 @@
     }
 
     function acceptChanges() {
-      return calEventService.acceptChanges(self.event.path, self.event, self.additionalEvent, self.event.etag, ['start', 'end', 'allDay'])
+      return calEventService.acceptChanges(self.event.path, self.event, self.additionalEvent, self.event.etag, ['start', 'end'])
         .then(notify('Event updated'))
         .then(function() {
           self.meeting.loaded = false;
