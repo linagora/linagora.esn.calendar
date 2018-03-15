@@ -66,5 +66,15 @@ describe('The email helper', function() {
     it('should not return comment-text.png when comment is not specified', function() {
       expect(this.module.filterEventAttachments(event)('comment-text.png')).to.be.false;
     });
+
+    it('should return false for resource.png when event does not have resource', function() {
+      event.hasResources = false;
+      expect(this.module.filterEventAttachments(event)('resource.png')).to.be.false;
+    });
+
+    it('should return true for resource.png when event does have resource', function() {
+      event.hasResources = true;
+      expect(this.module.filterEventAttachments(event)('resource.png')).to.be.true;
+    });
   });
 });
