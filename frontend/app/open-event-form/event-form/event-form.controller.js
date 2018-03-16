@@ -53,6 +53,7 @@
       $scope.cancel = cancel;
       $scope.toggleSuggestedEvent = toggleSuggestedEvent;
       $scope.submitSuggestion = submitSuggestion;
+      $scope.displayInputSuggestion = !!$scope.suggestedInputEvent;
 
       // Initialize the scope of the form. It creates a scope.editedEvent which allows us to
       // rollback to scope.event in case of a Cancel.

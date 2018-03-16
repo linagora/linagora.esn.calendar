@@ -51,16 +51,7 @@
         .cal-blue-bar-value #{__('This event has been cancelled')}
 
     .cal-blue-bar-info-and-actions.ellipsis(ng-if="$ctrl.event && $ctrl.additionalEvent && $ctrl.meeting.method === $ctrl.CAL_EVENT_METHOD.COUNTER")
-      .cal-blue-bar-actions-container.cal-blue-bar-labelled-value
-        .cal-blue-bar-bold-label #{__('%s suggested some changes', '{{ $ctrl.replyAttendee.displayName }}')}
-
-      .cal-blue-bar-info
-        .cal-blue-bar-date.cal-blue-bar-labelled-value.ellipsis
-          i.cal-blue-bar-label.mdi.mdi-clock
-          span.cal-blue-bar-value {{ $ctrl.additionalEvent.start | amDateFormat:'lll' }} - {{ $ctrl.additionalEvent.end | amDateFormat:'lll' }}  ({{ $ctrl.additionalEvent.end | amDifference:$ctrl.additionalEvent.start:'hours':true }}h)
-        .cal-blue-bar-recurrence.cal-blue-bar-labelled-value.ellipsis(ng-if="$ctrl.additionalEvent.isRecurring()")
-          i.cal-blue-bar-label.mdi.mdi-sync
-          span.cal-blue-bar-value #{__('Recurs %s', '{{ $ctrl.additionalEvent.getRecurrenceType() | lowercase }}')}
+      cal-event-date-suggestion-summary(event="$ctrl.additionalEvent", user="$ctrl.replyAttendee")
 
       .cal-blue-bar-actions-container
         .cal-blue-bar-actions.counter

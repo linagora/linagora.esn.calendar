@@ -1,0 +1,11 @@
+.cal-event-date-suggestion-summary
+  .suggestion-user
+    span #{__('%s suggested some changes', '{{ $ctrl.user.displayName }}')}
+
+  .suggestion-event
+    .date.ellipsis
+      i.mdi.mdi-clock
+      span {{ $ctrl.event.start | amDateFormat:'lll' }} - {{ $ctrl.event.end | amDateFormat:'lll' }}  ({{ $ctrl.event.end | amDifference:$ctrl.event.start:'hours':true }}h)
+    .recurrence.ellipsis(ng-if="$ctrl.event.isRecurring()")
+      i.mdi.mdi-sync
+      span #{__('Recurs %s', '{{ $ctrl.event.getRecurrenceType() | lowercase }}')}
