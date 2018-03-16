@@ -1,5 +1,5 @@
 .modal.full-screen.cal-event-date-suggestion-modal(tabindex="-1", role="dialog")
-  form.suggest-form(role="form", aria-hidden="true", ng-submit='submit()')
+  form.suggest-form(name="form", role="form", aria-hidden="true", ng-submit='submit()')
     .modal-dialog
       .modal-content
         .modal-header
@@ -14,4 +14,4 @@
         .modal-footer.flex
           .flex-vertical-centered.flex-end
             button.btn.btn-link.color-default.close-button(type='button', ng-click="$hide()") #{__('Cancel')}
-            button.btn.btn-primary.save.save-button(type='submit') #{__('Send')}
+            button.btn.btn-primary.save.save-button(ng-disabled="!form.$dirty", type='submit') #{__('Send')}
