@@ -130,6 +130,14 @@
         this.ensureAlarmCoherence();
       },
 
+      get comment() {
+        return this.vevent.getFirstPropertyValue('comment');
+      },
+
+      set comment(value) {
+        this.vevent.updatePropertyWithValue('comment', value);
+      },
+
       get location() { return this.vevent.getFirstPropertyValue('location'); },
       set location(value) {
         this.vevent.updatePropertyWithValue('location', value);

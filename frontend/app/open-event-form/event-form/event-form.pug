@@ -21,7 +21,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
               cal-partstat-buttons(event="event", change-partstat="changeParticipation(partstat)" show-date-suggestion="toggleSuggestedEvent()")
           .col-xs-12.suggestion-container(ng-if="suggestedEvent")
             cal-event-date-suggestion(event="suggestedEvent", use-24hour-format='use24hourFormat')
-            .text-center
+            .suggestion-buttons
               button.btn.btn-primary(type='button', ng-click='submitSuggestion()') #{__("Send")}
           .col-xs-12
             .form-group

@@ -2038,4 +2038,24 @@ describe('CalendarShell factory', function() {
         .to.equal('cbdf2ff0-c6e0-413f-8984-0f70a86e9866');
     });
   });
+
+  describe('The comment getter', function() {
+    it('should return the ICS comment if defined', function() {
+      expect(loadICSFixtureAsCalendarShell('eventWithComment.ics').comment).to.equal('This will be great to meet you!');
+    });
+
+    it('should return undefined when ICS comment is not defined', function() {
+      expect(loadICSFixtureAsCalendarShell('event.ics').comment).to.be.null;
+    });
+  });
+
+  describe('The comment setter', function() {
+    it('should set comment property in the ICS', function() {
+      var comment = 'Hey! Oh! Lets go!';
+      var shell = CalendarShell.fromIncompleteShell({});
+
+      shell.comment = comment;
+      expect(shell.vevent.getFirstPropertyValue('comment')).to.equal(comment);
+    });
+  });
 });

@@ -4,7 +4,13 @@
   angular.module('esn.calendar')
     .factory('calEventDateSuggestionModal', calEventDateSuggestionModal);
 
-  function calEventDateSuggestionModal($rootScope, $modal, CAL_EVENTS) {
+  function calEventDateSuggestionModal(
+    $rootScope,
+    $modal,
+    notificationFactory,
+    calEventService,
+    CAL_EVENTS
+  ) {
     var modalIsOpen = false;
 
     return function(event) {
@@ -27,8 +33,13 @@
             $scope.$hide = hide;
             $scope.event = event;
             $scope.submit = function() {
-              // TODO: Send is implemented in #1150
-              hide();
+              calEventService.sendCounter($scope.event).then(function() {
+                notificationFactory.weakInfo('Calendar', 'Your proposal has been sent');
+                hide();
+              })
+              .catch(function() {
+                notificationFactory.weakError('Calendar', 'An error occurred, please try again');
+              });
             };
 
             function hide() {
