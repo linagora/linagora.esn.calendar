@@ -26,6 +26,7 @@
     esnI18nService,
     calMoment,
     CAL_ATTENDEE_OBJECT_TYPE,
+    CAL_RELATED_EVENT_TYPES,
     CAL_EVENTS,
     CAL_EVENT_FORM,
     CAL_ICAL) {
@@ -102,7 +103,7 @@
         $scope.newResources = calEventUtils.getNewResources();
         $scope.isOrganizer = calEventUtils.isOrganizer($scope.editedEvent);
         $scope.canSuggestTime = calEventUtils.canSuggestChanges($scope.editedEvent, session.user);
-        $scope.inputSuggestions = _.filter($scope.relatedEvents, {type: 'counter'});
+        $scope.inputSuggestions = _.filter($scope.relatedEvents, {type: CAL_RELATED_EVENT_TYPES.COUNTER});
 
         calendarService.listPersonalAndAcceptedDelegationCalendars($scope.calendarHomeId)
           .then(function(calendars) {
