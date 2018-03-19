@@ -53,7 +53,6 @@
       $scope.cancel = cancel;
       $scope.toggleSuggestedEvent = toggleSuggestedEvent;
       $scope.submitSuggestion = submitSuggestion;
-      $scope.displayInputSuggestion = !!$scope.suggestedInputEvent;
 
       // Initialize the scope of the form. It creates a scope.editedEvent which allows us to
       // rollback to scope.event in case of a Cancel.
@@ -103,6 +102,7 @@
         $scope.newResources = calEventUtils.getNewResources();
         $scope.isOrganizer = calEventUtils.isOrganizer($scope.editedEvent);
         $scope.canSuggestTime = calEventUtils.canSuggestChanges($scope.editedEvent, session.user);
+        $scope.inputSuggestions = _.filter($scope.relatedEvents, {type: 'counter'});
 
         calendarService.listPersonalAndAcceptedDelegationCalendars($scope.calendarHomeId)
           .then(function(calendars) {

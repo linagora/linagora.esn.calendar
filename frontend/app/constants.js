@@ -96,6 +96,10 @@
 
     .constant('CAL_DAV_DATE_FORMAT', 'YYYYMMDD[T]HHmmss')
 
+    .constant('CAL_RELATED_EVENT_TYPES', {
+      COUNTER: 'counter'
+    })
+
     .constant('CAL_ICAL', {
       partstat: {
         needsaction: 'NEEDS-ACTION',

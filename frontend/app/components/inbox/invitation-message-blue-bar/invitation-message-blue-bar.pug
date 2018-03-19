@@ -53,10 +53,6 @@
     .cal-blue-bar-info-and-actions.ellipsis(ng-if="$ctrl.event && $ctrl.additionalEvent && $ctrl.meeting.method === $ctrl.CAL_EVENT_METHOD.COUNTER")
       cal-event-date-suggestion-summary(event="$ctrl.additionalEvent", user="$ctrl.replyAttendee")
 
-      .cal-blue-bar-actions-container
-        .cal-blue-bar-actions.counter
-          button.cal-blue-bar-action-button.btn.btn-primary(ng-click="$ctrl.acceptChanges()") #{__('Accept')}
-
     .cal-blue-bar-info-and-actions.ellipsis(ng-if="$ctrl.event")
       .cal-blue-bar-value
         a(href="", ng-click="$ctrl.openEvent()") #{__('Event details')}
