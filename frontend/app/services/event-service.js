@@ -41,7 +41,6 @@
       self.searchEvents = searchEvents;
       self.getEventByUID = getEventByUID;
       self.getEventFromICSUrl = getEventFromICSUrl;
-      self.acceptChanges = acceptChanges;
 
       ////////////
 
@@ -511,20 +510,6 @@
         return $http.get(url).then(function(response) {
           return new CalendarShell(ICAL.Component.fromString(response.data));
         });
-      }
-
-      function acceptChanges(eventPath, initialEvent, suggestedEvent, etag, fieldsToChange) {
-        if (!fieldsToChange || !fieldsToChange.length) {
-          return $q.reject(new Error('fields to change must be specified'));
-        }
-
-        var updatedEvent = initialEvent.clone();
-
-        fieldsToChange.forEach(function(field) {
-          updatedEvent[field] = suggestedEvent[field];
-        });
-
-        return self.modifyEvent(eventPath, updatedEvent, initialEvent, etag);
       }
   }
 })();
