@@ -5,7 +5,9 @@
   .suggestion-event
     .date.ellipsis
       i.mdi.mdi-clock
-      span {{ $ctrl.event.start | amDateFormat:'lll' }} - {{ $ctrl.event.end | amDateFormat:'lll' }}  ({{ $ctrl.event.end | amDifference:$ctrl.event.start:'hours':true }}h)
+      span(ng-if="!$ctrl.event.allDay") {{ $ctrl.event.start | amDateFormat:'lll' }} - {{ $ctrl.event.end | amDateFormat:'lll' }}  ({{ $ctrl.event.end | amDifference:$ctrl.event.start:'hours':true }}h)
+      span(ng-if="$ctrl.event.allDay && $ctrl.event.end === $ctrl.event.start") {{ $ctrl.event.start | amDateFormat:'ll' }} (#{__('All day')})
+      span(ng-if="$ctrl.event.allDay && $ctrl.event.end !== $ctrl.event.start") {{ $ctrl.event.start | amDateFormat:'ll' }} - {{ $ctrl.event.end | amDateFormat:'ll' }} (#{__('All day')})
     .recurrence.ellipsis(ng-if="$ctrl.event.isRecurring()")
       i.mdi.mdi-sync
       span #{__('Recurs %s', '{{ $ctrl.event.getRecurrenceType() | lowercase }}')}
