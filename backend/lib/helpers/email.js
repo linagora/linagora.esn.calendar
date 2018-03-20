@@ -11,7 +11,7 @@ function filterEventAttachments(event) {
         return !!event.description;
       case 'folder-download.png':
         return !!event.files;
-      case 'check.png':
+      case 'to.png':
         return !(event.allDay && event.durationInDays === 1);
       case 'comment-text.png':
         return !!event.comment;
