@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('The calInboxInvitationMessageBlueBarController', function() {
-  var $componentController, $rootScope, $q, calEventService, session, shells = {}, CalendarShell, ICAL, INVITATION_MESSAGE_HEADERS;
+  var $componentController, $rootScope, $q, calOpenEventForm, calEventService, session, shells = {}, CalendarShell, ICAL, INVITATION_MESSAGE_HEADERS;
 
   function initCtrl(method, uid, sequence, recurrenceId, sender, attachments) {
     var headers = {};
@@ -40,7 +40,11 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
 
   beforeEach(function() {
     module('esn.calendar');
+
+    calOpenEventForm = sinon.spy();
+
     module(function($provide) {
+      $provide.value('calOpenEventForm', calOpenEventForm);
       $provide.value('calendarHomeService', {
         getUserCalendarHomeId: function() {
           return $q.when('cal');
@@ -321,6 +325,38 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
       expect(attachments[2].getSignedDownloadUrl).to.not.have.been.called;
       expect(calEventService.getEventFromICSUrl).to.have.been.calledWith(url);
       expect(ctrl.meeting.error).to.not.be.defined;
+    });
+  });
+
+  describe('The openEvent function', function() {
+    it('should open form with relatedEvents array when additional is defined', function() {
+      var url = 'http://localhost:1080/jmap/attachment/2';
+      var attachments = [{
+        type: 'foo',
+        getSignedDownloadUrl: sinon.stub().returns($q.reject(new Error('Should not be called')))
+      }, {
+        type: 'text/calendar',
+        getSignedDownloadUrl: sinon.stub().returns($q.when(url))
+      }, {
+        type: 'text/calendar',
+        getSignedDownloadUrl: sinon.stub().returns($q.reject(new Error('Should not be called')))
+      }];
+      var ctrl = initCtrl('COUNTER', '1234', '2', null, null, attachments);
+
+      calEventService.getEventByUID = sinon.stub().returns($q.when(shells.recurringEventWithTwoExceptions));
+      calEventService.getEventFromICSUrl = sinon.stub().returns($q.when(shells.recurringEventWithTwoExceptions));
+      session.user.emails = ['admin@linagora.com'];
+
+      ctrl.$onInit();
+      $rootScope.$digest();
+
+      ctrl.openEvent();
+
+      expect(calOpenEventForm).to.have.been.calledWith(ctrl.userCalendarHomeId, ctrl.event, [{
+        type: 'counter',
+        event: shells.recurringEventWithTwoExceptions,
+        actor: ctrl.replyAttendee
+      }]);
     });
   });
 });

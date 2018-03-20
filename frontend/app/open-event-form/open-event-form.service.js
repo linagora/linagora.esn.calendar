@@ -14,16 +14,16 @@
   function calOpenEventForm($rootScope, $modal, calendarService, calDefaultValue, calEventUtils, calUIAuthorizationService, notificationFactory, session, CAL_EVENTS) {
     var modalIsOpen = false;
 
-    return function calOpenEventForm(fallbackCalendarHomeId, event) {
+    return function calOpenEventForm(fallbackCalendarHomeId, event, relatedEvents) {
       var calendarHomeId = calEventUtils.isNew(event) ? fallbackCalendarHomeId : event.calendarHomeId;
       var calendarId = calEventUtils.isNew(event) ? calDefaultValue.get('calendarId') : event.calendarId;
 
       calendarService.getCalendar(calendarHomeId, calendarId).then(function(calendar) {
         if (calUIAuthorizationService.canAccessEventDetails(calendar, event, session.user._id)) {
           if (!event.isInstance()) {
-            _openForm(calendar, event);
+            _openForm(calendar, event, relatedEvents);
           } else {
-            _openRecurringModal(calendar, event);
+            _openRecurringModal(calendar, event, relatedEvents);
           }
         } else {
           notificationFactory.weakInfo('Private event', 'Cannot access private event');
@@ -33,7 +33,7 @@
 
     ////////////
 
-    function _openForm(calendar, event) {
+    function _openForm(calendar, event, relatedEvents) {
       calEventUtils.setEditedEvent(event);
       if (modalIsOpen === false) {
         modalIsOpen = true;
@@ -42,9 +42,12 @@
           resolve: {
             event: function(calEventUtils) {
               return calEventUtils.getEditedEvent();
+            },
+            relatedEvents: function() {
+              return relatedEvents;
             }
           },
-          controller: function($scope, event) {
+          controller: function($scope, event, relatedEvents) {
             var _$hide = $scope.$hide;
 
             var unregister = $rootScope.$on(CAL_EVENTS.MODAL + '.hide', function() {
@@ -59,6 +62,7 @@
             };
 
             $scope.event = event;
+            $scope.relatedEvents = relatedEvents;
             $scope.calendarHomeId = session.user._id;
           },
           backdrop: 'static',
@@ -68,7 +72,7 @@
       }
     }
 
-    function _openRecurringModal(calendar, event) {
+    function _openRecurringModal(calendar, event, relatedEvents) {
       $modal({
         templateUrl: '/calendar/app/open-event-form/edit-instance-or-series',
         resolve: {
@@ -78,18 +82,22 @@
           event: function() {
             return event;
           },
+          relatedEvents: function() {
+            return relatedEvents;
+          },
           openForm: function() {
             return _openForm;
           }
         },
-        controller: function($scope, calendar, event, openForm) {
+        controller: function($scope, calendar, event, openForm, relatedEvents) {
           $scope.event = event;
+          $scope.relatedEvents = relatedEvents;
           $scope.calendarHomeId = calendar.calendarHomeId;
 
           $scope.editAllInstances = function() {
             $scope.$hide();
             event.getModifiedMaster(true).then(function(eventMaster) {
-              openForm(calendar, eventMaster);
+              openForm(calendar, eventMaster, relatedEvents);
             });
           };
 

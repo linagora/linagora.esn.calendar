@@ -460,6 +460,37 @@ describe('The event-form module controllers', function() {
         expect(this.scope.attendees.users).to.shallowDeepEqual([{displayName: 'attendee1'}]);
         expect(this.scope.attendees.resources).to.shallowDeepEqual([{displayName: 'resource1'}]);
       });
+
+      it('should set inputSuggestions from scope.relatedEvents', function() {
+        var relatedCounterEvent = {
+          type: 'counter',
+          event: {},
+          actor: {id: '1'}
+        };
+        var relatedFooEvent = {
+          type: 'foo',
+          event: {},
+          actor: {id: '1'}
+        };
+
+        this.scope.event = this.CalendarShell.fromIncompleteShell({
+          attendees: [{
+            displayName: 'attendee1',
+            email: 'attendee1@openpaas.org',
+            cutype: this.CAL_ICAL.cutype.individual
+          }, {
+            displayName: 'resource1',
+            email: 'resource1@openpaas.org',
+            cutype: this.CAL_ICAL.cutype.resource
+          }]
+        });
+
+        this.scope.relatedEvents = [relatedCounterEvent, relatedFooEvent];
+
+        this.initController();
+
+        expect(this.scope.inputSuggestions).to.deep.equal([relatedCounterEvent]);
+      });
     });
 
     describe('displayParticipation function', function() {

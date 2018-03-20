@@ -15,13 +15,13 @@
     calEventDateSuggestionModal,
     session,
     INVITATION_MESSAGE_HEADERS,
-    CAL_EVENT_METHOD
+    CAL_EVENT_METHOD,
+    CAL_RELATED_EVENT_TYPES
   ) {
     var self = this;
 
     self.$onInit = $onInit;
     self.CAL_EVENT_METHOD = CAL_EVENT_METHOD;
-    self.acceptChanges = acceptChanges;
     self.showDateSuggestionWindow = showDateSuggestionWindow;
     self.openEvent = openEvent;
     self.onPartstatChangeSuccess = onPartstatChangeSuccess;
@@ -166,18 +166,14 @@
         });
     }
 
-    function acceptChanges() {
-      return calEventService.acceptChanges(self.event.path, self.event, self.additionalEvent, self.event.etag, ['start', 'end'])
-        .then(notify('Event updated'))
-        .then(function() {
-          self.meeting.loaded = false;
-          load();
-        })
-        .catch(notify('Event modification failed'));
-    }
-
     function openEvent() {
-      calOpenEventForm(self.userCalendarHomeId, self.event);
+      var relatedEvents = [];
+
+      if (self.additionalEvent) {
+        relatedEvents.push({type: CAL_RELATED_EVENT_TYPES.COUNTER, event: self.additionalEvent, actor: self.replyAttendee});
+      }
+
+      calOpenEventForm(self.userCalendarHomeId, self.event, relatedEvents);
     }
 
     function InvalidMeetingError(message) {
