@@ -116,6 +116,9 @@
         room: 'ROOM',
         resource: 'RESOURCE',
         group: 'GROUP'
+      },
+      status: {
+        CANCELLED: 'CANCELLED'
       }
     })
 
