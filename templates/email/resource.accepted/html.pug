@@ -54,7 +54,8 @@ html.mail
               td(colspan="2")
             td.recurrence
             td.indent-right
-              a(href=content.seeInCalendarLink) #{translate('See in calendar')}
+              if (content.seeInCalendarLink)
+                a(href=content.seeInCalendarLink) #{translate('See in calendar')}
           if (content.event.description)
             tr
               td

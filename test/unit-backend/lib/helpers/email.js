@@ -41,21 +41,21 @@ describe('The email helper', function() {
       expect(this.module.filterEventAttachments(event)('folder-download.png')).to.be.false;
     });
 
-    it('should return check.png for a timed event', function() {
+    it('should return to.png for a timed event', function() {
       event.allDay = false;
-      expect(this.module.filterEventAttachments(event)('check.png')).to.be.true;
+      expect(this.module.filterEventAttachments(event)('to.png')).to.be.true;
     });
 
-    it('should return check.png for a multi-allday event', function() {
+    it('should return to.png for a multi-allday event', function() {
       event.allDay = true;
       event.durationInDays = 2;
-      expect(this.module.filterEventAttachments(event)('check.png')).to.be.true;
+      expect(this.module.filterEventAttachments(event)('to.png')).to.be.true;
     });
 
-    it('should not return check.png for an allday event that lasts for one day', function() {
+    it('should not return to.png for an allday event that lasts for one day', function() {
       event.allDay = true;
       event.durationInDays = 1;
-      expect(this.module.filterEventAttachments(event)('check.png')).to.be.false;
+      expect(this.module.filterEventAttachments(event)('to.png')).to.be.false;
     });
 
     it('should return comment-text.png when comment is specified', function() {
@@ -73,6 +73,11 @@ describe('The email helper', function() {
     });
 
     it('should return true for resource.png when event does have resource', function() {
+      event.hasResources = true;
+      expect(this.module.filterEventAttachments(event)('resource.png')).to.be.true;
+    });
+
+    it('should return true for to.png when event is all day', function() {
       event.hasResources = true;
       expect(this.module.filterEventAttachments(event)('resource.png')).to.be.true;
     });
