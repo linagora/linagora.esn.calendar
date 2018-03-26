@@ -80,7 +80,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
   }));
 
   beforeEach(function() {
-    ['event', 'recurringEventWithTwoExceptions'].forEach(function(file) {
+    ['event', 'recurringEventWithTwoExceptions', 'singleWithAttendees'].forEach(function(file) {
       shells[file] = new CalendarShell(ICAL.Component.fromString(__FIXTURES__[('frontend/app/fixtures/calendar/' + file + '.ics')]), {
         etag: 'etag',
         path: 'path'
@@ -160,6 +160,30 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
       $rootScope.$digest();
 
       expect(ctrl.meeting.invalid).to.equal(true);
+    });
+
+    it('should set the occurence when counter and recurrenceId is defined', function() {
+      var ctrl = initCtrl('COUNTER', '1234', '2', '20170115T100000Z');
+
+      session.user.emails = ['admin@linagora.com'];
+      calEventService.getEventByUID = qResolve(shells.recurringEventWithTwoExceptions);
+      ctrl.$onInit();
+      $rootScope.$digest();
+
+      expect(ctrl.meeting.invalid).to.equal(undefined);
+      expect(ctrl.event).to.not.equal(shells.recurringEventWithTwoExceptions);
+    });
+
+    it('should set the master meeting if counter and the recurrenceId is not defined', function() {
+      var ctrl = initCtrl('COUNTER', '1234', '0', null, 'admin@open-paas.org');
+
+      session.user.emails = ['admin@open-paas.org'];
+      calEventService.getEventByUID = qResolve(shells.singleWithAttendees);
+      ctrl.$onInit();
+      $rootScope.$digest();
+
+      expect(ctrl.meeting.invalid).to.equal(undefined);
+      expect(ctrl.event).to.deep.equal(shells.singleWithAttendees);
     });
 
     it('should report an invalid meeting if the current user is not involved in the event', function() {

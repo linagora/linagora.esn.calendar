@@ -103,7 +103,7 @@
 
           $scope.editInstance = function() {
             $scope.$hide();
-            openForm(calendar, event, event.recurrenceIdAsString);
+            openForm(calendar, event, relatedEvents);
           };
         },
         placement: 'center'
