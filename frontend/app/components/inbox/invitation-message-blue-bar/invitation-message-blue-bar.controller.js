@@ -10,6 +10,7 @@
     calEventService,
     calendarHomeService,
     calEventUtils,
+    calMoment,
     notificationFactory,
     calOpenEventForm,
     calEventDateSuggestionModal,
@@ -42,7 +43,7 @@
       calendarHomeService.getUserCalendarHomeId()
         .then(bindCalendarHomeId)
         .then(getEventByUID)
-        .then(selectMasterEventOrException, handleNonExistentEvent)
+        .then(selectEvent, handleNonExistentEvent)
         .then(assertEventInvolvesCurrentUser)
         .then(assertInvitationSequenceIsNotOutdated)
         .then(bindEventToController)
@@ -98,6 +99,22 @@
 
     function getEventByUID() {
       return calEventService.getEventByUID(self.userCalendarHomeId, self.meeting.uid);
+    }
+
+    function selectEvent(event) {
+      return (self.meeting.method === CAL_EVENT_METHOD.COUNTER ? selectMasterEventOrOccurence : selectMasterEventOrException)(event);
+    }
+
+    function selectMasterEventOrOccurence(event) {
+      var result = event;
+
+      if (self.meeting.recurrenceId) {
+        var date = calMoment(self.meeting.recurrenceId);
+
+        result = event.expand(date.clone().subtract(1, 'day'), date.clone().add(1, 'day'))[0] || event;
+      }
+
+      return result;
     }
 
     function selectMasterEventOrException(event) {

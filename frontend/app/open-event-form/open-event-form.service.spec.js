@@ -248,7 +248,7 @@ describe('The calOpenEventForm service', function() {
           $rootScope.$digest();
 
           expect(instance.getModifiedMaster).to.have.been.calledWith(true);
-          expect(openForm.firstCall).to.have.been.calledWith(calendar, instance, instance.recurrenceIdAsString);
+          expect(openForm.firstCall).to.have.been.calledWith(calendar, instance);
           expect(openForm.secondCall).to.have.been.calledWith(calendar, master);
           expect($scope.$hide).to.have.been.calledTwice;
 
