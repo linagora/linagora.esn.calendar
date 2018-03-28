@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('The calWebsocketListenerService service', function() {
-  var $rootScope, $q, $log, scope, liveNotification, calWebsocketListenerService, CAL_WEBSOCKET;
+  var $rootScope, $q, $log, scope, liveNotification, calWebsocketListenerService, CAL_ICAL, CAL_WEBSOCKET;
   var CalendarShellMock, calEventServiceMock, calendarServiceMock, calendarEventEmitterMock, calMasterEventCacheMock, calCachedEventSourceMock;
   var calendarHomeId, calendarId, calendarPath, calendarSourceHomeId, calendarSourceId, calendarSourcePath;
 
@@ -82,13 +82,14 @@ describe('The calWebsocketListenerService service', function() {
     });
   });
 
-  beforeEach(angular.mock.inject(function(_$controller_, _$rootScope_, _$q_, _$log_, _calWebsocketListenerService_, _CAL_WEBSOCKET_) {
+  beforeEach(angular.mock.inject(function(_$controller_, _$rootScope_, _$q_, _$log_, _calWebsocketListenerService_, _CAL_ICAL_, _CAL_WEBSOCKET_) {
     $rootScope = _$rootScope_;
     scope = $rootScope.$new();
     $q = _$q_;
     $log = _$log_;
     calWebsocketListenerService = _calWebsocketListenerService_;
     CAL_WEBSOCKET = _CAL_WEBSOCKET_;
+    CAL_ICAL = _CAL_ICAL_;
   }));
 
   afterEach(function() {
@@ -229,12 +230,57 @@ describe('The calWebsocketListenerService service', function() {
     });
 
     describe('on EVENT.CANCEL', function() {
-      it('should remove event on calCachedEventSource and broadcast emit an event for a deletion on EVENT_CANCEL', function() {
-        testUpdateCalCachedEventSourceAndFcEmit(wsEventCancelListener, 'registerDelete', 'emitRemovedEvent');
+      it('should remove event on calCachedEventSource and broadcast emit an event for a deletion if whole event is cancelled', function() {
+        var event = {id: 'id', calendarId: 'calId', status: CAL_ICAL.status.CANCELLED};
+        var path = 'path';
+        var etag = 'etag';
+        var resultingEvent = CalendarShellMock.from(event, {etag: etag, path: path});
+
+        wsEventCancelListener({event: event, eventPath: path, etag: etag});
+        scope.$digest();
+
+        expect(CalendarShellMock.from).to.have.been.calledWith(event, {path: path, etag: etag});
+        expect(calendarEventEmitterMock.emitRemovedEvent).to.have.been.calledWith(resultingEvent);
+        expect(calCachedEventSourceMock.registerDelete).to.have.been.calledWith(resultingEvent);
       });
 
-      it('should remove event on calMasterEventCache for a deletion', function() {
-        testUpdateCalMasterEventCache(wsEventCancelListener, 'remove');
+      it('should remove event on calMasterEventCache for a deletion if whole event is cancelled', function() {
+        var event = {id: 'id', calendarId: 'calId', status: CAL_ICAL.status.CANCELLED};
+        var path = 'path';
+        var etag = 'etag';
+        var resultingEvent = CalendarShellMock.from(event, {etag: etag, path: path});
+
+        wsEventCancelListener({event: event, eventPath: path, etag: etag});
+        scope.$digest();
+
+        expect(CalendarShellMock.from).to.have.been.calledWith(event, {path: path, etag: etag});
+        expect(calMasterEventCacheMock.remove).to.have.been.calledWith(resultingEvent);
+      });
+      it('should update event on calCachedEventSource and broadcast emit an event for a modification if master event is not cancelled', function() {
+        var event = {id: 'id', calendarId: 'calId'};
+        var path = 'path';
+        var etag = 'etag';
+        var resultingEvent = CalendarShellMock.from(event, {etag: etag, path: path});
+
+        wsEventModifyListener({event: event, eventPath: path, etag: etag});
+        scope.$digest();
+
+        expect(CalendarShellMock.from).to.have.been.calledWith(event, {path: path, etag: etag});
+        expect(calendarEventEmitterMock.emitModifiedEvent).to.have.been.calledWith(resultingEvent);
+        expect(calCachedEventSourceMock.registerUpdate).to.have.been.calledWith(resultingEvent);
+      });
+
+      it('should update event on calMasterEventCache for a modification if master event is not cancelled', function() {
+        var event = {id: 'id', calendarId: 'calId'};
+        var path = 'path';
+        var etag = 'etag';
+        var resultingEvent = CalendarShellMock.from(event, {etag: etag, path: path});
+
+        wsEventModifyListener({event: event, eventPath: path, etag: etag});
+        scope.$digest();
+
+        expect(CalendarShellMock.from).to.have.been.calledWith(event, {path: path, etag: etag});
+        expect(calMasterEventCacheMock.save).to.have.been.calledWith(resultingEvent);
       });
     });
 

@@ -15,6 +15,7 @@
     calendarService,
     calMasterEventCache,
     CalendarShell,
+    CAL_ICAL,
     CAL_WEBSOCKET
   ) {
 
@@ -27,7 +28,7 @@
 
       sio.on(CAL_WEBSOCKET.EVENT.CREATED, _onEventCreateRequestOrUpdate.bind(null, CAL_WEBSOCKET.EVENT.CREATED));
       sio.on(CAL_WEBSOCKET.EVENT.REQUEST, _onEventCreateRequestOrUpdate.bind(null, CAL_WEBSOCKET.EVENT.REQUEST));
-      sio.on(CAL_WEBSOCKET.EVENT.CANCEL, _onEventDeleted.bind(null, CAL_WEBSOCKET.EVENT.CANCEL));
+      sio.on(CAL_WEBSOCKET.EVENT.CANCEL, _onEventCancelled.bind(null, CAL_WEBSOCKET.EVENT.CANCEL));
       sio.on(CAL_WEBSOCKET.EVENT.UPDATED, _onEventCreateRequestOrUpdate.bind(null, CAL_WEBSOCKET.EVENT.UPDATED));
       sio.on(CAL_WEBSOCKET.EVENT.DELETED, _onEventDeleted.bind(null, CAL_WEBSOCKET.EVENT.DELETED));
       sio.on(CAL_WEBSOCKET.EVENT.REPLY, _onEventReply.bind(null, CAL_WEBSOCKET.EVENT.REPLY));
@@ -89,9 +90,7 @@
         $log.debug('Calendar Event created/updated', type, msg);
         var event = CalendarShell.from(msg.event, {etag: msg.etag, path: getEventPath(msg)});
 
-        calCachedEventSource.registerUpdate(event);
-        calMasterEventCache.save(event);
-        calendarEventEmitter.emitModifiedEvent(event);
+        _udpateEventCacheAndNotify(event);
       }
 
       function _onEventReply(type, msg) {
@@ -102,9 +101,7 @@
         event && event.applyReply(replyEvent);
 
         $q.when(event || calEventService.getEvent(replyEvent.path)).then(function(event) {
-          calMasterEventCache.save(event);
-          calCachedEventSource.registerUpdate(event);
-          calendarEventEmitter.emitModifiedEvent(event);
+          _udpateEventCacheAndNotify(event);
         });
       }
 
@@ -112,6 +109,29 @@
         $log.debug('Calendar Event deleted/canceled', type, msg);
         var event = CalendarShell.from(msg.event, {etag: msg.etag, path: getEventPath(msg)});
 
+        _removeFromEventCacheAndNotify(event);
+      }
+
+      function _onEventCancelled(type, msg) {
+        $log.debug('Calendar Event deleted/canceled', type, msg);
+        var event = CalendarShell.from(msg.event, {etag: msg.etag, path: getEventPath(msg)});
+
+        //If instances of reccurring event have been cancelled but not the whole event
+        // Then event is not cancelled but modified
+        if (event.status !== CAL_ICAL.status.CANCELLED) {
+          _udpateEventCacheAndNotify(event);
+        } else {
+          _removeFromEventCacheAndNotify(event);
+        }
+      }
+
+      function _udpateEventCacheAndNotify(event) {
+        calCachedEventSource.registerUpdate(event);
+        calMasterEventCache.save(event);
+        calendarEventEmitter.emitModifiedEvent(event);
+      }
+
+      function _removeFromEventCacheAndNotify(event) {
         calCachedEventSource.registerDelete(event);
         calMasterEventCache.remove(event);
         calendarEventEmitter.emitRemovedEvent(event);
