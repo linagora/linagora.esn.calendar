@@ -95,14 +95,9 @@
 
       function _onEventReply(type, msg) {
         $log.debug('Calendar Event reply', type, msg);
-        var replyEvent = CalendarShell.from(msg.event, {etag: msg.etag, path: msg.eventPath});
-        var event = calMasterEventCache.get(replyEvent.path);
+        var event = CalendarShell.from(msg.event, {etag: msg.etag, path: msg.eventPath});
 
-        event && event.applyReply(replyEvent);
-
-        $q.when(event || calEventService.getEvent(replyEvent.path)).then(function(event) {
-          _udpateEventCacheAndNotify(event);
-        });
+        _udpateEventCacheAndNotify(event);
       }
 
       function _onEventDeleted(type, msg) {
