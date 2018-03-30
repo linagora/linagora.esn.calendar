@@ -33,7 +33,6 @@
       setNewResources: setNewResources,
       setBackgroundColor: setBackgroundColor,
       resetStoredEvents: resetStoredEvents,
-      applyReply: applyReply,
       getUserAttendee: getUserAttendee,
       getEventTitle: getEventTitle,
       canSuggestChanges: canSuggestChanges
@@ -109,18 +108,6 @@
       editedEvent = {};
       newAttendees = [];
       newResources = [];
-    }
-
-    function applyReply(originalEvent, reply) {
-      reply.vcalendar.getFirstSubcomponent('vevent').getAllProperties('attendee').forEach(function(replyAttendee) {
-        originalEvent.vcalendar.getFirstSubcomponent('vevent').getAllProperties('attendee').forEach(function(attendee) {
-          if (replyAttendee.getFirstValue() === attendee.getFirstValue()) {
-            attendee.setParameter('partstat', replyAttendee.getParameter('partstat'));
-          }
-        });
-      });
-
-      return originalEvent;
     }
 
     function setBackgroundColor(event, calendars) {

@@ -132,7 +132,6 @@ describe('The calendarViewController', function() {
     this.gracePeriodService = {};
     this.userMock = {};
     this.calEventUtilsMock = {
-      applyReply: sinon.spy(),
       setBackgroundColor: sinon.spy(angular.identity)
     };
 
