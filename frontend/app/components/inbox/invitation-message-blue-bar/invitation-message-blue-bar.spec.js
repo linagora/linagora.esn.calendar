@@ -16,6 +16,10 @@ describe('The calInboxInvitationMessageBlueBar component', function() {
   beforeEach(function() {
     module('esn.calendar');
     module('jadeTemplates');
+
+    module(function($provide) {
+      $provide.value('linkyFilter', angular.noop);
+    });
   });
 
   beforeEach(inject(function(_$compile_, _$rootScope_) {

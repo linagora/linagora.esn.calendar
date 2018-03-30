@@ -22,7 +22,7 @@
         .cal-blue-bar-summary.ellipsis {{ $ctrl.event.summary }}
         .cal-blue-bar-location.cal-blue-bar-labelled-value.ellipsis(ng-if="$ctrl.event.location")
           i.cal-blue-bar-label.mdi.mdi-map-marker
-          span.cal-blue-bar-value {{ $ctrl.event.location }}
+          span.cal-blue-bar-value(ng-bind-html="$ctrl.event.location | linky:'_blank'")
         .cal-blue-bar-date.cal-blue-bar-labelled-value.ellipsis
           i.cal-blue-bar-label.mdi.mdi-clock
           span.cal-blue-bar-value {{ $ctrl.event.start | amDateFormat:'lll' }} ({{ $ctrl.event.end | amDifference:$ctrl.event.start:'hours':true }}h)
