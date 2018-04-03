@@ -80,7 +80,7 @@
     "dynamic-directive": "3.0.0",
     "email-addresses": "3.0.0",
     "fullcalendar": "3.0.1",
-    "ical.js": "linagora/ical.js#v1.0.4-2",
+    "ical.js": "linagora/ical.js#v1.2.3",
     "iframe-resizer": "3.5.5",
     "james-admin-client": "0.0.2",
     "jcrop": "~0.9.12",
