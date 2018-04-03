@@ -67,41 +67,6 @@ describe('The calEventUtils service', function() {
     event.end = event.start.add(this.CAL_MAX_DURATION_OF_SMALL_EVENT.DESKTOP, 'minutes');
   }));
 
-  describe('applyReply', function() {
-    it('should update reply\'s attendee participation without modifying other', function() {
-      var origEvent = this.CalendarShell.fromIncompleteShell({title: 'second world war'});
-
-      origEvent.attendees = [{
-        email: 'winston.churchill@demo.open-paas.org',
-        partstat: 'ACCEPTED'
-      }, {
-        email: 'philippe.petain@demo.open-paas.org',
-        partstat: 'NEEDS-ACTION'
-      }];
-
-      var reply = this.CalendarShell.fromIncompleteShell({title: 'second world war'});
-
-      reply.attendees = [{
-        email: 'philippe.petain@demo.open-paas.org',
-        partstat: 'DECLINED'
-      }];
-
-      this.calEventUtils.applyReply(origEvent, reply);
-
-      expect(origEvent.attendees).to.shallowDeepEqual({
-        0: {
-          email: 'winston.churchill@demo.open-paas.org',
-          partstat: 'ACCEPTED'
-        },
-        1: {
-          email: 'philippe.petain@demo.open-paas.org',
-          partstat: 'DECLINED'
-        },
-        length: 2
-      });
-    });
-  });
-
   describe('isOrganizer function', function() {
 
     it('should return true when the event organizer is the current user', function() {

@@ -75,7 +75,6 @@
       isPublic: isPublic,
       isPrivate: isPrivate,
       isRecurring: isRecurring,
-      applyReply: applyReply,
       deleteInstance: deleteInstance,
       deleteAllException: deleteAllException,
       expand: expand,
@@ -798,46 +797,6 @@
      */
     function _getExceptionOrRegularInstance(instanceDetails) {
       return this._getException(instanceDetails.recurrenceId) || this._computeNonExceptionnalInstance(instanceDetails);
-    }
-
-    /**
-     * This take the vevent of a reply iTipmessage and apply it to update
-     * the partstat correctly
-     */
-    function applyReply(replyEvent) {
-      if (this.isInstance()) {
-        throw new Error('applyReply should be called on master event only');
-      }
-
-      if (!(replyEvent instanceof CalendarShell)) {
-        replyEvent = new CalendarShell(new ICAL.Component(replyEvent));
-      }
-
-      function updateAttendee(shell) {
-        replyEvent.attendees.forEach(function(attendee) {
-          shell.changeParticipation(attendee.partstat, [attendee.email]);
-        });
-      }
-
-      this.etag = replyEvent.etag || this.etag;
-
-      if (!replyEvent.isInstance()) {
-        updateAttendee(this);
-      } else {
-        var instance;
-        var recurrenceId = replyEvent.vevent.getFirstPropertyValue('recurrence-id');
-
-        this._registerException();
-
-        instance = this._getExceptionOrRegularInstance({
-          recurrenceId: recurrenceId,
-          startDate: replyEvent.vevent.getFirstPropertyValue('dtstart'),
-          endDate: replyEvent.vevent.getFirstPropertyValue('dtend')
-        });
-
-        updateAttendee(instance);
-        this.modifyOccurrence(instance);
-      }
     }
 
     function isMeeting() {
