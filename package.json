@@ -15,7 +15,7 @@
     "url": "https://ci.linagora.com/linagora/lgs/openpaas/linagora.esn.calendar.git"
   },
   "dependencies": {
-    "@linagora/ical.js": "1.1.4",
+    "@linagora/ical.js": "1.2.3",
     "async": "2.4.1",
     "awesome-module": "1.0.0",
     "express": "4.14.0",
