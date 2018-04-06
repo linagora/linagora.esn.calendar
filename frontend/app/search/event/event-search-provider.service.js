@@ -7,6 +7,7 @@
   function calSearchEventProviderService(
     $log,
     $q,
+    _,
     $rootScope,
     calendarHomeService,
     calendarService,
@@ -18,43 +19,26 @@
     esnI18nService
   ) {
     var service = {
-      getAll: getAll,
-      getForCalendar: getForCalendar,
-      setUpSearchProviders: setUpSearchProviders
+      setUpSearchProvider: setUpSearchProvider
     };
 
     return service;
 
     ////////////
 
-    function setUpSearchProviders() {
-      searchProviders.add(getAll());
-
-      setUpListeners();
-    }
-
-    function getAll() {
+    function setUpSearchProvider() {
       return calendarHomeService.getUserCalendarHomeId()
-        .then(function(calendarHomeId) {
-          return calendarService.listPersonalAndAcceptedDelegationCalendars(calendarHomeId);
-        })
-        .then(function(calendars) {
-          return calendars.map(getForCalendar);
-        }, function(error) {
-          $log.error('Could not register search providers for calendar module', error);
-
-          return [];
+        .then(buildProvider)
+        .then(function(provider) {
+          searchProviders.add(provider);
+          return provider;
         });
     }
 
-    function getForCalendar(calendar) {
-      return buildProvider(calendar);
-    }
+    function buildProvider(calendarHomeId) {
 
-    function buildProvider(calendar) {
       return newProvider({
-        name: esnI18nService.translate('Events from %s', calendar.name),
-        id: calendar.getUniqueId(),
+        name: esnI18nService.translate('Events'),
         fetch: function(query) {
           var offset = 0;
 
@@ -62,15 +46,10 @@
             event.date = event.start;
           }
 
-          return function() {
-            var context = {
-              query: query,
-              offset: offset,
-              limit: ELEMENTS_PER_REQUEST
-            };
+          function _searchInSingleCalendar(context, calendar) {
             var calendarToSearch = calendar.source ? calendar.source : calendar;
 
-            return calEventService.searchEvents(calendarToSearch.calendarHomeId, calendarToSearch.id, context)
+            return calEventService.searchEvents(calendarHomeId, calendarToSearch.id, context)
               .then(function(events) {
                 offset += events.length;
 
@@ -82,36 +61,29 @@
                   return event;
                 });
               });
+          }
+
+          return function() {
+            var context = {
+              query: query,
+              offset: offset,
+              limit: ELEMENTS_PER_REQUEST
+            };
+
+            var calendarsSearchResult = calendarService.listPersonalAndAcceptedDelegationCalendars(calendarHomeId)
+              .then(function(calendars) {
+                return $q.all(calendars.map(_.partial(_searchInSingleCalendar, context)));
+              });
+
+            return calendarsSearchResult
+              .then(function(arrayOfPromisedResultEvents) {
+                return _.sortBy(_.flatten(arrayOfPromisedResultEvents), function(event) { return -event.date; });
+              });
           };
         },
         buildFetchContext: function(options) { return $q.when(options.query); },
         templateUrl: '/calendar/app/search/event/event-search-item'
       });
-    }
-
-    function setUpListeners() {
-      $rootScope.$on(CAL_EVENTS.CALENDARS.ADD, function(event, calendar) {
-        _addCalendarInSearchProviders(calendar);
-      });
-
-      $rootScope.$on(CAL_EVENTS.CALENDARS.REMOVE, function(event, calendar) {
-        _removeCalendarFromSearchProviders(calendar);
-      });
-
-      $rootScope.$on(CAL_EVENTS.CALENDARS.UPDATE, function(event, calendar) {
-        _removeCalendarFromSearchProviders(calendar);
-        _addCalendarInSearchProviders(calendar);
-      });
-
-      function _addCalendarInSearchProviders(calendar) {
-        searchProviders.add(getForCalendar(calendar));
-      }
-
-      function _removeCalendarFromSearchProviders(calendar) {
-        searchProviders.remove(function(provider) {
-          return provider.id === calendar.uniqueId;
-        });
-      }
     }
   }
 })();
