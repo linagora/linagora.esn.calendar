@@ -68,14 +68,6 @@
           }
         }
       })
-      .state('calendar.settings.resources', {
-        url: '/resources',
-        views: {
-          settings: {
-            template: '<cal-settings-resources />'
-          }
-        }
-      })
       .state('calendar.edit', {
         url: '/edit/:calendarUniqueId',
         params: {
