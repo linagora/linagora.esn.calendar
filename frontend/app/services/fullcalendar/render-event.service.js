@@ -79,6 +79,8 @@
             element.addClass('event-accepted');
           } else if (userAsAttendee.partstat === 'DECLINED') {
             element.addClass('event-declined');
+          } else {
+            element.addClass('event-needs-action');
           }
         }
       });
