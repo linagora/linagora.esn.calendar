@@ -129,6 +129,10 @@
             $scope.displayCalMailToAttendeesButton = displayCalMailToAttendeesButton;
             $scope.canModifyEventAttendees = calUIAuthorizationService.canModifyEventAttendees($scope.calendar, $scope.editedEvent, session.user._id);
             $scope.canModifyEventRecurrence = calUIAuthorizationService.canModifyEventRecurrence($scope.calendar, $scope.editedEvent, session.user._id);
+
+            return calAttendeeService.splitAttendeesFromTypeWithResourceDetails($scope.editedEvent.attendees);
+          }).then(function(attendeesWithResourceDetails) {
+            $scope.attendees = _.assign({}, $scope.attendees, attendeesWithResourceDetails);
           });
       }
 

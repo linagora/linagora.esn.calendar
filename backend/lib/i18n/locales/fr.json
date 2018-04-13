@@ -224,5 +224,6 @@
   "%s has tentatively accepted this event": "%s a provisoirement accepté cet évènement",
   "%s has declined this event": "%s a décliné cet évènement",
   "Your proposal has been sent": "Votre proposition a bien été envoyée",
-  "An error occurred, please try again": "Une erreur est survenue, merci de réessayer"
+  "An error occurred, please try again": "Une erreur est survenue, merci de réessayer",
+  "Failed to retrieve resources details": "Impossible de récupérer les détails des resources"
 }

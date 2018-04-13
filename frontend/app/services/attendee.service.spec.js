@@ -5,11 +5,16 @@
 var expect = chai.expect;
 
 describe('The calAttendeeService service', function() {
-  var CAL_ICAL, calAttendeeService, userUtils;
+  var $rootScope, $log, $q, CAL_ICAL, calAttendeeService, calResourceService, userUtils;
 
   beforeEach(function() {
     userUtils = {
       displayNameOf: sinon.stub()
+    };
+    calResourceService = {
+      getResource: sinon.spy(function(id) {
+        return $q.when({ _id: id, deleted: true });
+      })
     };
   });
 
@@ -18,36 +23,41 @@ describe('The calAttendeeService service', function() {
 
     angular.mock.module(function($provide) {
       $provide.value('userUtils', userUtils);
+      $provide.value('calResourceService', calResourceService);
+
     });
 
-    angular.mock.inject(function(_CAL_ICAL_, _calAttendeeService_) {
+    angular.mock.inject(function(_$rootScope_, _$log_, _$q_, _CAL_ICAL_, _calAttendeeService_) {
+      $rootScope = _$rootScope_;
+      $log = _$log_;
+      $q = _$q_;
       CAL_ICAL = _CAL_ICAL_;
       calAttendeeService = _calAttendeeService_;
     });
   });
 
-  describe('The splitAttendeesFromType function', function() {
+  describe('The splitAttendeesFromTypefunction', function() {
     it('should return empty arrays when attendees is not defined', function() {
       expect(calAttendeeService.splitAttendeesFromType()).to.deep.equals({
-        users: [],
-        resources: []
+          users: [],
+          resources: []
       });
     });
 
     it('should return empty arrays when attendees is empty', function() {
       expect(calAttendeeService.splitAttendeesFromType([])).to.deep.equals({
-        users: [],
-        resources: []
-      });
+          users: [],
+          resources: []
+        });
     });
 
     it('should set attendee without cutype as user', function() {
       var attendee = { _id: 1 };
 
       expect(calAttendeeService.splitAttendeesFromType([attendee])).to.deep.equals({
-        users: [attendee],
-        resources: []
-      });
+          users: [attendee],
+          resources: []
+        });
     });
 
     it('should set attendees in correct category', function() {
@@ -55,9 +65,81 @@ describe('The calAttendeeService service', function() {
       var resourceAttendee = { _id: 1, cutype: CAL_ICAL.cutype.resource };
 
       expect(calAttendeeService.splitAttendeesFromType([userAttendee, resourceAttendee])).to.deep.equals({
-        users: [userAttendee],
-        resources: [resourceAttendee]
+          users: [userAttendee],
+          resources: [resourceAttendee]
+        });
+    });
+  });
+
+  describe('The splitAttendeesFromTypeWithResourceDetails function', function() {
+    it('should return empty arrays when attendees is not defined', function(done) {
+      calAttendeeService.splitAttendeesFromTypeWithResourceDetails().then(function(result) {
+        expect(result).to.deep.equals({
+          users: [],
+          resources: []
+        });
+
+        done();
       });
+
+      $rootScope.$digest();
+    });
+
+    it('should return empty arrays when attendees is empty', function(done) {
+      calAttendeeService.splitAttendeesFromTypeWithResourceDetails([]).then(function(result) {
+        expect(result).to.deep.equals({
+          users: [],
+          resources: []
+        });
+        done();
+      });
+
+      $rootScope.$digest();
+    });
+
+    it('should set attendee without cutype as user', function(done) {
+      var attendee = { _id: 1 };
+
+      calAttendeeService.splitAttendeesFromTypeWithResourceDetails([attendee]).then(function(result) {
+        expect(result).to.deep.equals({
+          users: [attendee],
+          resources: []
+        });
+        done();
+      });
+
+      $rootScope.$digest();
+    });
+
+    it('should set attendees in correct category', function(done) {
+      var userAttendee = { _id: 1, cutype: CAL_ICAL.cutype.individual };
+      var resourceAttendee = { _id: 1, cutype: CAL_ICAL.cutype.resource };
+
+      calAttendeeService.splitAttendeesFromTypeWithResourceDetails([userAttendee, resourceAttendee]).then(function(result) {
+        expect(result).to.deep.equals({
+          users: [userAttendee],
+          resources: [resourceAttendee]
+        });
+        done();
+      });
+
+      $rootScope.$digest();
+    });
+
+    it('should request complementary resource data', function(done) {
+      var resourceAttendee = { _id: 1, cutype: CAL_ICAL.cutype.resource, email: '1@1.1'};
+      var resourceAttendeeExpected = { _id: 1, cutype: CAL_ICAL.cutype.resource, email: '1@1.1', deleted: true };
+
+      calAttendeeService.splitAttendeesFromTypeWithResourceDetails([resourceAttendee]).then(function(result) {
+        expect(calResourceService.getResource).to.have.been.called;
+        expect(result).to.deep.equals({
+          users: [],
+          resources: [resourceAttendeeExpected]
+        });
+        done();
+      });
+
+      $rootScope.$digest();
     });
   });
 
@@ -110,6 +192,77 @@ describe('The calAttendeeService service', function() {
       var attendees = [{email: 'user1@open-paas.org'}, {email: 'user2@open-paas.org'}, {email: 'user2@open-paas.org', partstat: 'needs-action'}];
 
       expect(calAttendeeService.filterDuplicates(attendees)).to.deep.equals([attendees[0], attendees[2]]);
+    });
+  });
+
+  describe('The manageResourceDetailsPromiseResolutions function', function() {
+    it('should log rejected promise as error', function(done) {
+      var resourcesFromDbPromises = [
+        { state: 'fulfilled', value: { _id: 1, cutype: CAL_ICAL.cutype.resource, email: '1@1.1' }},
+        { state: 'rejected', reason: { _id: 2, error: { message: 'could not find resource', code: 404 }}},
+        { state: 'fulfilled', value: { _id: 3, cutype: CAL_ICAL.cutype.resource, email: '3@3.3' }}
+      ];
+      var logSpy = sinon.spy($log, 'error');
+
+      calAttendeeService.manageResourceDetailsPromiseResolutions(resourcesFromDbPromises).then(function() {
+        expect(logSpy).to.have.been.calledOnce;
+        expect(logSpy).to.have.been.calledWith(sinon.match.string, { _id: 2, error: { message: 'could not find resource', code: 404 }});
+
+        done();
+      });
+
+      $rootScope.$digest();
+  });
+
+    it('should returned only fulfilled promise value', function(done) {
+      var resourcesFromDbPromises = [
+        { state: 'fulfilled', value: { _id: 1, cutype: CAL_ICAL.cutype.resource, email: '1@1.1' }},
+        { state: 'rejected', reason: { _id: 2, error: { message: 'could not find resource', code: 404 }}},
+        { state: 'fulfilled', value: { _id: 3, cutype: CAL_ICAL.cutype.resource, email: '3@3.3' }}
+      ];
+
+      calAttendeeService.manageResourceDetailsPromiseResolutions(resourcesFromDbPromises).then(function(result) {
+        expect(result).to.deep.equals([
+          { _id: 1, cutype: CAL_ICAL.cutype.resource, email: '1@1.1'},
+          { _id: 3, cutype: CAL_ICAL.cutype.resource, email: '3@3.3'}
+        ]);
+
+        done();
+      });
+
+      $rootScope.$digest();
+    });
+
+    it('should return a reject promise when there is no fulfilled promise', function(done) {
+      var resourcesFromDbPromises = [
+        { state: 'rejected', reason: { _id: 1, error: { message: 'could not find resource', code: 404 }}},
+        { state: 'rejected', reason: { _id: 2, error: { message: 'could not find resource', code: 404 }}},
+        { state: 'rejected', reason: { _id: 3, error: { message: 'could not find resource', code: 404 }}}
+      ];
+
+      calAttendeeService.manageResourceDetailsPromiseResolutions(resourcesFromDbPromises).catch(function(error) {
+        expect(error).to.deep.equals([
+          { _id: 1, error: { message: 'could not find resource', code: 404 }},
+          { _id: 2, error: { message: 'could not find resource', code: 404 }},
+          { _id: 3, error: { message: 'could not find resource', code: 404 }}
+        ]);
+
+        done();
+      });
+
+      $rootScope.$digest();
+    });
+  });
+
+  describe('The logResourceDetailsError function', function() {
+    it('should log error given', function() {
+      var error = { message: 'could not find resource', code: 404 };
+      var logSpy = sinon.spy($log, 'error');
+
+      calAttendeeService.logResourceDetailsError(error);
+
+      expect(logSpy).to.have.been.calledOnce;
+      expect(logSpy).to.have.been.calledWith(sinon.match.string, error);
     });
   });
 });

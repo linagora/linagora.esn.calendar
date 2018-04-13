@@ -2,7 +2,14 @@
   .cal-resource-avatar-block
     cal-resource-avatar(resource='ctrl.resource')
     .cal-participation-status
-      i.mdi.mdi(ng-class='ctrl.PARTSTAT_ICONS[ctrl.resource.partstat]')
+      i.mdi.mdi(
+        ng-if="!ctrl.resource.deleted",
+        ng-class='ctrl.PARTSTAT_ICONS[ctrl.resource.partstat]'
+      )
+      i.mdi.mdi(
+        ng-if="ctrl.resource.deleted",
+        ng-class='ctrl.DELETED_ICONS'
+      )
     .checkbox(ng-if='ctrl.canModifyResource')
       label
         input.force-position-initial(type="checkbox", ng-checked="ctrl.resource.selected")
