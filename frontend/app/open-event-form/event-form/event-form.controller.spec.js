@@ -6,7 +6,8 @@ var expect = chai.expect;
 
 describe('The event-form module controllers', function() {
   var Cache, calendarTest, canModifyEventResult, eventTest, owner, user;
-  var calendarHomeServiceMock, calAttendeesDenormalizerService;
+  var calendarHomeServiceMock, calAttendeesDenormalizerService, calAttendeeService;
+  var CAL_ICAL;
   var $rootScope;
 
   beforeEach(function() {
@@ -182,11 +183,25 @@ describe('The event-form module controllers', function() {
     });
   });
 
-  beforeEach(angular.mock.inject(function($controller, _$rootScope_, moment, calEventUtils, calUIAuthorizationService, session, CalendarShell, CAL_EVENTS, CAL_ALARM_TRIGGER, CAL_EVENT_FORM, CAL_ICAL) {
+  beforeEach(angular.mock.inject(function(
+    $controller,
+    _$rootScope_,
+    moment,
+    _calAttendeeService_,
+    calEventUtils,
+    calUIAuthorizationService,
+    session,
+    CalendarShell,
+    CAL_EVENTS,
+    CAL_ALARM_TRIGGER,
+    CAL_EVENT_FORM,
+    _CAL_ICAL_
+  ) {
     this.rootScope = $rootScope = _$rootScope_;
     this.scope = $rootScope.$new();
     this.controller = $controller;
     this.moment = moment;
+    calAttendeeService = _calAttendeeService_;
     this.calEventUtils = calEventUtils;
     this.calUIAuthorizationService = calUIAuthorizationService;
     this.session = session;
@@ -194,7 +209,7 @@ describe('The event-form module controllers', function() {
     this.CAL_EVENTS = CAL_EVENTS;
     this.CAL_ALARM_TRIGGER = CAL_ALARM_TRIGGER;
     this.CAL_EVENT_FORM = CAL_EVENT_FORM;
-    this.CAL_ICAL = CAL_ICAL;
+    CAL_ICAL = _CAL_ICAL_;
   }));
 
   beforeEach(function() {
@@ -211,6 +226,13 @@ describe('The event-form module controllers', function() {
 
     sinon.stub(this.calUIAuthorizationService, 'canModifyEventAttendees', function() {
       return true;
+    });
+
+    sinon.stub(calAttendeeService, 'splitAttendeesFromTypeWithResourceDetails', function(attendees) {
+      return $q.when({
+        users: _.filter(attendees, { cutype: CAL_ICAL.cutype.individual }),
+        resources: _.filter(attendees, { cutype: CAL_ICAL.cutype.resource })
+      });
     });
   });
 
@@ -447,11 +469,11 @@ describe('The event-form module controllers', function() {
           attendees: [{
             displayName: 'attendee1',
             email: 'attendee1@openpaas.org',
-            cutype: this.CAL_ICAL.cutype.individual
+            cutype: CAL_ICAL.cutype.individual
           }, {
             displayName: 'resource1',
             email: 'resource1@openpaas.org',
-            cutype: this.CAL_ICAL.cutype.resource
+            cutype: CAL_ICAL.cutype.resource
           }]
         });
 
@@ -477,11 +499,11 @@ describe('The event-form module controllers', function() {
           attendees: [{
             displayName: 'attendee1',
             email: 'attendee1@openpaas.org',
-            cutype: this.CAL_ICAL.cutype.individual
+            cutype: CAL_ICAL.cutype.individual
           }, {
             displayName: 'resource1',
             email: 'resource1@openpaas.org',
-            cutype: this.CAL_ICAL.cutype.resource
+            cutype: CAL_ICAL.cutype.resource
           }]
         });
 
@@ -1448,19 +1470,19 @@ describe('The event-form module controllers', function() {
             name: 'organiser',
             email: 'organiser@openpaas.org',
             partstart: 'ACCEPTED',
-            cutype: this.CAL_ICAL.cutype.individual
+            cutype: CAL_ICAL.cutype.individual
           },
           attendees: [{
             name: 'organiser',
             email: 'organiser@openpaas.org',
             partstart: 'ACCEPTED',
-            cutype: this.CAL_ICAL.cutype.individual
+            cutype: CAL_ICAL.cutype.individual
           },
             {
               name: 'attendee1',
               email: 'attendee1@openpaas.org',
               partstart: 'ACCEPTED',
-              cutype: this.CAL_ICAL.cutype.individual
+              cutype: CAL_ICAL.cutype.individual
             }],
           etag: '0000'
         });
@@ -1478,12 +1500,12 @@ describe('The event-form module controllers', function() {
             name: 'organiser',
             email: 'organiser@openpaas.org',
             partstart: 'ACCEPTED',
-            cutype: this.CAL_ICAL.cutype.individual
+            cutype: CAL_ICAL.cutype.individual
           },
           attendees: [{
             name: 'resource',
             email: 'resource',
-            cutype: this.CAL_ICAL.cutype.resource
+            cutype: CAL_ICAL.cutype.resource
           }]
         });
 
@@ -1499,19 +1521,19 @@ describe('The event-form module controllers', function() {
             name: 'organiser',
             email: 'organiser@openpaas.org',
             partstart: 'ACCEPTED',
-            cutype: this.CAL_ICAL.cutype.individual
+            cutype: CAL_ICAL.cutype.individual
           },
           attendees: [{
             name: 'organiser',
             email: 'organiser@openpaas.org',
             partstart: 'ACCEPTED',
-            cutype: this.CAL_ICAL.cutype.individual
+            cutype: CAL_ICAL.cutype.individual
           },
             {
               name: 'attendee1',
               email: 'attendee1@openpaas.org',
               partstart: 'ACCEPTED',
-              cutype: this.CAL_ICAL.cutype.individual
+              cutype: CAL_ICAL.cutype.individual
             }],
           gracePeriodTaskId: '0000',
           etag: '0000'
@@ -1529,19 +1551,19 @@ describe('The event-form module controllers', function() {
             name: 'organiser',
             email: 'organiser@openpaas.org',
             partstart: 'ACCEPTED',
-            cutype: this.CAL_ICAL.cutype.individual
+            cutype: CAL_ICAL.cutype.individual
           },
           attendees: [{
             name: 'organiser',
             email: 'organiser@openpaas.org',
             partstart: 'ACCEPTED',
-            cutype: this.CAL_ICAL.cutype.individual
+            cutype: CAL_ICAL.cutype.individual
           },
             {
               name: 'attendee1',
               email: 'attendee1@openpaas.org',
               partstart: 'ACCEPTED',
-              cutype: this.CAL_ICAL.cutype.individual
+              cutype: CAL_ICAL.cutype.individual
             }],
           gracePeriodTaskId: '0000'
         });
@@ -1558,13 +1580,13 @@ describe('The event-form module controllers', function() {
             name: 'organiser',
             email: 'organiser@openpaas.org',
             partstart: 'ACCEPTED',
-            cutype: this.CAL_ICAL.cutype.individual
+            cutype: CAL_ICAL.cutype.individual
           },
           attendees: [{
             name: 'organiser',
             email: 'organiser@openpaas.org',
             partstart: 'ACCEPTED',
-            cutype: this.CAL_ICAL.cutype.individual
+            cutype: CAL_ICAL.cutype.individual
           }],
           gracePeriodTaskId: '0000'
         });

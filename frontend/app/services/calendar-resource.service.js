@@ -7,11 +7,13 @@
   function calResourceService(
     calendarResourceRestangular,
     esnResourceAPIClient,
-    CAL_RESOURCE
+    CAL_RESOURCE,
+    Restangular
   ) {
     return {
       acceptResourceReservation: acceptResourceReservation,
       declineResourceReservation: declineResourceReservation,
+      getResource: getResource,
       getResourceIcon: getResourceIcon
     };
 
@@ -25,7 +27,7 @@
 
     function getResource(id) {
       return esnResourceAPIClient.get(id).then(function(response) {
-        return response.data;
+        return Restangular.stripRestangular(response.data);
       });
     }
 

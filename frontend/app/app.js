@@ -36,6 +36,7 @@
     'mgcrea.ngStrap.modal',
     'naturalSort',
     'ng.deviceDetector',
+    'ngPromiseExtras',
     'ngTouch',
     'op.dynamicDirective',
     'pascalprecht.translate',

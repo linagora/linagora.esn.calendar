@@ -6,7 +6,8 @@
   var expect = chai.expect;
 
   describe('The CalEventViewController controller', function() {
-    var $controller, $scope, calAttendeeService, bindings, userAttendee, resourceAttendee, CAL_ICAL;
+    var $controller, $scope, calAttendeeService, bindings, CAL_ICAL;
+    var userAttendee, resourceAttendee, resourceAttendeeWithDetails;
 
     beforeEach(function() {
       angular.mock.module('esn.calendar');
@@ -19,6 +20,7 @@
 
       userAttendee = { _id: 1, cutype: CAL_ICAL.cutype.individual };
       resourceAttendee = { _id: 1, cutype: CAL_ICAL.cutype.resource };
+      resourceAttendeeWithDetails = { _id: 1, cutype: CAL_ICAL.cutype.resource, details: true };
 
       bindings = {
         event: {
@@ -35,13 +37,26 @@
       var ctrl = initController();
 
       sinon.spy(calAttendeeService, 'splitAttendeesFromType');
+      sinon.stub(calAttendeeService, 'splitAttendeesFromTypeWithResourceDetails', function() {
+        return $q.when({
+          users: [userAttendee],
+          resources: [resourceAttendeeWithDetails]
+        });
+      });
       ctrl.$onInit();
-      $scope.$digest();
 
       expect(calAttendeeService.splitAttendeesFromType).has.been.calledWith(bindings.event.attendees);
       expect(ctrl.attendees).to.deep.equals({
         users: [userAttendee],
         resources: [resourceAttendee]
+      });
+
+      $scope.$digest();
+
+      expect(calAttendeeService.splitAttendeesFromTypeWithResourceDetails).has.been.calledWith(bindings.event.attendees);
+      expect(ctrl.attendees).to.deep.equals({
+        users: [userAttendee],
+        resources: [resourceAttendeeWithDetails]
       });
     });
   });

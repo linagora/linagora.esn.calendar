@@ -130,6 +130,7 @@
       AVATAR_URL: '/linagora.esn.resource/images/resource.png',
       type: 'calendar',
       DEFAULT_ICON: 'mdi-home',
+      DELETED_ICON: 'mdi-delete-forever',
       ICONS: {
         home: 'mdi-home',
         office: 'mdi-office',

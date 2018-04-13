@@ -224,5 +224,6 @@
   "%s has tentatively accepted this event": "%s đã tạm thời chấp nhận sự kiện này",
   "%s has declined this event": "%s đã từ chối sự kiện này",
   "Your proposal has been sent": "Đề xuất của bạn đã được gửi đi",
-  "An error occurred, please try again": "Có lỗi xảy ra, hãy thử lại"
+  "An error occurred, please try again": "Có lỗi xảy ra, hãy thử lại",
+  "Failed to retrieve resources details": ""
 }
