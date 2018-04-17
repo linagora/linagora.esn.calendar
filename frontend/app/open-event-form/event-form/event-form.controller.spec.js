@@ -177,7 +177,7 @@ describe('The event-form module controllers', function() {
       $provide.value('$state', self.$state);
       $provide.factory('calEventsProviders', function() {
         return {
-          setUpSearchProviders: function() {}
+          setUpSearchProvider: function() {}
         };
       });
     });

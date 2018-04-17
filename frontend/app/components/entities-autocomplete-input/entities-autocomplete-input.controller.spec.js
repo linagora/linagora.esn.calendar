@@ -75,7 +75,7 @@ describe('The calEntitiesAutocompleteInputController', function() {
 
     calEventsProviders = function() {
       return {
-        setUpSearchProviders: function() {
+        setUpSearchProvider: function() {
         }
       };
     };

@@ -32,7 +32,7 @@ describe('The calEventAlarmEditionController', function() {
 
     calEventsProviders = function() {
       return {
-        setUpSearchProviders: angular.noop
+        setUpSearchProvider: angular.noop
       };
     };
 

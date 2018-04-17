@@ -69,7 +69,7 @@ describe('The cal-event-message Angular module directives', function() {
         $provide.value('session', self.sessionMock);
         $provide.factory('calEventsProviders', function() {
           return {
-            setUpSearchProviders: function() {}
+            setUpSearchProvider: function() {}
           };
         });
       });

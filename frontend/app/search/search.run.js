@@ -5,6 +5,6 @@
     .run(runBlock);
 
   function runBlock(calSearchEventProviderService) {
-    calSearchEventProviderService.setUpSearchProviders();
+    calSearchEventProviderService.setUpSearchProvider();
   }
 })();
