@@ -241,7 +241,10 @@
       }
 
       function _removeCalendar(event, calendarWrapperUniqueId) {
-        _.remove($scope.calendars, {uniqueId: calendarWrapperUniqueId.uniqueId});
+        _.remove(self.calendars, function(calendar) {
+          return calendar.getUniqueId() === calendarWrapperUniqueId.uniqueId;
+        });
+
         var removedEventSource = $scope.eventSourcesMap[calendarWrapperUniqueId.uniqueId];
 
         delete $scope.eventSourcesMap[calendarWrapperUniqueId.uniqueId];

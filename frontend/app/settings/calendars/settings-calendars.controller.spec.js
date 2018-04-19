@@ -20,7 +20,10 @@ describe('The CalSettingsCalendarsController controller', function() {
     calendar = {
       uniqueId: 1,
       calendarHomeId: 'MyId',
-      name: 'MyName'
+      name: 'MyName',
+      getUniqueId: function() {
+        return 1;
+      }
     };
     calendarHomeService = {
       getUserCalendarHomeId: function() {
@@ -30,7 +33,10 @@ describe('The CalSettingsCalendarsController controller', function() {
     otherCalendar = {
       uniqueId: 2,
       calendarHomeId: 'MyOtherId',
-      name: 'MyOtherName'
+      name: 'MyOtherName',
+      getUniqueId: function() {
+        return 2;
+      }
     };
     calendars = [calendar, otherCalendar];
     userAndExternalCalendars = sinon.spy(function() {
