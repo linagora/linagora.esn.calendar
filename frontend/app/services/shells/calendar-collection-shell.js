@@ -71,7 +71,6 @@
     CalendarCollectionShell.prototype.isSubscription = isSubscription;
     CalendarCollectionShell.prototype.isResource = isResource;
     CalendarCollectionShell.prototype.isWritable = isWritable;
-    CalendarCollectionShell.prototype.getUniqueId = getUniqueId;
     CalendarCollectionShell.prototype.getCalendarType = getCalendarType;
     CalendarCollectionShell.prototype.getResourceId = getResourceId;
 

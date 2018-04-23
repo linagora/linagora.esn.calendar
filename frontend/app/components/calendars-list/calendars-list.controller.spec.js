@@ -284,12 +284,7 @@ describe('The calendarsList controller', function() {
 
         CalendarsListController.$onInit();
         $rootScope.$digest();
-        $rootScope.$broadcast(CAL_EVENTS.CALENDARS.REMOVE, CalendarCollectionShell.from({
-          href: '/calendars/12345/3.json',
-          name: 'name3',
-          color: 'color3',
-          description: 'description3'
-        }));
+        $rootScope.$broadcast(CAL_EVENTS.CALENDARS.REMOVE, { uniqueId: '/calendars/12345/3_source.json' });
 
         expect(CalendarsListController.calendars).to.deep.equal(expectedResult);
       });
@@ -306,6 +301,9 @@ describe('The calendarsList controller', function() {
           },
           isSubscription: function() {
             return false;
+          },
+          getUniqueId: function() {
+            return '1';
           }
         }, {
           uniqueId: '2',

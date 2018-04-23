@@ -39,7 +39,7 @@
 
     function onCalendarRemoved(event, calendarUniqueIdWrapper) {
       _.remove(self.calendars, function(calendar) {
-        return calendar.uniqueId === calendarUniqueIdWrapper.uniqueId;
+        return calendar.getUniqueId() === calendarUniqueIdWrapper.uniqueId;
       });
 
       refreshCalendarsList();

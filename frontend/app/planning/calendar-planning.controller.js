@@ -66,7 +66,10 @@
     }
 
     function removeCalendar(event, calendarWrapperUniqueId) {
-      _.remove(self.calendars, {uniqueId: calendarWrapperUniqueId.uniqueId});
+      _.remove(self.calendars, function(calendar) {
+        return calendar.getUniqueId() === calendarWrapperUniqueId.uniqueId;
+      });
+
       var removedEventSource = eventSourcesMap[calendarWrapperUniqueId.uniqueId];
 
       delete eventSourcesMap[calendarWrapperUniqueId.uniqueId];
