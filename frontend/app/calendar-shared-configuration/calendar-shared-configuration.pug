@@ -9,6 +9,7 @@
           .user-search.form-group
             .autocomplete
               cal-entities-autocomplete-input(
+                auto-focus-ngtagsinput,
                 mutable-entities='$ctrl.users',
                 on-entity-added='$ctrl.onUserAdded',
                 on-adding-entity='$ctrl.onAddingUser',
