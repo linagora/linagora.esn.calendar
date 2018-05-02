@@ -22,6 +22,7 @@
     this.getCalendar = getCalendar;
     this.getRight = getRight;
     this.listCalendars = listCalendars;
+    this.listFreeBusyCalendars = listFreeBusyCalendars;
     this.listDelegationCalendars = listDelegationCalendars;
     this.listPersonalAndAcceptedDelegationCalendars = listPersonalAndAcceptedDelegationCalendars;
     this.listPublicCalendars = listPublicCalendars;
@@ -79,6 +80,16 @@
           return new CalendarCollectionShell(calendar);
         });
       });
+    }
+
+    /**
+     * List all free busy calendars for the requested calendar home (user).
+     * free busy calendar = user calendar that allows to display free/busy infos
+     * @param  {String}     calendarHomeId  The calendar home id of the user
+     * @return {[CalendarCollectionShell]}  an array of CalendarCollectionShell
+     */
+    function listFreeBusyCalendars(calendarHomeId) {
+      return listCalendarsAsCollectionShell(calendarHomeId, { withRights: true, withFreeBusy: true });
     }
 
     /**
