@@ -52,7 +52,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
             place-holder="Attendees",
             show-icon='true',
             on-entity-added='onUserAttendeesAdded',
-            template='/calendar/app/components/entities-autocomplete-input/entities-autocomplete-input-tag.html'
+            template='/calendar/app/components/entities-autocomplete-input/entities-autocomplete-input-loader.html'
           )
           cal-entities-autocomplete-input(
             ng-hide='!canModifyEventAttendees',
@@ -62,8 +62,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
             place-holder="Resources",
             show-icon='true',
             show-resource-icon='true',
-            on-entity-added='onResourceAttendeesAdded',
-            template='/calendar/app/components/entities-autocomplete-input/entities-autocomplete-input-tag.html'
+            on-entity-added='onResourceAttendeesAdded'
           )
           .col-xs-12
             cal-attendee-tabs(

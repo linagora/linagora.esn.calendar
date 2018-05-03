@@ -5,6 +5,7 @@
     .controller('CalEventFormController', CalEventFormController);
 
   function CalEventFormController(
+    $timeout,
     $alert,
     $scope,
     $state,
@@ -29,8 +30,9 @@
     CAL_RELATED_EVENT_TYPES,
     CAL_EVENTS,
     CAL_EVENT_FORM,
-    CAL_ICAL) {
-
+    CAL_ICAL,
+    calFreebusyService
+  ) {
       var initialUserAttendeesRemoved = [];
       var initialResourceAttendeesRemoved = [];
 
@@ -47,6 +49,8 @@
       $scope.isInvolvedInATask = calEventUtils.isInvolvedInATask;
       $scope.updateAlarm = updateAlarm;
       $scope.submit = submit;
+      $scope.onUserAttendeesAdded = onUserAttendeesAdded;
+      $scope.onResourceAttendeesAdded = onResourceAttendeesAdded;
       $scope.onUserAttendeesRemoved = onUserAttendeesRemoved;
       $scope.onResourceAttendeesRemoved = onResourceAttendeesRemoved;
       $scope.canPerformCall = canPerformCall;
@@ -349,6 +353,48 @@
 
         $scope.editedEvent.attendees = $scope.initialAttendees;
         calOpenEventForm($scope.calendarHomeId, $scope.editedEvent);
+      }
+
+      function onAttendeesAdded(attendeeAdded) {
+        return calFreebusyService
+          .isAttendeeAvailable(attendeeAdded.id, $scope.editedEvent.start, $scope.editedEvent.end)
+          .then(function(isAvailable) {
+            return !isAvailable;
+          })
+          .catch(function(error) {
+            $log.debug('Cannot retrieve attendee availability', error);
+
+            _displayNotification(
+              notificationFactory.weakError,
+              'Cannot retrieve attendee availability',
+              'An error occurred, please try again'
+            );
+            return true;
+          });
+      }
+
+      function onUserAttendeesAdded(userAttendeeAdded) {
+        userAttendeeAdded.isLoading = true;
+
+        onAttendeesAdded(userAttendeeAdded)
+          .then(function(isBusy) {
+            userAttendeeAdded.isBusy = isBusy;
+          })
+          .finally(function() {
+            userAttendeeAdded.isLoading = false;
+          });
+      }
+
+      function onResourceAttendeesAdded(resourceAttendeeAdded) {
+        resourceAttendeeAdded.isLoading = true;
+
+        onAttendeesAdded(resourceAttendeeAdded)
+          .then(function(isBusy) {
+            resourceAttendeeAdded.isBusy = isBusy;
+          })
+          .finally(function() {
+            resourceAttendeeAdded.isLoading = false;
+          });
       }
 
       function onUserAttendeesRemoved(removed) {

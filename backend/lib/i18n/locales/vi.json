@@ -226,5 +226,7 @@
   "%s has declined this event": "%s đã từ chối sự kiện này",
   "Your proposal has been sent": "Đề xuất của bạn đã được gửi đi",
   "An error occurred, please try again": "Có lỗi xảy ra, hãy thử lại",
-  "Failed to retrieve resources details": ""
+  "Failed to retrieve resources details": "Không thể lấy thông tin tài nguyên",
+  "Not available": "Không sẵn sàng",
+  "Cannot retrieve attendee availability": "Không thể truy xuất trạng thái sẵn sàng"
 }
