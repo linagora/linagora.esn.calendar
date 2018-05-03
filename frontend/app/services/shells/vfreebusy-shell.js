@@ -31,7 +31,9 @@
       var momentDateOfavailabilityEnd = calMoment(dateOfAvailabilityEnd);
 
       if (!momentDateOfavailabilityStart.isBetween(dtstart, dtend) &&
-          !momentDateOfavailabilityEnd.isBetween(dtstart, dtend)) {
+          !momentDateOfavailabilityEnd.isBetween(dtstart, dtend) &&
+          !dtstart.isBetween(momentDateOfavailabilityStart, momentDateOfavailabilityEnd) &&
+          !dtend.isBetween(momentDateOfavailabilityStart, momentDateOfavailabilityEnd)) {
         return true;
       }
 
@@ -40,8 +42,13 @@
         var start = calMoment(period.start);
         var end = calMoment(period.end);
 
-        return !momentDateOfavailabilityStart.isBetween(start, end) &&
+        var availabilityRequestedNotInBusyTime = !momentDateOfavailabilityStart.isBetween(start, end) &&
           !momentDateOfavailabilityEnd.isBetween(start, end);
+        var busyTimeNotInAvailabilityRequested =
+            !start.isBetween(momentDateOfavailabilityStart, momentDateOfavailabilityEnd) &&
+          !end.isBetween(momentDateOfavailabilityStart, momentDateOfavailabilityEnd);
+
+        return availabilityRequestedNotInBusyTime && busyTimeNotInAvailabilityRequested;
       });
     }
   }

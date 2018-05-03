@@ -84,4 +84,86 @@ describe('The calFreebusyService service', function() {
       $httpBackend.flush();
     });
   });
+
+  describe('the isAttendeeAvailable function', function() {
+    var attendee;
+    var handleBackend;
+
+    beforeEach(function() {
+      attendee = { id: 'uid' };
+
+      handleBackend = function handleBackned() {
+        var response;
+
+        response = {
+          _links: {
+            self: {
+              href: '/calendars/56698ca29e4cf21f66800def.json'
+            }
+          },
+          _embedded: {
+            'dav:calendar': [
+              {
+                _links: {
+                  self: {
+                    href: '/calendars/uid/events.json'
+                  }
+                },
+                'dav:name': null,
+                'caldav:description': null,
+                'calendarserver:ctag': 'http://sabre.io/ns/sync/3',
+                'apple:color': null,
+                'apple:order': null
+              }
+            ]
+          }
+        };
+
+        $httpBackend.expectGET('/dav/api/calendars/uid.json?withFreeBusy=true&withRights=true', { Accept: CAL_ACCEPT_HEADER }).respond(response);
+        $httpBackend.expect('REPORT', '/dav/api/calendars/uid/events.json', undefined).respond(200, {
+          _links: {
+            self: {href: '/prepath/path/to/calendar.json'}
+          },
+          data: [
+            'vcalendar', [], [
+              vfreebusy
+            ]
+          ]
+        });
+      };
+    });
+
+    it('should return false on attendee busy', function(done) {
+      var busyEvent = {
+        start: calMoment('2018-03-03T09:00:00Z'),
+        end: calMoment('2018-03-03T13:00:00Z')
+      };
+
+      handleBackend();
+      calFreebusyService.isAttendeeAvailable(attendee.id, busyEvent.start, busyEvent.end).then(function(isAvailable) {
+        expect(isAvailable).to.be.false;
+
+        done();
+      });
+
+      $httpBackend.flush();
+    });
+
+    it('should return true on attendee free', function(done) {
+      var event = {
+        start: calMoment('2018-03-03T11:00:00Z'),
+        end: calMoment('2018-03-03T12:00:00Z')
+      };
+
+      handleBackend();
+      calFreebusyService.isAttendeeAvailable(attendee.id, event.start, event.end).then(function(isAvailable) {
+        expect(isAvailable).to.be.true;
+
+        done();
+      });
+
+      $httpBackend.flush();
+    });
+  });
+
 });
