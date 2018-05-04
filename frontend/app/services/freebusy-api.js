@@ -20,8 +20,8 @@
       var body = {
         type: 'free-busy-query',
         match: {
-          start: start.format(CAL_DAV_DATE_FORMAT),
-          end: end.format(CAL_DAV_DATE_FORMAT)
+          start: start.tz('Zulu').format(CAL_DAV_DATE_FORMAT),
+          end: end.tz('Zulu').format(CAL_DAV_DATE_FORMAT)
         }
       };
 
