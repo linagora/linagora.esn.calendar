@@ -95,8 +95,8 @@
         }
       }
 
-      function _displayNotification(notificationFactoryFunction, title, content) {
-        notificationFactoryFunction(title, content);
+      function _displayNotification(notificationFactoryFunction, title, content, z_index) {
+        notificationFactoryFunction(title, content, z_index);
       }
 
       function initFormData() {
