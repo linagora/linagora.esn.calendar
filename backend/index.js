@@ -4,6 +4,7 @@ const AwesomeModule = require('awesome-module');
 const Dependency = AwesomeModule.AwesomeModuleDependency;
 const path = require('path');
 const glob = require('glob-all');
+const cors = require('cors');
 
 const FRONTEND_JS_PATH = path.join(__dirname, '/../frontend/app/');
 const APP_ENTRY_POINT = path.join(FRONTEND_JS_PATH, 'app.js');
@@ -75,6 +76,7 @@ const AwesomeCalendarModule = new AwesomeModule('linagora.esn.calendar', {
       // Register the webapp
       const app = require('./webserver/application')(dependencies);
 
+      app.all('/api/*', cors({origin: true, credentials: true}));
       app.use('/api', this.api);
 
       const webserverWrapper = dependencies('webserver-wrapper');
