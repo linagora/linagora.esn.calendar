@@ -12,56 +12,21 @@
     calendarHomeService,
     calendarService,
     calEventService,
-    newProvider,
-    searchProviders,
+    esnSearchProvider,
     CAL_EVENTS,
     ELEMENTS_PER_REQUEST,
     esnI18nService
   ) {
-    var service = {
-      setUpSearchProvider: setUpSearchProvider
+
+    return function() {
+      return calendarHomeService.getUserCalendarHomeId().then(buildProvider);
     };
 
-    return service;
-
-    ////////////
-
-    function setUpSearchProvider() {
-      return calendarHomeService.getUserCalendarHomeId()
-        .then(buildProvider)
-        .then(function(provider) {
-          searchProviders.add(provider);
-          return provider;
-        });
-    }
-
     function buildProvider(calendarHomeId) {
-
-      return newProvider({
+      return new esnSearchProvider({
         name: esnI18nService.translate('Events'),
         fetch: function(query) {
           var offset = 0;
-
-          function _setRelevance(event) {
-            event.date = event.start;
-          }
-
-          function _searchInSingleCalendar(context, calendar) {
-            var calendarToSearch = calendar.source ? calendar.source : calendar;
-
-            return calEventService.searchEvents(calendarHomeId, calendarToSearch.id, context)
-              .then(function(events) {
-                offset += events.length;
-
-                return events.map(function(event) {
-                  event.calendar = calendar;
-                  event.type = name;
-                  _setRelevance(event);
-
-                  return event;
-                });
-              });
-          }
 
           return function() {
             var context = {
@@ -80,9 +45,26 @@
                 return _.sortBy(_.flatten(arrayOfPromisedResultEvents), function(event) { return -event.date; });
               });
           };
+
+          function _searchInSingleCalendar(context, calendar) {
+            var calendarToSearch = calendar.source ? calendar.source : calendar;
+
+            return calEventService.searchEvents(calendarHomeId, calendarToSearch.id, context)
+              .then(function(events) {
+                offset += events.length;
+
+                return events.map(function(event) {
+                  event.calendar = calendar;
+                  event.type = name;
+                  event.date = event.start;
+
+                  return event;
+                });
+              });
+          }
         },
         buildFetchContext: function(options) { return $q.when(options.query); },
-        templateUrl: '/calendar/app/search/event/event-search-item',
+        templateUrl: '/calendar/app/search/event/event-search-item.html',
         activeOn: ['calendar']
       });
     }
