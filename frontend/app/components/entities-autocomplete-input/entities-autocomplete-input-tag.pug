@@ -1,0 +1,7 @@
+.cal-entities-autocomplete-input-tag
+  .left-tag
+    .esn-spinner(ng-if="data.isLoading", openpaas-logo-spinner, spinner-start-active='1', spinner-size='0.15')
+    i.mdi.mdi-clock-alert.is-busy(ng-if="!data.isLoading && data.isBusy")
+    i.mdi.mdi-clock.is-free(ng-if="!data.isLoading && !data.isBusy")
+  span {{ ::$getDisplayText() }}
+  a.remove-button(ng-click="$removeTag()" ng-bind="::$$removeTagSymbol")
