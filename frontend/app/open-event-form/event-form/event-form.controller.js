@@ -355,11 +355,11 @@
         calOpenEventForm($scope.calendarHomeId, $scope.editedEvent);
       }
 
-      function isAttendeeAvailable(attendee, start, end) {
+      function onAttendeesAdded(attendeeAdded) {
         return calFreebusyService
-          .isAttendeeAvailable(attendee.id, start, end)
+          .isAttendeeAvailable(attendeeAdded.id, $scope.editedEvent.start, $scope.editedEvent.end)
           .then(function(isAvailable) {
-            return isAvailable;
+            return !isAvailable;
           })
           .catch(function(error) {
             $log.debug('Cannot retrieve attendee availability', error);
@@ -374,15 +374,11 @@
       }
 
       function onUserAttendeesAdded(userAttendeeAdded) {
-        if (!userAttendeeAdded.id) {
-          return;
-        }
-
         userAttendeeAdded.isLoading = true;
 
-        isAttendeeAvailable(userAttendeeAdded, $scope.editedEvent.start, $scope.editedEvent.end)
-          .then(function(isAvailable) {
-            userAttendeeAdded.isBusy = !isAvailable;
+        onAttendeesAdded(userAttendeeAdded)
+          .then(function(isBusy) {
+            userAttendeeAdded.isBusy = isBusy;
           })
           .finally(function() {
             userAttendeeAdded.isLoading = false;
@@ -392,9 +388,9 @@
       function onResourceAttendeesAdded(resourceAttendeeAdded) {
         resourceAttendeeAdded.isLoading = true;
 
-        isAttendeeAvailable(resourceAttendeeAdded, $scope.editedEvent.start, $scope.editedEvent.end)
-          .then(function(isAvailable) {
-            resourceAttendeeAdded.isBusy = !isAvailable;
+        onAttendeesAdded(resourceAttendeeAdded)
+          .then(function(isBusy) {
+            resourceAttendeeAdded.isBusy = isBusy;
           })
           .finally(function() {
             resourceAttendeeAdded.isLoading = false;

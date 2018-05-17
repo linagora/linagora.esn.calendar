@@ -1613,13 +1613,6 @@ describe('The event-form module controllers', function() {
           this.initController();
         });
 
-        it('should do nothing when attendee.id is not set', function() {
-          this.scope.onUserAttendeesAdded({});
-
-          expect(attendee.isLoading).to.not.exist;
-          expect(attendee.isBusy).to.not.exist;
-        });
-
         it('should set user loading to true before call', function() {
           calFreebusyService.isAttendeeAvailable = sinon.spy(function() {
             return $q.when(true);

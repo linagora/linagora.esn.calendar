@@ -5,18 +5,17 @@
 var expect = chai.expect;
 
 describe('The calFreebusyService service', function() {
-  var $httpBackend, calFreebusyService, calMoment, CAL_ACCEPT_HEADER, CAL_DAV_DATE_FORMAT;
+  var $httpBackend, calFreebusyService, calMoment, CAL_ACCEPT_HEADER;
   var vfreebusy;
 
   beforeEach(function() {
     angular.mock.module('esn.calendar');
 
-    angular.mock.inject(function(_$httpBackend_, _calFreebusyService_, _CAL_ACCEPT_HEADER_, _calMoment_, _CAL_DAV_DATE_FORMAT_) {
+    angular.mock.inject(function(_$httpBackend_, _calFreebusyService_, _CAL_ACCEPT_HEADER_, _calMoment_) {
       $httpBackend = _$httpBackend_;
       calFreebusyService = _calFreebusyService_;
       calMoment = _calMoment_;
       CAL_ACCEPT_HEADER = _CAL_ACCEPT_HEADER_;
-      CAL_DAV_DATE_FORMAT = _CAL_DAV_DATE_FORMAT_;
     });
 
     function getComponentFromFixture(string) {
@@ -33,10 +32,7 @@ describe('The calFreebusyService service', function() {
     it('should list freebusy infos', function(done) {
       var data = {
         type: 'free-busy-query',
-        match: {
-          start: calMoment('20140101T000000').tz('Zulu').format(CAL_DAV_DATE_FORMAT),
-          end: calMoment('20140102T000000').tz('Zulu').format(CAL_DAV_DATE_FORMAT)
-        }
+        match: { start: '20140101T000000', end: '20140102T000000' }
       };
 
       var response = {
