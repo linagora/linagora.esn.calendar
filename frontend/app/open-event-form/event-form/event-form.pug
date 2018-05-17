@@ -62,7 +62,8 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
             place-holder="Resources",
             show-icon='true',
             show-resource-icon='true',
-            on-entity-added='onResourceAttendeesAdded'
+            on-entity-added='onResourceAttendeesAdded',
+            template='/calendar/app/components/entities-autocomplete-input/entities-autocomplete-input-tag.html'
           )
           .col-xs-12
             cal-attendee-tabs(
