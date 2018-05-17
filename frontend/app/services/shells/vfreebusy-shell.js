@@ -25,25 +25,23 @@
      * @memberOf esn.calendar.CalVfreebusyShellFactory
      */
     function isAvailable(dateOfAvailabilityStart, dateOfAvailabilityEnd) {
+      var dtstart = calMoment(this.vfreebusy.getFirstPropertyValue('dtstart'));
+      var dtend = calMoment(this.vfreebusy.getFirstPropertyValue('dtend'));
       var momentDateOfavailabilityStart = calMoment(dateOfAvailabilityStart);
       var momentDateOfavailabilityEnd = calMoment(dateOfAvailabilityEnd);
+
+      if (!momentDateOfavailabilityStart.isBetween(dtstart, dtend) &&
+          !momentDateOfavailabilityEnd.isBetween(dtstart, dtend)) {
+        return true;
+      }
 
       return _.every(this.vfreebusy.getAllProperties('freebusy'), function(freeBusy) {
         var period = freeBusy.getFirstValue();
         var start = calMoment(period.start);
         var end = calMoment(period.end);
 
-        if (start.isSame(momentDateOfavailabilityStart) && end.isSame(momentDateOfavailabilityEnd)) {
-          return false;
-        }
-
-        var availabilityRequestedNotInBusyTime = !momentDateOfavailabilityStart.isBetween(start, end) &&
+        return !momentDateOfavailabilityStart.isBetween(start, end) &&
           !momentDateOfavailabilityEnd.isBetween(start, end);
-        var busyTimeNotInAvailabilityRequested =
-            !start.isBetween(momentDateOfavailabilityStart, momentDateOfavailabilityEnd) &&
-          !end.isBetween(momentDateOfavailabilityStart, momentDateOfavailabilityEnd);
-
-        return availabilityRequestedNotInBusyTime && busyTimeNotInAvailabilityRequested;
       });
     }
   }

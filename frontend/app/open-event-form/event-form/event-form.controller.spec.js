@@ -7,7 +7,7 @@ var expect = chai.expect;
 describe('The event-form module controllers', function() {
   var Cache, calendarTest, canModifyEventResult, eventTest, owner, user;
   var calendarHomeServiceMock, calAttendeesDenormalizerService, calAttendeeService;
-  var CAL_ICAL, calFreebusyService;
+  var CAL_ICAL;
   var $rootScope;
 
   beforeEach(function() {
@@ -195,8 +195,7 @@ describe('The event-form module controllers', function() {
     CAL_EVENTS,
     CAL_ALARM_TRIGGER,
     CAL_EVENT_FORM,
-    _CAL_ICAL_,
-    _calFreebusyService_
+    _CAL_ICAL_
   ) {
     this.rootScope = $rootScope = _$rootScope_;
     this.scope = $rootScope.$new();
@@ -211,7 +210,6 @@ describe('The event-form module controllers', function() {
     this.CAL_ALARM_TRIGGER = CAL_ALARM_TRIGGER;
     this.CAL_EVENT_FORM = CAL_EVENT_FORM;
     CAL_ICAL = _CAL_ICAL_;
-    calFreebusyService = _calFreebusyService_;
   }));
 
   beforeEach(function() {
@@ -1596,136 +1594,6 @@ describe('The event-form module controllers', function() {
         this.initController();
 
         expect(this.scope.displayCalMailToAttendeesButton()).to.be.false;
-      });
-    });
-
-    describe('when adding attendee', function() {
-
-      describe('the onUserAttendeesAdded function', function() {
-        var attendee;
-
-        beforeEach(function() {
-          attendee = { id: '123123' };
-          this.scope.event = this.CalendarShell.fromIncompleteShell({
-            start: this.moment('2018-04-30 12:30'),
-            end: this.moment('2018-04-30 13:30')
-          });
-          this.initController();
-        });
-
-        it('should do nothing when attendee.id is not set', function() {
-          this.scope.onUserAttendeesAdded({});
-
-          expect(attendee.isLoading).to.not.exist;
-          expect(attendee.isBusy).to.not.exist;
-        });
-
-        it('should set user loading to true before call', function() {
-          calFreebusyService.isAttendeeAvailable = sinon.spy(function() {
-            return $q.when(true);
-          });
-
-          this.scope.onUserAttendeesAdded(attendee);
-
-          expect(attendee.isLoading).to.be.true;
-        });
-
-        it('should set user loading to false after call', function() {
-          calFreebusyService.isAttendeeAvailable = sinon.spy(function() {
-            return $q.when(true);
-          });
-
-          this.scope.onUserAttendeesAdded(attendee);
-          this.scope.$digest();
-
-          expect(attendee.isLoading).to.be.false;
-        });
-
-        it('should call isAttendeeAvailable', function() {
-          calFreebusyService.isAttendeeAvailable = sinon.spy(function() {
-            return $q.when(true);
-          });
-
-          this.scope.onUserAttendeesAdded(attendee);
-          this.scope.$digest();
-
-          expect(calFreebusyService.isAttendeeAvailable).to.have.been.calledWith(
-            attendee.id,
-            this.scope.editedEvent.start,
-            this.scope.editedEvent.end
-          );
-        });
-
-        it('should set user isBusy', function() {
-          calFreebusyService.isAttendeeAvailable = sinon.spy(function() {
-            return $q.when(true);
-          });
-
-          this.scope.onUserAttendeesAdded(attendee);
-          this.scope.$digest();
-
-          expect(attendee.isBusy).to.exist;
-        });
-      });
-
-      describe('the onResourceAttendeesAdded function', function() {
-        var attendee;
-
-        beforeEach(function() {
-          attendee = { id: '123123' };
-          this.scope.event = this.CalendarShell.fromIncompleteShell({
-            start: this.moment('2018-04-30 12:30'),
-            end: this.moment('2018-04-30 13:30')
-          });
-          this.initController();
-        });
-
-        it('should set resource loading to true before call', function() {
-          calFreebusyService.isAttendeeAvailable = sinon.spy(function() {
-            return $q.when(true);
-          });
-
-          this.scope.onResourceAttendeesAdded(attendee);
-
-          expect(attendee.isLoading).to.be.true;
-        });
-
-        it('should set resource loading to false after call', function() {
-          calFreebusyService.isAttendeeAvailable = sinon.spy(function() {
-            return $q.when(true);
-          });
-
-          this.scope.onResourceAttendeesAdded(attendee);
-          this.scope.$digest();
-
-          expect(attendee.isLoading).to.be.false;
-        });
-
-        it('should call isAttendeeAvailable', function() {
-          calFreebusyService.isAttendeeAvailable = sinon.spy(function() {
-            return $q.when(true);
-          });
-
-          this.scope.onResourceAttendeesAdded(attendee);
-          this.scope.$digest();
-
-          expect(calFreebusyService.isAttendeeAvailable).to.have.been.calledWith(
-            attendee.id,
-            this.scope.editedEvent.start,
-            this.scope.editedEvent.end
-          );
-        });
-
-        it('should set resource isBusy', function() {
-          calFreebusyService.isAttendeeAvailable = sinon.spy(function() {
-            return $q.when(true);
-          });
-
-          this.scope.onResourceAttendeesAdded(attendee);
-          this.scope.$digest();
-
-          expect(attendee.isBusy).to.exist;
-        });
       });
     });
   });
