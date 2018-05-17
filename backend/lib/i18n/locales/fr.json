@@ -228,5 +228,8 @@
   "An error occurred, please try again": "Une erreur est survenue, merci de réessayer",
   "Failed to retrieve resources details": "Impossible de récupérer les détails des resources",
   "Not available": "Non disponible",
+  "Attendee is available": "Le participant est disponible",
+  "Attendee is not available": "Le participant n'est pas disponible",
+  "Attendee availability is unknown": "Le disponibilité du participant est inconnue",
   "Cannot retrieve attendee availability": "Impossible de récupérer la disponibilité du participant"
 }

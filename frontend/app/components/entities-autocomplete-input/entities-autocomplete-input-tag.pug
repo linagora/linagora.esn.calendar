@@ -1,7 +1,13 @@
 .cal-entities-autocomplete-input-tag
   .left-tag
     .esn-spinner(ng-if="data.isLoading", openpaas-logo-spinner, spinner-start-active='1', spinner-size='0.15')
-    i.mdi.mdi-clock-alert.is-busy(ng-if="!data.isLoading && data.isBusy")
-    i.mdi.mdi-clock.is-free(ng-if="!data.isLoading && !data.isBusy")
+    .tag-icon
+      md-tooltip(md-direction="bottom" md-z-index="10000")
+        span(ng-if="!data.isLoading && data.isBusy") #{__('Attendee is not available')}
+        span(ng-if="!data.isLoading && !data.isBusy") #{__('Attendee is available')}
+        span(ng-if="!data.isLoading && data.unknownFreeBusy") #{__('Attendee availability is unknown')}
+      i.mdi.mdi-clock-alert.is-busy(ng-if="!data.isLoading && data.isBusy")
+      i.mdi.mdi-clock.is-free(ng-if="!data.isLoading && !data.isBusy")
+      i.mdi.mdi-clock-alert.is-unknown(ng-if="!data.isLoading && data.unknownFreeBusy")
   span {{ ::$getDisplayText() }}
   a.remove-button(ng-click="$removeTag()" ng-bind="::$$removeTagSymbol")

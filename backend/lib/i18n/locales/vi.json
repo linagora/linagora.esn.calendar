@@ -228,5 +228,8 @@
   "An error occurred, please try again": "Có lỗi xảy ra, hãy thử lại",
   "Failed to retrieve resources details": "Không thể lấy thông tin tài nguyên",
   "Not available": "Không sẵn sàng",
-  "Cannot retrieve attendee availability": "Không thể truy xuất trạng thái sẵn sàng"
+  "Attendee is available": "Người tham dự có sẵn",
+  "Attendee is not available": "Người tham dự không có mặt",
+  "Attendee availability is unknown": "Attendee availability is unknown",
+  "Cannot retrieve attendee availability": "Tính khả dụng của người tham dự không xác định"
 }
