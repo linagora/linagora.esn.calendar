@@ -9,15 +9,13 @@
     $rootScope,
     _,
     CalVfreebusyShell,
-    calFreebusyAPI,
-    calPathBuilder,
     calendarAPI,
     calendarService,
-    calMoment,
+    calFreebusyAPI,
+    calPathBuilder,
     ICAL
   ) {
     this.listFreebusy = listFreebusy;
-    this.isAttendeeAvailable = isAttendeeAvailable;
 
     ////////////
 
@@ -37,27 +35,6 @@
             });
           });
       }).catch($q.reject);
-    }
-
-    /**
-     * @name isAttendeeAvailable
-     * @description For a given datetime period, determine if user is Free or Busy, for all is calendars
-     * @param {string} attendeeId - Id of the attendee
-     * @param {string} dateStart - Starting date of the requested period
-     * @param {string} dateEnd - Ending date of the requested period
-     * @return {boolean} true on free, false on busy
-     */
-    function isAttendeeAvailable(attendeeId, dateStart, dateEnd) {
-      var start = calMoment(dateStart);
-      var end = calMoment(dateEnd);
-
-      return listFreebusy(attendeeId, start, end)
-        .then(function(freeBusies) {
-          return _.every(freeBusies, function(freeBusy) {
-            return freeBusy.isAvailable(start, end);
-          });
-        })
-        .catch($q.reject);
     }
   }
 })();
