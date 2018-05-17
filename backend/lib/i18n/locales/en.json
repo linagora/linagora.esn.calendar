@@ -226,7 +226,5 @@
   "%s has declined this event": "%s has declined this event",
   "Your proposal has been sent": "Your proposal has been sent",
   "An error occurred, please try again": "An error occurred, please try again",
-  "Failed to retrieve resources details": "Failed to retrieve resources details",
-  "Not available": "Not available",
-  "Cannot retrieve attendee availability": "Cannot retrieve attendee availability"
+  "Failed to retrieve resources details": "Failed to retrieve resources details"
 }
