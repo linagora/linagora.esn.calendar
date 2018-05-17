@@ -1656,15 +1656,31 @@ describe('The event-form module controllers', function() {
           );
         });
 
-        it('should set user isBusy', function() {
-          calFreebusyService.isAttendeeAvailable = sinon.spy(function() {
-            return $q.when(true);
-          });
+        it('should set attendee.freeBusy to free when user is available', function() {
+          calFreebusyService.isAttendeeAvailable = sinon.stub().returns($q.when(true));
 
           this.scope.onUserAttendeesAdded(attendee);
           this.scope.$digest();
 
-          expect(attendee.isBusy).to.exist;
+          expect(attendee.freeBusy).to.equal('free');
+        });
+
+        it('should set attendee.freeBusy to busy when user is not available', function() {
+          calFreebusyService.isAttendeeAvailable = sinon.stub().returns($q.when(false));
+
+          this.scope.onUserAttendeesAdded(attendee);
+          this.scope.$digest();
+
+          expect(attendee.freeBusy).to.equal('busy');
+        });
+
+        it('should set attendee.freeBusy to unknown when user availability can not be found', function() {
+          calFreebusyService.isAttendeeAvailable = sinon.stub().returns($q.reject(new Error()));
+
+          this.scope.onUserAttendeesAdded(attendee);
+          this.scope.$digest();
+
+          expect(attendee.freeBusy).to.equal('unknown');
         });
       });
 
@@ -1716,15 +1732,31 @@ describe('The event-form module controllers', function() {
           );
         });
 
-        it('should set resource isBusy', function() {
-          calFreebusyService.isAttendeeAvailable = sinon.spy(function() {
-            return $q.when(true);
-          });
+        it('should set attendee.freeBusy to free when user is available', function() {
+          calFreebusyService.isAttendeeAvailable = sinon.stub().returns($q.when(true));
 
           this.scope.onResourceAttendeesAdded(attendee);
           this.scope.$digest();
 
-          expect(attendee.isBusy).to.exist;
+          expect(attendee.freeBusy).to.equal('free');
+        });
+
+        it('should set attendee.freeBusy to busy when user is not available', function() {
+          calFreebusyService.isAttendeeAvailable = sinon.stub().returns($q.when(false));
+
+          this.scope.onResourceAttendeesAdded(attendee);
+          this.scope.$digest();
+
+          expect(attendee.freeBusy).to.equal('busy');
+        });
+
+        it('should set attendee.freeBusy to unknown when user availability can not be found', function() {
+          calFreebusyService.isAttendeeAvailable = sinon.stub().returns($q.reject(new Error()));
+
+          this.scope.onResourceAttendeesAdded(attendee);
+          this.scope.$digest();
+
+          expect(attendee.freeBusy).to.equal('unknown');
         });
       });
     });

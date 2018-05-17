@@ -357,19 +357,16 @@
 
       function isAttendeeAvailable(attendee, start, end) {
         return calFreebusyService
-          .isAttendeeAvailable(attendee.id, start, end)
-          .then(function(isAvailable) {
-            return isAvailable;
-          })
-          .catch(function(error) {
-            $log.debug('Cannot retrieve attendee availability', error);
+          .isAttendeeAvailable(attendee.id, start, end);
+      }
 
-            _displayNotification(
-              notificationFactory.weakError,
-              'Cannot retrieve attendee availability',
-              'An error occurred, please try again'
-            );
-            return true;
+      function setFreeBusyStatus(attendee, start, end) {
+        return isAttendeeAvailable(attendee, start, end)
+          .then(function(isAvailable) {
+            attendee.freeBusy = isAvailable ? 'free' : 'busy';
+          })
+          .catch(function() {
+            attendee.freeBusy = 'unknown';
           });
       }
 
@@ -380,10 +377,7 @@
 
         userAttendeeAdded.isLoading = true;
 
-        isAttendeeAvailable(userAttendeeAdded, $scope.editedEvent.start, $scope.editedEvent.end)
-          .then(function(isAvailable) {
-            userAttendeeAdded.isBusy = !isAvailable;
-          })
+        setFreeBusyStatus(userAttendeeAdded, $scope.editedEvent.start, $scope.editedEvent.end)
           .finally(function() {
             userAttendeeAdded.isLoading = false;
           });
@@ -392,10 +386,7 @@
       function onResourceAttendeesAdded(resourceAttendeeAdded) {
         resourceAttendeeAdded.isLoading = true;
 
-        isAttendeeAvailable(resourceAttendeeAdded, $scope.editedEvent.start, $scope.editedEvent.end)
-          .then(function(isAvailable) {
-            resourceAttendeeAdded.isBusy = !isAvailable;
-          })
+        setFreeBusyStatus(resourceAttendeeAdded, $scope.editedEvent.start, $scope.editedEvent.end)
           .finally(function() {
             resourceAttendeeAdded.isLoading = false;
           });
