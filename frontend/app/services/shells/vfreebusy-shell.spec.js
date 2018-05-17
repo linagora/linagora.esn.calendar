@@ -40,13 +40,5 @@ describe('CalVfreebusyShell factory', function() {
     it('should be false when datetime given is during busy day & hour time', function() {
       expect(myFreeBusyShell.isAvailable('2018-03-04T10:30:00Z', '2018-03-04T11:30:00Z')).to.be.false;
     });
-
-    it('should be false when busy time is during given day & hour time', function() {
-      expect(myFreeBusyShell.isAvailable('2018-03-03T09:00:00Z', '2018-03-03T13:30:00Z')).to.be.false;
-    });
-
-    it('should be false when busy time is during given days', function() {
-      expect(myFreeBusyShell.isAvailable('2018-03-01T09:00:00Z', '2018-03-10T10:30:00Z')).to.be.false;
-    });
   });
 });
