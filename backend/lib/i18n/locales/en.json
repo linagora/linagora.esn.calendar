@@ -231,5 +231,7 @@
   "Attendee is available": "Attendee is available",
   "Attendee is not available": "Attendee is not available",
   "Attendee availability is unknown": "Attendee availability is unknown",
-  "Cannot retrieve attendee availability": "Cannot retrieve attendee availability"
+  "Cannot retrieve attendee availability": "Cannot retrieve attendee availability",
+  "Some attendees are not available": "Some attendees are not available",
+  "You can go back to edition to find a better date, or send event like this.": "You can go back to edition to find a better date, or send event like this."
 }

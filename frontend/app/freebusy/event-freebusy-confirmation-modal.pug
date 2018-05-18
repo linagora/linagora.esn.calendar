@@ -1,0 +1,10 @@
+.modal.event-freebusy-confirmation
+  .modal-dialog.modal-sm
+    .modal-content
+      .modal-header
+        h4.modal-title #{__('Some attendees are not available')}
+      .modal-body
+        span #{__('You can go back to edition to find a better date, or send event like this.')}
+      .modal-footer
+        button.btn.btn-link(type="button", ng-click="$hide()") #{__('Edit')}
+        button.btn.btn-primary(type="button", ng-click="ctrl.submit(); $hide()") #{__('Send')}

@@ -12,6 +12,7 @@
     $log,
     $q,
     _,
+    calEventFreeBusyConfirmationModalService,
     calendarService,
     userUtils,
     calEventService,
@@ -338,7 +339,17 @@
       }
 
       function submit() {
-        (calEventUtils.isNew($scope.editedEvent) && !calEventUtils.isInvolvedInATask($scope.editedEvent) ? createEvent : modifyEvent)();
+        var attendees = getAttendees();
+
+        if (_.some(attendees, { freeBusy: 'busy' })) {
+          calEventFreeBusyConfirmationModalService(createOrUpdate);
+        } else {
+          createOrUpdate();
+        }
+
+        function createOrUpdate() {
+          (calEventUtils.isNew($scope.editedEvent) && !calEventUtils.isInvolvedInATask($scope.editedEvent) ? createEvent : modifyEvent)();
+        }
       }
 
       function goToCalendar(callback) {

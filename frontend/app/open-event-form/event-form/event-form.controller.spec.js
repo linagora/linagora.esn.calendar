@@ -6,7 +6,7 @@ var expect = chai.expect;
 
 describe('The event-form module controllers', function() {
   var Cache, calendarTest, canModifyEventResult, eventTest, owner, user;
-  var calendarHomeServiceMock, calAttendeesDenormalizerService, calAttendeeService;
+  var calendarHomeServiceMock, calAttendeesDenormalizerService, calAttendeeService, calEventFreeBusyConfirmationModalService;
   var CAL_ICAL, calFreebusyService;
   var $rootScope;
 
@@ -58,6 +58,7 @@ describe('The event-form module controllers', function() {
     };
 
     calAttendeesDenormalizerService = function(attendees) {return $q.when(attendees);};
+    calEventFreeBusyConfirmationModalService = sinon.spy();
 
     this.calendars = [
       calendarTest,
@@ -167,6 +168,7 @@ describe('The event-form module controllers', function() {
         return angular.extend($delegate, calendarUtilsMock);
       });
       $provide.value('calAttendeesDenormalizerService', calAttendeesDenormalizerService);
+      $provide.value('calEventFreeBusyConfirmationModalService', calEventFreeBusyConfirmationModalService);
       $provide.value('calendarHomeService', calendarHomeServiceMock);
       $provide.value('calEventService', self.calEventServiceMock);
       $provide.value('calendarService', self.calendarServiceMock);
@@ -265,6 +267,8 @@ describe('The event-form module controllers', function() {
         this.initController();
         this.scope.submit();
         this.scope.$digest();
+
+        expect(calEventFreeBusyConfirmationModalService).to.not.have.been.called;
       });
 
       it('should be modifyEvent if event has a gracePeriodTaskId property', function(done) {
@@ -285,6 +289,8 @@ describe('The event-form module controllers', function() {
         this.scope.submit();
 
         this.rootScope.$digest();
+
+        expect(calEventFreeBusyConfirmationModalService).to.not.have.been.called;
       });
 
       it('should be modifyEvent if event has a etag property', function(done) {
@@ -309,6 +315,31 @@ describe('The event-form module controllers', function() {
         this.scope.submit();
 
         this.rootScope.$digest();
+
+        expect(calEventFreeBusyConfirmationModalService).to.not.have.been.called;
+      });
+
+      it('should call calEventFreeBusyConfirmationModalService when some attendees are busy', function() {
+        this.scope.event = this.CalendarShell.fromIncompleteShell({
+          attendees: [{
+            displayName: 'attendee1',
+            email: 'attendee1@openpaas.org',
+            cutype: CAL_ICAL.cutype.individual
+          }, {
+            displayName: 'resource1',
+            email: 'resource1@openpaas.org',
+            cutype: CAL_ICAL.cutype.resource
+          }]
+        });
+
+        this.calEventServiceMock.createEvent = sinon.spy();
+        this.initController();
+        this.scope.attendees.users[0].freeBusy = 'busy';
+        this.scope.submit();
+        this.rootScope.$digest();
+
+        expect(this.calEventServiceMock.createEvent).to.not.have.been.called;
+        expect(calEventFreeBusyConfirmationModalService).to.have.been.called;
       });
     });
 
