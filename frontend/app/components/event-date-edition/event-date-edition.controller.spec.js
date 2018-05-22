@@ -212,6 +212,22 @@ describe('The calEventDateEditionController', function() {
         expect(isSame).to.be.true;
       });
 
+      it('should call onDateChange', function() {
+        var bindings = {
+          event: {
+            start: startTestMoment,
+            end: endTestMoment
+          },
+          onDateChange: sinon.spy()
+        };
+        var ctrl = initController(bindings);
+
+        ctrl.diff = 3600 * 1000 * 2; // 2 hours
+        ctrl.onStartDateChange();
+
+        expect(bindings.onDateChange).to.have.been.calledOnce;
+      });
+
       describe('comportment for null date and invalid date', function() {
         /* global moment: false */
 
@@ -290,6 +306,36 @@ describe('The calEventDateEditionController', function() {
 
           expect(isSame).to.be.true;
         }, this);
+      });
+
+      it('should call onDateChange when called with falsy parameter', function() {
+        var bindings = {
+          event: {
+            start: startTestMoment,
+            end: calMoment('2013-02-07 13:30')
+          },
+          onDateChange: sinon.spy()
+        };
+        var ctrl = initController(bindings);
+
+        ctrl.onEndDateChange();
+
+        expect(bindings.onDateChange).to.have.been.calledOne;
+      });
+
+      it('should not call onDateChange when called with truthy parameter', function() {
+        var bindings = {
+          event: {
+            start: startTestMoment,
+            end: calMoment('2013-02-07 13:30')
+          },
+          onDateChange: sinon.spy()
+        };
+        var ctrl = initController(bindings);
+
+        ctrl.onEndDateChange(true);
+
+        expect(bindings.onDateChange).to.not.have.been.called;
       });
     });
   });

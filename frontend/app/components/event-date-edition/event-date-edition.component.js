@@ -10,6 +10,7 @@ angular.module('esn.calendar')
       disabled: '=?',
       dateOnBlur: '=?',
       allDayOnChange: '=?',
+      onDateChange: '=?',
       use24hourFormat: '<'
     }
   });
