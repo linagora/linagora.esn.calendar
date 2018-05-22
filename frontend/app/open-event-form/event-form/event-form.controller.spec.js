@@ -1791,5 +1791,55 @@ describe('The event-form module controllers', function() {
         });
       });
     });
+
+    describe('The onDateChange function', function() {
+      beforeEach(function() {
+        this.scope.event = this.CalendarShell.fromIncompleteShell({
+          start: this.moment('2018-05-01 10:30'),
+          end: this.moment('2018-05-01 14:30'),
+          attendees: [{
+            displayName: 'attendee1',
+            email: 'attendee1@openpaas.org',
+            cutype: CAL_ICAL.cutype.individual
+          }, {
+            displayName: 'resource1',
+            email: 'resource1@openpaas.org',
+            cutype: CAL_ICAL.cutype.resource
+          }]
+        });
+
+        this.initController();
+      });
+
+      it('should not call freebusy service when new date is in old date', function() {
+        var newDate = {
+          start: this.moment('2018-05-01 10:31'),
+          end: this.moment('2018-05-01 14:29')
+        };
+
+        calFreebusyService.isAttendeeAvailable = sinon.stub().returns($q.when(true));
+
+        this.scope.onDateChange(newDate);
+        this.scope.$digest();
+
+        expect(calFreebusyService.isAttendeeAvailable).to.not.have.been.called;
+      });
+
+      it('should call freebusy service as many times as there are internal attendees', function() {
+        var id = 'theattendeeID';
+        var newDate = {
+          start: this.moment('2018-05-01 10:29'),
+          end: this.moment('2018-05-01 14:31')
+        };
+
+        calFreebusyService.isAttendeeAvailable = sinon.stub().returns($q.when(true));
+
+        this.scope.attendees.users[0].id = id;
+        this.scope.onDateChange(newDate);
+        this.scope.$digest();
+
+        expect(calFreebusyService.isAttendeeAvailable).to.have.been.calledWith(id);
+      });
+    });
   });
 });

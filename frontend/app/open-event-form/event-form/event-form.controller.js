@@ -59,6 +59,7 @@
       $scope.cancel = cancel;
       $scope.toggleSuggestedEvent = toggleSuggestedEvent;
       $scope.submitSuggestion = submitSuggestion;
+      $scope.onDateChange = onDateChange;
 
       // Initialize the scope of the form. It creates a scope.editedEvent which allows us to
       // rollback to scope.event in case of a Cancel.
@@ -381,26 +382,39 @@
           });
       }
 
-      function onUserAttendeesAdded(userAttendeeAdded) {
-        if (!userAttendeeAdded.id) {
+      function onDateChange(updatedDate) {
+        updateAttendeesFreeBusyStatus(updatedDate);
+      }
+
+      function updateAttendeesFreeBusyStatus(updatedDate) {
+        if (updatedDate.start.isBetween($scope.event.start, $scope.event.end) && updatedDate.end.isBetween($scope.event.start, $scope.event.end)) {
           return;
         }
 
-        userAttendeeAdded.isLoading = true;
+        getAttendees().forEach(function(attendee) {
+          loadFreeBusyForAttendee(attendee, updatedDate.start, updatedDate.end);
+        });
+      }
 
-        setFreeBusyStatus(userAttendeeAdded, $scope.editedEvent.start, $scope.editedEvent.end)
+      function loadFreeBusyForAttendee(attendee, start, end) {
+        if (!attendee.id) {
+          return;
+        }
+
+        attendee.isLoading = true;
+
+        return setFreeBusyStatus(attendee, start, end)
           .finally(function() {
-            userAttendeeAdded.isLoading = false;
+            attendee.isLoading = false;
           });
       }
 
-      function onResourceAttendeesAdded(resourceAttendeeAdded) {
-        resourceAttendeeAdded.isLoading = true;
+      function onUserAttendeesAdded(userAttendeeAdded) {
+        loadFreeBusyForAttendee(userAttendeeAdded, $scope.editedEvent.start, $scope.editedEvent.end);
+      }
 
-        setFreeBusyStatus(resourceAttendeeAdded, $scope.editedEvent.start, $scope.editedEvent.end)
-          .finally(function() {
-            resourceAttendeeAdded.isLoading = false;
-          });
+      function onResourceAttendeesAdded(resourceAttendeeAdded) {
+        loadFreeBusyForAttendee(resourceAttendeeAdded, $scope.editedEvent.start, $scope.editedEvent.end);
       }
 
       function onUserAttendeesRemoved(removed) {
