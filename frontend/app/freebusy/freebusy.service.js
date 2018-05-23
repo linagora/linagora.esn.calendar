@@ -61,7 +61,7 @@
         .catch($q.reject);
     }
 
-    function areAttendeesAvailable(attendees, dateStart, dateEnd) {
+    function areAttendeesAvailable() {
       // Will be implemented in #1257 and #1258
 
       return $q.when(false);
