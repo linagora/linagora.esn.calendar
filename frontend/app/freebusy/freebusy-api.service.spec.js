@@ -4,8 +4,7 @@
 
 var expect = chai.expect;
 
-describe('The freebusy module api', function() {
-
+describe('The calFreebusyAPI service', function() {
   var davItem, davItems, notificationFactoryMock;
 
   notificationFactoryMock = {

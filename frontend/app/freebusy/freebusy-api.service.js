@@ -1,8 +1,7 @@
-(function() {
+(function(angular) {
   'use strict';
 
-  angular.module('esn.calendar')
-         .factory('calFreebusyAPI', calFreebusyAPI);
+  angular.module('esn.calendar').factory('calFreebusyAPI', calFreebusyAPI);
 
   function calFreebusyAPI(
     calDavRequest,
@@ -13,8 +12,6 @@
     return {
       report: report
     };
-
-    ////////////
 
     function report(calendarHref, start, end) {
       var body = {
@@ -31,4 +28,4 @@
         });
     }
   }
-})();
+})(angular);

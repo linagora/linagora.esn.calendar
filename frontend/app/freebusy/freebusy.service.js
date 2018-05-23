@@ -1,8 +1,7 @@
-(function() {
+(function(angular) {
   'use strict';
 
-  angular.module('esn.calendar')
-         .service('calFreebusyService', calFreebusyService);
+  angular.module('esn.calendar').factory('calFreebusyService', calFreebusyService);
 
   function calFreebusyService(
     $q,
@@ -16,11 +15,12 @@
     calMoment,
     ICAL
   ) {
-    this.listFreebusy = listFreebusy;
-    this.isAttendeeAvailable = isAttendeeAvailable;
-    this.areAttendeesAvailable = areAttendeesAvailable;
 
-    ////////////
+    return {
+      listFreebusy: listFreebusy,
+      isAttendeeAvailable: isAttendeeAvailable,
+      areAttendeesAvailable: areAttendeesAvailable
+    };
 
     function listFreebusy(userId, start, end) {
       return calendarService.listFreeBusyCalendars(userId).then(function(cals) {
@@ -67,4 +67,4 @@
       return $q.when(false);
     }
   }
-})();
+})(angular);
