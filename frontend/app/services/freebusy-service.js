@@ -18,6 +18,7 @@
   ) {
     this.listFreebusy = listFreebusy;
     this.isAttendeeAvailable = isAttendeeAvailable;
+    this.areAttendeesAvailable = areAttendeesAvailable;
 
     ////////////
 
@@ -58,6 +59,12 @@
           });
         })
         .catch($q.reject);
+    }
+
+    function areAttendeesAvailable(attendees, dateStart, dateEnd) {
+      // Will be implemented in #1257 and #1258
+
+      return $q.when(false);
     }
   }
 })();

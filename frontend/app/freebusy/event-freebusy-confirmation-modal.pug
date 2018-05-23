@@ -2,9 +2,18 @@
   .modal-dialog.modal-sm
     .modal-content
       .modal-header
+        button.close(type='button', data-dismiss="modal", aria-label="Cancel", ng-click="ctrl.cancel(); $hide()")
+          span(aria-hidden="true") &times;
         h4.modal-title #{__('Some attendees are not available')}
       .modal-body
-        span #{__('You can go back to edition to find a better date, or send event like this.')}
+        span #{__('You can edit the event to find a better date, or send it like this.')}
       .modal-footer
-        button.btn.btn-link(type="button", ng-click="$hide()") #{__('Edit')}
-        button.btn.btn-primary(type="button", ng-click="ctrl.submit(); $hide()") #{__('Send')}
+        button.btn.btn-link(type="button", ng-click="ctrl.cancel(); $hide()") #{__('Cancel')}
+        .btn-group.send-edit
+          button.btn.btn-primary(type="button", ng-click="ctrl.submit(); $hide()") #{__('Send')}
+          .btn-group.dropdown(ng-if="ctrl.displayEdit")
+            button.btn.btn-primary.dropdown-toggle(type="button" data-toggle='dropdown', aria-expanded='true')
+              span.caret
+            ul.dropdown-menu.dropdown-menu-right(role="menu")
+              li
+                a(href="" ng-click="ctrl.edit(); $hide()") #{__('Edit')}

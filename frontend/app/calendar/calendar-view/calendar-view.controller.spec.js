@@ -93,6 +93,7 @@ describe('The calendarViewController', function() {
     }];
 
     this.calEventServiceMock = {
+      checkAndUpdateEvent: sinon.stub(),
       createEvent: function() {
         return $q.when({});
       },
@@ -721,7 +722,7 @@ describe('The calendarViewController', function() {
   });
 
   describe('the eventDropAndResize listener', function() {
-    it('should call calendarService.modifyEvent with the correct argument if resize', function() {
+    it('should call calendarService.checkAndUpdateEvent with the correct argument if resize', function() {
       var oldEvent = {
         path: 'aPath',
         etag: 'anEtag',
@@ -758,10 +759,10 @@ describe('The calendarViewController', function() {
       this.scope.eventDropAndResize(false, event, delta);
       expect(oldEvent.start.isSame(this.calMoment('2016-01-01 09:00'))).to.be.true;
       expect(oldEvent.end.isSame(this.calMoment('2016-01-01 10:00'))).to.be.true;
-      expect(this.calEventServiceMock.modifyEvent).to.have.been.calledWith(newEvent.path, newEvent, oldEvent, newEvent.etag);
+      expect(this.calEventServiceMock.checkAndUpdateEvent).to.have.been.calledWith(newEvent, sinon.match.func, sinon.match.func, sinon.match.func);
     });
 
-    it('should call calendarService.modifyEvent with the correct argument if drop', function() {
+    it('should call calendarService.checkAndUpdateEvent with the correct argument if drop', function() {
       var oldEvent = {
         path: 'aPath',
         etag: 'anEtag',
@@ -799,7 +800,7 @@ describe('The calendarViewController', function() {
 
       expect(oldEvent.start.isSame(this.calMoment('2016-01-01 08:50'))).to.be.true;
       expect(oldEvent.end.isSame(this.calMoment('2016-01-01 10:00'))).to.be.true;
-      expect(this.calEventServiceMock.modifyEvent).to.have.been.calledWith(newEvent.path, newEvent, oldEvent, newEvent.etag);
+      expect(this.calEventServiceMock.checkAndUpdateEvent).to.have.been.calledWith(newEvent, sinon.match.func, sinon.match.func, sinon.match.func);
     });
 
     it('should send a CAL_EVENTS.REVERT_MODIFICATION with the event after calling fullcalendar revert when the drap and drop if reverted', function(done) {
@@ -816,14 +817,14 @@ describe('The calendarViewController', function() {
 
       var oldEvent;
 
-      this.rootScope.$on(this.CAL_EVENTS.REVERT_MODIFICATION, function(angularEvent, event) { // eslint-disable-line
+      this.rootScope.$on(this.CAL_EVENTS.REVERT_MODIFICATION, function(angularEvent, event) {
         expect(event).to.equal(oldEvent);
         done();
       });
 
-      this.calEventServiceMock.modifyEvent = function(path, e, _oldEvent, etag, revertFunc) { // eslint-disable-line
-        oldEvent = _oldEvent;
-        revertFunc();
+      this.calEventServiceMock.checkAndUpdateEvent = function(event, updateFn, editFn, cancelFn) {
+        oldEvent = event;
+        cancelFn();
 
         return $q.when({});
       };
@@ -836,7 +837,7 @@ describe('The calendarViewController', function() {
       expect(fcRevert).to.have.been.calledOnce;
     });
 
-    it('should call calendarService.modifyEvent with a built path if scope.event.path does not exist', function(done) {
+    it('should call calendarService.checkAndUpdateEvent with a built path if scope.event.path does not exist', function(done) {
       var event = {
         etag: 'anEtag',
         end: this.calMoment(),
@@ -848,9 +849,8 @@ describe('The calendarViewController', function() {
 
       this.scope.calendarHomeId = calendarHomeId;
       this.scope.event = event;
-      this.calEventServiceMock.modifyEvent = function(path, e, oldEvent, etag) { // eslint-disable-line
-        expect(path).to.equal('/calendars/' + calendarHomeId + '/' + self.calDefaultValue.get('calendarId'));
-        expect(etag).to.equal(event.etag);
+      this.calEventServiceMock.checkAndUpdateEvent = function(event) {
+        expect(event.path).to.equal('/calendars/' + calendarHomeId + '/' + self.calDefaultValue.get('calendarId'));
         done();
       };
       this.controller('calendarViewController', {$scope: this.scope});

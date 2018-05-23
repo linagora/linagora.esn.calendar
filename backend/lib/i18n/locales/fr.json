@@ -233,5 +233,5 @@
   "Attendee availability is unknown": "Le disponibilité du participant est inconnue",
   "Cannot retrieve attendee availability": "Impossible de récupérer la disponibilité du participant",
   "Some attendees are not available": "Certains participants ne sont pas disponibles",
-  "You can go back to edition to find a better date, or send event like this.": "Vous pouvez retourner à l'édition pour trouver un meilleur horaire, ou envoyer l'événement quand même."
+  "You can edit the event to find a better date, or send it like this.": "Vous pouvez éditer l'événement pour trouver un meilleur horaire, ou l'envoyer tel quel."
 }
