@@ -3,3 +3,5 @@
     esn-avatar(avatar-url="ctrl.avatarUrl", user-email="ctrl.attendee.email")
     .organizer(ng-if='ctrl.isOrganizer')
       i.mdi.mdi-pencil
+    .freebusy
+      cal-freebusy-icon(status="ctrl.freeBusy")

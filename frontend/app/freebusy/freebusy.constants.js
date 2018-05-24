@@ -3,7 +3,7 @@
 
   angular.module('esn.calendar')
     .constant('CAL_FREEBUSY', {
-      UNNKWON: 'unknown',
+      UNKNOWN: 'unknown',
       FREE: 'free',
       busy: 'busy'
     });
