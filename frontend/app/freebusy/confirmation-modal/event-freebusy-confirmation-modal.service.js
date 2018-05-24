@@ -7,7 +7,7 @@
   function calEventFreeBusyConfirmationModalService($modal) {
     return function(onConfirm, onEdit, onCancel) {
       return $modal({
-        templateUrl: '/calendar/app/freebusy/event-freebusy-confirmation-modal.html',
+        templateUrl: '/calendar/app/freebusy/confirmation-modal/event-freebusy-confirmation-modal.html',
         controller: function() {
           this.submit = onConfirm;
           this.edit = function() {
