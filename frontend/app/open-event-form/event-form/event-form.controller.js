@@ -32,6 +32,7 @@
     CAL_EVENTS,
     CAL_EVENT_FORM,
     CAL_ICAL,
+    CAL_FREEBUSY,
     calFreebusyService
   ) {
       var initialUserAttendeesRemoved = [];
@@ -342,7 +343,7 @@
       function submit() {
         var attendees = getAttendees();
 
-        if (_.some(attendees, { freeBusy: 'busy' })) {
+        if (_.some(attendees, { freeBusy: CAL_FREEBUSY.BUSY })) {
           calEventFreeBusyConfirmationModalService(createOrUpdate);
         } else {
           createOrUpdate();
@@ -373,12 +374,14 @@
       }
 
       function setFreeBusyStatus(attendee, start, end) {
+        attendee.freeBusy = 'loading';
+
         return isAttendeeAvailable(attendee, start, end)
           .then(function(isAvailable) {
-            attendee.freeBusy = isAvailable ? 'free' : 'busy';
+            attendee.freeBusy = isAvailable ? CAL_FREEBUSY.FREE : CAL_FREEBUSY.BUSY;
           })
           .catch(function() {
-            attendee.freeBusy = 'unknown';
+            attendee.freeBusy = CAL_FREEBUSY.UNKNOWN;
           });
       }
 
@@ -401,12 +404,7 @@
           return;
         }
 
-        attendee.isLoading = true;
-
-        return setFreeBusyStatus(attendee, start, end)
-          .finally(function() {
-            attendee.isLoading = false;
-          });
+        return setFreeBusyStatus(attendee, start, end);
       }
 
       function onUserAttendeesAdded(userAttendeeAdded) {
