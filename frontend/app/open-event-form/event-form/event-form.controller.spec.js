@@ -1679,19 +1679,20 @@ describe('The event-form module controllers', function() {
       beforeEach(function() {
         this.scope.event = this.CalendarShell.fromIncompleteShell({
           start: this.moment('2018-05-01 10:30'),
-          end: this.moment('2018-05-01 14:30'),
-          attendees: [{
-            displayName: 'attendee1',
-            email: 'attendee1@openpaas.org',
-            cutype: CAL_ICAL.cutype.individual
-          }, {
-            displayName: 'resource1',
-            email: 'resource1@openpaas.org',
-            cutype: CAL_ICAL.cutype.resource
-          }]
+          end: this.moment('2018-05-01 14:30')
         });
 
         this.initController();
+
+        this.scope.newAttendees = [{
+          displayName: 'attendee2',
+          email: 'user2@test.com',
+          partstart: 'ACCEPTED'
+        }, {
+          displayName: 'attendee3',
+          email: 'user3@test.com',
+          partstart: 'ACCEPTED'
+        }];
       });
 
       it('should not call freebusy service when new date is in old date', function() {
@@ -1708,7 +1709,7 @@ describe('The event-form module controllers', function() {
         expect(calFreebusyService.setFreeBusyStatus).to.not.have.been.called;
       });
 
-      it('should call freebusy service as many times as there are internal attendees', function() {
+      it('should call freebusy service as many times as there are new attendees', function() {
         var newDate = {
           start: this.moment('2018-05-01 10:29'),
           end: this.moment('2018-05-01 14:31')
