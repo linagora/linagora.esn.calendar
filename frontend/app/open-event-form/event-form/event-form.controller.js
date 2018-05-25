@@ -369,16 +369,20 @@
       }
 
       function onDateChange(updatedDate) {
-        updateAttendeesFreeBusyStatus(updatedDate);
+        // For now just change new attendees
+        // Checking freebusy for all will be achieved in #1257
+        var attendees = [].concat($scope.newAttendees, $scope.newResources);
+
+        updateAttendeesFreeBusyStatus(attendees, updatedDate.start, updatedDate.end);
       }
 
-      function updateAttendeesFreeBusyStatus(updatedDate) {
-        if (updatedDate.start.isBetween($scope.event.start, $scope.event.end) && updatedDate.end.isBetween($scope.event.start, $scope.event.end)) {
+      function updateAttendeesFreeBusyStatus(attendeesToUpdate, start, end) {
+        if (start.isBetween($scope.event.start, $scope.event.end) && end.isBetween($scope.event.start, $scope.event.end)) {
           return;
         }
 
-        getAttendees().forEach(function(attendee) {
-          calFreebusyService.setFreeBusyStatus(attendee, updatedDate.start, updatedDate.end);
+        attendeesToUpdate.forEach(function(attendee) {
+          calFreebusyService.setFreeBusyStatus(attendee, start, end);
         });
       }
 

@@ -42,7 +42,7 @@
       function loadAndPatchAttendee(attendee, start, end) {
         attendee.freeBusy = CAL_FREEBUSY.LOADING;
 
-        return isAttendeeAvailable(attendee, start, end)
+        return isAttendeeAvailable(attendee.id, start, end)
           .then(function(isAvailable) {
             attendee.freeBusy = isAvailable ? CAL_FREEBUSY.FREE : CAL_FREEBUSY.BUSY;
           })
