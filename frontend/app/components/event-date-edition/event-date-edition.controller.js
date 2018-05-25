@@ -63,6 +63,7 @@
       self.event.start = start;
       self.event.end = end;
       self.diff = self.event.end.diff(self.event.start);
+      _onDateChange();
     }
 
     function onStartDateChange() {
@@ -70,11 +71,7 @@
         return;
       }
       self.event.end = calMoment(self.event.start).add(self.diff / 1000, 'seconds');
-
-      self.onDateChange && self.onDateChange({
-        start: self.event.start,
-        end: self.event.end
-      });
+      _onDateChange();
     }
 
     function onEndDateChange(skipDateUpdate) {
@@ -86,7 +83,11 @@
       }
       self.diff = self.event.end.diff(self.event.start);
 
-      !skipDateUpdate && self.onDateChange && self.onDateChange({
+      !skipDateUpdate && _onDateChange();
+    }
+
+    function _onDateChange() {
+      self.onDateChange && self.onDateChange({
         start: self.event.start,
         end: self.event.end
       });
