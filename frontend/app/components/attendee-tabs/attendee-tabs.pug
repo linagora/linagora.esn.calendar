@@ -1,7 +1,10 @@
-ul.esn-tab
-  li.btn-wave(ng-class="{'active': $ctrl.selectedTab === 'attendees'}")
-    a(href="", ng-click="$ctrl.selectedTab = 'attendees'")
-      | #{__('Attendees')}
-  li.btn-wave(ng-class="{'active': $ctrl.selectedTab === 'resources'}")
-    a(href="", ng-click="$ctrl.selectedTab = 'resources'")
-      | #{__('Resources')}
+.cal-attendees-tabs
+  ul.esn-tab
+    li.btn-wave(ng-class="{'active': $ctrl.selectedTab === 'attendees'}")
+      a(href="", ng-click="$ctrl.selectedTab = 'attendees'")
+        | #{__('Attendees')}
+    li.btn-wave(ng-class="{'active': $ctrl.selectedTab === 'resources'}")
+      a(href="", ng-click="$ctrl.selectedTab = 'resources'")
+        | #{__('Resources')}
+    li.tab-options
+      cal-mail-to-attendees(event="$ctrl.event")

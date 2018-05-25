@@ -5,6 +5,7 @@
     .component('calAttendeeTabs', {
       templateUrl: '/calendar/app/components/attendee-tabs/attendee-tabs.html',
       bindings: {
+        event: '=',
         selectedTab: '='
       }
     });

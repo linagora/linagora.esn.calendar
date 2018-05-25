@@ -1,9 +1,9 @@
-.row.cal-mail-to-attendees.text-center
-  a.btn.btn-accent.btn-link(
+.cal-mail-to-attendees
+  a.btn.btn-link.btn-icon(
     ng-if="ctrl.getEmailAddressesFromUsers(ctrl.event.attendees)",
     ng-href="mailto:{{ctrl.getEmailAddressesFromUsers(ctrl.event.attendees)}}",
     op-inbox-compose
   )
-    label
-      | #{__('Mail to Attendees')}
+    md-tooltip(md-direction="bottom" md-z-index="10000")
+      span #{__('Mail to attendees')}
     i.mdi.mdi-email
