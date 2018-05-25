@@ -46,7 +46,8 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
           .col-xs-12
             cal-attendee-tabs(
               ng-show="selectedTab && attendees.users.length > 0",
-              selected-tab="selectedTab")
+              selected-tab="selectedTab"
+              event="editedEvent")
             cal-resource-list(
               ng-show="selectedTab === 'resources'",
               ng-if="attendees.resources.length > 0",
@@ -61,8 +62,6 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
               can-modify-attendees="::canModifyEventAttendees",
               organizer="::editedEvent.organizer",
               on-attendees-removed="onUserAttendeesRemoved(removed)")
-          .col-xs-12
-            cal-mail-to-attendees(ng-if="displayCalMailToAttendeesButton()", event="editedEvent")
           .col-xs-12
             event-recurrence-edition(event="editedEvent", can-modify-event-recurrence='canModifyEventRecurrence')
           .col-xs-12
