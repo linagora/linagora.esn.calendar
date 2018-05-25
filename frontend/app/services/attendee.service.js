@@ -4,10 +4,11 @@
   angular.module('esn.calendar')
     .factory('calAttendeeService', calAttendeeService);
 
-  function calAttendeeService($log, $q, _, userUtils, CAL_ICAL, calResourceService) {
+  function calAttendeeService($log, $q, _, userUtils, CAL_ICAL, calResourceService, calAttendeesCache) {
     return {
       filterDuplicates: filterDuplicates,
       getAttendeeForUser: getAttendeeForUser,
+      getUserIdForAttendee: getUserIdForAttendee,
       manageResourceDetailsPromiseResolutions: manageResourceDetailsPromiseResolutions,
       logResourceDetailsError: logResourceDetailsError,
       splitAttendeesFromType: splitAttendeesFromType,
@@ -34,6 +35,14 @@
 
       return _.find(attendees, function(attendee) {
         return _.contains(attendee.email, user.emails);
+      });
+    }
+
+    function getUserIdForAttendee(attendee) {
+      return calAttendeesCache.get(attendee.email).then(function(user) {
+        if (user) {
+          return user._id;
+        }
       });
     }
 

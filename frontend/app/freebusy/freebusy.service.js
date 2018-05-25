@@ -12,15 +12,45 @@
     calPathBuilder,
     calendarAPI,
     calendarService,
+    calAttendeeService,
     calMoment,
+    CAL_FREEBUSY,
     ICAL
   ) {
 
     return {
       listFreebusy: listFreebusy,
       isAttendeeAvailable: isAttendeeAvailable,
-      areAttendeesAvailable: areAttendeesAvailable
+      areAttendeesAvailable: areAttendeesAvailable,
+      setFreeBusyStatus: setFreeBusyStatus
     };
+
+    function setFreeBusyStatus(attendee, start, end) {
+      if (!attendee.id) {
+        return calAttendeeService.getUserIdForAttendee(attendee)
+          .then(function(id) {
+            if (id) {
+              attendee.id = id;
+
+              return loadAndPatchAttendee(attendee, start, end);
+            }
+          });
+      }
+
+      return loadAndPatchAttendee(attendee, start, end);
+
+      function loadAndPatchAttendee(attendee, start, end) {
+        attendee.freeBusy = CAL_FREEBUSY.LOADING;
+
+        return isAttendeeAvailable(attendee, start, end)
+          .then(function(isAvailable) {
+            attendee.freeBusy = isAvailable ? CAL_FREEBUSY.FREE : CAL_FREEBUSY.BUSY;
+          })
+          .catch(function() {
+            attendee.freeBusy = CAL_FREEBUSY.UNKNOWN;
+          });
+      }
+    }
 
     function listFreebusy(userId, start, end) {
       return calendarService.listFreeBusyCalendars(userId).then(function(cals) {

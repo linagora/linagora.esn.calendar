@@ -5,6 +5,7 @@
     .constant('CAL_FREEBUSY', {
       UNKNOWN: 'unknown',
       FREE: 'free',
-      busy: 'busy'
+      BUSY: 'busy',
+      LOADING: 'loading'
     });
 })(angular);

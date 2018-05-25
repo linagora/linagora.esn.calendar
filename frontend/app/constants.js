@@ -321,6 +321,8 @@
 
     .constant('CAL_USER_CACHE_TTL', 3600000)
 
+    .constant('CAL_ATTENDEES_CACHE_TTL', 3600000)
+
     /**
      * When checking if an event has been modified in the event form, these JSON
      * keys on the calendar shell will be checked.

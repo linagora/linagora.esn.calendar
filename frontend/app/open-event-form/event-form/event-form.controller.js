@@ -368,23 +368,6 @@
         calOpenEventForm($scope.calendarHomeId, $scope.editedEvent);
       }
 
-      function isAttendeeAvailable(attendee, start, end) {
-        return calFreebusyService
-          .isAttendeeAvailable(attendee.id, start, end);
-      }
-
-      function setFreeBusyStatus(attendee, start, end) {
-        attendee.freeBusy = 'loading';
-
-        return isAttendeeAvailable(attendee, start, end)
-          .then(function(isAvailable) {
-            attendee.freeBusy = isAvailable ? CAL_FREEBUSY.FREE : CAL_FREEBUSY.BUSY;
-          })
-          .catch(function() {
-            attendee.freeBusy = CAL_FREEBUSY.UNKNOWN;
-          });
-      }
-
       function onDateChange(updatedDate) {
         updateAttendeesFreeBusyStatus(updatedDate);
       }
@@ -395,24 +378,16 @@
         }
 
         getAttendees().forEach(function(attendee) {
-          loadFreeBusyForAttendee(attendee, updatedDate.start, updatedDate.end);
+          calFreebusyService.setFreeBusyStatus(attendee, updatedDate.start, updatedDate.end);
         });
       }
 
-      function loadFreeBusyForAttendee(attendee, start, end) {
-        if (!attendee.id) {
-          return;
-        }
-
-        return setFreeBusyStatus(attendee, start, end);
-      }
-
       function onUserAttendeesAdded(userAttendeeAdded) {
-        loadFreeBusyForAttendee(userAttendeeAdded, $scope.editedEvent.start, $scope.editedEvent.end);
+        calFreebusyService.setFreeBusyStatus(userAttendeeAdded, $scope.editedEvent.start, $scope.editedEvent.end);
       }
 
       function onResourceAttendeesAdded(resourceAttendeeAdded) {
-        loadFreeBusyForAttendee(resourceAttendeeAdded, $scope.editedEvent.start, $scope.editedEvent.end);
+        calFreebusyService.setFreeBusyStatus(resourceAttendeeAdded, $scope.editedEvent.start, $scope.editedEvent.end);
       }
 
       function onUserAttendeesRemoved(removed) {
