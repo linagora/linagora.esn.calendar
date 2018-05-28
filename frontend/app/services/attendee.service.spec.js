@@ -80,7 +80,7 @@ describe('The calAttendeeService service', function() {
         });
 
         done();
-      });
+      }, done);
 
       $rootScope.$digest();
     });
@@ -92,7 +92,7 @@ describe('The calAttendeeService service', function() {
           resources: []
         });
         done();
-      });
+      }, done);
 
       $rootScope.$digest();
     });
@@ -106,7 +106,7 @@ describe('The calAttendeeService service', function() {
           resources: []
         });
         done();
-      });
+      }, done);
 
       $rootScope.$digest();
     });
@@ -121,7 +121,7 @@ describe('The calAttendeeService service', function() {
           resources: [resourceAttendee]
         });
         done();
-      });
+      }, done);
 
       $rootScope.$digest();
     });
@@ -137,7 +137,7 @@ describe('The calAttendeeService service', function() {
           resources: [resourceAttendeeExpected]
         });
         done();
-      });
+      }, done);
 
       $rootScope.$digest();
     });
