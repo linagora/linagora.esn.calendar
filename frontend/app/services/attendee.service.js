@@ -96,7 +96,7 @@
         'reason'
       );
 
-      if (resourcesFromDBResolved.length === 0) {
+      if (!resourcesFromDBResolved.length && resourcesFromDBRejected.length) {
         return $q.reject(resourcesFromDBRejected);
       }
 
