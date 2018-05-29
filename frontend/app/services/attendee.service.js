@@ -64,19 +64,19 @@
 
           return resources;
         }, []))
-        .then(function(resourcesFromDBPromises) {
-          return manageResourceDetailsPromiseResolutions(resourcesFromDBPromises);
+        .then(function(promises) {
+          return manageResourceDetailsPromiseResolutions(promises);
         })
-        .then(function(resourcesFromDB) {
+        .then(function(resources) {
           return splitAttendeesFromType(attendees, function(attendee) {
-            var resourceFromDB = attendee.email ?
-                _.find(resourcesFromDB, { _id: attendee.email.split('@')[0]}) :
+            var resource = attendee.email ?
+                _.find(resources, { _id: attendee.email.split('@')[0]}) :
                 undefined;
-            var resource = resourceFromDB ?
-                _.assign({}, attendee, { deleted: resourceFromDB.deleted }) :
+            var result = resource ?
+                _.assign({}, attendee, { deleted: resource.deleted }) :
                 attendee;
 
-            return resource;
+            return result;
           });
         })
         .catch(function(error) {
@@ -86,25 +86,25 @@
         });
     }
 
-    function manageResourceDetailsPromiseResolutions(resourcesFromDbPromises) {
-      var resourcesFromDBResolved = _.map(
-        _.filter(resourcesFromDbPromises, {state: 'fulfilled'}),
+    function manageResourceDetailsPromiseResolutions(promises) {
+      var fulfilledPromises = _.map(
+        _.filter(promises, {state: 'fulfilled'}),
         'value'
       );
-      var resourcesFromDBRejected = _.map(
-        _.filter(resourcesFromDbPromises, {state: 'rejected'}),
+      var rejectedPromises = _.map(
+        _.filter(promises, {state: 'rejected'}),
         'reason'
       );
 
-      if (resourcesFromDBResolved.length === 0) {
-        return $q.reject(resourcesFromDBRejected);
+      if (!fulfilledPromises.length && rejectedPromises.length) {
+        return $q.reject(rejectedPromises);
       }
 
-      if (resourcesFromDBRejected.length > 0) {
-        resourcesFromDBRejected.forEach(function(error) { logResourceDetailsError(error); });
+      if (rejectedPromises.length > 0) {
+        rejectedPromises.forEach(function(error) { logResourceDetailsError(error); });
       }
 
-      return $q.when(resourcesFromDBResolved);
+      return $q.when(fulfilledPromises);
     }
 
     function logResourceDetailsError(error) {

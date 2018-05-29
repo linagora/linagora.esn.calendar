@@ -80,7 +80,7 @@ describe('The calAttendeeService service', function() {
         });
 
         done();
-      });
+      }, done);
 
       $rootScope.$digest();
     });
@@ -92,7 +92,7 @@ describe('The calAttendeeService service', function() {
           resources: []
         });
         done();
-      });
+      }, done);
 
       $rootScope.$digest();
     });
@@ -106,7 +106,7 @@ describe('The calAttendeeService service', function() {
           resources: []
         });
         done();
-      });
+      }, done);
 
       $rootScope.$digest();
     });
@@ -121,7 +121,7 @@ describe('The calAttendeeService service', function() {
           resources: [resourceAttendee]
         });
         done();
-      });
+      }, done);
 
       $rootScope.$digest();
     });
@@ -137,7 +137,7 @@ describe('The calAttendeeService service', function() {
           resources: [resourceAttendeeExpected]
         });
         done();
-      });
+      }, done);
 
       $rootScope.$digest();
     });
@@ -209,10 +209,10 @@ describe('The calAttendeeService service', function() {
         expect(logSpy).to.have.been.calledWith(sinon.match.string, { _id: 2, error: { message: 'could not find resource', code: 404 }});
 
         done();
-      });
+      }, done);
 
       $rootScope.$digest();
-  });
+    });
 
     it('should returned only fulfilled promise value', function(done) {
       var resourcesFromDbPromises = [
@@ -228,7 +228,7 @@ describe('The calAttendeeService service', function() {
         ]);
 
         done();
-      });
+      }, done);
 
       $rootScope.$digest();
     });
@@ -248,7 +248,18 @@ describe('The calAttendeeService service', function() {
         ]);
 
         done();
-      });
+      }, done);
+
+      $rootScope.$digest();
+    });
+
+    it('should not reject when there is no fulfilled nor resolved promise', function(done) {
+      var resourcesFromDbPromises = [];
+
+      calAttendeeService.manageResourceDetailsPromiseResolutions(resourcesFromDbPromises).then(function(result) {
+        expect(result).to.deep.equal([]);
+        done();
+      }).catch(done);
 
       $rootScope.$digest();
     });
