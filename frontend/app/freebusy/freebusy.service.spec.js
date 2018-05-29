@@ -1,19 +1,31 @@
 'use strict';
 
-/* global chai, __FIXTURES__: false */
+/* global chai, sinon, __FIXTURES__: false */
 
 var expect = chai.expect;
 
 describe('The calFreebusyService service', function() {
-  var $httpBackend, calFreebusyService, calMoment, CAL_ACCEPT_HEADER, CAL_DAV_DATE_FORMAT;
-  var vfreebusy;
+  var vfreebusy, $httpBackend, $rootScope, calFreebusyService, calMoment, CAL_ACCEPT_HEADER, CAL_DAV_DATE_FORMAT;
+  var calAttendeeService, calFreebusyAPI;
 
   beforeEach(function() {
     angular.mock.module('esn.calendar');
 
-    angular.mock.inject(function(_$httpBackend_, _calFreebusyService_, _CAL_ACCEPT_HEADER_, _calMoment_, _CAL_DAV_DATE_FORMAT_) {
+    calAttendeeService = {
+      getUsersIdsForAttendees: sinon.stub()
+    };
+
+    angular.mock.module(function($provide) {
+      $provide.value('calAttendeeService', calAttendeeService);
+    });
+  });
+
+  beforeEach(function() {
+    angular.mock.inject(function(_$rootScope_, _$httpBackend_, _calFreebusyAPI_, _calFreebusyService_, _CAL_ACCEPT_HEADER_, _calMoment_, _CAL_DAV_DATE_FORMAT_) {
+      $rootScope = _$rootScope_;
       $httpBackend = _$httpBackend_;
       calFreebusyService = _calFreebusyService_;
+      calFreebusyAPI = _calFreebusyAPI_;
       calMoment = _calMoment_;
       CAL_ACCEPT_HEADER = _CAL_ACCEPT_HEADER_;
       CAL_DAV_DATE_FORMAT = _CAL_DAV_DATE_FORMAT_;
@@ -170,4 +182,142 @@ describe('The calFreebusyService service', function() {
     });
   });
 
+  describe('The getAttendeesAvailability function', function() {
+    var getBulkFreebusyStatusStub;
+
+    beforeEach(function() {
+      getBulkFreebusyStatusStub = sinon.stub(calFreebusyAPI, 'getBulkFreebusyStatus');
+    });
+
+    it('should call bulk service with users having an id', function(done) {
+      var attendees = [
+        { email: 'a@open-paas.org' },
+        { email: 'b@open-paas.org' },
+        { email: 'c@open-paas.org' }
+      ];
+      var start = Date.now();
+      var end = Date.now();
+
+      calAttendeeService.getUsersIdsForAttendees.returns($q.when([1, undefined, 2]));
+      getBulkFreebusyStatusStub.returns($q.when());
+
+      calFreebusyService.getAttendeesAvailability(attendees, start, end)
+        .then(function() {
+          expect(calAttendeeService.getUsersIdsForAttendees).to.have.been.calledWith(attendees);
+          expect(getBulkFreebusyStatusStub).to.have.been.calledWith([1, 2], start, end);
+          done();
+        })
+        .catch(done);
+
+      $rootScope.$digest();
+    });
+  });
+
+  describe('The areAttendeesAvailable function', function() {
+    var start, end, attendees, getBulkFreebusyStatusStub;
+
+    beforeEach(function() {
+      getBulkFreebusyStatusStub = sinon.stub(calFreebusyAPI, 'getBulkFreebusyStatus');
+      attendees = [
+        { email: 'a@open-paas.org' },
+        { email: 'b@open-paas.org' }
+      ];
+      start = '';
+      end = '';
+    });
+
+    it('should resolve with true if all attendees are available', function(done) {
+      var availability = {
+        start: '',
+        end: '',
+        users: [
+          {
+            id: 1,
+            calendars: [
+              {
+                id: 1,
+                freebusy: {}
+              },
+              {
+                id: 2,
+                freebusy: {}
+              }
+            ]
+          },
+          {
+            id: 2,
+            calendars: [
+              {
+                id: 2,
+                freebusy: {}
+              },
+              {
+                id: 22,
+                freebusy: {}
+              }
+            ]
+          }
+        ]
+      };
+
+      calAttendeeService.getUsersIdsForAttendees.returns($q.when([1, 2]));
+      getBulkFreebusyStatusStub.returns($q.when(availability));
+
+      calFreebusyService.areAttendeesAvailable(attendees, start, end)
+        .then(function(result) {
+          expect(result).to.be.true;
+          done();
+        })
+        .catch(done);
+
+      $rootScope.$digest();
+    });
+
+    it('should resolve with false if at least one attendee is not available during the period', function(done) {
+      var availability = {
+        start: '',
+        end: '',
+        users: [
+          {
+            id: 1,
+            calendars: [
+              {
+                id: 1,
+                freebusy: {}
+              },
+              {
+                id: 2,
+                freebusy: {start: 1, end: 2}
+              }
+            ]
+          },
+          {
+            id: 2,
+            calendars: [
+              {
+                id: 2,
+                freebusy: {}
+              },
+              {
+                id: 22,
+                freebusy: {}
+              }
+            ]
+          }
+        ]
+      };
+
+      calAttendeeService.getUsersIdsForAttendees.returns($q.when([1, 2]));
+      getBulkFreebusyStatusStub.returns($q.when(availability));
+
+      calFreebusyService.areAttendeesAvailable(attendees, start, end)
+        .then(function(result) {
+          expect(result).to.be.false;
+          done();
+        })
+        .catch(done);
+
+      $rootScope.$digest();
+    });
+  });
 });

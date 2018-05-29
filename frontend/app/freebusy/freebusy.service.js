@@ -4,6 +4,7 @@
   angular.module('esn.calendar').factory('calFreebusyService', calFreebusyService);
 
   function calFreebusyService(
+    $log,
     $q,
     $rootScope,
     _,
@@ -22,6 +23,7 @@
       listFreebusy: listFreebusy,
       isAttendeeAvailable: isAttendeeAvailable,
       areAttendeesAvailable: areAttendeesAvailable,
+      getAttendeesAvailability: getAttendeesAvailability,
       setFreeBusyStatus: setFreeBusyStatus
     };
 
@@ -91,10 +93,30 @@
         .catch($q.reject);
     }
 
-    function areAttendeesAvailable() {
-      // Will be implemented in #1257 and #1258
+    function areAttendeesAvailable(attendees, start, end) {
+      return getAttendeesAvailability(attendees, start, end).then(function(result) {
+        if (!result.users) {
+          throw new Error('Can not retrieve attendees availability');
+        }
 
-      return $q.when(false);
+        return !_
+          .chain(result.users)
+          .pluck('calendars')
+          .flatten()
+          .filter(function(v) { return !_.isEmpty(v.freebusy); })
+          .value()
+          .length;
+      });
+    }
+
+    function getAttendeesAvailability(attendees, start, end) {
+      return calAttendeeService.getUsersIdsForAttendees(attendees)
+        .then(function(ids) {
+          return ids.filter(Boolean);
+        })
+        .then(function(usersIds) {
+          return calFreebusyAPI.getBulkFreebusyStatus(usersIds, start, end);
+        });
     }
   }
 })(angular);

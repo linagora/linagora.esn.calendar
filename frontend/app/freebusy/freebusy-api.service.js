@@ -10,6 +10,7 @@
     CAL_DAV_DATE_FORMAT
   ) {
     return {
+      getBulkFreebusyStatus: getBulkFreebusyStatus,
       report: report
     };
 
@@ -17,8 +18,8 @@
       var body = {
         type: 'free-busy-query',
         match: {
-          start: start.tz('Zulu').format(CAL_DAV_DATE_FORMAT),
-          end: end.tz('Zulu').format(CAL_DAV_DATE_FORMAT)
+          start: formatDate(start),
+          end: formatDate(end)
         }
       };
 
@@ -26,6 +27,23 @@
         .then(function(response) {
           return response.data && response.data.data || [];
         });
+    }
+
+    function getBulkFreebusyStatus(attendees, start, end) {
+      var body = {
+        start: formatDate(start),
+        end: formatDate(end),
+        users: attendees || []
+      };
+
+      return calDavRequest('post', '/freebusy', { 'Content-Type': 'application/json' }, body)
+        .then(function(response) {
+          return response.data ? response.data : {};
+        });
+    }
+
+    function formatDate(date) {
+      return date.tz('Zulu').format(CAL_DAV_DATE_FORMAT);
     }
   }
 })(angular);

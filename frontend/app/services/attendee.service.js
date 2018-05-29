@@ -9,6 +9,7 @@
       filterDuplicates: filterDuplicates,
       getAttendeeForUser: getAttendeeForUser,
       getUserIdForAttendee: getUserIdForAttendee,
+      getUsersIdsForAttendees: getUsersIdsForAttendees,
       manageResourceDetailsPromiseResolutions: manageResourceDetailsPromiseResolutions,
       logResourceDetailsError: logResourceDetailsError,
       splitAttendeesFromType: splitAttendeesFromType,
@@ -44,6 +45,17 @@
           return user._id;
         }
       });
+    }
+
+    function getUsersIdsForAttendees(attendees) {
+      var promises = attendees.map(function(attendee) {
+        return getUserIdForAttendee(attendee);
+      });
+
+      return $q.allSettled(promises)
+        .then(function(results) {
+          return _.map(_.filter(results, {state: 'fulfilled'}), 'value');
+        });
     }
 
     function splitAttendeesFromType(attendees, resourcesTypeCallback) {
