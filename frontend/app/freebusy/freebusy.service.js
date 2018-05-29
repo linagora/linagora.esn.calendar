@@ -28,29 +28,36 @@
     };
 
     function setFreeBusyStatus(attendee, start, end) {
-      if (!attendee.id) {
+      // attendee can have id equals to email when coming from autocomplete
+      if (!attendee.id || attendee.id === attendee.email) {
         return calAttendeeService.getUserIdForAttendee(attendee)
           .then(function(id) {
-            if (id) {
-              attendee.id = id;
-
-              return loadAndPatchAttendee(attendee, start, end);
+            if (!id) {
+              return setFreebusy(CAL_FREEBUSY.UNKNOWN);
             }
+
+            attendee.id = id;
+
+            return loadAndPatchAttendee(attendee, start, end);
           });
       }
 
       return loadAndPatchAttendee(attendee, start, end);
 
       function loadAndPatchAttendee(attendee, start, end) {
-        attendee.freeBusy = CAL_FREEBUSY.LOADING;
+        setFreebusy(CAL_FREEBUSY.LOADING);
 
         return isAttendeeAvailable(attendee.id, start, end)
           .then(function(isAvailable) {
-            attendee.freeBusy = isAvailable ? CAL_FREEBUSY.FREE : CAL_FREEBUSY.BUSY;
+            setFreebusy(isAvailable ? CAL_FREEBUSY.FREE : CAL_FREEBUSY.BUSY);
           })
           .catch(function() {
-            attendee.freeBusy = CAL_FREEBUSY.UNKNOWN;
+            setFreebusy(CAL_FREEBUSY.UNKNOWN);
           });
+      }
+
+      function setFreebusy(freebusy) {
+        attendee.freeBusy = freebusy;
       }
     }
 
