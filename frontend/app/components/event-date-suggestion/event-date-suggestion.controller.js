@@ -15,7 +15,7 @@
     self.onEndDateChange = onEndDateChange;
 
     function $onInit() {
-      self.dateFormat = esnI18nDateFormatService.getDateFormat();
+      self.dateFormat = esnI18nDateFormatService.getLongDateFormat();
       self.allDay = self.event.allDay;
       // on load, ensure that duration between start and end is stored inside editedEvent
       self.onEndDateChange();

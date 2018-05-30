@@ -15,7 +15,7 @@
     self.onEndDateChange = onEndDateChange;
 
     function $onInit() {
-      self.dateFormat = esnI18nDateFormatService.getDateFormat();
+      self.dateFormat = esnI18nDateFormatService.getLongDateFormat();
       self.disabled = angular.isDefined(self.disabled) ? self.disabled : false;
       self.allDayOnChange = self.allDayOnChange || angular.noop;
       self.allDay = self.event.allDay;

@@ -11,7 +11,7 @@ describe('The calEventDateSuggestionController', function() {
 
   beforeEach(function() {
     esnI18nDateFormatService = {
-      getDateFormat: sinon.spy()
+      getLongDateFormat: sinon.spy()
     };
 
     angular.mock.module('esn.calendar', function($provide) {

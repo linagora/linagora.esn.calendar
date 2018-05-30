@@ -14,7 +14,7 @@ describe('The cal-event-form Angular module directives', function() {
       $scope.initFormData = function() {};
     };
     this.esnI18nDateFormatService = {
-      getDateFormat: sinon.spy()
+      getLongDateFormat: sinon.spy()
     };
     var self = this;
 
