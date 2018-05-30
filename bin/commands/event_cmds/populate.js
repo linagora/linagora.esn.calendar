@@ -31,13 +31,26 @@ module.exports = {
     const {name, weeks, size, username, password, url} = argv;
     const events = event.generateFakeEvents({size, weeks});
 
-    Promise.all(events.map(create)).then(() => {
-      commons.logInfo('Events created');
-      commons.exit(0);
-    }, err => {
-      commons.logError('Error while creating events', err.message);
-      commons.exit(-1);
-    });
+    init()
+      .then(createEvents)
+      .then(() => {
+        commons.logInfo('Events created');
+        commons.exit(0);
+      })
+      .catch(err => {
+        commons.logError('Error while creating events', err.message);
+        commons.exit(-1);
+      });
+
+    function init() {
+      // get the list of calendars to be sure that they are initialized first
+      return client({ auth: {username, password}, baseURL: url })
+        .calendars.list();
+    }
+
+    function createEvents() {
+      return Promise.all(events.map(create));
+    }
 
     function create({summary, start, duration}) {
       const msg = `Event ${summary} starting at ${start.toDate()} with duration ${duration} hour`;
