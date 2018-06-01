@@ -50,6 +50,7 @@ describe('The event-form module controllers', function() {
       getOwner: function() {
         return $q.when(owner);
       },
+      isOwner: sinon.stub().returns(true),
       isSubscription: function() { return false; },
       getUniqueId: function() {
         return '/calendars/' + owner._id + '/id.json';
@@ -68,6 +69,7 @@ describe('The event-form module controllers', function() {
         color: 'color2',
         isWritable: angular.noop,
         isSubscription: function() { return false; },
+        isOwner: sinon.stub().returns(true),
         getOwner: function() {
           return $q.when(owner);
         },
@@ -80,6 +82,7 @@ describe('The event-form module controllers', function() {
         color: 'color',
         selected: true,
         readOnly: true,
+        isOwner: sinon.stub().returns(true),
         getOwner: function() {
           return $q.when(owner);
         },
@@ -563,6 +566,7 @@ describe('The event-form module controllers', function() {
           return $q.when([{
             readOnly: true,
             selected: true,
+            isOwner: sinon.stub().returns(true),
             getOwner: function() {
               return $q.when(owner);
             }
@@ -581,6 +585,7 @@ describe('The event-form module controllers', function() {
             return $q.when([{
               readOnly: false,
               selected: true,
+              isOwner: sinon.stub().returns(true),
               getOwner: function() {
                 return $q.when(user);
               }

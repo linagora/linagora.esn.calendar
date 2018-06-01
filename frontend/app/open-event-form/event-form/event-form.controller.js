@@ -136,11 +136,21 @@
             $scope.displayCalMailToAttendeesButton = displayCalMailToAttendeesButton;
             $scope.canModifyEventAttendees = calUIAuthorizationService.canModifyEventAttendees($scope.calendar, $scope.editedEvent, session.user._id);
             $scope.canModifyEventRecurrence = calUIAuthorizationService.canModifyEventRecurrence($scope.calendar, $scope.editedEvent, session.user._id);
+            $scope.excludeCurrentUserFromSuggestedAttendees = excludeCurrentUser();
+            $scope.$watch('calendar', onCalendarUpdated);
 
             return calAttendeeService.splitAttendeesFromTypeWithResourceDetails($scope.editedEvent.attendees);
           }).then(function(attendeesWithResourceDetails) {
             $scope.attendees = _.assign({}, $scope.attendees, attendeesWithResourceDetails);
           });
+      }
+
+      function onCalendarUpdated() {
+        $scope.excludeCurrentUserFromSuggestedAttendees = excludeCurrentUser();
+      }
+
+      function excludeCurrentUser() {
+        return $scope.calendar.isOwner(session.user._id) ? true : !_canModifyEvent();
       }
 
       function setOrganizer() {
