@@ -1,3 +1,4 @@
+@import './select-calendar/select-calendar-item';
 
 body  {
   .modal.center {
@@ -8,6 +9,17 @@ body  {
         }
       }
     }
+  }
+}
+
+.cal-event-edition-select-dropdown {
+  z-index: 2000;
+
+  md-option {
+    min-height: 36px;
+    height: 36px;
+    line-height: inherit;
+    font-size: 13px;
   }
 }
 
@@ -53,6 +65,31 @@ body  {
 
     .input-group-addon {
       vertical-align: middle;
+    }
+
+    md-select:not([disabled]):focus .md-select-value  {
+      border-bottom-color: @primaryColor;
+    }
+
+    md-select-value {
+      .cal-event-edition-calendar-item {
+        .info {
+          .flex-row;
+
+          .description {
+            .flex;
+
+            color: inherit;
+            font-size: inherit;
+
+            .separator {
+              display: block;
+              margin-right: 5px;
+              margin-left: 5px;
+            }
+          }
+        }
+      }
     }
   }
 
