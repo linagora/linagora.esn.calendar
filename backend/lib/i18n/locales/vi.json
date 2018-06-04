@@ -226,5 +226,13 @@
   "%s has declined this event": "%s đã từ chối sự kiện này",
   "Your proposal has been sent": "Đề xuất của bạn đã được gửi đi",
   "An error occurred, please try again": "Có lỗi xảy ra, hãy thử lại",
-  "Failed to retrieve resources details": ""
+  "Failed to retrieve resources details": "Không thể lấy thông tin tài nguyên",
+  "Not available": "Không sẵn sàng",
+  "Attendee is available": "Người tham dự có sẵn",
+  "Attendee is not available": "Người tham dự không có mặt",
+  "Attendee availability is unknown": "Attendee availability is unknown",
+  "Cannot retrieve attendee availability": "Tính khả dụng của người tham dự không xác định",
+  "Loading attendee availability": "Đang tải tính khả dụng của người tham dự",
+  "Some attendees are not available": "Một số người tham dự không có mặt",
+  "You can edit the event to find a better date, or send it like this.": "Bạn có thể chỉnh sửa sự kiện để tìm ngày tốt hơn hoặc gửi sự kiện như thế này."
 }

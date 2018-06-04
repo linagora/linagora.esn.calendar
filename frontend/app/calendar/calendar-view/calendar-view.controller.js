@@ -22,6 +22,7 @@
     calendarVisibilityService,
     calEventService,
     calendarUtils,
+    calFreebusyHooksService,
     calFullCalendarRenderEventService,
     gracePeriodService,
     calOpenEventForm,
@@ -167,12 +168,22 @@
           oldEvent.start.subtract(delta);
         }
         oldEvent.end.subtract(delta);
-        function revertFunc() {
+
+        calEventService.checkAndUpdateEvent(newEvent, _updateEvent, _editEvent, _cancel);
+
+        function _editEvent() {
+          _cancel();
+          calOpenEventForm($scope.calendarHomeId, event);
+        }
+
+        function _cancel() {
           revert();
           $rootScope.$broadcast(CAL_EVENTS.REVERT_MODIFICATION, oldEvent);
         }
 
-        calEventService.modifyEvent(newEvent.path, newEvent, oldEvent, newEvent.etag, revertFunc, { graceperiod: true, notifyFullcalendar: true });
+        function _updateEvent() {
+          calEventService.modifyEvent(newEvent.path, newEvent, oldEvent, newEvent.etag, _cancel, { graceperiod: true, notifyFullcalendar: true });
+        }
       }
 
       function displayCalendarError(err, errorMessage) {

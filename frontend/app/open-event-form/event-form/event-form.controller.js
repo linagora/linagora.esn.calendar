@@ -5,12 +5,14 @@
     .controller('CalEventFormController', CalEventFormController);
 
   function CalEventFormController(
+    $timeout,
     $alert,
     $scope,
     $state,
     $log,
     $q,
     _,
+    calEventFreeBusyConfirmationModalService,
     calendarService,
     userUtils,
     calEventService,
@@ -29,8 +31,10 @@
     CAL_RELATED_EVENT_TYPES,
     CAL_EVENTS,
     CAL_EVENT_FORM,
-    CAL_ICAL) {
-
+    CAL_ICAL,
+    CAL_FREEBUSY,
+    calFreebusyService
+  ) {
       var initialUserAttendeesRemoved = [];
       var initialResourceAttendeesRemoved = [];
 
@@ -47,6 +51,8 @@
       $scope.isInvolvedInATask = calEventUtils.isInvolvedInATask;
       $scope.updateAlarm = updateAlarm;
       $scope.submit = submit;
+      $scope.onUserAttendeesAdded = onUserAttendeesAdded;
+      $scope.onResourceAttendeesAdded = onResourceAttendeesAdded;
       $scope.onUserAttendeesRemoved = onUserAttendeesRemoved;
       $scope.onResourceAttendeesRemoved = onResourceAttendeesRemoved;
       $scope.canPerformCall = canPerformCall;
@@ -54,6 +60,7 @@
       $scope.cancel = cancel;
       $scope.toggleSuggestedEvent = toggleSuggestedEvent;
       $scope.submitSuggestion = submitSuggestion;
+      $scope.onDateChange = onDateChange;
 
       // Initialize the scope of the form. It creates a scope.editedEvent which allows us to
       // rollback to scope.event in case of a Cancel.
@@ -334,7 +341,17 @@
       }
 
       function submit() {
-        (calEventUtils.isNew($scope.editedEvent) && !calEventUtils.isInvolvedInATask($scope.editedEvent) ? createEvent : modifyEvent)();
+        var attendees = getAttendees();
+
+        if (_.some(attendees, { freeBusy: CAL_FREEBUSY.BUSY })) {
+          calEventFreeBusyConfirmationModalService(createOrUpdate);
+        } else {
+          createOrUpdate();
+        }
+
+        function createOrUpdate() {
+          (calEventUtils.isNew($scope.editedEvent) && !calEventUtils.isInvolvedInATask($scope.editedEvent) ? createEvent : modifyEvent)();
+        }
       }
 
       function goToCalendar(callback) {
@@ -349,6 +366,32 @@
 
         $scope.editedEvent.attendees = $scope.initialAttendees;
         calOpenEventForm($scope.calendarHomeId, $scope.editedEvent);
+      }
+
+      function onDateChange(updatedDate) {
+        // For now just change new attendees
+        // Checking freebusy for all will be achieved in #1257
+        var attendees = [].concat($scope.newAttendees, $scope.newResources);
+
+        updateAttendeesFreeBusyStatus(attendees, updatedDate.start, updatedDate.end);
+      }
+
+      function updateAttendeesFreeBusyStatus(attendeesToUpdate, start, end) {
+        if (start.isBetween($scope.event.start, $scope.event.end) && end.isBetween($scope.event.start, $scope.event.end)) {
+          return;
+        }
+
+        attendeesToUpdate.forEach(function(attendee) {
+          calFreebusyService.setFreeBusyStatus(attendee, start, end);
+        });
+      }
+
+      function onUserAttendeesAdded(userAttendeeAdded) {
+        calFreebusyService.setFreeBusyStatus(userAttendeeAdded, $scope.editedEvent.start, $scope.editedEvent.end);
+      }
+
+      function onResourceAttendeesAdded(resourceAttendeeAdded) {
+        calFreebusyService.setFreeBusyStatus(resourceAttendeeAdded, $scope.editedEvent.start, $scope.editedEvent.end);
       }
 
       function onUserAttendeesRemoved(removed) {

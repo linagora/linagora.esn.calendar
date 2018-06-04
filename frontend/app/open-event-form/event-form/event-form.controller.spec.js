@@ -6,8 +6,8 @@ var expect = chai.expect;
 
 describe('The event-form module controllers', function() {
   var Cache, calendarTest, canModifyEventResult, eventTest, owner, user;
-  var calendarHomeServiceMock, calAttendeesDenormalizerService, calAttendeeService;
-  var CAL_ICAL;
+  var calendarHomeServiceMock, calAttendeesDenormalizerService, calAttendeeService, calEventFreeBusyConfirmationModalService;
+  var CAL_ICAL, calFreebusyService;
   var $rootScope;
 
   beforeEach(function() {
@@ -58,6 +58,7 @@ describe('The event-form module controllers', function() {
     };
 
     calAttendeesDenormalizerService = function(attendees) {return $q.when(attendees);};
+    calEventFreeBusyConfirmationModalService = sinon.spy();
 
     this.calendars = [
       calendarTest,
@@ -167,6 +168,7 @@ describe('The event-form module controllers', function() {
         return angular.extend($delegate, calendarUtilsMock);
       });
       $provide.value('calAttendeesDenormalizerService', calAttendeesDenormalizerService);
+      $provide.value('calEventFreeBusyConfirmationModalService', calEventFreeBusyConfirmationModalService);
       $provide.value('calendarHomeService', calendarHomeServiceMock);
       $provide.value('calEventService', self.calEventServiceMock);
       $provide.value('calendarService', self.calendarServiceMock);
@@ -195,7 +197,8 @@ describe('The event-form module controllers', function() {
     CAL_EVENTS,
     CAL_ALARM_TRIGGER,
     CAL_EVENT_FORM,
-    _CAL_ICAL_
+    _CAL_ICAL_,
+    _calFreebusyService_
   ) {
     this.rootScope = $rootScope = _$rootScope_;
     this.scope = $rootScope.$new();
@@ -210,6 +213,7 @@ describe('The event-form module controllers', function() {
     this.CAL_ALARM_TRIGGER = CAL_ALARM_TRIGGER;
     this.CAL_EVENT_FORM = CAL_EVENT_FORM;
     CAL_ICAL = _CAL_ICAL_;
+    calFreebusyService = _calFreebusyService_;
   }));
 
   beforeEach(function() {
@@ -263,6 +267,8 @@ describe('The event-form module controllers', function() {
         this.initController();
         this.scope.submit();
         this.scope.$digest();
+
+        expect(calEventFreeBusyConfirmationModalService).to.not.have.been.called;
       });
 
       it('should be modifyEvent if event has a gracePeriodTaskId property', function(done) {
@@ -283,6 +289,8 @@ describe('The event-form module controllers', function() {
         this.scope.submit();
 
         this.rootScope.$digest();
+
+        expect(calEventFreeBusyConfirmationModalService).to.not.have.been.called;
       });
 
       it('should be modifyEvent if event has a etag property', function(done) {
@@ -307,6 +315,31 @@ describe('The event-form module controllers', function() {
         this.scope.submit();
 
         this.rootScope.$digest();
+
+        expect(calEventFreeBusyConfirmationModalService).to.not.have.been.called;
+      });
+
+      it('should call calEventFreeBusyConfirmationModalService when some attendees are busy', function() {
+        this.scope.event = this.CalendarShell.fromIncompleteShell({
+          attendees: [{
+            displayName: 'attendee1',
+            email: 'attendee1@openpaas.org',
+            cutype: CAL_ICAL.cutype.individual
+          }, {
+            displayName: 'resource1',
+            email: 'resource1@openpaas.org',
+            cutype: CAL_ICAL.cutype.resource
+          }]
+        });
+
+        this.calEventServiceMock.createEvent = sinon.spy();
+        this.initController();
+        this.scope.attendees.users[0].freeBusy = 'busy';
+        this.scope.submit();
+        this.rootScope.$digest();
+
+        expect(this.calEventServiceMock.createEvent).to.not.have.been.called;
+        expect(calEventFreeBusyConfirmationModalService).to.have.been.called;
       });
     });
 
@@ -1594,6 +1627,100 @@ describe('The event-form module controllers', function() {
         this.initController();
 
         expect(this.scope.displayCalMailToAttendeesButton()).to.be.false;
+      });
+    });
+
+    describe('when adding attendee', function() {
+
+      describe('the onUserAttendeesAdded function', function() {
+        var attendee;
+
+        beforeEach(function() {
+          attendee = { id: '123123' };
+          this.scope.event = this.CalendarShell.fromIncompleteShell({
+            start: this.moment('2018-04-30 12:30'),
+            end: this.moment('2018-04-30 13:30')
+          });
+          this.initController();
+        });
+
+        it('should call calFreebusyService.setFreeBusyStatus', function() {
+          calFreebusyService.setFreeBusyStatus = sinon.spy();
+
+          this.scope.onUserAttendeesAdded(attendee);
+
+          expect(calFreebusyService.setFreeBusyStatus).to.have.been.calledWith(attendee, this.scope.event.start, this.scope.event.end);
+        });
+      });
+
+      describe('the onResourceAttendeesAdded function', function() {
+        var attendee;
+
+        beforeEach(function() {
+          attendee = { id: '123123' };
+          this.scope.event = this.CalendarShell.fromIncompleteShell({
+            start: this.moment('2018-04-30 12:30'),
+            end: this.moment('2018-04-30 13:30')
+          });
+          this.initController();
+        });
+
+        it('should call calFreebusyService.setFreeBusyStatus', function() {
+          calFreebusyService.setFreeBusyStatus = sinon.spy();
+
+          this.scope.onUserAttendeesAdded(attendee);
+
+          expect(calFreebusyService.setFreeBusyStatus).to.have.been.calledWith(attendee, this.scope.event.start, this.scope.event.end);
+        });
+      });
+    });
+
+    describe('The onDateChange function', function() {
+      beforeEach(function() {
+        this.scope.event = this.CalendarShell.fromIncompleteShell({
+          start: this.moment('2018-05-01 10:30'),
+          end: this.moment('2018-05-01 14:30')
+        });
+
+        this.initController();
+
+        this.scope.newAttendees = [{
+          displayName: 'attendee2',
+          email: 'user2@test.com',
+          partstart: 'ACCEPTED'
+        }, {
+          displayName: 'attendee3',
+          email: 'user3@test.com',
+          partstart: 'ACCEPTED'
+        }];
+      });
+
+      it('should not call freebusy service when new date is in old date', function() {
+        var newDate = {
+          start: this.moment('2018-05-01 10:31'),
+          end: this.moment('2018-05-01 14:29')
+        };
+
+        calFreebusyService.setFreeBusyStatus = sinon.stub().returns($q.when(true));
+
+        this.scope.onDateChange(newDate);
+        this.scope.$digest();
+
+        expect(calFreebusyService.setFreeBusyStatus).to.not.have.been.called;
+      });
+
+      it('should call freebusy service as many times as there are new attendees', function() {
+        var newDate = {
+          start: this.moment('2018-05-01 10:29'),
+          end: this.moment('2018-05-01 14:31')
+        };
+
+        calFreebusyService.setFreeBusyStatus = sinon.stub().returns($q.when(true));
+
+        this.scope.onDateChange(newDate);
+        this.scope.$digest();
+
+        expect(calFreebusyService.setFreeBusyStatus).to.have.been.calledTwice;
       });
     });
   });

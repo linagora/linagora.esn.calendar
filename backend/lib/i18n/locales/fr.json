@@ -226,5 +226,13 @@
   "%s has declined this event": "%s a décliné cet évènement",
   "Your proposal has been sent": "Votre proposition a bien été envoyée",
   "An error occurred, please try again": "Une erreur est survenue, merci de réessayer",
-  "Failed to retrieve resources details": "Impossible de récupérer les détails des resources"
+  "Failed to retrieve resources details": "Impossible de récupérer les détails des resources",
+  "Not available": "Non disponible",
+  "Attendee is available": "Le participant est disponible",
+  "Attendee is not available": "Le participant n'est pas disponible",
+  "Attendee availability is unknown": "Le disponibilité du participant est inconnue",
+  "Cannot retrieve attendee availability": "Impossible de récupérer la disponibilité du participant",
+  "Loading attendee availability": "Chargement de la disponibilité du participant",
+  "Some attendees are not available": "Certains participants ne sont pas disponibles",
+  "You can edit the event to find a better date, or send it like this.": "Vous pouvez éditer l'événement pour trouver un meilleur horaire, ou l'envoyer tel quel."
 }

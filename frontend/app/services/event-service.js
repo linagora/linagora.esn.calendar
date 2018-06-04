@@ -20,6 +20,7 @@
     calPathBuilder,
     gracePeriodService,
     calMasterEventCache,
+    calFreebusyHooksService,
     notificationFactory,
     esnI18nService,
     CAL_GRACE_DELAY,
@@ -37,6 +38,7 @@
       self.listEvents = listEvents;
       self.createEvent = createEvent;
       self.modifyEvent = modifyEvent;
+      self.checkAndUpdateEvent = checkAndUpdateEvent;
       self.removeEvent = removeEvent;
       self.searchEvents = searchEvents;
       self.getEventByUID = getEventByUID;
@@ -326,6 +328,17 @@
         }
 
         return performRemove();
+      }
+
+      /**
+       * Check all the conditions and call the update function if preconditions are OK
+       * @param {CalendarShell} event     The event to check
+       * @param {Function}      updateFn  The update function to call
+       * @param {Function}      editFn    The edit function to call if user wants to go back to edition mode
+       * @param {Function}      cancelFn  The cancel function to call if the user wants to cancel the update
+       */
+      function checkAndUpdateEvent(event, updateFn, editFn, cancelFn) {
+        calFreebusyHooksService.onUpdate(event, updateFn, editFn, cancelFn);
       }
 
       /**

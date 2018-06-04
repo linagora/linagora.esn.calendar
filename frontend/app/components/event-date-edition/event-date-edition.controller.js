@@ -20,7 +20,7 @@
       self.allDayOnChange = self.allDayOnChange || angular.noop;
       self.allDay = self.event.allDay;
       // on load, ensure that duration between start and end is stored inside editedEvent
-      self.onEndDateChange();
+      self.onEndDateChange(true);
     }
 
     function dateOnBlurFn() {
@@ -63,6 +63,7 @@
       self.event.start = start;
       self.event.end = end;
       self.diff = self.event.end.diff(self.event.start);
+      _onDateChange();
     }
 
     function onStartDateChange() {
@@ -70,9 +71,10 @@
         return;
       }
       self.event.end = calMoment(self.event.start).add(self.diff / 1000, 'seconds');
+      _onDateChange();
     }
 
-    function onEndDateChange() {
+    function onEndDateChange(skipDateUpdate) {
       if (!self.event.end || !self.event.end.isValid()) {
         return;
       }
@@ -80,6 +82,15 @@
         self.event.end = calMoment(self.event.start).add(1, 'hours');
       }
       self.diff = self.event.end.diff(self.event.start);
+
+      !skipDateUpdate && _onDateChange();
+    }
+
+    function _onDateChange() {
+      self.onDateChange && self.onDateChange({
+        start: self.event.start,
+        end: self.event.end
+      });
     }
   }
 })();

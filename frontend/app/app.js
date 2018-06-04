@@ -41,6 +41,7 @@
     'op.dynamicDirective',
     'pascalprecht.translate',
     'restangular',
+    'material.components.tooltip',
     'uuid4'
   ]);
 })();

@@ -26,29 +26,29 @@ test:
     - ln -s ${PWD}/node_modules/linagora.esn.resource node_modules/linagora-rse/node_modules/
     - grunt
 
-# deploy_dev:
-#   stage: deploy_dev
-#   except:
-#     - triggers
-#   tags:
-#     - dev.open-paas.org
-#     - deployment
-#   environment:
-#     name: dev
-#     url: https://dev.open-paas.org
-#   only:
-#     - master@linagora/lgs/openpaas/linagora.esn.calendar
-#   script:
-#     - cd /srv/${CI_PROJECT_NAME}
-#     - git fetch --all
-#     - git checkout ${CI_COMMIT_SHA}
-#     - npm install --ignore-scripts --production
-#     - npm update --production
-#     - npm prune
-#     - bower install --production
-#     - bower prune
-#     - git checkout -- .
-#     - sudo /etc/init.d/rse.dev restart
+deploy_dev:
+  stage: deploy_dev
+  except:
+    - triggers
+  tags:
+    - dev.open-paas.org
+    - deployment
+  environment:
+    name: dev
+    url: https://dev.open-paas.org
+  only:
+    - master@linagora/lgs/openpaas/linagora.esn.calendar
+  script:
+    - cd /srv/${CI_PROJECT_NAME}
+    - git fetch --all
+    - git checkout ${CI_COMMIT_SHA}
+    - npm install --ignore-scripts --production
+    - npm update --production
+    - npm prune
+    - bower install --production
+    - bower prune
+    - git checkout -- .
+    - sudo /etc/init.d/rse.dev restart
 
 release:
   stage: release
@@ -56,4 +56,4 @@ release:
     - triggers
   script:
     - if [ -z "${VERSION}" ]; then exit 0; fi
-    - grunt release:${VERSION} 
+    - grunt release:${VERSION}

@@ -4,10 +4,12 @@
   angular.module('esn.calendar')
     .factory('calAttendeeService', calAttendeeService);
 
-  function calAttendeeService($log, $q, _, userUtils, CAL_ICAL, calResourceService) {
+  function calAttendeeService($log, $q, _, userUtils, CAL_ICAL, calResourceService, calAttendeesCache) {
     return {
       filterDuplicates: filterDuplicates,
       getAttendeeForUser: getAttendeeForUser,
+      getUserIdForAttendee: getUserIdForAttendee,
+      getUsersIdsForAttendees: getUsersIdsForAttendees,
       manageResourceDetailsPromiseResolutions: manageResourceDetailsPromiseResolutions,
       logResourceDetailsError: logResourceDetailsError,
       splitAttendeesFromType: splitAttendeesFromType,
@@ -35,6 +37,25 @@
       return _.find(attendees, function(attendee) {
         return _.contains(attendee.email, user.emails);
       });
+    }
+
+    function getUserIdForAttendee(attendee) {
+      return calAttendeesCache.get(attendee.email).then(function(user) {
+        if (user) {
+          return user._id;
+        }
+      });
+    }
+
+    function getUsersIdsForAttendees(attendees) {
+      var promises = attendees.map(function(attendee) {
+        return getUserIdForAttendee(attendee);
+      });
+
+      return $q.allSettled(promises)
+        .then(function(results) {
+          return _.map(_.filter(results, {state: 'fulfilled'}), 'value');
+        });
     }
 
     function splitAttendeesFromType(attendees, resourcesTypeCallback) {
