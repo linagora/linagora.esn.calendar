@@ -42,6 +42,7 @@
     'pascalprecht.translate',
     'restangular',
     'material.components.tooltip',
+    'material.components.radioButton',
     'uuid4'
   ]);
 })();

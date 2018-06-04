@@ -93,18 +93,23 @@
           $scope.event = event;
           $scope.relatedEvents = relatedEvents;
           $scope.calendarHomeId = calendar.calendarHomeId;
+          $scope.editChoice = 'this';
 
-          $scope.editAllInstances = function() {
+          $scope.submit = function() {
             $scope.$hide();
+
+            ($scope.editChoice === 'this' ? editInstance : editAllInstances)();
+          };
+
+          function editAllInstances() {
             event.getModifiedMaster(true).then(function(eventMaster) {
               openForm(calendar, eventMaster, relatedEvents);
             });
-          };
+          }
 
-          $scope.editInstance = function() {
-            $scope.$hide();
+          function editInstance() {
             openForm(calendar, event, relatedEvents);
-          };
+          }
         },
         placement: 'center'
       });

@@ -222,40 +222,74 @@ describe('The calOpenEventForm service', function() {
       }));
     });
 
-    it('if event is a recurring event, it should ask for editing master or instance', function() {
-      calOpenEventForm(calendarHomeId, instance);
+    describe('When event is recurring', function() {
+      it('should open instance by default', function() {
+        calOpenEventForm(calendarHomeId, instance);
 
-      $rootScope.$digest();
+        $rootScope.$digest();
 
-      expect($modal).to.have.been.calledWith(sinon.match({
-        templateUrl: '/calendar/app/open-event-form/edit-instance-or-series',
-        resolve: {
-          event: sinon.match.func.and(sinon.match(function(eventGetter) {
-            return eventGetter() === instance;
-          }))
-        },
-        controller: sinon.match.func.and(sinon.match(function(controller) {
-          var openForm = sinon.spy();
-          var $scope = {
-            $hide: sinon.spy()
-          };
+        expect($modal).to.have.been.calledWith(sinon.match({
+          templateUrl: '/calendar/app/open-event-form/edit-instance-or-series',
+          resolve: {
+            event: sinon.match.func.and(sinon.match(function(eventGetter) {
+              return eventGetter() === instance;
+            }))
+          },
+          controller: sinon.match.func.and(sinon.match(function(controller) {
+            var openForm = sinon.spy();
+            var $scope = {
+              $hide: sinon.spy()
+            };
 
-          controller($scope, calendar, instance, openForm);
-          instance.recurrenceIdAsString = '20170425T083000Z';
+            controller($scope, calendar, instance, openForm);
+            instance.recurrenceIdAsString = '20170425T083000Z';
 
-          $scope.editInstance();
-          $scope.editAllInstances();
-          $rootScope.$digest();
+            $scope.submit();
+            $rootScope.$digest();
 
-          expect(instance.getModifiedMaster).to.have.been.calledWith(true);
-          expect(openForm.firstCall).to.have.been.calledWith(calendar, instance);
-          expect(openForm.secondCall).to.have.been.calledWith(calendar, master);
-          expect($scope.$hide).to.have.been.calledTwice;
+            expect(openForm).to.have.been.calledWith(calendar, instance);
+            expect($scope.$hide).to.have.been.calledOnce;
 
-          return true;
-        })),
-        placement: 'center'
-      }));
+            return true;
+          })),
+          placement: 'center'
+        }));
+      });
+
+      it('should open recurrence when user choose it', function() {
+        calOpenEventForm(calendarHomeId, instance);
+
+        $rootScope.$digest();
+
+        expect($modal).to.have.been.calledWith(sinon.match({
+          templateUrl: '/calendar/app/open-event-form/edit-instance-or-series',
+          resolve: {
+            event: sinon.match.func.and(sinon.match(function(eventGetter) {
+              return eventGetter() === instance;
+            }))
+          },
+          controller: sinon.match.func.and(sinon.match(function(controller) {
+            var openForm = sinon.spy();
+            var $scope = {
+              $hide: sinon.spy()
+            };
+
+            controller($scope, calendar, instance, openForm);
+            instance.recurrenceIdAsString = '20170425T083000Z';
+            $scope.editChoice = 'all';
+
+            $scope.submit();
+            $rootScope.$digest();
+
+            expect(instance.getModifiedMaster).to.have.been.calledWith(true);
+            expect(openForm).to.have.been.calledWith(calendar, master);
+            expect($scope.$hide).to.have.been.calledOnce;
+
+            return true;
+          })),
+          placement: 'center'
+        }));
+      });
     });
 
     it('should prevent click action and display notification if event is private and current user is not the owner', function() {
