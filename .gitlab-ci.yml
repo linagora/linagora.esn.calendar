@@ -37,7 +37,7 @@ deploy_dev:
     name: dev
     url: https://dev.open-paas.org
   only:
-    - feature-freebusy@linagora/lgs/openpaas/linagora.esn.calendar
+    - master@linagora/lgs/openpaas/linagora.esn.calendar
   script:
     - cd /srv/${CI_PROJECT_NAME}
     - git fetch --all
@@ -56,4 +56,4 @@ release:
     - triggers
   script:
     - if [ -z "${VERSION}" ]; then exit 0; fi
-    - grunt release:${VERSION} 
+    - grunt release:${VERSION}
