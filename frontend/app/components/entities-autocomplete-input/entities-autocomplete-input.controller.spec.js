@@ -6,7 +6,7 @@ var expect = chai.expect;
 
 describe('The calEntitiesAutocompleteInputController', function() {
 
-  var $rootScope, $scope, $controller, calendarAttendeeService, calendarHomeService, session, calEventsProviders, CAL_AUTOCOMPLETE_MAX_RESULTS, CAL_ATTENDEE_OBJECT_TYPE;
+  var $rootScope, $scope, $controller, calendarAttendeeService, calendarHomeService, attendeeCandidates, session, calEventsProviders, CAL_AUTOCOMPLETE_MAX_RESULTS, CAL_ATTENDEE_OBJECT_TYPE;
 
   beforeEach(function() {
     session = {
@@ -25,6 +25,44 @@ describe('The calEntitiesAutocompleteInputController', function() {
       }
     };
 
+    attendeeCandidates = [
+      {
+        email: 'user1@test.com',
+        emails: ['user1@test.com'],
+        id: '111111',
+        firstname: 'first',
+        lastname: 'last',
+        partstat: 'NEEDS-ACTION',
+        preferredEmail: 'user1@test.com'
+      },
+      {
+        displayName: 'contact2',
+        email: 'user2@test.com',
+        emails: ['user2@test.com'],
+        id: '222222',
+        partstat: 'NEEDS-ACTION',
+        preferredEmail: 'user2@test.com'
+      },
+      {
+        displayName: 'contact3',
+        email: 'user3@test.com',
+        emails: ['user3@test.com'],
+        firstname: 'john',
+        id: '333333',
+        lastname: 'doe',
+        partstat: 'NEEDS-ACTION',
+        preferredEmail: 'user3@test.com'
+      },
+      {
+        displayName: 'contact4',
+        email: 'user4@test.com',
+        emails: ['user4@test.com'],
+        id: '444444',
+        partstat: 'NEEDS-ACTION',
+        preferredEmail: 'user4@test.com'
+      }
+    ];
+
     calendarHomeService = {
       getUserCalendarHomeId: function() {
         return $q.when(session.user._id);
@@ -33,43 +71,7 @@ describe('The calEntitiesAutocompleteInputController', function() {
 
     calendarAttendeeService = {
       getAttendeeCandidates: function() {
-        return $q.when([
-          {
-            email: 'user1@test.com',
-            emails: ['user1@test.com'],
-            id: '111111',
-            firstname: 'first',
-            lastname: 'last',
-            partstat: 'NEEDS-ACTION',
-            preferredEmail: 'user1@test.com'
-          },
-          {
-            displayName: 'contact2',
-            email: 'user2@test.com',
-            emails: ['user2@test.com'],
-            id: '222222',
-            partstat: 'NEEDS-ACTION',
-            preferredEmail: 'user2@test.com'
-          },
-          {
-            displayName: 'contact3',
-            email: 'user3@test.com',
-            emails: ['user3@test.com'],
-            firstname: 'john',
-            id: '333333',
-            lastname: 'doe',
-            partstat: 'NEEDS-ACTION',
-            preferredEmail: 'user3@test.com'
-          },
-          {
-            displayName: 'contact4',
-            email: 'user4@test.com',
-            emails: ['user4@test.com'],
-            id: '444444',
-            partstat: 'NEEDS-ACTION',
-            preferredEmail: 'user4@test.com'
-          }
-        ]);
+        return $q.when(attendeeCandidates);
       }
     };
 
@@ -170,98 +172,116 @@ describe('The calEntitiesAutocompleteInputController', function() {
       }
     ];
 
-    beforeEach(function() {
-      ctrl = initController();
-    });
-
-    it('should call calendarAttendeeService, remove session.user and sort the other users based on the displayName property ', function(done) {
-      ctrl.getInvitableEntities(query).then(function(response) {
-        expect(response).to.deep.equal(expectedEntitiesSorted);
-
-        done();
+    describe('When excludeCurrentUser is falsy', function() {
+      beforeEach(function() {
+        ctrl = initController({excludeCurrentUser: false});
       });
 
-      $scope.$digest();
+      it('should call calendarAttendeeService, keep session.user and sort the users based on the displayName property ', function(done) {
+        ctrl.getInvitableEntities(query).then(function(response) {
+          expect(response).to.deep.equal(attendeeCandidates);
+
+          done();
+        });
+
+        $scope.$digest();
+      });
     });
 
-    it('should remove duplicate entities, based on primary email, comparing to added already entities', function(done) {
-      ctrl.originalEntities = [{ email: 'user2@test.com', emails: ['user2@test.com'] }];
-
-      _checkDuplication(done);
-    });
-
-    it('should remove duplicate entities, based on secondary email, comparing to added already entities', function(done) {
-      ctrl.originalEntities = [{ email: 'another@world.com', emails: ['another@world.com', 'user2@test.com'] }];
-
-      _checkDuplication(done);
-    });
-
-    it('should remove duplicate entities, based on primary email, comparing to entities being currently added', function(done) {
-      ctrl.mutableEntities = [{ email: 'user2@test.com', emails: ['user2@test.com'] }];
-
-      _checkDuplication(done);
-    });
-
-    it('should remove duplicate entities, based on secondary email, comparing to entities being currently added', function(done) {
-      ctrl.mutableEntities = [{ email: 'another@world.com', emails: ['another@world.com', 'user2@test.com'] }];
-
-      _checkDuplication(done);
-    });
-
-    function _checkDuplication(done) {
-      _getAndCheckInvitableEntities(ctrl, query, expectedEntitiesDuplication, done);
-    }
-
-    function _getAndCheckInvitableEntities(ctrl, query, expectedEntitiesDuplication, done) {
-      ctrl.getInvitableEntities(query).then(function(response) {
-        expect(response).to.deep.equal(expectedEntitiesDuplication);
-
-        done();
+    describe('When excludeCurrentUser is truethy', function() {
+      beforeEach(function() {
+        ctrl = initController({excludeCurrentUser: true});
       });
 
-      $scope.$digest();
-    }
+      it('should call calendarAttendeeService, remove session.user and sort the other users based on the displayName property ', function(done) {
+        ctrl.getInvitableEntities(query).then(function(response) {
+          expect(response).to.deep.equal(expectedEntitiesSorted);
 
-    it('should call calendarAttendeeService and return a maximum of CAL_AUTOCOMPLETE_MAX_RESULTS results', function(done) {
-      calendarAttendeeService.getAttendeeCandidates = function(q) {
-        expect(q).to.equal(query);
-        var response = [];
+          done();
+        });
 
-        for (var i = 0; i < 20; i++) {
-          response.push({id: 'contact' + i, email: i + 'mail@domain.com', partstat: 'NEEDS-ACTION'});
-        }
-
-        return $q.when(response);
-      };
-
-      ctrl.getInvitableEntities(query).then(function(response) {
-        expect(response.length).to.equal(CAL_AUTOCOMPLETE_MAX_RESULTS);
-
-        done();
+        $scope.$digest();
       });
 
-      $scope.$digest();
-    });
+      it('should remove duplicate entities, based on primary email, comparing to added already entities', function(done) {
+        ctrl.originalEntities = [{ email: 'user2@test.com', emails: ['user2@test.com'] }];
 
-    it('should call the calendarAttendeeService with default types', function() {
-      calendarAttendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([]));
-      ctrl.getInvitableEntities();
+        _checkDuplication(done);
+      });
 
-      $scope.$digest();
+      it('should remove duplicate entities, based on secondary email, comparing to added already entities', function(done) {
+        ctrl.originalEntities = [{ email: 'another@world.com', emails: ['another@world.com', 'user2@test.com'] }];
 
-      expect(calendarAttendeeService.getAttendeeCandidates).to.have.been.calledWith(sinon.match.any, sinon.match.any, [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.resource, CAL_ATTENDEE_OBJECT_TYPE.contact]);
-    });
+        _checkDuplication(done);
+      });
 
-    it('should call the calendarAttendeeService with defined types', function() {
-      var types = ['twitter', 'facebook', 'github'];
+      it('should remove duplicate entities, based on primary email, comparing to entities being currently added', function(done) {
+        ctrl.mutableEntities = [{ email: 'user2@test.com', emails: ['user2@test.com'] }];
 
-      ctrl = initController({types: types});
-      calendarAttendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([]));
-      ctrl.getInvitableEntities();
+        _checkDuplication(done);
+      });
 
-      $scope.$digest();
+      it('should remove duplicate entities, based on secondary email, comparing to entities being currently added', function(done) {
+        ctrl.mutableEntities = [{ email: 'another@world.com', emails: ['another@world.com', 'user2@test.com'] }];
 
-      expect(calendarAttendeeService.getAttendeeCandidates).to.have.been.calledWith(sinon.match.any, sinon.match.any, types);
+        _checkDuplication(done);
+      });
+
+      function _checkDuplication(done) {
+        _getAndCheckInvitableEntities(ctrl, query, expectedEntitiesDuplication, done);
+      }
+
+      function _getAndCheckInvitableEntities(ctrl, query, expectedEntitiesDuplication, done) {
+        ctrl.getInvitableEntities(query).then(function(response) {
+          expect(response).to.deep.equal(expectedEntitiesDuplication);
+
+          done();
+        });
+
+        $scope.$digest();
+      }
+
+      it('should call calendarAttendeeService and return a maximum of CAL_AUTOCOMPLETE_MAX_RESULTS results', function(done) {
+        calendarAttendeeService.getAttendeeCandidates = function(q) {
+          expect(q).to.equal(query);
+          var response = [];
+
+          for (var i = 0; i < 20; i++) {
+            response.push({id: 'contact' + i, email: i + 'mail@domain.com', partstat: 'NEEDS-ACTION'});
+          }
+
+          return $q.when(response);
+        };
+
+        ctrl.getInvitableEntities(query).then(function(response) {
+          expect(response.length).to.equal(CAL_AUTOCOMPLETE_MAX_RESULTS);
+
+          done();
+        });
+
+        $scope.$digest();
+      });
+
+      it('should call the calendarAttendeeService with default types', function() {
+        calendarAttendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([]));
+        ctrl.getInvitableEntities();
+
+        $scope.$digest();
+
+        expect(calendarAttendeeService.getAttendeeCandidates).to.have.been.calledWith(sinon.match.any, sinon.match.any, [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.resource, CAL_ATTENDEE_OBJECT_TYPE.contact]);
+      });
+
+      it('should call the calendarAttendeeService with defined types', function() {
+        var types = ['twitter', 'facebook', 'github'];
+
+        ctrl = initController({types: types});
+        calendarAttendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([]));
+        ctrl.getInvitableEntities();
+
+        $scope.$digest();
+
+        expect(calendarAttendeeService.getAttendeeCandidates).to.have.been.calledWith(sinon.match.any, sinon.match.any, types);
+      });
     });
   });
 

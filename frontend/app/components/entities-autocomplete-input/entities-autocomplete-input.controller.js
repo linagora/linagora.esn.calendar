@@ -15,6 +15,7 @@
   ) {
     var self = this;
 
+    self.$onInit = $onInit;
     self.mutableEntities = self.mutableEntities || [];
     self.originalEntities = self.originalEntities || [];
     self.placeHolder = self.placeHolder || CAL_AUTOCOMPLETE_DEFAULT_PLACEHOLDER;
@@ -24,6 +25,10 @@
     self.defaultTypes = [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.resource, CAL_ATTENDEE_OBJECT_TYPE.contact];
 
     ////////////
+
+    function $onInit() {
+      self.excludeCurrentUser = !!self.excludeCurrentUser;
+    }
 
     function _onAddingEntity(entity) {
       if (!entity.id) {
@@ -39,7 +44,7 @@
       var types = self.types ? self.types : self.defaultTypes;
 
       return calendarAttendeeService.getAttendeeCandidates(query, CAL_AUTOCOMPLETE_MAX_RESULTS * 2, types).then(function(entityCandidates) {
-        entityCandidates = _fillNonDuplicateEntities(entityCandidates);
+        entityCandidates = filterCandidates(entityCandidates);
         entityCandidates.sort(function(a, b) {
           return naturalService.naturalSort(a.displayName, b.displayName);
         });
@@ -48,12 +53,16 @@
       });
     }
 
-    function _fillNonDuplicateEntities(entities) {
+    function filterCandidates(entities) {
       var addedEntitiesEmails = _getAddedEntitiesEmails();
 
       return entities.filter(function(entity) {
-        return !_isDuplicateEntity(entity, addedEntitiesEmails);
+        return !_isDuplicateEntity(entity, addedEntitiesEmails) && !_excludeCurrentUser(entity);
       });
+    }
+
+    function _excludeCurrentUser(entity) {
+      return self.excludeCurrentUser && (entity.email in session.user.emailMap);
     }
 
     function _getAddedEntitiesEmails() {
@@ -74,7 +83,8 @@
     }
 
     function _isDuplicateEntity(entity, addedEntitiesEmails) {
-      return (entity.email in session.user.emailMap) || addedEntitiesEmails.indexOf(entity.email) > -1;
+      //return (entity.email in session.user.emailMap) || addedEntitiesEmails.indexOf(entity.email) > -1;
+      return addedEntitiesEmails.indexOf(entity.email) > -1;
     }
   }
 

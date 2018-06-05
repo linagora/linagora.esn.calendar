@@ -45,6 +45,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
                 .fg-line
                   input.input.location.form-control(type="text", ng-model='editedEvent.location', ng-model-options="{getterSetter: true}", maxlength="{{::CAL_EVENT_FORM.location.maxlength}}", placeholder=__('Location'), ng-readonly="!canModifyEvent")
           cal-entities-autocomplete-input.cal-user-autocomplete-input(
+            exclude-current-user='excludeCurrentUserFromSuggestedAttendees',
             ng-hide='!canModifyEventAttendees',
             types='[{{::CAL_ATTENDEE_OBJECT_TYPE.user}}, {{::CAL_ATTENDEE_OBJECT_TYPE.group}}, {{::CAL_ATTENDEE_OBJECT_TYPE.contact}}]',
             original-entities='attendees.users',
