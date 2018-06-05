@@ -234,5 +234,8 @@
   "Cannot retrieve attendee availability": "Impossible de récupérer la disponibilité du participant",
   "Loading attendee availability": "Chargement de la disponibilité du participant",
   "Some attendees are not available": "Certains participants ne sont pas disponibles",
-  "You can edit the event to find a better date, or send it like this.": "Vous pouvez éditer l'événement pour trouver un meilleur horaire, ou l'envoyer tel quel."
+  "You can edit the event to find a better date, or send it like this.": "Vous pouvez éditer l'événement pour trouver un meilleur horaire, ou l'envoyer tel quel.",
+  "Update the recurrent event": "Modifier l'événement périodique",
+  "This event": "Cet événement",
+  "All the events": "Tous les événements"
 }

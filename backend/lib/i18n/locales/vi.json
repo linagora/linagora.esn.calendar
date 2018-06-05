@@ -234,5 +234,8 @@
   "Cannot retrieve attendee availability": "Tính khả dụng của người tham dự không xác định",
   "Loading attendee availability": "Đang tải tính khả dụng của người tham dự",
   "Some attendees are not available": "Một số người tham dự không có mặt",
-  "You can edit the event to find a better date, or send it like this.": "Bạn có thể chỉnh sửa sự kiện để tìm ngày tốt hơn hoặc gửi sự kiện như thế này."
+  "You can edit the event to find a better date, or send it like this.": "Bạn có thể chỉnh sửa sự kiện để tìm ngày tốt hơn hoặc gửi sự kiện như thế này.",
+  "Update the recurrent event": "Cập nhật sự kiện lặp lại",
+  "This event": "Sự kiện này",
+  "All the events": "Tất cả các sự kiện"
 }

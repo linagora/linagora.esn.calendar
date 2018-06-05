@@ -1,12 +1,15 @@
 .modal.edit-instance-or-series(tabindex="-1", role="dialog")
-  .modal-dialog
-    .modal-content
-      .modal-header
-        h4.modal-title #{__('What do you want to edit?')}
-      .modal-body.flex-column
-        button.btn.btn-default.effect(ng-click='editInstance()')
-          | #{__('Only this event')}
-        button.btn.btn-default.effect(ng-click='editAllInstances()')
-          | #{__('All events in the series')}
-        button.btn.btn-default.cancel(ng-click='$hide()')
-          | #{__('Cancel')}
+  form.suggest-form(name="form", role="form", aria-hidden="true", ng-submit='submit()')
+    .modal-dialog.modal-sm
+      .modal-content
+        .modal-header
+          h4.modal-title #{__('Update the recurrent event')}
+        .modal-body.flex-column
+          md-radio-group.md-primary(ng-model="editChoice")
+            md-radio-button(value="this") #{__('This event only')}
+            md-radio-button(value="all") #{__('All the events')}
+
+        .modal-footer.flex
+          .flex-vertical-centered.flex-end
+            button.btn.btn-link.color-default.close-button(type='button', ng-click="$hide()") #{__('Cancel')}
+            button.btn.btn-primary.save.save-button(type='submit') #{__('OK')}
