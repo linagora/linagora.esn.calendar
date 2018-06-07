@@ -97,6 +97,10 @@
       return calEventUtils.getUserAttendee(event);
     }
 
+    function currentUserIsOrganizer(event) {
+      return calEventUtils.isOrganizer(event);
+    }
+
     function getEventByUID() {
       return calEventService.getEventByUID(self.userCalendarHomeId, self.meeting.uid);
     }
@@ -130,11 +134,10 @@
     }
 
     function assertEventInvolvesCurrentUser(event) {
-      if (!getUserAttendee(event)) {
-        return $q.reject(new InvalidMeetingError('Event does not involve current user.'));
+      if (currentUserIsOrganizer(event) || getUserAttendee(event)) {
+        return event;
       }
-
-      return event;
+      return $q.reject(new InvalidMeetingError('Event does not involve current user.'));
     }
 
     function assertInvitationSequenceIsNotOutdated(event) {

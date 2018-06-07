@@ -80,7 +80,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
   }));
 
   beforeEach(function() {
-    ['event', 'recurringEventWithTwoExceptions', 'singleWithAttendees'].forEach(function(file) {
+    ['event', 'recurringEventWithTwoExceptions', 'singleWithAttendees', 'singleWithoutAttendee'].forEach(function(file) {
       shells[file] = new CalendarShell(ICAL.Component.fromString(__FIXTURES__[('frontend/app/fixtures/calendar/' + file + '.ics')]), {
         etag: 'etag',
         path: 'path'
@@ -195,6 +195,18 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
       $rootScope.$digest();
 
       expect(ctrl.meeting.invalid).to.equal(true);
+    });
+
+    it('should NOT report error when user is the organizer and there is no attendee', function() {
+      var ctrl = initCtrl('REQUEST', '1234', '1');
+
+      session.user.emails = ['admin@open-paas.org'];
+      calEventService.getEventByUID = qResolve(shells.singleWithoutAttendee);
+      ctrl.$onInit();
+      $rootScope.$digest();
+
+      expect(ctrl.meeting.invalid).to.be.undefined;
+      expect(ctrl.meeting.loaded).to.equal(true);
     });
 
     it('should report an invalid meeting if the sequence is outdated', function() {
