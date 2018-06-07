@@ -7,7 +7,7 @@
   function calEventForm($timeout) {
     var directive = {
       restrict: 'E',
-      templateUrl: '/calendar/app/open-event-form/event-form/event-form.html',
+      templateUrl: '/calendar/app/event/form/event-form.html',
       link: link,
       replace: true,
       controller: 'CalEventFormController'

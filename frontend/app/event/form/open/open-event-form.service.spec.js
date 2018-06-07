@@ -114,7 +114,7 @@ describe('The calOpenEventForm service', function() {
       expect($modal).to.have.been.called;
       expect($state.go).to.not.have.been;
       expect($modal).to.have.been.calledWith(sinon.match({
-        templateUrl: '/calendar/app/open-event-form/event-form-view',
+        templateUrl: '/calendar/app/event/form/modals/event-form-modal.html',
         backdrop: 'static',
         placement: 'center'
       }));
@@ -229,7 +229,7 @@ describe('The calOpenEventForm service', function() {
         $rootScope.$digest();
 
         expect($modal).to.have.been.calledWith(sinon.match({
-          templateUrl: '/calendar/app/open-event-form/edit-instance-or-series',
+          templateUrl: '/calendar/app/event/form/modals/edit-instance-or-series-modal.html',
           resolve: {
             event: sinon.match.func.and(sinon.match(function(eventGetter) {
               return eventGetter() === instance;
@@ -262,7 +262,7 @@ describe('The calOpenEventForm service', function() {
         $rootScope.$digest();
 
         expect($modal).to.have.been.calledWith(sinon.match({
-          templateUrl: '/calendar/app/open-event-form/edit-instance-or-series',
+          templateUrl: '/calendar/app/event/form/modals/edit-instance-or-series-modal.html',
           resolve: {
             event: sinon.match.func.and(sinon.match(function(eventGetter) {
               return eventGetter() === instance;
