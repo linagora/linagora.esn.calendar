@@ -100,8 +100,8 @@
         .catch($q.reject);
     }
 
-    function areAttendeesAvailable(attendees, start, end) {
-      return getAttendeesAvailability(attendees, start, end).then(function(result) {
+    function areAttendeesAvailable(attendees, start, end, excludedEvents) {
+      return getAttendeesAvailability(attendees, start, end, excludedEvents).then(function(result) {
         if (!result.users) {
           throw new Error('Can not retrieve attendees availability');
         }
@@ -110,19 +110,23 @@
           .chain(result.users)
           .pluck('calendars')
           .flatten()
-          .filter(function(v) { return !_.isEmpty(v.freebusy); })
+          .filter(function(v) { return !_.isEmpty(v.busy); })
           .value()
           .length;
       });
     }
 
-    function getAttendeesAvailability(attendees, start, end) {
+    function getAttendeesAvailability(attendees, start, end, excludedEvents) {
       return calAttendeeService.getUsersIdsForAttendees(attendees)
         .then(function(ids) {
           return ids.filter(Boolean);
         })
         .then(function(usersIds) {
-          return calFreebusyAPI.getBulkFreebusyStatus(usersIds, start, end);
+          var excludedEventsIds = (excludedEvents || []).map(function(event) {
+            return event.uid;
+          });
+
+          return calFreebusyAPI.getBulkFreebusyStatus(usersIds, start, end, excludedEventsIds);
         });
     }
   }

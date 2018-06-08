@@ -214,9 +214,10 @@ describe('The calFreebusyService service', function() {
   });
 
   describe('The areAttendeesAvailable function', function() {
-    var start, end, attendees, getBulkFreebusyStatusStub;
+    var start, end, attendees, event, getBulkFreebusyStatusStub;
 
     beforeEach(function() {
+      event = {uid: 123};
       getBulkFreebusyStatusStub = sinon.stub(calFreebusyAPI, 'getBulkFreebusyStatus');
       attendees = [
         { email: 'a@open-paas.org' },
@@ -236,11 +237,11 @@ describe('The calFreebusyService service', function() {
             calendars: [
               {
                 id: 1,
-                freebusy: {}
+                busy: []
               },
               {
                 id: 2,
-                freebusy: {}
+                busy: []
               }
             ]
           },
@@ -249,11 +250,11 @@ describe('The calFreebusyService service', function() {
             calendars: [
               {
                 id: 2,
-                freebusy: {}
+                busy: []
               },
               {
                 id: 22,
-                freebusy: {}
+                busy: []
               }
             ]
           }
@@ -263,7 +264,7 @@ describe('The calFreebusyService service', function() {
       calAttendeeService.getUsersIdsForAttendees.returns($q.when([1, 2]));
       getBulkFreebusyStatusStub.returns($q.when(availability));
 
-      calFreebusyService.areAttendeesAvailable(attendees, start, end)
+      calFreebusyService.areAttendeesAvailable(attendees, start, end, [event])
         .then(function(result) {
           expect(result).to.be.true;
           done();
@@ -283,11 +284,11 @@ describe('The calFreebusyService service', function() {
             calendars: [
               {
                 id: 1,
-                freebusy: {}
+                busy: []
               },
               {
                 id: 2,
-                freebusy: {start: 1, end: 2}
+                busy: [{id: 'eventId', start: 1, end: 2}]
               }
             ]
           },
@@ -296,11 +297,11 @@ describe('The calFreebusyService service', function() {
             calendars: [
               {
                 id: 2,
-                freebusy: {}
+                busy: []
               },
               {
                 id: 22,
-                freebusy: {}
+                busy: []
               }
             ]
           }
@@ -310,7 +311,7 @@ describe('The calFreebusyService service', function() {
       calAttendeeService.getUsersIdsForAttendees.returns($q.when([1, 2]));
       getBulkFreebusyStatusStub.returns($q.when(availability));
 
-      calFreebusyService.areAttendeesAvailable(attendees, start, end)
+      calFreebusyService.areAttendeesAvailable(attendees, start, end, [event])
         .then(function(result) {
           expect(result).to.be.false;
           done();

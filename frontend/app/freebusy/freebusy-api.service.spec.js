@@ -124,13 +124,14 @@ describe('The calFreebusyAPI service', function() {
     var bulkRequest, users, freeBusyEndpoint, davDateFormat;
 
     beforeEach(function() {
-      freeBusyEndpoint = '/dav/api/freebusy';
+      freeBusyEndpoint = '/dav/api/calendars/freebusy';
       davDateFormat = 'YYYYMMDD[T]HHmmss';
       users = [1, 2];
       bulkRequest = {
         start: this.start.format(davDateFormat),
         end: this.end.format(davDateFormat),
-        users: users
+        users: users,
+        uids: []
       };
     });
 
