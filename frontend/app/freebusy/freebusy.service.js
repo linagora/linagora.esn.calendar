@@ -24,7 +24,8 @@
       isAttendeeAvailable: isAttendeeAvailable,
       areAttendeesAvailable: areAttendeesAvailable,
       getAttendeesAvailability: getAttendeesAvailability,
-      setFreeBusyStatus: setFreeBusyStatus
+      setFreeBusyStatus: setFreeBusyStatus,
+      setBulkFreeBusyStatus: setBulkFreeBusyStatus
     };
 
     function setFreeBusyStatus(attendee, start, end) {
@@ -33,7 +34,7 @@
         return calAttendeeService.getUserIdForAttendee(attendee)
           .then(function(id) {
             if (!id) {
-              return setFreebusy(CAL_FREEBUSY.UNKNOWN);
+              return _setFreebusy(attendee, CAL_FREEBUSY.UNKNOWN);
             }
 
             attendee.id = id;
@@ -45,19 +46,70 @@
       return loadAndPatchAttendee(attendee, start, end);
 
       function loadAndPatchAttendee(attendee, start, end) {
-        setFreebusy(CAL_FREEBUSY.LOADING);
+        _setFreebusy(attendee, CAL_FREEBUSY.LOADING);
 
         return isAttendeeAvailable(attendee.id, start, end)
           .then(function(isAvailable) {
-            setFreebusy(isAvailable ? CAL_FREEBUSY.FREE : CAL_FREEBUSY.BUSY);
+            _setFreebusy(attendee, isAvailable ? CAL_FREEBUSY.FREE : CAL_FREEBUSY.BUSY);
           })
           .catch(function() {
-            setFreebusy(CAL_FREEBUSY.UNKNOWN);
+            _setFreebusy(attendee, CAL_FREEBUSY.UNKNOWN);
+          });
+      }
+    }
+
+    function setBulkFreeBusyStatus(attendees, start, end, excludedEvents) {
+      return $q.allSettled(attendees.map(populateUserId)).then(setBulkStatus);
+
+      function setBulkStatus() {
+        var internalAttendees = attendees.filter(function(attendee) { return !!attendee.id; });
+        var externalAttendees = attendees.filter(function(attendee) { return !attendee.id; });
+        var internalUserIds = internalAttendees.map(function(attendee) { return attendee.id; });
+        var excludedEventIds = (excludedEvents || []).map(function(event) { return event.uid; });
+
+        _setFreeBusyForAttendees(internalAttendees, CAL_FREEBUSY.LOADING);
+        _setFreeBusyForAttendees(externalAttendees, CAL_FREEBUSY.UNKNOWN);
+
+        return calFreebusyAPI.getBulkFreebusyStatus(internalUserIds, start, end, excludedEventIds)
+          .then(function(result) {
+            if (!result.users) {
+              return _setFreeBusyForAttendees(internalAttendees, CAL_FREEBUSY.UNKNOWN);
+            }
+
+            var userCalendarsHash = _.chain(result.users).indexBy('id').mapValues('calendars').value();
+
+            internalAttendees.forEach(_setInternalUserStatus);
+
+            function _setInternalUserStatus(attendee) {
+              if (!userCalendarsHash[attendee.id]) {
+                return _setFreebusy(attendee, CAL_FREEBUSY.UNKNOWN);
+              }
+
+              _setFreebusy(attendee, _isAvailable(attendee) ? CAL_FREEBUSY.FREE : CAL_FREEBUSY.BUSY);
+            }
+
+            function _isAvailable(attendee) {
+              return !_.chain(userCalendarsHash[attendee.id])
+                .filter(function(v) { return !_.isEmpty(v.busy); })
+                .value()
+                .length;
+            }
+          }).catch(function(err) {
+            $log.error('Can not get bulk freebusy status', err);
+            _setFreeBusyForAttendees(internalAttendees, CAL_FREEBUSY.UNKNOWN);
           });
       }
 
-      function setFreebusy(freebusy) {
-        attendee.freeBusy = freebusy;
+      function populateUserId(attendee) {
+        // attendee can have id equals to email when coming from autocomplete which is bad...
+        if (attendee.id && attendee.id !== attendee.email) {
+          return $q.when();
+        }
+
+        return calAttendeeService.getUserIdForAttendee(attendee)
+          .then(function(id) {
+            attendee.id = id;
+          });
       }
     }
 
@@ -128,6 +180,16 @@
 
           return calFreebusyAPI.getBulkFreebusyStatus(usersIds, start, end, excludedEventsIds);
         });
+    }
+
+    function _setFreebusy(attendee, freebusy) {
+      attendee.freeBusy = freebusy;
+    }
+
+    function _setFreeBusyForAttendees(attendees, freebusy) {
+      attendees.forEach(function(attendee) {
+        _setFreebusy(attendee, freebusy);
+      });
     }
   }
 })(angular);

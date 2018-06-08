@@ -5,14 +5,15 @@
 var expect = chai.expect;
 
 describe('The calFreebusyService service', function() {
-  var vfreebusy, $httpBackend, $rootScope, calFreebusyService, calMoment, CAL_ACCEPT_HEADER, CAL_DAV_DATE_FORMAT;
+  var vfreebusy, $httpBackend, $rootScope, calFreebusyService, calMoment, CAL_ACCEPT_HEADER, CAL_DAV_DATE_FORMAT, CAL_FREEBUSY;
   var calAttendeeService, calFreebusyAPI;
 
   beforeEach(function() {
     angular.mock.module('esn.calendar');
 
     calAttendeeService = {
-      getUsersIdsForAttendees: sinon.stub()
+      getUsersIdsForAttendees: sinon.stub(),
+      getUserIdForAttendee: sinon.stub()
     };
 
     angular.mock.module(function($provide) {
@@ -21,7 +22,7 @@ describe('The calFreebusyService service', function() {
   });
 
   beforeEach(function() {
-    angular.mock.inject(function(_$rootScope_, _$httpBackend_, _calFreebusyAPI_, _calFreebusyService_, _CAL_ACCEPT_HEADER_, _calMoment_, _CAL_DAV_DATE_FORMAT_) {
+    angular.mock.inject(function(_$rootScope_, _$httpBackend_, _calFreebusyAPI_, _calFreebusyService_, _CAL_ACCEPT_HEADER_, _calMoment_, _CAL_DAV_DATE_FORMAT_, _CAL_FREEBUSY_) {
       $rootScope = _$rootScope_;
       $httpBackend = _$httpBackend_;
       calFreebusyService = _calFreebusyService_;
@@ -29,6 +30,7 @@ describe('The calFreebusyService service', function() {
       calMoment = _calMoment_;
       CAL_ACCEPT_HEADER = _CAL_ACCEPT_HEADER_;
       CAL_DAV_DATE_FORMAT = _CAL_DAV_DATE_FORMAT_;
+      CAL_FREEBUSY = _CAL_FREEBUSY_;
     });
 
     function getComponentFromFixture(string) {
@@ -319,6 +321,172 @@ describe('The calFreebusyService service', function() {
         .catch(done);
 
       $rootScope.$digest();
+    });
+  });
+
+  describe('The setBulkFreeBusyStatus function', function() {
+    var start, end, attendees, event, getBulkFreebusyStatusStub, externalAttendee;
+
+    beforeEach(function() {
+      event = {uid: 123};
+      getBulkFreebusyStatusStub = sinon.stub(calFreebusyAPI, 'getBulkFreebusyStatus');
+      attendees = [
+        { email: 'a@open-paas.org' },
+        { email: 'b@open-paas.org' }
+      ];
+      externalAttendee = { email: 'external@mail.com' };
+      start = '';
+      end = '';
+    });
+
+    it('should get the user id from attendee when attendee does not have id', function() {
+      attendees[1].id = '1';
+      calAttendeeService.getUserIdForAttendee.returns($q.when());
+      getBulkFreebusyStatusStub.returns($q.when({}));
+
+      calFreebusyService.setBulkFreeBusyStatus(attendees, start, end, [event]);
+      $rootScope.$digest();
+
+      expect(calAttendeeService.getUserIdForAttendee).to.have.been.calledWith(attendees[0]);
+    });
+
+    it('should get the user id from attendee when attendee id is the same as email', function() {
+      attendees[1].id = '1';
+      attendees[0].id = attendees[0].email;
+      calAttendeeService.getUserIdForAttendee.returns($q.when());
+      getBulkFreebusyStatusStub.returns($q.when({}));
+
+      calFreebusyService.setBulkFreeBusyStatus(attendees, start, end, [event]);
+      $rootScope.$digest();
+
+      expect(calAttendeeService.getUserIdForAttendee).to.have.been.calledWith(attendees[0]);
+    });
+
+    describe('When there are external attendees', function() {
+      beforeEach(function() {
+        calAttendeeService.getUserIdForAttendee.withArgs(attendees[0]).returns($q.when('1'));
+        calAttendeeService.getUserIdForAttendee.withArgs(attendees[1]).returns($q.when('2'));
+        calAttendeeService.getUserIdForAttendee.withArgs(externalAttendee).returns($q.when());
+
+        attendees.push(externalAttendee);
+      });
+
+      it('should call the bulk API for internal attendees only', function() {
+        getBulkFreebusyStatusStub.returns($q.when({}));
+        calFreebusyService.setBulkFreeBusyStatus(attendees, start, end, [event]);
+        $rootScope.$digest();
+
+        expect(getBulkFreebusyStatusStub).to.have.been.calledWith(['1', '2'], start, end, [event.uid]);
+      });
+
+      it('should set freebusy to unknow for external attendees', function() {
+        getBulkFreebusyStatusStub.returns($q.when({}));
+        calFreebusyService.setBulkFreeBusyStatus(attendees, start, end, [event]);
+        $rootScope.$digest();
+
+        expect(externalAttendee.freeBusy).to.equal(CAL_FREEBUSY.UNKNOWN);
+      });
+
+      it('should set freebusy to unknow for internal users when freebusy status is not found', function() {
+        getBulkFreebusyStatusStub.returns($q.when({}));
+        calFreebusyService.setBulkFreeBusyStatus(attendees, start, end, [event]);
+        $rootScope.$digest();
+
+        expect(attendees[0].freeBusy).to.equal(CAL_FREEBUSY.UNKNOWN);
+        expect(attendees[1].freeBusy).to.equal(CAL_FREEBUSY.UNKNOWN);
+      });
+
+      it('should set freebusy to free for internal users when they are free', function() {
+        var bulkResponse = {
+          users: [
+            {
+              id: '1',
+              calendars: [
+                {
+                  id: 1,
+                  busy: []
+                },
+                {
+                  id: 2,
+                  busy: []
+                }
+              ]
+            },
+            {
+              id: '4',
+              calendars: [
+                {
+                  id: 2,
+                  busy: []
+                },
+                {
+                  id: 22,
+                  busy: []
+                }
+              ]
+            }
+          ]
+        };
+
+        getBulkFreebusyStatusStub.returns($q.when(bulkResponse));
+        calFreebusyService.setBulkFreeBusyStatus(attendees, start, end, [event]);
+        $rootScope.$digest();
+
+        expect(attendees[0].freeBusy).to.equal(CAL_FREEBUSY.FREE);
+        expect(attendees[1].freeBusy).to.equal(CAL_FREEBUSY.UNKNOWN);
+        expect(attendees[2].freeBusy).to.equal(CAL_FREEBUSY.UNKNOWN);
+      });
+
+      it('should set freebusy to busy for internal users when they are busy', function() {
+        var bulkResponse = {
+          users: [
+            {
+              id: '1',
+              calendars: [
+                {
+                  id: 1,
+                  busy: [{start: new Date(), end: new Date()}]
+                },
+                {
+                  id: 2,
+                  busy: []
+                }
+              ]
+            },
+            {
+              id: '4',
+              calendars: [
+                {
+                  id: 2,
+                  busy: []
+                },
+                {
+                  id: 22,
+                  busy: []
+                }
+              ]
+            }
+          ]
+        };
+
+        getBulkFreebusyStatusStub.returns($q.when(bulkResponse));
+        calFreebusyService.setBulkFreeBusyStatus(attendees, start, end, [event]);
+        $rootScope.$digest();
+
+        expect(attendees[0].freeBusy).to.equal(CAL_FREEBUSY.BUSY);
+        expect(attendees[1].freeBusy).to.equal(CAL_FREEBUSY.UNKNOWN);
+        expect(attendees[2].freeBusy).to.equal(CAL_FREEBUSY.UNKNOWN);
+      });
+
+      it('should set freebusy to unknow for internal users when an error occurs', function() {
+        getBulkFreebusyStatusStub.returns($q.reject(new Error()));
+        calFreebusyService.setBulkFreeBusyStatus(attendees, start, end, [event]);
+        $rootScope.$digest();
+
+        expect(attendees[0].freeBusy).to.equal(CAL_FREEBUSY.UNKNOWN);
+        expect(attendees[1].freeBusy).to.equal(CAL_FREEBUSY.UNKNOWN);
+        expect(attendees[2].freeBusy).to.equal(CAL_FREEBUSY.UNKNOWN);
+      });
     });
   });
 });
