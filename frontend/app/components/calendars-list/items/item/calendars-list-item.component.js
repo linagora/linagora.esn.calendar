@@ -7,7 +7,6 @@
       controller: 'CalendarsListItemController',
       bindings: {
         calendar: '<',
-        onOptionClick: '&',
         onShowHideToggle: '&',
         selected: '<',
         showDetails: '<'

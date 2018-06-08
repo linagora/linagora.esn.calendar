@@ -9,7 +9,6 @@
         calendars: '=?',
         toggleCalendar: '=?',
         hiddenCalendars: '=?',
-        stateToGo: '=?',
         showDetails: '=?'
       }
     });

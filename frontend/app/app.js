@@ -25,6 +25,7 @@
     'esn.router',
     'esn.search',
     'esn.session',
+    'esn.settings-overlay',
     'esn.clipboard',
     'esn.user-configuration',
     'esn.widget.helper',
