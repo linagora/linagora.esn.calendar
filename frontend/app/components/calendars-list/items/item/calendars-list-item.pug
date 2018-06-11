@@ -1,4 +1,4 @@
-.calendars-list-item(ng-mouseenter="$ctrl.isHover = true;" ng-mouseleave="$ctrl.isHover = false;")
+.calendars-list-item.clickable(ng-mouseenter="$ctrl.isHover = true;" ng-mouseleave="$ctrl.isHover = false;")
   a.lv-item
     .media.row
       .col-md-12
@@ -9,5 +9,5 @@
               span {{ $ctrl.calendar.name }}
             .details(ng-if="$ctrl.details")
               span.ellipsis {{ ::$ctrl.details }}
-      .settings.hidden-xs(ng-click="$ctrl.onOptionClick()")
-        i.mdi.mdi-settings
+      settings-overlay.hidden-xs.settings(ng-click="$event.stopImmediatePropagation(); hideAside();", ui-sref-active-eq="selected")
+        cal-calendars-list-item-configuration(calendar-id="$ctrl.calendar.uniqueId")
