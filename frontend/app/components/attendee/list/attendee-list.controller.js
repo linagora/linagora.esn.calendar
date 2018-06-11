@@ -2,9 +2,9 @@
   'use strict';
 
   angular.module('esn.calendar')
-    .controller('CalAttendeesListController', CalAttendeesListController);
+    .controller('CalAttendeeListController', CalAttendeeListController);
 
-  function CalAttendeesListController($scope, CAL_EVENTS) {
+  function CalAttendeeListController($scope, CAL_EVENTS) {
     var self = this;
 
     self.attendeesPerPartstat = {};

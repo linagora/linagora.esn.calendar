@@ -2,15 +2,15 @@
   'use strict';
 
   angular.module('esn.calendar')
-    .component('calAttendeesListCondensed', {
+    .component('calAttendeeList', {
       bindings: {
         attendees: '=',
         canModifyAttendees: '=',
         organizer: '=',
         onAttendeesRemoved: '&'
       },
-      controller: 'CalAttendeesListController',
+      controller: 'CalAttendeeListController',
       controllerAs: 'ctrl',
-      templateUrl: '/calendar/app/components/attendees-list/attendees-list-condensed/attendees-list-condensed.html'
+      templateUrl: '/calendar/app/components/attendee/list/attendee-list.html'
     });
 })();
