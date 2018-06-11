@@ -29,14 +29,15 @@
         });
     }
 
-    function getBulkFreebusyStatus(attendees, start, end) {
+    function getBulkFreebusyStatus(userIds, start, end, excludedEventIds) {
       var body = {
         start: formatDate(start),
         end: formatDate(end),
-        users: attendees || []
+        users: userIds || [],
+        uids: excludedEventIds || []
       };
 
-      return calDavRequest('post', '/freebusy', { 'Content-Type': 'application/json' }, body)
+      return calDavRequest('post', '/calendars/freebusy', { 'Content-Type': 'application/json' }, body)
         .then(function(response) {
           return response.data ? response.data : {};
         });

@@ -13,9 +13,9 @@
     };
 
     function onUpdate(event, updateFn, editFn, cancelFn) {
-      calFreebusyService.areAttendeesAvailable(event.attendees, event.start, event.end)
-        .then(function(busy) {
-          if (busy) {
+      calFreebusyService.areAttendeesAvailable(event.attendees, event.start, event.end, [event])
+        .then(function(free) {
+          if (!free) {
             calEventFreeBusyConfirmationModalService(updateFn, editFn, cancelFn);
           } else {
             updateFn();

@@ -142,6 +142,8 @@
             return calAttendeeService.splitAttendeesFromTypeWithResourceDetails($scope.editedEvent.attendees);
           }).then(function(attendeesWithResourceDetails) {
             $scope.attendees = _.assign({}, $scope.attendees, attendeesWithResourceDetails);
+          }).then(function() {
+            calFreebusyService.setBulkFreeBusyStatus(getAttendees(), $scope.event.start, $scope.event.end, [$scope.event]);
           });
       }
 
@@ -379,11 +381,7 @@
       }
 
       function onDateChange(updatedDate) {
-        // For now just change new attendees
-        // Checking freebusy for all will be achieved in #1257
-        var attendees = [].concat($scope.newAttendees, $scope.newResources);
-
-        updateAttendeesFreeBusyStatus(attendees, updatedDate.start, updatedDate.end);
+        updateAttendeesFreeBusyStatus(getAttendees(), updatedDate.start, updatedDate.end);
       }
 
       function updateAttendeesFreeBusyStatus(attendeesToUpdate, start, end) {
@@ -391,9 +389,7 @@
           return;
         }
 
-        attendeesToUpdate.forEach(function(attendee) {
-          calFreebusyService.setFreeBusyStatus(attendee, start, end);
-        });
+        calFreebusyService.setBulkFreeBusyStatus(attendeesToUpdate, start, end, [$scope.event]);
       }
 
       function onUserAttendeesAdded(userAttendeeAdded) {
