@@ -1,7 +1,8 @@
-.cal-resource-list
-  .cal-resource-sublist
-    .cal-resource-sublist-body
-      cal-resource-item(resource='resource', can-modify-resource='::ctrl.canModifyResources', ng-click= "ctrl.selectResource(resource)", ng-repeat="resource in ctrl.resources track by $index")
-  .cal-resource-actions
-    .trash(ng-if='ctrl.canModifyResources && ctrl.resourceSelectedCount > 0', ng-click='ctrl.deleteSelectedResource()')
-      i.mdi.mdi-delete(ng-if='ctrl.canModifyResources && ctrl.resourceSelectedCount > 0', ng-click='ctrl.deleteSelectedResources()')
+.cal-attendee-list
+  .cal-attendee-list-body
+    cal-resource-item(
+      resource='resource',
+      can-modify-resource='::ctrl.canModifyResources',
+      remove="ctrl.removeResource(resource)",
+      ng-repeat="resource in ctrl.resources track by $index"
+    )

@@ -54,7 +54,7 @@
       $scope.onUserAttendeesAdded = onUserAttendeesAdded;
       $scope.onResourceAttendeesAdded = onResourceAttendeesAdded;
       $scope.onUserAttendeeRemoved = onUserAttendeeRemoved;
-      $scope.onResourceAttendeesRemoved = onResourceAttendeesRemoved;
+      $scope.onResourceAttendeeRemoved = onResourceAttendeeRemoved;
       $scope.canPerformCall = canPerformCall;
       $scope.goToCalendar = goToCalendar;
       $scope.cancel = cancel;
@@ -412,8 +412,16 @@
         initialUserAttendeesRemoved.push(attendee);
       }
 
-      function onResourceAttendeesRemoved(removed) {
-        initialResourceAttendeesRemoved = initialResourceAttendeesRemoved.concat(removed);
+      function onResourceAttendeeRemoved(resource) {
+        if (_.isEmpty(resource)) {
+          return;
+        }
+
+        $scope.attendees.resources = $scope.attendees.resources.filter(function(item) {
+          return item.email !== resource.email;
+        });
+
+        initialResourceAttendeesRemoved.push(resource);
       }
 
       function getAttendees() {

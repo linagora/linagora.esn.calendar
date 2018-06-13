@@ -4,7 +4,8 @@ angular.module('esn.calendar')
   .component('calResourceItem', {
     bindings: {
       resource: '<',
-      canModifyResource: '='
+      canModifyResource: '=',
+      remove: '&'
     },
     controller: 'CalResourceItemController',
     controllerAs: 'ctrl',

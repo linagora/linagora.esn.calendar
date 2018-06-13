@@ -877,7 +877,7 @@ describe('The CalEventFormController controller', function() {
             attendees: this.scope.attendees.users
           });
           this.scope.onUserAttendeeRemoved(attendee);
-          this.scope.onResourceAttendeesRemoved([resource]);
+          this.scope.onResourceAttendeeRemoved(resource);
           this.scope.newAttendees = [
             addedAttendee,
           {
