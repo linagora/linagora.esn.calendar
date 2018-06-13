@@ -53,7 +53,7 @@
       $scope.submit = submit;
       $scope.onUserAttendeesAdded = onUserAttendeesAdded;
       $scope.onResourceAttendeesAdded = onResourceAttendeesAdded;
-      $scope.onUserAttendeesRemoved = onUserAttendeesRemoved;
+      $scope.onUserAttendeeRemoved = onUserAttendeeRemoved;
       $scope.onResourceAttendeesRemoved = onResourceAttendeesRemoved;
       $scope.canPerformCall = canPerformCall;
       $scope.goToCalendar = goToCalendar;
@@ -400,8 +400,16 @@
         calFreebusyService.setFreeBusyStatus(resourceAttendeeAdded, $scope.editedEvent.start, $scope.editedEvent.end);
       }
 
-      function onUserAttendeesRemoved(removed) {
-        initialUserAttendeesRemoved = initialUserAttendeesRemoved.concat(removed);
+      function onUserAttendeeRemoved(attendee) {
+        if (_.isEmpty(attendee)) {
+          return;
+        }
+
+        $scope.attendees.users = $scope.attendees.users.filter(function(item) {
+          return item.email !== attendee.email;
+        });
+
+        initialUserAttendeesRemoved.push(attendee);
       }
 
       function onResourceAttendeesRemoved(removed) {

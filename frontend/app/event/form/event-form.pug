@@ -84,7 +84,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
               attendees="attendees.users",
               can-modify-attendees="::canModifyEventAttendees",
               organizer="::editedEvent.organizer",
-              on-attendees-removed="onUserAttendeesRemoved(removed)")
+              on-attendee-removed="onUserAttendeeRemoved(attendee)")
           .col-xs-12
             event-recurrence-edition(event="editedEvent", can-modify-event-recurrence='canModifyEventRecurrence')
           .col-xs-12

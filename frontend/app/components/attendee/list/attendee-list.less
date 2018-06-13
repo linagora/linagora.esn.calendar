@@ -1,25 +1,15 @@
-.cal-attendees-list, .cal-resource-list {
+.cal-attendee-list, .cal-resource-list {
   .flex;
 
   font-size: 15px;
   margin: 0;
 
-  .cal-attendees-sublists {
+  .cal-attendee-list-body {
     .flex-column;
-
-    .cal-attendees-sublist {
-      .attendees-sublist-title {
-        margin-top: 5px;
-        margin-bottom: 5px;
-      }
-
-      .cal-attendees-sublist-body {
-        .flex-wrap;
-      }
-    }
+    .flex-grow(1);
   }
 
-  .cal-attendees-actions {
+  .cal-attendee-list-actions {
     .flex-horizontal-centered;
 
     min-width: 40px;

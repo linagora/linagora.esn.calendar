@@ -6,7 +6,9 @@ angular.module('esn.calendar')
     bindings: {
       attendee: '=',
       canModifyAttendee: '=',
-      isOrganizer: '='
+      isOrganizer: '=',
+      remove: '&'
     },
+    controller: 'CalAttendeeItemController',
     controllerAs: 'ctrl'
   });

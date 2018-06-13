@@ -230,6 +230,8 @@
   "Your proposal has been sent": "Your proposal has been sent",
   "An error occurred, please try again": "An error occurred, please try again",
   "Failed to retrieve resources details": "Failed to retrieve resources details",
+  "Free": "Free",
+  "Busy": "Busy",
   "Not available": "Not available",
   "Attendee is available": "Attendee is available",
   "Attendee is not available": "Attendee is not available",

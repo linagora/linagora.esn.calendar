@@ -4,10 +4,10 @@
   angular.module('esn.calendar')
     .component('calAttendeeList', {
       bindings: {
-        attendees: '=',
+        attendees: '<',
         canModifyAttendees: '=',
         organizer: '=',
-        onAttendeesRemoved: '&'
+        onAttendeeRemoved: '&'
       },
       controller: 'CalAttendeeListController',
       controllerAs: 'ctrl',

@@ -3,37 +3,64 @@
   .flex-space-between;
   .flex-vertical-centered;
 
-  height: 50px;
-  margin-left: 5px;
+  padding: 2px 0px;
   position: relative;
 
   .avatar {
     .clickable;
     .flex-row;
-
     position: relative;
 
     img {
-      .esn-avatar-lg;
+      .esn-avatar;
+    }
+  }
+
+  .attendee-item-meta {
+    .flex-column;
+    .flex-grow(1);
+    .flex-start;
+    .aligner-item-start;
+
+    font-size: 13px;
+    line-height: 15px;
+    padding-left: 8px;
+
+    .name {
+      .flex-vertical-centered;
+      .ellipsis;
+
+      & span {
+        font-weight: 500;
+      }
+
+      & cal-freebusy-icon {
+        margin-right: 4px;
+      }
     }
 
-    .organizer {
-      position: absolute;
-      top: 30px;
-      left: 36px;
+    .details {
+      color: @secondaryTextColor;
+      font-size: 0.9em;
 
-      .mdi {
-        font-size: 1.5em;
-        color: @accentColor;
+      .separator {
+        display: none;
+      }
+
+      .separator:not(:first-child) {
+        display: inline;
+        margin: 0px 3px;
       }
     }
   }
 
-  .name {
-    .ellipsis;
-    .flex-grow(1);
-
-    margin-left: 8px;
+  .attendee-item-right {
+    a.btn {
+      width: 28px;
+      height: 28px;
+      font-size: 12px;
+      font-weight: 600;
+    }
   }
 
   &.attendee-item-edition {

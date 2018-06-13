@@ -4,20 +4,33 @@
   angular.module('esn.calendar')
     .controller('CalAttendeeListController', CalAttendeeListController);
 
-  function CalAttendeeListController($scope, CAL_EVENTS) {
+  function CalAttendeeListController(_) {
     var self = this;
 
-    self.attendeesPerPartstat = {};
-    self.attendeeSelectedCount = 0;
-    self.isOrganizer = isOrganizer;
-    self.selectAttendee = selectAttendee;
-    self.deleteSelectedAttendees = deleteSelectedAttendees;
+    self.removeAttendee = removeAttendee;
     self.$onInit = $onInit;
+    self.$onChanges = $onChanges;
 
     function $onInit() {
-      updateAttendeeStats();
-      $scope.$on(CAL_EVENTS.EVENT_ATTENDEES_UPDATE, function() {
-        updateAttendeeStats();
+      _splitAttendees();
+    }
+
+    function $onChanges() {
+      _splitAttendees();
+    }
+
+    function _splitAttendees() {
+      self.organizerAttendee = getOrganizer();
+      self.attendeesToDisplay = getAttendeesToDisplay();
+    }
+
+    function getOrganizer() {
+      return _.find(self.attendees, isOrganizer);
+    }
+
+    function getAttendeesToDisplay() {
+      return self.attendees.filter(function(attendee) {
+        return !isOrganizer(attendee);
       });
     }
 
@@ -25,44 +38,8 @@
       return attendee && attendee.email && self.organizer && self.organizer.email && self.organizer.email === attendee.email;
     }
 
-    function deleteSelectedAttendees() {
-      var removed = [];
-      var notselected = [];
-
-      self.attendees.forEach(function(attendee) {
-        attendee.selected ? removed.push(attendee) : notselected.push(attendee);
-      });
-
-      self.attendees = notselected;
-      self.attendeeSelectedCount = 0;
-      self.onAttendeesRemoved && self.onAttendeesRemoved({removed: removed});
-
-      updateAttendeeStats();
-    }
-
-    function selectAttendee(attendee) {
-      if (self.organizer.email !== attendee.email) {
-        attendee.selected = !attendee.selected;
-        self.attendeeSelectedCount += attendee.selected ? 1 : -1;
-      }
-    }
-
-    function updateAttendeeStats() {
-      var partstatMap = self.attendeesPerPartstat = {
-        'NEEDS-ACTION': 0,
-        ACCEPTED: 0,
-        TENTATIVE: 0,
-        DECLINED: 0,
-        OTHER: 0
-      };
-
-      if (!self.attendees || !self.attendees.length) {
-        return;
-      }
-
-      self.attendees.forEach(function(attendee) {
-        partstatMap[attendee.partstat in partstatMap ? attendee.partstat : 'OTHER']++;
-      });
+    function removeAttendee(attendee) {
+      self.onAttendeeRemoved && self.onAttendeeRemoved({attendee: attendee});
     }
   }
 
