@@ -4,19 +4,32 @@
   angular.module('esn.calendar')
     .controller('CalAttendeeListController', CalAttendeeListController);
 
-  function CalAttendeeListController(_) {
+  function CalAttendeeListController(_, CAL_ATTENDEE_LIST_LIMIT) {
     var self = this;
 
     self.removeAttendee = removeAttendee;
     self.$onInit = $onInit;
     self.$onChanges = $onChanges;
+    self.showAll = showAll;
+    self.showToggle = showToggle;
 
     function $onInit() {
+      self.CAL_ATTENDEE_LIST_LIMIT = CAL_ATTENDEE_LIST_LIMIT;
+      self.limit = CAL_ATTENDEE_LIST_LIMIT - 1;
       _splitAttendees();
     }
 
     function $onChanges() {
       _splitAttendees();
+    }
+
+    function showToggle() {
+      return !self.showAllAttendees && self.attendees.length > CAL_ATTENDEE_LIST_LIMIT;
+    }
+
+    function showAll() {
+      self.showAllAttendees = true;
+      self.limit = self.attendees.length;
     }
 
     function _splitAttendees() {

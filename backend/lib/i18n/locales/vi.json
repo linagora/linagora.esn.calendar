@@ -242,5 +242,8 @@
   "You can edit the event to find a better date, or send it like this.": "Bạn có thể chỉnh sửa sự kiện để tìm ngày tốt hơn hoặc gửi sự kiện như thế này.",
   "Update the recurrent event": "Cập nhật sự kiện lặp lại",
   "This event": "Sự kiện này",
-  "All the events": "Tất cả các sự kiện"
+  "All the events": "Tất cả các sự kiện",
+  "%s attendees": "%s người tham dự",
+  "1 attendee": "1 người tham dự",
+  "No attendees": "Không có người tham dự"
 }

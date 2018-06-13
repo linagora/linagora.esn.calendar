@@ -242,5 +242,8 @@
   "You can edit the event to find a better date, or send it like this.": "You can edit the event to find a better date, or send it like this.",
   "Update the recurrent event": "Update the recurrent event",
   "This event": "This event",
-  "All the events": "All the events"
+  "All the events": "All the events",
+  "%s attendees": "%s attendees",
+  "1 attendee": "1 attendee",
+  "No attendees": "No attendees"
 }

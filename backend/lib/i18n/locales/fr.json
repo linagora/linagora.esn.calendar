@@ -242,5 +242,8 @@
   "You can edit the event to find a better date, or send it like this.": "Vous pouvez éditer l'événement pour trouver un meilleur horaire, ou l'envoyer tel quel.",
   "Update the recurrent event": "Modifier l'événement périodique",
   "This event": "Cet événement",
-  "All the events": "Tous les événements"
+  "All the events": "Tous les événements",
+  "%s attendees": "%s participants",
+  "1 attendee": "1 participant",
+  "No attendees": "Pas de participants"
 }
