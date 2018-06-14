@@ -26,7 +26,7 @@ describe('The cal-resource-item component', function() {
     $scope = $rootScope.$new();
     partstat = _CAL_ICAL_.partstat;
     CAL_RESOURCE = _CAL_RESOURCE_;
-    classes = '.cal-resource-item .cal-participation-status i.mdi.';
+    classes = '.attendee-item .cal-participation-status i.mdi.';
   }));
 
   beforeEach(function() {

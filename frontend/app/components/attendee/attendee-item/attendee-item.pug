@@ -1,0 +1,16 @@
+.attendee-item
+  cal-attendee-avatar(attendee='ctrl.attendee')
+  .attendee-item-meta
+    .name
+      span {{::ctrl.getDisplayName()}}
+    .details
+      span.organizer(ng-if="ctrl.isOrganizer") #{__('Organizer')}
+      span.separator -
+      span.freebusy(ng-if="ctrl.attendee.freeBusy === ctrl.CAL_FREEBUSY.FREE") #{__('Free')}
+      span.freebusy(ng-if="ctrl.attendee.freeBusy === ctrl.CAL_FREEBUSY.BUSY") #{__('Busy')}
+  .attendee-item-right
+    a.btn.btn-link.btn-icon(
+      ng-if='ctrl.canModifyAttendee && !ctrl.isOrganizer',
+      ng-click="ctrl.removeAttendee()"
+    )
+      i.mdi.mdi-close

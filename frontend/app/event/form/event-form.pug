@@ -76,15 +76,15 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
               ng-if="attendees.resources.length > 0",
               resources="attendees.resources",
               can-modify-resources="::canModifyEventAttendees",
-              on-resources-removed="onResourceAttendeesRemoved(removed)")
+              on-resource-removed="onResourceAttendeeRemoved(resource)")
             .message(ng-show="selectedTab === 'resources'", ng-if="attendees.resources.length === 0") #{__('No resource')}
-            cal-attendees-list-condensed(
+            cal-attendee-list(
               ng-show="selectedTab === 'attendees'",
               ng-if="attendees.users.length > 0 || newAttendees.length > 0",
               attendees="attendees.users",
               can-modify-attendees="::canModifyEventAttendees",
               organizer="::editedEvent.organizer",
-              on-attendees-removed="onUserAttendeesRemoved(removed)")
+              on-attendee-removed="onUserAttendeeRemoved(attendee)")
           .col-xs-12
             event-recurrence-edition(event="editedEvent", can-modify-event-recurrence='canModifyEventRecurrence')
           .col-xs-12

@@ -230,6 +230,8 @@
   "Your proposal has been sent": "Đề xuất của bạn đã được gửi đi",
   "An error occurred, please try again": "Có lỗi xảy ra, hãy thử lại",
   "Failed to retrieve resources details": "Không thể lấy thông tin tài nguyên",
+  "Free": "Miễn phí",
+  "Busy": "Bận",
   "Not available": "Không sẵn sàng",
   "Attendee is available": "Người tham dự có sẵn",
   "Attendee is not available": "Người tham dự không có mặt",
@@ -240,5 +242,8 @@
   "You can edit the event to find a better date, or send it like this.": "Bạn có thể chỉnh sửa sự kiện để tìm ngày tốt hơn hoặc gửi sự kiện như thế này.",
   "Update the recurrent event": "Cập nhật sự kiện lặp lại",
   "This event": "Sự kiện này",
-  "All the events": "Tất cả các sự kiện"
+  "All the events": "Tất cả các sự kiện",
+  "%s attendees": "%s người tham dự",
+  "1 attendee": "1 người tham dự",
+  "No attendees": "Không có người tham dự"
 }

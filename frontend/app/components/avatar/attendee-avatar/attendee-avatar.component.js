@@ -5,8 +5,7 @@
     .component('calAttendeeAvatar', {
       templateUrl: '/calendar/app/components/avatar/attendee-avatar/attendee-avatar.html',
       bindings: {
-        attendee: '=',
-        isOrganizer: '<'
+        attendee: '='
       },
       controllerAs: 'ctrl',
       controller: 'CalAttendeeAvatarController'

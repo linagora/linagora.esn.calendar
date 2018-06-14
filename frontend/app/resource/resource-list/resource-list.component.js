@@ -6,7 +6,7 @@
       bindings: {
         canModifyResources: '=',
         resources: '=',
-        onResourcesRemoved: '&'
+        onResourceRemoved: '&'
       },
       controller: 'CalResourceListController',
       controllerAs: 'ctrl',

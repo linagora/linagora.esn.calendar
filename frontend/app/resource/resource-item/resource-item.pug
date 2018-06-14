@@ -1,4 +1,4 @@
-.cal-resource-item
+.attendee-item
   .cal-resource-avatar-block
     cal-resource-avatar(resource='ctrl.resource')
     .cal-participation-status
@@ -10,9 +10,16 @@
         ng-if="ctrl.resource.deleted",
         ng-class='ctrl.DELETED_ICONS'
       )
-    .checkbox(ng-if='ctrl.canModifyResource')
-      label
-        input.force-position-initial(type="checkbox", ng-checked="ctrl.resource.selected")
-        i.input-helper
-  .name
-    span {{::ctrl.resource.name}}
+  .attendee-item-meta
+    .name
+      span {{::ctrl.resource.name}}
+    .details
+      span.freebusy(ng-if="ctrl.resource.freeBusy === ctrl.CAL_FREEBUSY.FREE") #{__('Free')}
+      span.freebusy(ng-if="ctrl.resource.freeBusy === ctrl.CAL_FREEBUSY.BUSY") #{__('Busy')}
+  .attendee-item-right
+    a.btn.btn-link.btn-icon(
+      ng-if='ctrl.canModifyResource',
+      ng-click="ctrl.removeResource()"
+    )
+      i.mdi.mdi-close
+
