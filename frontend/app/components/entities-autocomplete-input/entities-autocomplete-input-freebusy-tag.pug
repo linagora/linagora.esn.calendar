@@ -1,4 +1,6 @@
 .cal-entities-autocomplete-input-tag
   .esn-chip
+    .left-tag
+      cal-freebusy-icon(status="data.freeBusy")
     span {{ ::$getDisplayText() }}
     i.mdi.mdi-close-circle(ng-click="$removeTag()")

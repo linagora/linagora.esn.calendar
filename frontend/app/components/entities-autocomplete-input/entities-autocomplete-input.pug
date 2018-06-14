@@ -16,7 +16,7 @@
             type='email',
             on-tag-added='ctrl.onEntityAdded($tag)',
             on-tag-removed='ctrl.onEntityRemoved($tag)',
-            template='{{ctrl.template || false}}',
+            template='{{ctrl.template || "/calendar/app/components/entities-autocomplete-input/entities-autocomplete-input-tag.html"}}',
             add-from-autocomplete-only='addFromAutocompleteOnly'
           )
             auto-complete(
