@@ -1,5 +1,5 @@
 .cal-attendee-avatar
   a.avatar(href="", ng-attr-title='{{::ctrl.getDisplayName()}}')
-    esn-avatar(avatar-url="ctrl.avatarUrl", user-email="ctrl.attendee.email")
+    esn-avatar(user-id="ctrl.attendee.id", user-email="ctrl.attendee.email")
     .partstat
       cal-partstat-icon(partstat="ctrl.attendee.partstat")
