@@ -9,18 +9,12 @@
 
     self.removeAttendee = removeAttendee;
     self.$onInit = $onInit;
-    self.$onChanges = $onChanges;
     self.showAll = showAll;
     self.showToggle = showToggle;
 
     function $onInit() {
-      self.CAL_ATTENDEE_LIST_LIMIT = CAL_ATTENDEE_LIST_LIMIT;
-      self.limit = CAL_ATTENDEE_LIST_LIMIT - 1;
-      _splitAttendees();
-    }
-
-    function $onChanges() {
-      _splitAttendees();
+      self.limit = CAL_ATTENDEE_LIST_LIMIT;
+      setOrganizerFlag();
     }
 
     function showToggle() {
@@ -32,19 +26,16 @@
       self.limit = self.attendees.length;
     }
 
-    function _splitAttendees() {
-      self.organizerAttendee = getOrganizer();
-      self.attendeesToDisplay = getAttendeesToDisplay();
+    function setOrganizerFlag() {
+      var organizerAttendee = getOrganizer();
+
+      if (organizerAttendee) {
+        organizerAttendee.organizer = true;
+      }
     }
 
     function getOrganizer() {
-      return _.find(self.attendees, isOrganizer) || self.organizer;
-    }
-
-    function getAttendeesToDisplay() {
-      return self.attendees.filter(function(attendee) {
-        return !isOrganizer(attendee);
-      });
+      return _.find(self.attendees, isOrganizer);
     }
 
     function isOrganizer(attendee) {

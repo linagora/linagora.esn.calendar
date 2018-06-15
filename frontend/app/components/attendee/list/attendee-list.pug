@@ -8,16 +8,10 @@
 
   .cal-attendee-list-body
     cal-attendee-item(
-      ng-if="ctrl.organizerAttendee",
-      attendee='ctrl.organizerAttendee',
-      can-modify-attendee='::ctrl.canModifyAttendees',
-      is-organizer='true'
-    )
-    cal-attendee-item(
       attendee='attendee',
       can-modify-attendee='::ctrl.canModifyAttendees',
-      is-organizer='false',
+      is-organizer='attendee.organizer',
       remove="ctrl.removeAttendee(attendee)",
-      ng-repeat="attendee in ctrl.attendeesToDisplay | limitTo: ctrl.limit track by $id(attendee)"
+      ng-repeat="attendee in ctrl.attendees | limitTo: ctrl.limit track by $id(attendee)"
     )
     a.clickable(ng-if="ctrl.showToggle()", ng-href="", ng-click="ctrl.showAll()") #{__('Show all...')}
