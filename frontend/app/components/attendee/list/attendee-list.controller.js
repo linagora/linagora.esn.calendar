@@ -38,7 +38,7 @@
     }
 
     function getOrganizer() {
-      return _.find(self.attendees, isOrganizer);
+      return _.find(self.attendees, isOrganizer) || self.organizer;
     }
 
     function getAttendeesToDisplay() {
