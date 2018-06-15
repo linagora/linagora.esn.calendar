@@ -1,9 +1,9 @@
 (function(angular) {
   'use strict';
 
-  angular.module('esn.calendar').controller('CalEventFormSelectCalendarItemController', CalEventFormSelectCalendarItemController);
+  angular.module('esn.calendar').controller('CalSelectCalendarItemController', CalSelectCalendarItemController);
 
-  function CalEventFormSelectCalendarItemController(userUtils, session) {
+  function CalSelectCalendarItemController(userUtils, session) {
     var self = this;
 
     self.$onInit = $onInit;
