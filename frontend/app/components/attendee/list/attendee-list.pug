@@ -8,6 +8,7 @@
 
   .cal-attendee-list-body
     cal-attendee-item(
+      ng-if="ctrl.organizerAttendee",
       attendee='ctrl.organizerAttendee',
       can-modify-attendee='::ctrl.canModifyAttendees',
       is-organizer='true'
