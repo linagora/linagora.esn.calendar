@@ -68,11 +68,13 @@
       $scope.swipeLeft = next;
       $scope.swipeRight = prev;
 
+      $scope.showNextMonth = showNextMonth;
+      $scope.showPrevMonth = showPrevMonth;
+
       var currentView = calendarCurrentView.get();
 
       $scope.uiConfig.calendar.defaultDate = currentView.start || $scope.uiConfig.calendar.defaultDate;
       $scope.uiConfig.calendar.defaultView = currentView.name || $scope.uiConfig.calendar.defaultView;
-
       /*
        * "eventAfterAllRender" is called when all events are fetched but it
        * is not called when the davserver is unreachable so the "viewRender"
@@ -201,6 +203,8 @@
       function viewRender(view) {
         $timeout($scope.resizeCalendarHeight, 1000);
         calendarCurrentView.set(view);
+        currentView = calendarCurrentView.get();
+        $scope.prevented = currentView.name === 'month' ? true : null;
         $rootScope.$broadcast(CAL_EVENTS.HOME_CALENDAR_VIEW_CHANGE, view);
       }
 
@@ -326,6 +330,18 @@
         withCalendar(function(calendar) {
           calendar.fullCalendar('today');
         })(event, calendar);
+      }
+
+      function showNextMonth() {
+        if ($scope.prevented) {
+          next();
+        }
+      }
+
+      function showPrevMonth() {
+        if ($scope.prevented) {
+          prev();
+        }
       }
 
       $scope.$on('$destroy', function() {
