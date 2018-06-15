@@ -126,6 +126,7 @@ module.exports = dependencies => {
    */
   router.get('/:userId/:calendarId/events.json',
     authorizationMW.requiresAPILogin,
+    calendarMW.checkUserParameter,
     controller.searchEvents);
 
   return router;

@@ -5,7 +5,8 @@ module.exports = dependencies => {
   const userModule = dependencies('user');
 
   return {
-    decodeJWT
+    decodeJWT,
+    checkUserParameter
   };
 
   function decodeJWT(req, res, next) {
@@ -46,5 +47,19 @@ module.exports = dependencies => {
       req.user = organizer;
       next();
     });
+  }
+
+  function checkUserParameter(req, res, next) {
+    if (req.query.query && req.params.userId !== req.user.id) {
+      return res.status(403).json({
+        error: {
+          code: 403,
+          message: 'Forbidden',
+          details: 'User do not have the required privileges for this calendarHome'
+        }
+      });
+    }
+
+    next();
   }
 };
