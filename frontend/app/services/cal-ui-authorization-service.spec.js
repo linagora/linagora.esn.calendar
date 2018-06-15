@@ -102,6 +102,38 @@ describe('The calUIAuthorizationService service', function() {
     });
   });
 
+  describe('The canExportCalendarIcs function', function() {
+    var calendar;
+
+    beforeEach(function() {
+      userId = 'userId';
+    });
+
+    it('should return false if calendar is undefined', function() {
+      expect(calUIAuthorizationService.canExportCalendarIcs()).to.be.false;
+    });
+
+    it('should return true if user have read rights on the calendar', function() {
+      calendar = {
+        isReadable: sinon.stub().returns(true)
+      };
+      var result = calUIAuthorizationService.canExportCalendarIcs(calendar, userId);
+
+      expect(calendar.isReadable).to.have.been.calledWith(userId);
+      expect(result).to.be.true;
+    });
+
+    it('should return false if user does not have read rights on the calendar', function() {
+      calendar = {
+        isReadable: sinon.stub().returns(false)
+      };
+      var result = calUIAuthorizationService.canExportCalendarIcs(calendar, userId);
+
+      expect(calendar.isReadable).to.have.been.calledWith(userId);
+      expect(result).to.be.false;
+    });
+  });
+
   describe('the canDeleteCalendar function', function() {
     it('should return false if calendar is undefined', function() {
       expect(calUIAuthorizationService.canDeleteCalendar()).to.be.false;

@@ -13,6 +13,8 @@
     CalCalendarRightsUtilsService,
     CAL_CALENDAR_PUBLIC_RIGHT,
     CAL_CALENDAR_SHARED_RIGHT,
+    CAL_DAV_PATH,
+    calPathBuilder,
     calUIAuthorizationService,
     calCalendarDeleteConfirmationModalService,
     calCalDAVURLService
@@ -44,11 +46,14 @@
 
       !self.newCalendar && performExternalCalendarOperations(isExternalCalendar());
       self.canModifyPublicSelection = _canModifyPublicSelection();
+      self.canExportIcs = canExportIcs();
 
       if (!self.newCalendar && self.calendar) {
         calCalDAVURLService.getCalendarURL(self.calendar).then(function(url) {
           self.caldavurl = url;
         });
+
+        self.calendarIcsUrl = CAL_DAV_PATH + calPathBuilder.forCalendarPath(self.calendar.calendarHomeId, self.calendar.id) + '?export';
       }
     }
 
@@ -74,6 +79,10 @@
 
     function canDeleteCalendar() {
       return !self.newCalendar && calUIAuthorizationService.canDeleteCalendar(self.calendar, session.user._id);
+    }
+
+    function canExportIcs() {
+      return !self.newCalendar && calUIAuthorizationService.canExportCalendarIcs(self.calendar, session.user._id);
     }
 
     function _canModifyPublicSelection() {

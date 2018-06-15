@@ -50,6 +50,14 @@
         span #{__('CalDAV URL')}
       .settings-value
         esn-clipboard-url(url="$ctrl.caldavurl")
+    .calendar-link(ng-if="$ctrl.canExportIcs")
+      .settings-label
+        i.mdi.mdi-download
+        span #{__('Export calendar')}
+      .settings-text
+        span #{__('Export your calendar to iCalendar format file (.ics) which you can import to other applications.')}
+      .settings-actions
+        a.btn.btn-primary.btn-sm(ng-href="{{::$ctrl.calendarIcsUrl}}") #{__('Export')}
 
 .settings-actions
   span.delete-calendar-button(ng-if="$ctrl.canDeleteCalendar()", type="button", ng-click="$ctrl.openDeleteConfirmationDialog()") #{__('Remove this calendar')}
