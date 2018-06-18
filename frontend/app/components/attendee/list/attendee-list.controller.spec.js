@@ -5,20 +5,30 @@
 var expect = chai.expect;
 
 describe('The CalAttendeeListController controller', function() {
+  var calAttendeeService, context, $controller, $q, $scope, $rootScope;
 
   beforeEach(function() {
     module('jadeTemplates');
     angular.mock.module('esn.calendar');
   });
 
-  beforeEach(angular.mock.inject(function($controller, $rootScope, $compile, CAL_EVENTS) {
-    this.$controller = $controller;
-    this.$rootScope = $rootScope;
-    this.$scope = this.$rootScope.$new();
-    this.$compile = $compile;
-    this.CAL_EVENTS = CAL_EVENTS;
-    this.context = {};
-    this.context.attendees = [
+  beforeEach(function() {
+    calAttendeeService = {
+      getUserDisplayNameForAttendee: sinon.stub()
+    };
+
+    angular.mock.module(function($provide) {
+      $provide.value('calAttendeeService', calAttendeeService);
+    });
+  });
+
+  beforeEach(angular.mock.inject(function(_$controller_, _$rootScope_, _$q_) {
+    $controller = _$controller_;
+    $rootScope = _$rootScope_;
+    $q = _$q_;
+    $scope = $rootScope.$new();
+    context = {};
+    context.attendees = [
       { email: 'other1@example.com', partstat: 'NEEDS-ACTION' },
       { email: 'other2@example.com', partstat: 'ACCEPTED' },
       { email: 'other3@example.com', partstat: 'DECLINED' },
@@ -26,32 +36,42 @@ describe('The CalAttendeeListController controller', function() {
       { email: 'other5@example.com', partstat: 'YOLO' }
     ];
 
-    this.initController = function() {
-      return this.$controller('CalAttendeeListController', {$scope: this.$scope}, this.context);
-    };
+    calAttendeeService.getUserDisplayNameForAttendee.returns($q.when());
   }));
+
+  function initController() {
+    return $controller('CalAttendeeListController', {$scope: $scope}, context);
+  }
 
   describe('The $onInit function', function() {
     it('should set organizer flag to organizer', function() {
-      this.context.organizer = { email: this.context.attendees[1].email };
+      context.organizer = { email: context.attendees[1].email };
 
-      var ctrl = this.initController();
+      var ctrl = initController();
 
       ctrl.$onInit();
 
       expect(ctrl.attendees[1].organizer).to.be.true;
     });
+
+    it('should update the attendees display name', function() {
+      var ctrl = initController();
+
+      ctrl.$onInit();
+
+      expect(calAttendeeService.getUserDisplayNameForAttendee.callCount).to.equal(context.attendees.length);
+    });
   });
 
   describe('The removeAttendee function', function() {
     it('should call onAttendeeRemoved with removed attendee', function() {
-      var ctrl = this.initController();
+      var ctrl = initController();
 
       ctrl.onAttendeeRemoved = sinon.spy();
       ctrl.$onInit();
-      ctrl.removeAttendee(this.context.attendees[0]);
+      ctrl.removeAttendee(context.attendees[0]);
 
-      expect(ctrl.onAttendeeRemoved).to.have.been.calledWith({ attendee: this.context.attendees[0] });
+      expect(ctrl.onAttendeeRemoved).to.have.been.calledWith({ attendee: context.attendees[0] });
     });
   });
 });

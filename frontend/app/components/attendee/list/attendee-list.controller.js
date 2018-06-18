@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .controller('CalAttendeeListController', CalAttendeeListController);
 
-  function CalAttendeeListController(_, CAL_ATTENDEE_LIST_LIMIT) {
+  function CalAttendeeListController(_, calAttendeeService, CAL_ATTENDEE_LIST_LIMIT) {
     var self = this;
 
     self.removeAttendee = removeAttendee;
@@ -15,6 +15,7 @@
     function $onInit() {
       self.limit = CAL_ATTENDEE_LIST_LIMIT;
       setOrganizerFlag();
+      setAttendeesDisplayName();
     }
 
     function showToggle() {
@@ -32,6 +33,15 @@
       if (organizerAttendee) {
         organizerAttendee.organizer = true;
       }
+    }
+
+    function setAttendeesDisplayName() {
+      self.attendees.forEach(function(attendee) {
+        attendee.displayName = attendee.displayName || attendee.name;
+        calAttendeeService.getUserDisplayNameForAttendee(attendee).then(function(displayName) {
+          attendee.displayName = displayName;
+        });
+      });
     }
 
     function getOrganizer() {
