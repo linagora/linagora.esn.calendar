@@ -10,7 +10,7 @@ module.exports = {
   generateFakeEvents
 };
 
-function asICAL({ location, summary, start, duration = 1 }) {
+function asICAL({ location, summary, start, duration = 1, attendees = 0 }) {
   const vCalendar = new ICAL.Component(['vcalendar', [], []]);
   const vEvent = new ICAL.Component('vevent');
   const event = new ICAL.Event(vEvent);
@@ -20,6 +20,14 @@ function asICAL({ location, summary, start, duration = 1 }) {
   event.location = location;
   event.startDate = ICAL.Time.fromJSDate(start.toDate(), true);
   event.endDate = ICAL.Time.fromJSDate(start.add(duration, 'hour').toDate(), true);
+
+  for (let index = 0; index < attendees; index++) {
+    const attendee = vEvent.addPropertyWithValue('attendee', `MAILTO:user${index}@open-paas.org`);
+
+    attendee.setParameter('partstat', 'NEEDS-ACTION');
+    attendee.setParameter('rsvp', 'true');
+    attendee.setParameter('cn', `John Doe ${index}`);
+  }
 
   vCalendar.addSubcomponent(vEvent);
 

@@ -17,6 +17,6 @@
       can-modify-attendee='::ctrl.canModifyAttendees',
       is-organizer='false',
       remove="ctrl.removeAttendee(attendee)",
-      ng-repeat="attendee in ctrl.attendeesToDisplay | limitTo: ctrl.limit track by attendee.email"
+      ng-repeat="attendee in ctrl.attendeesToDisplay | limitTo: ctrl.limit track by $id(attendee)"
     )
     a.clickable(ng-if="ctrl.showToggle()", ng-href="", ng-click="ctrl.showAll()") #{__('Show all...')}

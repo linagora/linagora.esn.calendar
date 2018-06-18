@@ -58,7 +58,7 @@ module.exports = {
 
       return client({ auth: {username, password}, baseURL: url })
         .calendars.get(name)
-        .create(event.asICAL({summary, start, duration})).then(() => {
+        .create(event.asICAL({summary, start, duration, attendees: 20})).then(() => {
           spinner.succeed(`${msg} has been created`);
         }, err => {
           spinner.fail(`Failed to create ${msg}`, err.message);
