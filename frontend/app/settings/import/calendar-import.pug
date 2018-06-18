@@ -1,0 +1,22 @@
+.modal.full-screen(tabindex="-1", role="dialog")
+  .modal-dialog
+    .modal-content
+      .modal-header
+        button.close(type="button", ng-click="$hide()") &times;
+        h4.modal-title #{__('Import')}
+      .modal-body
+        p #{__('Import events from an ICS file to one of your calendars.')}
+          .import-file-button
+            .btn-group.btn-group-justified
+              span.btn.btn-primary.btn-file.waves-effect
+                i.mdi.mdi-upload
+                span.import-filename {{ $ctrl.file.name || 'Select a file' | esnI18n }}
+                input.import-input(type="file", accept=".ics", ng-file-select='$ctrl.onFileSelect($files)', data-ng-required="true", data-multiple='false')
+        p #{__('Import to')}
+        md-input-container
+          md-select(ng-model="$ctrl.calendar", md-container-class="cal-event-edition-select-dropdown")
+            md-option(ng-value="calendar" ng-repeat="calendar in $ctrl.calendars | filter: $ctrl.canModifyCalendar() ? { readOnly: false } : {}")
+              cal-select-calendar-item(calendar="calendar")
+      .modal-footer
+        button.btn.btn-default(type="button", ng-click="$hide()") #{__('Cancel')}
+        button.btn.btn-primary(type='button', ng-disabled='!$ctrl.isValid', ng-click='$ctrl.submit(); $hide()') #{__('Import')}
