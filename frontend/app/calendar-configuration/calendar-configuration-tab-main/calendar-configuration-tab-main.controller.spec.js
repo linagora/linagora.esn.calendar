@@ -47,6 +47,7 @@ describe('The calendar configuration tab delegation controller', function() {
       isOwner: sinon.stub().returns(false),
       isPublic: sinon.stub().returns(false),
       isSubscription: sinon.stub().returns(false),
+      isReadable: sinon.stub().returns(true),
       href: '/calendars/userid/id.json'
     };
 
@@ -189,6 +190,38 @@ describe('The calendar configuration tab delegation controller', function() {
     });
   });
 
+  describe('the canExportIcs function', function() {
+    it('should return false for new calendars', function() {
+      sinon.spy(calUIAuthorizationService, 'canExportCalendarIcs');
+      CalendarConfigurationTabMainController.newCalendar = true;
+
+      CalendarConfigurationTabMainController.$onInit();
+
+      expect(calUIAuthorizationService.canExportCalendarIcs).to.not.have.been.called;
+      expect(CalendarConfigurationTabMainController.canExportIcs).to.be.false;
+    });
+
+    it('should leverage calUIAuthorizationService.canExportCalendarIcs', function() {
+      var canExportIcs = true;
+
+      sinon.stub(calUIAuthorizationService, 'canExportCalendarIcs', function() {
+        return canExportIcs;
+      });
+      CalendarConfigurationTabMainController.calendar = {
+        id: 'id',
+        isAdmin: sinon.stub().returns(true),
+        isShared: sinon.stub().returns(false),
+        isSubscription: sinon.stub().returns(false),
+        isReadable: sinon.stub().returns(true)
+      };
+
+      CalendarConfigurationTabMainController.$onInit();
+
+      expect(calUIAuthorizationService.canExportCalendarIcs).to.have.been.calledWith(CalendarConfigurationTabMainController.calendar, session.user._id);
+      expect(CalendarConfigurationTabMainController.canExportIcs).to.equal(canExportIcs);
+    });
+  });
+
   describe('the canModifyPublicSelection', function() {
     it('should return true for new calendars', function() {
       sinon.spy(calUIAuthorizationService, 'canModifyPublicSelection');
@@ -211,7 +244,8 @@ describe('The calendar configuration tab delegation controller', function() {
         isShared: sinon.stub().returns(false),
         isOwner: sinon.stub().returns(false),
         isPublic: sinon.stub().returns(false),
-        isSubscription: sinon.stub().returns(false)
+        isSubscription: sinon.stub().returns(false),
+        isReadable: sinon.stub().returns(true)
       };
 
       CalendarConfigurationTabMainController.$onInit();
@@ -238,6 +272,7 @@ describe('The calendar configuration tab delegation controller', function() {
         isAdmin: sinon.stub().returns(true),
         isShared: sinon.stub().returns(true),
         isSubscription: sinon.stub().returns(false),
+        isReadable: sinon.stub().returns(true),
         rights: {
           getShareeRight: sinon.spy(function() {
             return getShareeRightResult;
