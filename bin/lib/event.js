@@ -31,6 +31,8 @@ function asICAL({ location, summary, start, duration = 1, attendees = 0 }) {
 
   vCalendar.addSubcomponent(vEvent);
 
+  vEvent.addPropertyWithValue('organizer', 'MAILTO:organizer@open-paas.org').setParameter('cn', 'I am the boss');
+
   return vCalendar;
 }
 

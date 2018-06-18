@@ -25,7 +25,6 @@ describe('The CalAttendeeListController controller', function() {
       { email: 'other4@example.com', partstat: 'TENTATIVE' },
       { email: 'other5@example.com', partstat: 'YOLO' }
     ];
-    this.context.organizer = { email: 'organizer@openpaas.org' };
 
     this.initController = function() {
       return this.$controller('CalAttendeeListController', {$scope: this.$scope}, this.context);
@@ -33,28 +32,14 @@ describe('The CalAttendeeListController controller', function() {
   }));
 
   describe('The $onInit function', function() {
-    it('should set organizerAttendee from attendees', function() {
-      this.context.attendees.push(this.context.organizer);
+    it('should set organizer flag to organizer', function() {
+      this.context.organizer = { email: this.context.attendees[1].email };
+
       var ctrl = this.initController();
 
       ctrl.$onInit();
 
-      expect(ctrl.organizerAttendee).to.deep.equal(this.context.organizer);
-    });
-
-    it('should set attendeesToDisplay which does not contains oragnizer', function() {
-      this.context.attendees.push(this.context.organizer);
-      var ctrl = this.initController();
-
-      ctrl.$onInit();
-
-      expect(ctrl.attendeesToDisplay).to.deep.equal([
-        { email: 'other1@example.com', partstat: 'NEEDS-ACTION' },
-        { email: 'other2@example.com', partstat: 'ACCEPTED' },
-        { email: 'other3@example.com', partstat: 'DECLINED' },
-        { email: 'other4@example.com', partstat: 'TENTATIVE' },
-        { email: 'other5@example.com', partstat: 'YOLO' }
-      ]);
+      expect(ctrl.attendees[1].organizer).to.be.true;
     });
   });
 
