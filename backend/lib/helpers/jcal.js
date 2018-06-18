@@ -11,6 +11,7 @@ module.exports = {
   getAttendeesEmails,
   getIcalEvent,
   getOrganizerEmail,
+  getIcalDateAsMoment,
   getVAlarmAsObject,
   getVeventAttendeeByMail,
   updateParticipation,
@@ -34,6 +35,10 @@ function _icalDateToMoment(icalDate) {
   }
 
   return dt;
+}
+
+function getIcalDateAsMoment(icalDate) {
+  return _icalDateToMoment(icalDate);
 }
 
 function getVeventAttendeeByMail(vevent, email) {

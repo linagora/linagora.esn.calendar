@@ -62,6 +62,7 @@ module.exports = dependencies => {
     const vcalendar = new ICAL.Component(msg.event);
     const vevent = vcalendar.getFirstSubcomponent('vevent');
     const valarms = vevent.getAllSubcomponents('valarm');
+    const dtStart = vevent.getFirstPropertyValue('dtstart');
 
     logger.info(`calendar:alarm:create ${eventPath} - Creating new alarms for event ${eventPath}`);
 
@@ -71,10 +72,17 @@ module.exports = dependencies => {
       return Promise.resolve([]);
     }
 
+    if (process.env.NODE_ENV !== 'dev' && jcalHelper.getIcalDateAsMoment(dtStart).isBefore(Date.now())) {
+      logger.debug(`calendar:alarm:create ${eventPath} - Event is in the past, skipping alarms`);
+
+      return Promise.resolve([]);
+    }
+
     return Q.allSettled(valarms.map(createAlarm));
 
     function createAlarm(valarm) {
-      const alarmObject = jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstPropertyValue('dtstart'));
+      const alarmObject = jcalHelper.getVAlarmAsObject(valarm, dtStart);
+
       const alarm = {
         action: valarm.getFirstPropertyValue('action'),
         eventPath,

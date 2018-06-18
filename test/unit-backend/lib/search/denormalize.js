@@ -172,8 +172,8 @@ describe('search helpers', function() {
       expect(this.denormalize.denormalize(data)).to.shallowDeepEqual({
         summary: 'Démo OPENPAAS',
         uid: 'f1514f44bf39311568d640721cbc555071ca90e08d3349ccae43e1787553988ae047feb2aab16e43439a608f28671ab7c10e754cec5324c4e4cd93f443dc3934f6c5d2e592a8112c',
-        start: '2015-06-12T00:00:00.000Z',
-        end: '2015-09-12T00:00:00.000Z',
+        start: '2115-06-12T00:00:00.000Z',
+        end: '2115-09-12T00:00:00.000Z',
         allDay: true,
         durationInDays: 92,
         location: 'https://hubl.in/openpaas',

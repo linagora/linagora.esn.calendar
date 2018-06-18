@@ -52,7 +52,7 @@ describe('The links helper', function() {
       this.requireModule().getEventInCalendar(ics)
         .then(result => {
           expect(spy).to.have.been.calledOnce;
-          expect(result).to.equal(`${url}/#/calendar?start=06-12-2015`);
+          expect(result).to.equal(`${url}/#/calendar?start=06-12-2115`);
           done();
         })
         .catch(done);
