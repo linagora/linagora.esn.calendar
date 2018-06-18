@@ -280,6 +280,63 @@ describe('The calAttendeeService service', function() {
     });
   });
 
+  describe('The getUserDisplayNameForAttendee function', function() {
+    var attendee;
+
+    beforeEach(function() {
+      attendee = {
+        email: 'user1@open-paas.org',
+        name: 'The name',
+        displayName: 'The display name'
+      };
+    });
+
+    it('should return the attendee name from attendee if user is not found', function(done) {
+      calAttendeesCache.get.returns($q.when());
+
+      calAttendeeService.getUserDisplayNameForAttendee(attendee).then(function(result) {
+        expect(calAttendeesCache.get).to.have.been.calledWith(attendee.email);
+        expect(userUtils.displayNameOf).to.not.have.been.called;
+        expect(result).to.equals(attendee.displayName);
+
+        done();
+      }).catch(done);
+
+      $rootScope.$digest();
+    });
+
+    it('should return the attendee name from attendee if user name can not be generated from user', function(done) {
+      var user = { _id: 1 };
+
+      calAttendeesCache.get.returns($q.when(user));
+      userUtils.displayNameOf.returns();
+
+      calAttendeeService.getUserDisplayNameForAttendee(attendee).then(function(result) {
+        expect(calAttendeesCache.get).to.have.been.calledWith(attendee.email);
+        expect(userUtils.displayNameOf).to.have.been.calledWith(user);
+        expect(result).to.equals(attendee.displayName);
+
+        done();
+      }).catch(done);
+
+      $rootScope.$digest();
+    });
+
+    it('should return the attendee name from attendee if user resolution fails', function(done) {
+      calAttendeesCache.get.returns($q.reject(new Error('I failed')));
+
+      calAttendeeService.getUserDisplayNameForAttendee(attendee).then(function(result) {
+        expect(calAttendeesCache.get).to.have.been.calledWith(attendee.email);
+        expect(userUtils.displayNameOf).to.not.have.been.called;
+        expect(result).to.equals(attendee.displayName);
+
+        done();
+      }).catch(done);
+
+      $rootScope.$digest();
+    });
+  });
+
   describe('The getUsersIdsForAttendees function', function() {
     var attendees;
 

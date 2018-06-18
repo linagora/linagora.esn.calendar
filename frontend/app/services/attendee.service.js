@@ -9,6 +9,7 @@
       filterDuplicates: filterDuplicates,
       getAttendeeForUser: getAttendeeForUser,
       getUserIdForAttendee: getUserIdForAttendee,
+      getUserDisplayNameForAttendee: getUserDisplayNameForAttendee,
       getUsersIdsForAttendees: getUsersIdsForAttendees,
       manageResourceDetailsPromiseResolutions: manageResourceDetailsPromiseResolutions,
       logResourceDetailsError: logResourceDetailsError,
@@ -44,6 +45,18 @@
         if (user) {
           return user._id;
         }
+      });
+    }
+
+    // Since clients can create events with attendees defined as email only:
+    // if the user is an openpaas one, get the openpaas display name, else get it from the attendee ICS
+    function getUserDisplayNameForAttendee(attendee) {
+      var name = attendee.displayName || attendee.name;
+
+      return calAttendeesCache.get(attendee.email).then(function(user) {
+        return user ? userUtils.displayNameOf(user) || name : name;
+      }).catch(function() {
+        return $q.when(name);
       });
     }
 

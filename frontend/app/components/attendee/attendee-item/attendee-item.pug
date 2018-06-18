@@ -2,7 +2,7 @@
   cal-attendee-avatar(attendee='ctrl.attendee')
   .attendee-item-meta
     .name
-      span {{::ctrl.getDisplayName()}}
+      span {{ctrl.attendee.displayName}}
     .details
       span.organizer(ng-if="ctrl.isOrganizer") #{__('Organizer')}
       span.separator -
