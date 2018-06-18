@@ -300,6 +300,10 @@
             label: 'Public'
           },
           {
+            value: 'CONFIDENTIAL',
+            label: 'Show time and date only'
+          },
+          {
             value: 'PRIVATE',
             label: 'Private'
           }
