@@ -108,6 +108,59 @@ describe('The calendar configuration tab delegation controller', function() {
     });
   });
 
+  describe('the calendarIcsUrl', function() {
+    beforeEach(function() {
+      calendar = {
+        isShared: sinon.stub().returns(false),
+        isAdmin: sinon.stub().returns(false),
+        isOwner: sinon.stub().returns(false),
+        isSubscription: sinon.stub().returns(false),
+        isReadable: sinon.stub().returns(true),
+        id: 'id',
+        calendarHomeId: 'homeId'
+      };
+    });
+
+    it('should not be initialized if new calendar', function() {
+      CalendarConfigurationTabMainController.calendar = calendar;
+      CalendarConfigurationTabMainController.newCalendar = true;
+
+      CalendarConfigurationTabMainController.$onInit();
+
+      expect(CalendarConfigurationTabMainController.calendarIcsUrl).to.be.undefined;
+    });
+
+    it('should be initialized with calendar path if not subscription', function() {
+      CalendarConfigurationTabMainController.calendar = calendar;
+
+      CalendarConfigurationTabMainController.$onInit();
+
+      expect(CalendarConfigurationTabMainController.calendarIcsUrl).to.equals('/dav/api/calendars/homeId/id?export');
+    });
+
+    it('should be initialized with calendar source path if subscription', function() {
+      calendar = {
+        isShared: sinon.stub().returns(false),
+        isAdmin: sinon.stub().returns(false),
+        isOwner: sinon.stub().returns(false),
+        isSubscription: sinon.stub().returns(true),
+        isReadable: sinon.stub().returns(true),
+        id: 'id',
+        calendarHomeId: 'homeId',
+        source: {
+          id: 'sourceId',
+          calendarHomeId: 'sourceHomeId'
+        }
+      };
+
+      CalendarConfigurationTabMainController.calendar = calendar;
+
+      CalendarConfigurationTabMainController.$onInit();
+
+      expect(CalendarConfigurationTabMainController.calendarIcsUrl).to.equals('/dav/api/calendars/sourceHomeId/sourceId?export');
+    });
+  });
+
   describe('the openDeleteConfirmationDialog function', function() {
     it('should call the modal confirmation service', function() {
       CalendarConfigurationTabMainController.openDeleteConfirmationDialog();
@@ -312,8 +365,20 @@ describe('The calendar configuration tab delegation controller', function() {
 
     it('should trigger performExternalCalendarOperations for an external calendar "isShared=false and isSubscription=true"', function() {
       sinon.stub(calUIAuthorizationService, 'canModifyPublicSelection', angular.noop);
-      CalendarConfigurationTabMainController.calendar.isShared = sinon.stub().returns(false);
-      CalendarConfigurationTabMainController.calendar.isSubscription = sinon.stub().returns(true);
+      CalendarConfigurationTabMainController.calendar = {
+        source: {},
+        isShared: sinon.stub().returns(false),
+        isSubscription: sinon.stub().returns(true),
+        isReadable: sinon.stub().returns(true),
+        rights: {
+          getShareeRight: sinon.spy(function() {
+            return CAL_CALENDAR_SHARED_RIGHT.SHAREE_OWNER;
+          })
+        },
+        getOwner: sinon.spy(function() {
+          return getOwnerResult;
+        })
+      };
 
       CalendarConfigurationTabMainController.$onInit();
 
