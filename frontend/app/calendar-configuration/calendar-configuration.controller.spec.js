@@ -102,11 +102,7 @@ describe('The calendar configuration controller', function() {
       modifyPublicRights: sinon.spy()
     };
 
-    calendar = {
-      getOwner: sinon.spy(function() {
-        return $q.when();
-      })
-    };
+    calendar = 'calendar';
 
     calendarService = {
       getRight: sinon.spy(function() {
@@ -235,15 +231,6 @@ describe('The calendar configuration controller', function() {
       $rootScope.$digest();
 
       expect(calendarService.getCalendar).to.not.be.called;
-    });
-
-    it('should calendar.getOwner to get the calendar owner if calendar is not null', function() {
-      calendarConfigurationController.$onInit();
-
-      $rootScope.$digest();
-
-      expect(calendarService.getCalendar).to.be.calledWith(calendarHomeId, '123');
-      expect(calendar.getOwner).to.have.been.calledWith();
     });
 
     it('should initialize calendar with the right calendar when we want configure a calendar', function() {

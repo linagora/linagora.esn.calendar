@@ -14,8 +14,7 @@
         selectedShareeRight: '=',
         newUsersGroups: '=',
         addUserGroup: '=',
-        removeUserGroup: '=',
-        calendarOwner: '='
+        removeUserGroup: '='
       },
       controller: 'CalendarConfigurationTabDelegationController'
     };
