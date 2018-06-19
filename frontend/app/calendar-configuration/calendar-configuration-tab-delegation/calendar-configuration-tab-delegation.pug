@@ -13,7 +13,7 @@ hr
 .delegation-line(ng-repeat="delegation in $ctrl.delegations")
   .user
     a.user-avatar(href="", ng-attr-title='delegation.user.displayName')
-      esn-avatar(user-email="delegation.user.preferredEmail")
+      esn-avatar(user-id="delegation.user.id", user-email="delegation.user.preferredEmail")
     .user-name
       a(ng-href="mailto:{{::delegation.user.preferredEmail}}" op-inbox-compose op-inbox-compose-display-name="{{::delegation.user.displayName}}") {{ delegation.user.displayName }}
   .select-delegation

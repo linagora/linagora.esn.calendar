@@ -31,9 +31,10 @@
       .public-access-line-visibility-key.col-xs-4
         | #{__('Shared by')}
       .public-access-line-visibility-value.calendar-owner.form-group.col-xs-8
-        a.attendee-avatar.margin-right-15(href="", ng-attr-title="$ctrl.user.displayName")
-          esn-avatar(user-email="$ctrl.sharedCalendarOwner.preferredEmail")
-        | {{ $ctrl.displayNameOfSharedCalendarOwner }}
+        a.attendee-avatar(href="", ng-attr-title="$ctrl.user.displayName")
+          esn-avatar(user-id="$ctrl.sharedCalendarOwner.id", user-email="$ctrl.sharedCalendarOwner.preferredEmail")
+        .user-name
+          a(ng-href="mailto:{{$ctrl.sharedCalendarOwner.preferredEmail}}" op-inbox-compose op-inbox-compose-display-name="{{::$ctrl.displayNameOfSharedCalendarOwner}}") {{ $ctrl.displayNameOfSharedCalendarOwner }}
 
   .calendar-shared-rights
     .public-access-line.public-access-visibility-line(ng-if="$ctrl.shareeRight")
