@@ -316,6 +316,24 @@ describe('The calEntitiesAutocompleteInputController', function() {
       expect(response).to.be.false;
     });
 
+    describe('excluding unknown users', function() {
+      it('should return false if added entity is not an OP user', function() {
+        var displayName = 'plain@email.com';
+        var entity = { displayName: displayName };
+        var ctrl = initController({ excludeUnknownUsers: true });
+
+        expect(ctrl.onAddingEntity(entity)).to.be.falsy;
+      });
+
+      it('should return true if added entity is an OP user', function() {
+        var displayName = 'plain@email.com';
+        var entity = { displayName: displayName, _id: 'test' };
+        var ctrl = initController({ excludeUnknownUsers: true });
+
+        expect(ctrl.onAddingEntity(entity)).to.be.true;
+      });
+    });
+
     describe('adding plain email entity', function() {
       it('should use displayName as ID and email', function() {
         var displayName = 'plain@email.com';

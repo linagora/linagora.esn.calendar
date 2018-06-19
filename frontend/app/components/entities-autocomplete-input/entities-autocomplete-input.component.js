@@ -7,6 +7,7 @@ angular.module('esn.calendar')
       excludeCurrentUser: '=?', // defaults to false
       originalEntities: '=?',
       mutableEntities: '=',
+      excludeUnknownUsers: '=?',
       onEntityAdded: '=?',
       onEntityRemoved: '=?',
       onAddingEntity: '=?',

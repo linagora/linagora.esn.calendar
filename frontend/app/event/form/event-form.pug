@@ -64,6 +64,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
             show-icon='true',
             show-resource-icon='true',
             on-entity-added='onResourceAttendeesAdded',
+            exclude-unknown-users='true',
             template='/calendar/app/components/entities-autocomplete-input/entities-autocomplete-input-freebusy-tag.html'
           )
           .col-xs-12

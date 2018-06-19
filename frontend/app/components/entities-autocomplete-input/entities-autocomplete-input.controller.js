@@ -28,12 +28,17 @@
 
     function $onInit() {
       self.excludeCurrentUser = !!self.excludeCurrentUser;
+      self.excludeUnknownUsers = !!self.excludeUnknownUsers;
     }
 
     function _onAddingEntity(entity) {
       if (!entity.id) {
         entity.id = entity.displayName;
         entity.email = entity.displayName;
+      }
+
+      if (self.excludeUnknownUsers && !entity._id) {
+        return false;
       }
 
       return emailService.isValidEmail(entity.email) && !_isDuplicateEntity(entity, _getAddedEntitiesEmails());
