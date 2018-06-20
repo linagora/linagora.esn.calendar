@@ -52,8 +52,9 @@
         calCalDAVURLService.getCalendarURL(self.calendar).then(function(url) {
           self.caldavurl = url;
         });
+        var calendarToExport = self.calendar.isSubscription() ? self.calendar.source : self.calendar;
 
-        self.calendarIcsUrl = CAL_DAV_PATH + calPathBuilder.forCalendarPath(self.calendar.calendarHomeId, self.calendar.id) + '?export';
+        self.calendarIcsUrl = CAL_DAV_PATH + calPathBuilder.forCalendarPath(calendarToExport.calendarHomeId, calendarToExport.id) + '?export';
       }
     }
 
