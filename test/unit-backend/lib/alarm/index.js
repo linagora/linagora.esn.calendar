@@ -8,7 +8,7 @@ const ICAL = require('@linagora/ical.js');
 const CONSTANTS = require('../../../../backend/lib/constants');
 
 describe('The alarm module', function() {
-  let alarms, eventUid, notifyFunctions, amqpClientProviderMock, amqpClient, attendeeEmail, eventPath, alarmDB, jobLib, jobQueue, pubsubMock;
+  let alarms, eventUid, notifyFunctions, amqpClientProviderMock, amqpClient, attendeeEmail, eventPath, alarmDB, jobLib, jobQueue, pubsubMock, nodeEnv;
 
   beforeEach(function() {
     this.calendarModulePath = this.moduleHelpers.modulePath;
@@ -78,6 +78,14 @@ describe('The alarm module', function() {
     this.getEvent = name => ICAL.Component.fromString(this.getICSAsString(name));
   });
 
+  beforeEach(function() {
+    nodeEnv = process.env.NODE_ENV;
+  });
+
+  afterEach(function() {
+    process.env.NODE_ENV = nodeEnv;
+  });
+
   function checkAlarmCreated(done) {
     expect(alarmDB.create).to.have.been.calledWith(
       sinon.match(context => {
@@ -91,6 +99,11 @@ describe('The alarm module', function() {
       })
     );
 
+    done && done();
+  }
+
+  function checkAlarmNotCreated(done) {
+    expect(alarmDB.create).to.not.have.been.called;
     done && done();
   }
 
@@ -175,6 +188,36 @@ describe('The alarm module', function() {
           return notifyFunctions[CONSTANTS.EVENTS.ALARM.CREATED]({
             eventPath,
             event: self.getEventAsJSON('withVALARM')
+          })
+          .then(() => checkAlarmCreated(done));
+        }
+      });
+
+      it('should not register a new alarm without recurring when event is in the past', function(done) {
+        const self = this;
+
+        this.requireModule().init().then(test).catch(done);
+
+        function test() {
+          return notifyFunctions[CONSTANTS.EVENTS.ALARM.CREATED]({
+            eventPath,
+            event: self.getEventAsJSON('withVALARMInPast')
+          })
+          .then(() => checkAlarmNotCreated(done));
+        }
+      });
+
+      it('should register a new alarm without recurring when event is in the past but NODE_ENV is dev', function(done) {
+        const self = this;
+
+        process.env.NODE_ENV = 'dev';
+
+        this.requireModule().init().then(test).catch(done);
+
+        function test() {
+          return notifyFunctions[CONSTANTS.EVENTS.ALARM.CREATED]({
+            eventPath,
+            event: self.getEventAsJSON('withVALARMInPast')
           })
           .then(() => checkAlarmCreated(done));
         }
