@@ -339,6 +339,18 @@ describe('The calFreebusyService service', function() {
       end = '';
     });
 
+    it('should do nothing if attendees list is empty', function() {
+      attendees = [];
+      calAttendeeService.getUserIdForAttendee.returns($q.when());
+      getBulkFreebusyStatusStub.returns($q.when({}));
+
+      calFreebusyService.setBulkFreeBusyStatus(attendees, start, end, [event]);
+      $rootScope.$digest();
+
+      expect(calAttendeeService.getUserIdForAttendee).to.not.have.been.called;
+      expect(getBulkFreebusyStatusStub).to.not.have.been.called;
+    });
+
     it('should get the user id from attendee when attendee does not have id', function() {
       attendees[1].id = '1';
       calAttendeeService.getUserIdForAttendee.returns($q.when());
