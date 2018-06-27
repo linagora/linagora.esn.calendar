@@ -27,6 +27,7 @@
     self.openEvent = openEvent;
     self.onPartstatChangeSuccess = onPartstatChangeSuccess;
     self.onPartstatChangeError = onPartstatChangeError;
+    self.isActionable = isActionable;
 
     function $onInit() {
       self.meeting = {
@@ -99,6 +100,10 @@
 
     function currentUserIsOrganizer(event) {
       return calEventUtils.isOrganizer(event);
+    }
+
+    function isActionable() {
+      return self.meeting.method === CAL_EVENT_METHOD.REQUEST && !currentUserIsOrganizer(self.event);
     }
 
     function getEventByUID() {

@@ -80,7 +80,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
   }));
 
   beforeEach(function() {
-    ['event', 'recurringEventWithTwoExceptions', 'singleWithAttendees', 'singleWithoutAttendee'].forEach(function(file) {
+    ['event', 'recurringEventWithTwoExceptions', 'singleWithAttendees', 'singleWithoutAttendee', 'eventRequestRegular'].forEach(function(file) {
       shells[file] = new CalendarShell(ICAL.Component.fromString(__FIXTURES__[('frontend/app/fixtures/calendar/' + file + '.ics')]), {
         etag: 'etag',
         path: 'path'
@@ -393,6 +393,30 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
         event: shells.recurringEventWithTwoExceptions,
         actor: ctrl.replyAttendee
       }]);
+    });
+  });
+
+  describe('The isActionable function', function() {
+    it('should return true when user is an attendee (RSVP required)', function() {
+      var ctrl = initCtrl('REQUEST', '1234', '1');
+
+      session.user.emails = ['b@example.com'];
+      calEventService.getEventByUID = qResolve(shells.eventRequestRegular);
+      ctrl.$onInit();
+      $rootScope.$digest();
+
+      expect(ctrl.isActionable()).to.equal(true);
+    });
+
+    it('should return false when user is also event organizer (no action required)', function() {
+      var ctrl = initCtrl('REQUEST', '1234', '1');
+
+      session.user.emails = ['admin@open-paas.org'];
+      calEventService.getEventByUID = qResolve(shells.singleWithoutAttendee);
+      ctrl.$onInit();
+      $rootScope.$digest();
+
+      expect(ctrl.isActionable()).to.equal(false);
     });
   });
 });
