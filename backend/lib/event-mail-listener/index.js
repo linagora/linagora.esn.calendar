@@ -1,7 +1,3 @@
-'use strict';
-
-const Q = require('q');
-
 const CONSTANTS = require('../constants');
 
 module.exports = dependencies => {
@@ -9,8 +5,8 @@ module.exports = dependencies => {
   const amqpClientProvider = dependencies('amqpClientProvider');
   const logger = dependencies('logger');
   const userModule = dependencies('user');
-  const pubsub = dependencies('pubsub');
   const caldavClient = require('../caldav-client')(dependencies);
+  let amqpClient;
 
   return {
     init
@@ -22,7 +18,7 @@ module.exports = dependencies => {
         if (config && config.exchanges && config.exchanges.length) {
           return config.exchanges.map(_subscribe);
         }
-        logger.warn('CalEventMailListener : Missing configuration in mongoDB');
+        logger.info(`CalEventMailListener : Missing configuration in mongoDB, fallback to default ${CONSTANTS.EVENT_MAIL_LISTENER.FALLBACK_EXCHANGE}`);
 
         return _subscribe(CONSTANTS.EVENT_MAIL_LISTENER.FALLBACK_EXCHANGE);
       })
@@ -32,10 +28,13 @@ module.exports = dependencies => {
   }
 
   function _subscribe(exchange) {
-    logger.debug(`CalEventMailListener: registering listener on topic ${exchange}`);
-    pubsub.global.topic(exchange).subscribe(_processMessage);
+    logger.debug(`CalEventMailListener: registering listener on exchange ${exchange}`);
 
-    return Q.when(true);
+    return amqpClientProvider.getClient()
+      .then(client => (amqpClient = client))
+      // For simplicity, queue name is the same as the exchange one
+      .then(() => amqpClient.subscribeToDurableQueue(exchange, exchange, _processMessage))
+      .catch(err => logger.error(`Can not setup AMQP client to process '${exchange}' exchanges. Emails will not be processed correctly until a new subsriber is up and running`, err));
   }
 
   function _getConfiguration() {
@@ -45,45 +44,41 @@ module.exports = dependencies => {
   function _processMessage(jsonMessage, originalMessage) {
     logger.debug('CalEventMailListener, new message received');
     if (!_checkMandatoryFields(jsonMessage)) {
-      logger.warn('CalEventMailListener : Missing mandatory field => Event ignored');
+      logger.warn('CalEventMailListener : Missing some mandatory fields, event ignored');
 
       return;
     }
-    logger.debug('CalEventMailListener, handling message ' + jsonMessage.uid);
+    logger.debug(`CalEventMailListener[${jsonMessage.uid}] : Processing message`);
 
     userModule.findByEmail(jsonMessage.recipient, (err, user) => {
-        if (err) {
-          logger.error('CalEventMailListener[' + jsonMessage.uid + '] : Could not connect to UserModule => Event ignored');
+      if (err) {
+        logError('Error while searching user from email, skipping event')(err);
 
-          return;
-        }
-
-        if (user) {
-          _handleMessage(user.id, jsonMessage)
-          .then(() => _ackMessage(originalMessage))
-          .then(() => {
-            logger.debug('CalEventMailListener[' + jsonMessage.uid + '] : Successfully sent to DAV server');
-          })
-          .catch(err => {
-            logger.error('CalEventMailListener[' + jsonMessage.uid + '] : error acknowledging message');
-            logger.debug('CalEventMailListener[' + jsonMessage.uid + '] : DAV request Error ' + err + ' ' + err ? err.stack : '');
-          });
-        } else {
-          _ackMessage(originalMessage)
-          .then(() => {
-            logger.warn('CalEventMailListener[' + jsonMessage.uid + '] : Recipient user unknown in OpenPaas => Event ignored');
-          })
-          .catch(error => {
-            logger.error('CalEventMailListener[' + jsonMessage.uid + '] : error acknowledging message');
-            logger.debug(error);
-          });
-        }
+        return;
       }
-    );
+
+      if (user) {
+        return _handleMessage(user.id, jsonMessage)
+          .then(() => _ackMessage(originalMessage))
+          .then(() => logger.debug(`CalEventMailListener[${jsonMessage.uid}] : Successfully sent to DAV server`))
+          .catch(logError('Error handling message'));
+      }
+
+      _ackMessage(originalMessage)
+        .then(() => logger.warn(`CalEventMailListener[${jsonMessage.uid}] : Recipient user unknown in OpenPaas ${jsonMessage.recipient}, skipping event`))
+        .catch(logError('Error acknowledging message'));
+
+      function logError(msg) {
+        return err => {
+          logger.error(`CalEventMailListener[${jsonMessage.uid}] : ${msg}`, err.message);
+          logger.debug(`CalEventMailListener[${jsonMessage.uid}]`, err);
+        };
+      }
+    });
   }
 
   function _ackMessage(message) {
-    return amqpClientProvider.getClient().then(client => client.ack(message));
+    return amqpClient ? amqpClient.ack(message) : Promise.reject(new Error('No client available to ack message'));
   }
 
   function _checkMandatoryFields(jsonMessage = {}) {
