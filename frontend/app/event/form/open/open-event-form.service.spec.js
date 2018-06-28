@@ -223,72 +223,92 @@ describe('The calOpenEventForm service', function() {
     });
 
     describe('When event is recurring', function() {
-      it('should open instance by default', function() {
-        calOpenEventForm(calendarHomeId, instance);
+      describe('When user can not edit event', function() {
+        it('should open event form with instance', function() {
+          canModifyEvent = false;
 
-        $rootScope.$digest();
+          calOpenEventForm(calendarHomeId, instance);
 
-        expect($modal).to.have.been.calledWith(sinon.match({
-          templateUrl: '/calendar/app/event/form/modals/edit-instance-or-series-modal.html',
-          resolve: {
-            event: sinon.match.func.and(sinon.match(function(eventGetter) {
-              return eventGetter() === instance;
-            }))
-          },
-          controller: sinon.match.func.and(sinon.match(function(controller) {
-            var openForm = sinon.spy();
-            var $scope = {
-              $hide: sinon.spy()
-            };
+          $rootScope.$digest();
 
-            controller($scope, calendar, instance, openForm);
-            instance.recurrenceIdAsString = '20170425T083000Z';
-
-            $scope.submit();
-            $rootScope.$digest();
-
-            expect(openForm).to.have.been.calledWith(calendar, instance);
-            expect($scope.$hide).to.have.been.calledOnce;
-
-            return true;
-          })),
-          placement: 'center'
-        }));
+          expect($modal).to.have.been.called;
+          expect($state.go).to.not.have.been;
+          expect($modal).to.have.been.calledWith(sinon.match({
+            templateUrl: '/calendar/app/event/form/modals/event-form-modal.html',
+            backdrop: 'static',
+            placement: 'center'
+          }));
+        });
       });
 
-      it('should open recurrence when user choose it', function() {
-        calOpenEventForm(calendarHomeId, instance);
+      describe('When user can edit event', function() {
+        it('should open choice modal with instance selected by default', function() {
+          calOpenEventForm(calendarHomeId, instance);
 
-        $rootScope.$digest();
+          $rootScope.$digest();
 
-        expect($modal).to.have.been.calledWith(sinon.match({
-          templateUrl: '/calendar/app/event/form/modals/edit-instance-or-series-modal.html',
-          resolve: {
-            event: sinon.match.func.and(sinon.match(function(eventGetter) {
-              return eventGetter() === instance;
-            }))
-          },
-          controller: sinon.match.func.and(sinon.match(function(controller) {
-            var openForm = sinon.spy();
-            var $scope = {
-              $hide: sinon.spy()
-            };
+          expect($modal).to.have.been.calledWith(sinon.match({
+            templateUrl: '/calendar/app/event/form/modals/edit-instance-or-series-modal.html',
+            resolve: {
+              event: sinon.match.func.and(sinon.match(function(eventGetter) {
+                return eventGetter() === instance;
+              }))
+            },
+            controller: sinon.match.func.and(sinon.match(function(controller) {
+              var openForm = sinon.spy();
+              var $scope = {
+                $hide: sinon.spy()
+              };
 
-            controller($scope, calendar, instance, openForm);
-            instance.recurrenceIdAsString = '20170425T083000Z';
-            $scope.editChoice = 'all';
+              controller($scope, calendar, instance, openForm);
+              instance.recurrenceIdAsString = '20170425T083000Z';
 
-            $scope.submit();
-            $rootScope.$digest();
+              $scope.submit();
+              $rootScope.$digest();
 
-            expect(instance.getModifiedMaster).to.have.been.calledWith(true);
-            expect(openForm).to.have.been.calledWith(calendar, master);
-            expect($scope.$hide).to.have.been.calledOnce;
+              expect(openForm).to.have.been.calledWith(calendar, instance);
+              expect($scope.$hide).to.have.been.calledOnce;
 
-            return true;
-          })),
-          placement: 'center'
-        }));
+              return true;
+            })),
+            placement: 'center'
+          }));
+        });
+
+        it('should open recurrence when user choose it', function() {
+          calOpenEventForm(calendarHomeId, instance);
+
+          $rootScope.$digest();
+
+          expect($modal).to.have.been.calledWith(sinon.match({
+            templateUrl: '/calendar/app/event/form/modals/edit-instance-or-series-modal.html',
+            resolve: {
+              event: sinon.match.func.and(sinon.match(function(eventGetter) {
+                return eventGetter() === instance;
+              }))
+            },
+            controller: sinon.match.func.and(sinon.match(function(controller) {
+              var openForm = sinon.spy();
+              var $scope = {
+                $hide: sinon.spy()
+              };
+
+              controller($scope, calendar, instance, openForm);
+              instance.recurrenceIdAsString = '20170425T083000Z';
+              $scope.editChoice = 'all';
+
+              $scope.submit();
+              $rootScope.$digest();
+
+              expect(instance.getModifiedMaster).to.have.been.calledWith(true);
+              expect(openForm).to.have.been.calledWith(calendar, master);
+              expect($scope.$hide).to.have.been.calledOnce;
+
+              return true;
+            })),
+            placement: 'center'
+          }));
+        });
       });
     });
 
