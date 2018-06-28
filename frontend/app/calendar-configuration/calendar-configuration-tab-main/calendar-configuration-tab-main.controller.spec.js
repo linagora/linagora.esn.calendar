@@ -217,6 +217,8 @@ describe('The calendar configuration tab delegation controller', function() {
     var canDeleteCalendarResult;
 
     beforeEach(function() {
+      CalendarConfigurationTabMainController.calendar = calendar;
+
       sinon.stub(calUIAuthorizationService, 'canDeleteCalendar', function() {
         return canDeleteCalendarResult;
       });
@@ -226,20 +228,26 @@ describe('The calendar configuration tab delegation controller', function() {
       CalendarConfigurationTabMainController.newCalendar = false;
       canDeleteCalendarResult = true;
 
-      expect(CalendarConfigurationTabMainController.canDeleteCalendar()).to.be.true;
+      CalendarConfigurationTabMainController.$onInit();
+
+      expect(CalendarConfigurationTabMainController.canDeleteCalendar).to.be.true;
     });
 
     it('should return false if newCalendar=false and calUIAuthorizationService.canDeleteCalendar= false', function() {
       CalendarConfigurationTabMainController.newCalendar = false;
       canDeleteCalendarResult = false;
 
-      expect(CalendarConfigurationTabMainController.canDeleteCalendar()).to.be.false;
+      CalendarConfigurationTabMainController.$onInit();
+
+      expect(CalendarConfigurationTabMainController.canDeleteCalendar).to.be.false;
     });
 
     it('should return false if newCalendar=true', function() {
       CalendarConfigurationTabMainController.newCalendar = true;
 
-      expect(CalendarConfigurationTabMainController.canDeleteCalendar()).to.be.false;
+      CalendarConfigurationTabMainController.$onInit();
+
+      expect(CalendarConfigurationTabMainController.canDeleteCalendar).to.be.false;
     });
   });
 
@@ -260,6 +268,10 @@ describe('The calendar configuration tab delegation controller', function() {
       sinon.stub(calUIAuthorizationService, 'canExportCalendarIcs', function() {
         return canExportIcs;
       });
+      sinon.stub(calUIAuthorizationService, 'canDeleteCalendar', function() {
+        return true;
+      });
+
       CalendarConfigurationTabMainController.calendar = {
         id: 'id',
         isAdmin: sinon.stub().returns(true),

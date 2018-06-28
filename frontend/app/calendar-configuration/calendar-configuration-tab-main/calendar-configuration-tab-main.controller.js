@@ -25,7 +25,6 @@
     self.openDeleteConfirmationDialog = openDeleteConfirmationDialog;
     self.removeCalendar = removeCalendar;
     self.unsubscribe = unsubscribe;
-    self.canDeleteCalendar = canDeleteCalendar;
 
     ///////////
     function $onInit() {
@@ -47,6 +46,7 @@
       !self.newCalendar && performExternalCalendarOperations(isExternalCalendar());
       self.canModifyPublicSelection = _canModifyPublicSelection();
       self.canExportIcs = canExportIcs();
+      self.canDeleteCalendar = canDeleteCalendar();
 
       if (!self.newCalendar && self.calendar) {
         calCalDAVURLService.getCalendarURL(self.calendar).then(function(url) {
