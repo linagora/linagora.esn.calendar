@@ -59,6 +59,10 @@
     }
 
     function setBulkFreeBusyStatus(attendees, start, end, excludedEvents) {
+      if (!attendees || attendees.length === 0) {
+        return $q.when();
+      }
+
       return $q.allSettled(attendees.map(populateUserId)).then(setBulkStatus);
 
       function setBulkStatus() {
