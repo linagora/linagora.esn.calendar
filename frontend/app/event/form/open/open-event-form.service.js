@@ -20,7 +20,7 @@
 
       calendarService.getCalendar(calendarHomeId, calendarId).then(function(calendar) {
         if (calUIAuthorizationService.canAccessEventDetails(calendar, event, session.user._id)) {
-          if (!event.isInstance()) {
+          if (!calUIAuthorizationService.canModifyEvent(calendar, event, session.user._id) || !event.isInstance()) {
             _openForm(calendar, event, relatedEvents);
           } else {
             _openRecurringModal(calendar, event, relatedEvents);
