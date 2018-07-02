@@ -921,4 +921,50 @@ describe('The calendarViewController', function() {
       expect(event.clone).to.have.been.calledWith();
     });
   });
+
+  describe('the mouseScrollEvent', function() {
+    it('should call fullCalendar next on scrollUp when currentView is equal to month', function() {
+      this.controller('calendarViewController', {$scope: this.scope});
+
+      this.scope.prevented = true;
+      this.scope.calendarReady(this.calendar);
+      this.scope.showNextMonth();
+      this.scope.$digest();
+
+      expect(fullCalendarSpy).to.have.been.calledWith('next');
+    });
+
+    it('should call fullCalendar prev on scrollUp when currentView is equal to month', function() {
+      this.controller('calendarViewController', {$scope: this.scope});
+
+      this.scope.prevented = true;
+      this.scope.calendarReady(this.calendar);
+      this.scope.showPrevMonth();
+      this.scope.$digest();
+
+      expect(fullCalendarSpy).to.have.been.calledWith('prev');
+    });
+
+    it('should not call fullCalendar next on scrollUp when currentView is not equal to month', function() {
+      this.controller('calendarViewController', {$scope: this.scope});
+
+      this.scope.prevented = false;
+      this.scope.calendarReady(this.calendar);
+      this.scope.showNextMonth();
+      this.scope.$digest();
+
+      expect(fullCalendarSpy).to.have.been.notCalled;
+    });
+
+    it('should not call fullCalendar prev on scrollUp when currentView is not equal to month', function() {
+      this.controller('calendarViewController', {$scope: this.scope});
+
+      this.scope.prevented = false;
+      this.scope.calendarReady(this.calendar);
+      this.scope.showPrevMonth();
+      this.scope.$digest();
+
+      expect(fullCalendarSpy).to.have.been.notCalled;
+    });
+  });
 });

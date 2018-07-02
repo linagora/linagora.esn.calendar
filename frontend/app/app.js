@@ -44,6 +44,7 @@
     'restangular',
     'material.components.tooltip',
     'material.components.radioButton',
-    'uuid4'
+    'uuid4',
+    'esn.onscroll'
   ]);
 })();
