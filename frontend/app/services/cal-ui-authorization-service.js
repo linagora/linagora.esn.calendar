@@ -15,6 +15,7 @@
       canAccessEventDetails: canAccessEventDetails,
       canDeleteCalendar: canDeleteCalendar,
       canExportCalendarIcs: canExportCalendarIcs,
+      canImportCalendarIcs: canImportCalendarIcs,
       canModifyCalendarProperties: canModifyCalendarProperties,
       canModifyEvent: canModifyEvent,
       canModifyEventAttendees: canModifyEventAttendees,
@@ -35,6 +36,10 @@
 
     function canExportCalendarIcs(calendar, userId) {
       return !!calendar && calendar.isReadable(userId);
+    }
+
+    function canImportCalendarIcs(calendar, userId) {
+      return !!calendar && calendar.isOwner(userId) && !calendar.isSubscription() && !calendar.isPublic();
     }
 
     function canModifyEvent(calendar, event, userId) {
