@@ -3,7 +3,7 @@
 
   angular.module('esn.calendar').factory('calCalDAVURLService', calCalDAVURLService);
 
-  function calCalDAVURLService(_, $log, $window, esnUserConfigurationService) {
+  function calCalDAVURLService(_, $log, $window, esnUserConfigurationService, calPathParser) {
     var DAVSERVER_CONFIGURATION = 'davserver';
 
     return {
@@ -13,12 +13,18 @@
 
     function getCalendarURL(calendar) {
       return getFrontendURL().then(function(url) {
-        return [url, calendar.href.replace('.json', '')]
+        return [url, sanitizeCalendarHref(calendar)]
           .map(function(fragment) {
             return fragment.replace(/^\/|\/$/g, '');
           })
           .join('/');
       });
+    }
+
+    function sanitizeCalendarHref(calendar) {
+      var parsedPath = calPathParser.parseCalendarPath(calendar.href);
+
+      return ['calendars', parsedPath.calendarHomeId, parsedPath.calendarId].join('/');
     }
 
     function getFrontendURL() {

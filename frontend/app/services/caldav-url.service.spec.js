@@ -11,7 +11,7 @@ describe('The calCalDAVURLService service', function() {
     url = 'http://davserverurl';
 
     calendar = {
-      href: 'calendars/123.json'
+      href: 'calendars/123/456.json'
     };
 
     esnUserConfigurationService = {
@@ -42,7 +42,7 @@ describe('The calCalDAVURLService service', function() {
       url += '/';
 
       calCalDAVURLService.getCalendarURL(calendar).then(function(_url) {
-        expect(_url).to.equal(url + 'calendars/123');
+        expect(_url).to.equal(url + 'calendars/123/456');
         done();
       }, done);
 
@@ -53,18 +53,29 @@ describe('The calCalDAVURLService service', function() {
       calendar.href = '/' + calendar.href;
 
       calCalDAVURLService.getCalendarURL(calendar).then(function(_url) {
-        expect(_url).to.equal(url + '/calendars/123');
+        expect(_url).to.equal(url + '/calendars/123/456');
         done();
       }, done);
 
       $rootScope.$digest();
     });
 
-    it('should send right url even when calendar href contains traiiling / and no .json', function(done) {
-      calendar.href = 'calendars/123/';
+    it('should send right url even when calendar href contains trailing / and no .json', function(done) {
+      calendar.href = 'calendars/123/456';
 
       calCalDAVURLService.getCalendarURL(calendar).then(function(_url) {
-        expect(_url).to.equal(url + '/calendars/123');
+        expect(_url).to.equal(url + '/calendars/123/456');
+        done();
+      }, done);
+
+      $rootScope.$digest();
+    });
+
+    it('should send right url even when calendar href contains trailing prefix', function(done) {
+      calendar.href = 'sdav/calendars/123/456.json';
+
+      calCalDAVURLService.getCalendarURL(calendar).then(function(_url) {
+        expect(_url).to.equal(url + '/calendars/123/456');
         done();
       }, done);
 
