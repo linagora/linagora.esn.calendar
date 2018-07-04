@@ -27,6 +27,7 @@
     self.openEvent = openEvent;
     self.onPartstatChangeSuccess = onPartstatChangeSuccess;
     self.onPartstatChangeError = onPartstatChangeError;
+    self.isActionable = isActionable;
 
     function $onInit() {
       self.meeting = {
@@ -97,6 +98,14 @@
       return calEventUtils.getUserAttendee(event);
     }
 
+    function currentUserIsOrganizer(event) {
+      return calEventUtils.isOrganizer(event);
+    }
+
+    function isActionable() {
+      return self.meeting.method === CAL_EVENT_METHOD.REQUEST && !currentUserIsOrganizer(self.event);
+    }
+
     function getEventByUID() {
       return calEventService.getEventByUID(self.userCalendarHomeId, self.meeting.uid);
     }
@@ -130,11 +139,10 @@
     }
 
     function assertEventInvolvesCurrentUser(event) {
-      if (!getUserAttendee(event)) {
-        return $q.reject(new InvalidMeetingError('Event does not involve current user.'));
+      if (currentUserIsOrganizer(event) || getUserAttendee(event)) {
+        return event;
       }
-
-      return event;
+      return $q.reject(new InvalidMeetingError('Event does not involve current user.'));
     }
 
     function assertInvitationSequenceIsNotOutdated(event) {
