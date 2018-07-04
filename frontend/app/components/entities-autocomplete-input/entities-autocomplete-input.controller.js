@@ -5,6 +5,7 @@
     .controller('calEntitiesAutocompleteInputController', calEntitiesAutocompleteInputController);
 
   function calEntitiesAutocompleteInputController(
+    _,
     emailService,
     naturalService,
     session,
@@ -61,9 +62,11 @@
     function filterCandidates(entities) {
       var addedEntitiesEmails = _getAddedEntitiesEmails();
 
-      return entities.filter(function(entity) {
+      var filterDupes = entities.filter(function(entity) {
         return !_isDuplicateEntity(entity, addedEntitiesEmails) && !_excludeCurrentUser(entity);
       });
+
+      return filterDupes.filter(_.property('email'));
     }
 
     function _excludeCurrentUser(entity) {
