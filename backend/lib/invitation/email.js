@@ -59,11 +59,11 @@ module.exports = dependencies => {
         switch (method) {
           case 'REQUEST':
             if (event.sequence > 0) {
-              subject = _i18nHelper('Event {{summary}} from {{userDisplayName}} updated', true, true);
+              subject = _i18nHelper('Event {{& summary}} from {{userDisplayName}} updated', true, true);
               template.name = 'event.update';
               inviteMessage = _i18nHelper('has updated a meeting');
             } else {
-              subject = _i18nHelper('New event from {{userDisplayName}}: {{summary}}', true, true);
+              subject = _i18nHelper('New event from {{userDisplayName}}: {{& summary}}', true, true);
               template.name = 'event.invitation';
               inviteMessage = _i18nHelper('has invited you to a meeting');
             }
@@ -73,12 +73,12 @@ module.exports = dependencies => {
             [subject, inviteMessage] = _getReplyContents();
             break;
           case 'CANCEL':
-            subject = _i18nHelper('Event {{summary}} from {{userDisplayName}} canceled', true, true);
+            subject = _i18nHelper('Event {{& summary}} from {{userDisplayName}} canceled', true, true);
             template.name = 'event.cancel';
             inviteMessage = _i18nHelper('has canceled a meeting');
             break;
           case 'COUNTER':
-            subject = _i18nHelper('New changes proposed to event {{summary}}', true, true);
+            subject = _i18nHelper('New changes proposed to event {{& summary}}', true, true);
             template.name = 'event.counter';
             inviteMessage = _i18nHelper('has proposed changes to the event');
             break;
@@ -163,19 +163,19 @@ module.exports = dependencies => {
 
           switch (_getParticipationStatus(event, userEmail)) {
             case 'ACCEPTED':
-              response.push(_i18nHelper('Accepted: {{summary}} ({{userDisplayName}})', true, true));
+              response.push(_i18nHelper('Accepted: {{& summary}} ({{userDisplayName}})', true, true));
               response.push(_i18nHelper('has accepted this invitation'));
               break;
             case 'DECLINED':
-              response.push(_i18nHelper('Declined: {{summary}} ({{userDisplayName}})', true, true));
+              response.push(_i18nHelper('Declined: {{& summary}} ({{userDisplayName}})', true, true));
               response.push(_i18nHelper('has declined this invitation'));
               break;
             case 'TENTATIVE':
-              response.push(_i18nHelper('Tentatively accepted: {{summary}} ({{userDisplayName}})', true, true));
+              response.push(_i18nHelper('Tentatively accepted: {{& summary}} ({{userDisplayName}})', true, true));
               response.push(_i18nHelper('has replied "Maybe" to this invitation'));
               break;
             default:
-              response.push(_i18nHelper('Participation updated: {{summary}}', true));
+              response.push(_i18nHelper('Participation updated: {{& summary}}', true));
               response.push(_i18nHelper('has changed his participation'));
           }
 
