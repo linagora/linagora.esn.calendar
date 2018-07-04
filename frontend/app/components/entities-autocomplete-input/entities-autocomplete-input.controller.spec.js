@@ -1,6 +1,6 @@
 'use strict';
 
-/* global chai, sinon: false */
+/* global chai, sinon, _: false */
 
 var expect = chai.expect;
 
@@ -281,6 +281,25 @@ describe('The calEntitiesAutocompleteInputController', function() {
         $scope.$digest();
 
         expect(calendarAttendeeService.getAttendeeCandidates).to.have.been.calledWith(sinon.match.any, sinon.match.any, types);
+      });
+
+      it('should filter out entities which does not have email', function(done) {
+        var attendees = [1, 2, 3].map(function(i) {
+          return {id: 'contact' + i, email: i + 'mail@domain.com', partstat: 'NEEDS-ACTION'};
+        });
+
+        attendees.push({id: 'noemail'});
+
+        calendarAttendeeService.getAttendeeCandidates = sinon.stub().returns($q.when(attendees));
+
+        ctrl.getInvitableEntities(query).then(function(response) {
+          expect(response.length).to.equal(attendees.length - 1);
+          expect(_.find(response, {id: 'noemail'})).to.be.falsy;
+
+          done();
+        });
+
+        $scope.$digest();
       });
     });
   });
