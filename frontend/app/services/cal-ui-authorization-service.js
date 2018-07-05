@@ -78,16 +78,17 @@
     }
 
     function _canModifyEvent(calendar, event, userId) {
-      var publicRight, sharedRight;
+      var publicRight, sharedRight, isOrganizerAndOwner;
 
       if (!!calendar && !!event) {
         sharedRight = calendar.rights.getShareeRight(userId);
         publicRight = calendar.rights.getPublicRight();
+        isOrganizerAndOwner = _isOrganizerAndOwner(calendar, event, userId);
 
-        return _isOrganizerAndOwner(calendar, event, userId) ||
-        sharedRight === CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ_WRITE ||
-        sharedRight === CAL_CALENDAR_SHARED_RIGHT.SHAREE_ADMIN ||
-        publicRight === CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE;
+        return isOrganizerAndOwner ||
+          sharedRight === CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ_WRITE ||
+          sharedRight === CAL_CALENDAR_SHARED_RIGHT.SHAREE_ADMIN ||
+          (!isOrganizerAndOwner && publicRight === CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE);
       }
 
       return false;
