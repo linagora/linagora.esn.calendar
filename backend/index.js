@@ -87,9 +87,14 @@ const AwesomeCalendarModule = new AwesomeModule('linagora.esn.calendar', {
       ]);
 
       const frontendUriModules = frontendFullPathModules.map(filepath => filepath.replace(FRONTEND_JS_PATH, ''));
+      const fullCalendarPath = '../components/fullcalendar/dist';
+      const fullCalendarJSFiles = ['fullcalendar.min.js', 'locale.all.js'].map(file => `${fullCalendarPath}/${file}`);
+      const fullCalendarCSSFiles = ['fullcalendar.css'].map(file => `${fullCalendarPath}/${file}`);
 
       webserverWrapper.injectLess('calendar', [path.resolve(__dirname, '../frontend/app/styles.less')], 'esn');
       webserverWrapper.injectAngularAppModules('calendar', frontendUriModules, ['esn.calendar', 'esn.ical'], ['esn'], {localJsFiles: frontendFullPathModules});
+      webserverWrapper.injectJS('calendar', fullCalendarJSFiles, 'esn');
+      webserverWrapper.injectCSS('calendar', fullCalendarCSSFiles, 'esn');
       webserverWrapper.addApp('calendar', app);
 
       return callback();
