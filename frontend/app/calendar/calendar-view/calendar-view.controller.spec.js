@@ -190,7 +190,6 @@ describe('The calendarViewController', function() {
   beforeEach(angular.mock.inject(function(
     $controller,
     $rootScope,
-    $compile,
     $timeout,
     $window,
     CAL_UI_CONFIG,
@@ -207,7 +206,6 @@ describe('The calendarViewController', function() {
     this.rootScope = $rootScope;
     this.scope = $rootScope.$new();
     this.controller = $controller;
-    this.$compile = $compile;
     this.$q = $q;
     this.$timeout = $timeout;
     this.$window = $window;
@@ -536,24 +534,6 @@ describe('The calendarViewController', function() {
     expect(this.calendar.fullCalendar).to.have.been.calledWith('removeEventSource');
   });
 
-  it('should resize the calendar height twice when the controller is created', function() {
-    this.controller('calendarViewController', {$scope: this.scope});
-    var uiCalendarDiv = this.$compile(angular.element('<esn-calendar config="uiConfig.calendar" calendar-ready="calendarReady"></div>'))(this.scope);
-
-    uiCalendarDiv.appendTo(document.body);
-    this.scope.calendarReady(this.calendar);
-    this.scope.uiConfig.calendar.viewRender();
-    this.$timeout.flush();
-    try {
-      this.$timeout.flush();
-    } catch (exception) {
-      // Depending on the context, the 'no defered tasks' exception can occur
-    }
-    this.scope.$digest();
-    expect(this.calendar.fullCalendar).to.have.been.calledWith('option', 'height');
-    uiCalendarDiv.remove();
-  });
-
   it('should change view on VIEW_TRANSLATION only when mobile mini calendar is hidden', function() {
     this.controller('calendarViewController', {$scope: this.scope});
 
@@ -585,47 +565,13 @@ describe('The calendarViewController', function() {
     this.controller('calendarViewController', {$scope: this.scope});
     this.scope.$digest();
 
-    var uiCalendarDiv = this.$compile(angular.element('<esn-calendar config="uiConfig.calendar" calendar-ready="calendarReady"></div>'))(this.scope);
-
-    uiCalendarDiv.appendTo(document.body);
-    this.$timeout.flush();
-    try {
-      this.$timeout.flush();
-    } catch (exception) {
-      // Depending on the context, the 'no defered tasks' exception can occur
-    }
-
     this.scope.calendarReady(this.calendar);
     this.scope.$digest();
-
-    var fullCalendarSpy = this.calendar.fullCalendar = sinon.spy();
 
     angular.element(this.$window).resize();
-    this.scope.calendarReady(this.calendar);
     this.scope.$digest();
-    expect(fullCalendarSpy).to.be.calledWith('option', 'height');
-    uiCalendarDiv.remove();
-  });
 
-  it('should resize the calendar height to a max value', function() {
-    this.controller('calendarViewController', {$scope: this.scope});
-
-    this.scope.calendarReadyNoop = angular.noop;
-    var uiCalendarDiv = this.$compile(angular.element('<esn-calendar config="uiConfig.calendar" calendar-ready="calendarReadyNoop"></div>'))(this.scope);
-
-    uiCalendarDiv.appendTo(document.body);
-    this.$timeout.flush();
-    try {
-      this.$timeout.flush();
-    } catch (exception) {
-      // Depending on the context, the 'no defered tasks' exception can occur
-    }
-
-    angular.element(this.$window).resize();
-    this.scope.calendarReady(this.calendar);
-    this.scope.$digest();
-    expect(this.calendar.fullCalendar).to.have.been.calledWith('option', 'height', 10);
-    uiCalendarDiv.remove();
+    expect(fullCalendarSpy).to.have.been.calledWith('option', 'height', sinon.match.number);
   });
 
   it('should display an error if calendar events cannot be retrieved', function(done) {
