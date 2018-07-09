@@ -106,6 +106,7 @@ describe('The CalEventFormController controller', function() {
     ];
 
     calEventServiceMock = {
+      onEventCreatedOrUpdated: sinon.stub().returns($q.when()),
       createEvent: sinon.spy(function() {
         return $q.when({});
       }),
