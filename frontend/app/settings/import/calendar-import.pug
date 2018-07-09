@@ -15,7 +15,7 @@
         p #{__('Import to')}
         md-input-container
           md-select(ng-model="$ctrl.calendar", md-container-class="cal-event-edition-select-dropdown")
-            md-option(ng-value="calendar" ng-repeat="calendar in $ctrl.calendars | filter: $ctrl.canModifyCalendar() ? { readOnly: false } : {}")
+            md-option(ng-value="calendar" ng-repeat="calendar in $ctrl.calendars | filter: $ctrl.canModifyCalendar")
               cal-select-calendar-item(calendar="calendar")
       .modal-footer
         button.btn.btn-default(type="button", ng-click="$hide()") #{__('Cancel')}

@@ -532,4 +532,42 @@ describe('The calUIAuthorizationService service', function() {
       expect(calendar.isSubscription).to.have.been.calledWith();
     });
   });
+
+  describe('The canImportCalendarIcs function', function() {
+    var calendar;
+
+    beforeEach(function() {
+      userId = 'userId';
+    });
+
+    it('should return false if calendar is undefined', function() {
+      expect(calUIAuthorizationService.canImportCalendarIcs()).to.be.false;
+    });
+
+    it('should return true if user is the owner of the calendar', function() {
+      calendar = {
+        isOwner: sinon.stub().returns(true),
+        isReadable: sinon.stub().returns(true),
+        isSubscription: sinon.stub().returns(false),
+        isPublic: sinon.stub().returns(false)
+      };
+      var result = calUIAuthorizationService.canImportCalendarIcs(calendar, userId);
+
+      expect(calendar.isOwner).to.have.been.calledWith(userId);
+      expect(result).to.be.true;
+    });
+
+    it('should return false if user is not the owner of the calendar', function() {
+      calendar = {
+        isOwner: sinon.stub().returns(false),
+        isReadable: sinon.stub().returns(false),
+        isSubscription: sinon.stub().returns(false),
+        isPublic: sinon.stub().returns(false)
+      };
+      var result = calUIAuthorizationService.canImportCalendarIcs(calendar, userId);
+
+      expect(calendar.isOwner).to.have.been.calledWith(userId);
+      expect(result).to.be.false;
+    });
+  });
 });

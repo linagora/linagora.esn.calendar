@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .controller('CalCalendarImportController', CalCalendarImportController);
 
-  function CalCalendarImportController(esnI18nService, calendarService, calendarHomeService, calUIAuthorizationService, session) {
+  function CalCalendarImportController(asyncAction, davImportService, calendarService, calendarHomeService, calUIAuthorizationService, session) {
     var self = this;
 
     self.$onInit = $onInit;
@@ -36,11 +36,21 @@
       self.isValid = self.file.type === 'text/calendar';
     }
 
-    function canModifyCalendar() {
-      return !calUIAuthorizationService.canModifyCalendarProperties(self.calendar, session.user._id);
+    function canModifyCalendar(calendar) {
+      return calUIAuthorizationService.canImportCalendarIcs(calendar, session.user._id);
     }
 
     function submit() {
+      var notificationMessages = {
+        progressing: 'Submitting importing calendar request...',
+        success: 'Request submitted',
+        failure: 'Failed to submit request'
+      };
+
+      asyncAction(notificationMessages, function() {
+        return davImportService.importFromFile(self.file, self.calendar.href);
+      });
+
     }
   }
 })(angular);

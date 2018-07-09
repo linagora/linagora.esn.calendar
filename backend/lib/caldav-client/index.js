@@ -35,7 +35,8 @@ module.exports = dependencies => {
     deleteEvent,
     deleteEventInDefaultCalendar,
     iTipRequest,
-    createEventInDefaultCalendar
+    createEventInDefaultCalendar,
+    importEvent
   };
 
   function buildEventUrlFromEventPath(eventPath) {
@@ -222,11 +223,11 @@ module.exports = dependencies => {
   }
 
   function _requestCaldav(options, formatRequest, formatResult) {
-    const { userId, calendarUri, eventUid, getNewTokenFn } = options;
+    const { userId, calendarUri, eventUid, getNewTokenFn, urlParams } = options;
     const getNewToken = getNewTokenFn || Q.nfcall(token.getNewToken, { user: userId });
 
     return Q.all([
-      _buildEventUrl(userId, calendarUri, eventUid),
+      _buildEventUrl(userId, calendarUri, eventUid, urlParams),
       getNewToken
     ])
       .spread((eventUrl, newToken) => Q.nfcall(request, formatRequest(eventUrl, newToken.token)))
@@ -239,8 +240,10 @@ module.exports = dependencies => {
       });
   }
 
-  function _buildEventUrl(userId, calendarUri, eventUid) {
-    const path = !eventUid && calendarUri ? `/calendars/${userId}/${calendarUri}.json` : getEventPath(userId, calendarUri, eventUid);
+  function _buildEventUrl(userId, calendarUri, eventUid, urlParams) {
+    let path = !eventUid && calendarUri ? `/calendars/${userId}/${calendarUri}.json` : getEventPath(userId, calendarUri, eventUid);
+
+    path = urlParams ? path + `?${urlParams}` : path;
 
     return new Promise(resolve => davserver.getDavEndpoint(davserver => resolve(urljoin(davserver, path))));
   }
@@ -285,5 +288,17 @@ module.exports = dependencies => {
         resolve();
       });
     });
+  }
+
+  function importEvent(user, calendarUri, eventUid, event) {
+    return _requestCaldav({ userId: user.id, calendarUri, eventUid, urlParams: 'import' }, (url, token) => ({
+      method: 'PUT',
+      url,
+      json: true,
+      headers: {
+        ESNToken: token
+      },
+      body: event
+    }));
   }
 };
