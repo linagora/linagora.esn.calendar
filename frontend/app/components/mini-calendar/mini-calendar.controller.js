@@ -1,4 +1,4 @@
-(function() {
+(function(angular) {
   'use strict';
 
   angular.module('esn.calendar')
@@ -12,14 +12,12 @@
     calMoment,
     CAL_UI_CONFIG,
     CAL_EVENTS,
-    calendarEventSource,
     calendarService,
     miniCalendarService,
     calMiniCalendarEventSourceBuilderService,
     notificationFactory,
     calendarHomeService,
     calendarCurrentView,
-    calCachedEventSource,
     userAndExternalCalendars,
     calFullUiConfiguration) {
 
@@ -145,8 +143,8 @@
           .then(buildEventSource)
           .then(addEventSource)
           .catch(function(error) {
-            notificationFactory.weakError('Could not retrieve user calendars', error.message);
-            $log.error('Could not retrieve user calendars for user minicalendar', error);
+            notificationFactory.weakError('Can not retrieve user calendars', error.message);
+            $log.error('Can not retrieve user calendars for minicalendar', error);
           }
         );
       }
@@ -193,4 +191,4 @@
         });
       }
     }
-})();
+})(angular);
