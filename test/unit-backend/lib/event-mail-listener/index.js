@@ -26,7 +26,7 @@ describe('EventMailListener module', function() {
     };
 
     amqpClient = {
-      ack: sinon.stub().returns(Promise.resolve()),
+      ack: sinon.stub().returns(true),
       subscribeToDurableQueue: sinon.stub().returns(Promise.resolve())
     };
 
@@ -272,6 +272,7 @@ describe('EventMailListener module', function() {
           processMessageFunction = amqpClient.subscribeToDurableQueue.firstCall.args[2];
           processMessageFunction(jsonMessage);
 
+          expect(amqpClient.ack).to.not.have.been.called;
           expect(caldavClientMock.iTipRequest).to.not.have.been.called;
 
           done();
