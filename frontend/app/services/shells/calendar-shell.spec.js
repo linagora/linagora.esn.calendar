@@ -1227,7 +1227,7 @@ describe('CalendarShell factory', function() {
         start: calMoment('1983-05-25 01:01')
       });
 
-      var masterEvent = CalendarShell.fromIncompleteShell({start: calMoment('1983-05-25 01:01')});
+      var masterEvent = CalendarShell.fromIncompleteShell({start: calMoment('1983-05-25 01:01'), rrule: {freq: 'DAILY', count: 7}});
       masterEvent.modifyOccurrence(nonMasterEvent);
 
       masterEvent.modifyOccurrence(nonMasterEventModified);
@@ -1239,6 +1239,38 @@ describe('CalendarShell factory', function() {
 
       vevents.forEach(function(vevent) {
         numSame += angular.equals(vevent.toJSON(), nonMasterEventModified.vevent.toJSON()) ? 1 : 0;
+      });
+
+      expect(numSame).to.equal(1);
+      expect(this.calMasterEventCache.save).to.have.been.calledWith(masterEvent);
+    });
+
+    it('should always replace an existing exception', function() {
+      this.calMasterEventCache.save = sinon.spy();
+
+      var masterEvent = CalendarShell.fromIncompleteShell({summary: 'Test', start: calMoment('1983-05-25 01:01'), rrule: {freq: 'DAILY', count: 7}});
+
+      var instance = masterEvent.expand()[1];
+
+      instance.summary = 'Test 2';
+
+      masterEvent.modifyOccurrence(instance);
+
+      expect(masterEvent.expand()[1].summary).to.equals('Test 2');
+
+      instance.summary = 'Test';
+
+      masterEvent.modifyOccurrence(instance);
+
+      expect(masterEvent.expand()[1].summary).to.equals('Test');
+
+      var vevents = masterEvent.vcalendar.getAllSubcomponents('vevent');
+
+      expect(vevents.length).to.equal(2);
+      var numSame = 0;
+
+      vevents.forEach(function(vevent) {
+        numSame += angular.equals(vevent.toJSON(), instance.vevent.toJSON()) ? 1 : 0;
       });
 
       expect(numSame).to.equal(1);
