@@ -49,4 +49,14 @@
             .input-group.force-absolute-center
               span.input-group-addon #{__('At')}
               .fg-line
-                input.input-sm.form-control(type="text", ng-model="vm.event.rrule.until", ng-focus="selectEndRadioButton(2)", data-autoclose="1", data-min-date="today", data-start-week="1", data-date-format="yyyy/MM/dd", bs-datepicker, ng-disabled="!vm.canModifyEventRecurrence")
+                input.input-sm.form-control(
+                  type="text",
+                  ng-disabled="!vm.canModifyEventRecurrence",
+                  ng-model="vm.event.rrule.until",
+                  ng-focus="selectEndRadioButton(2)",
+                  data-autoclose="1",
+                  data-min-date="today",
+                  data-start-week="1",
+                  data-date-format="yyyy/MM/dd",
+                  bs-datepicker
+                )

@@ -382,7 +382,7 @@ describe('CalendarShell factory', function() {
         title: 'non-allday event',
         rrule: {
           freq: 'YEARLY',
-          until: new Date(2024, 11, 29, 0, 0, 0)
+          until: calMoment.utc([2024, 11, 29, 19, 0, 0]).toDate()
         }
       };
 
@@ -392,7 +392,7 @@ describe('CalendarShell factory', function() {
         'recur',
         {
           freq: 'YEARLY',
-          until: '2024-12-29T00:00:00'
+          until: '2024-12-30T02:00:00'
         }
       ];
 

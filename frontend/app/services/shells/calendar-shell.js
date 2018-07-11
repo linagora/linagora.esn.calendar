@@ -229,7 +229,7 @@
         var rrule = this.vevent.getFirstPropertyValue('rrule');
 
         if (rrule && !this.__rrule) {
-          this.__rrule = new CalRRuleShell(rrule, this.vevent);
+          this.__rrule = new CalRRuleShell(rrule, this.vevent, localTimezone);
         }
 
         return this.__rrule;
@@ -242,7 +242,7 @@
           return;
         }
         if (value.until) {
-          value.until = ICAL.Time.fromJSDate(value.until);
+          value.until = ICAL.Time.fromJSDate(value.until, true).convertToZone(ICAL.TimezoneService.get(localTimezone));
         }
         var rrule = new ICAL.Recur.fromData(value);
 
