@@ -738,7 +738,7 @@
         throw new Error('Cannot modify occurrence on an instance');
       }
 
-      if (!this.isRealException(instance)) {
+      if (!this.getExceptionByRecurrenceId(instance.recurrenceIdAsString) && !this.isRealException(instance)) {
         return;
       }
 
