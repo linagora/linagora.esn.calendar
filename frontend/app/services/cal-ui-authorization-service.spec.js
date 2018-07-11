@@ -276,11 +276,13 @@ describe('The calUIAuthorizationService service', function() {
   });
 
   describe('the canModifyEvent function', function() {
-    var calendar, event, userId, publicRight, shareeRight;
+    var calendar, event, userId, publicRight, shareeRight, isOwner;
 
     beforeEach(function() {
       calendar = {
-        isOwner: sinon.stub().returns(true),
+        isOwner: sinon.spy(function() {
+          return isOwner;
+        }),
         rights: {
           getPublicRight: sinon.spy(function() {
             return publicRight;
@@ -302,48 +304,95 @@ describe('The calUIAuthorizationService service', function() {
       calEventUtils.isNew = sinon.stub().returns(false);
     });
 
-    it('should return true if new event', function() {
-      calEventUtils.isNew = sinon.stub().returns(true);
+    describe('user own calendar', function() {
+      beforeEach(function() {
+        isOwner = true;
 
-      expect(calUIAuthorizationService.canModifyEvent(calendar, event, userId)).to.be.true;
-      expect(calEventUtils.isNew).to.have.been.calledWith(event);
+        publicRight = CAL_CALENDAR_PUBLIC_RIGHT.PRIVATE;
+        shareeRight = CAL_CALENDAR_SHARED_RIGHT.SHAREE_OWNER;
+      });
+
+      it('should return true if new event', function() {
+        calEventUtils.isNew = sinon.stub().returns(true);
+
+        expect(calUIAuthorizationService.canModifyEvent(calendar, event, userId)).to.be.true;
+        expect(calEventUtils.isNew).to.have.been.calledWith(event);
+      });
+
+      it('should return true if user is event organizer', function() {
+        calEventUtils.isOrganizer = sinon.stub().returns(true);
+
+        expect(calUIAuthorizationService.canModifyEvent(calendar, event, userId)).to.be.true;
+        expect(calendar.isOwner).to.have.been.calledWith(userId);
+        expect(calEventUtils.isOrganizer).to.have.been.calledWith(event);
+        expect(calendar.rights.getPublicRight).to.have.been.calledWith;
+        expect(calendar.rights.getShareeRight).to.have.been.calledWith(userId);
+      });
+
+      it('should return false if not new event and user is attendee', function() {
+        expect(calUIAuthorizationService.canModifyEventRecurrence(calendar, event, userId)).to.be.false;
+        expect(calendar.isOwner).to.have.been.calledWith(userId);
+        expect(calEventUtils.isOrganizer).to.have.been.calledWith(event);
+        expect(calendar.rights.getPublicRight).to.have.been.calledWith;
+        expect(calendar.rights.getShareeRight).to.have.been.calledWith(userId);
+      });
+
+      it('should return false if not new event and user is attendee (even if user has added public write rights', function() {
+        publicRight = CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE;
+
+        expect(calUIAuthorizationService.canModifyEvent(calendar, event, userId)).to.be.true;
+        expect(calendar.isOwner).to.have.been.calledWith(userId);
+        expect(calEventUtils.isOrganizer).to.have.been.calledWith(event);
+        expect(calendar.rights.getPublicRight).to.have.been.calledWith;
+        expect(calendar.rights.getShareeRight).to.have.been.calledWith(userId);
+      });
     });
 
-    it('should return false if not new event and user is attendee and user does not have write rights on event calendar', function() {
-      expect(calUIAuthorizationService.canModifyEventRecurrence(calendar, event, userId)).to.be.false;
-      expect(calendar.isOwner).to.have.been.calledWith(userId);
-      expect(calEventUtils.isOrganizer).to.have.been.calledWith(event);
-      expect(calendar.rights.getPublicRight).to.have.been.calledWith;
-      expect(calendar.rights.getShareeRight).to.have.been.calledWith(userId);
-    });
+    describe('calendar shared to the user', function() {
+      beforeEach(function() {
+        isOwner = false;
 
-    it('should return true if not new event and user is event organizer', function() {
-      calEventUtils.isOrganizer = sinon.stub().returns(true);
+        publicRight = CAL_CALENDAR_PUBLIC_RIGHT.READ;
+        shareeRight = CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ;
+      });
 
-      expect(calUIAuthorizationService.canModifyEvent(calendar, event, userId)).to.be.true;
-      expect(calendar.isOwner).to.have.been.calledWith(userId);
-      expect(calEventUtils.isOrganizer).to.have.been.calledWith(event);
-      expect(calendar.rights.getPublicRight).to.have.been.calledWith;
-      expect(calendar.rights.getShareeRight).to.have.been.calledWith(userId);
-    });
+      it('should return false if user has no write rights on the calendar', function() {
+        expect(calUIAuthorizationService.canModifyEvent(calendar, event, userId)).to.be.false;
+        expect(calendar.isOwner).to.have.been.calledWith(userId);
+        expect(calEventUtils.isOrganizer).to.not.have.been.called;
+        expect(calendar.rights.getPublicRight).to.have.been.calledWith;
+        expect(calendar.rights.getShareeRight).to.have.been.calledWith(userId);
+      });
 
-    it('should return true if user is attendee of the event and but user have public write rights on the calendar', function() {
-      publicRight = CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE;
+      it('should return true if user has public write rights on the calendar', function() {
+        publicRight = CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE;
 
-      expect(calUIAuthorizationService.canModifyEvent(calendar, event, userId)).to.be.true;
-      expect(calendar.isOwner).to.have.been.calledWith(userId);
-      expect(calEventUtils.isOrganizer).to.have.been.calledWith(event);
-      expect(calendar.rights.getPublicRight).to.have.been.calledWith;
-      expect(calendar.rights.getShareeRight).to.have.been.calledWith(userId);
-    });
+        expect(calUIAuthorizationService.canModifyEvent(calendar, event, userId)).to.be.true;
+        expect(calendar.isOwner).to.have.been.calledWith(userId);
+        expect(calEventUtils.isOrganizer).to.not.have.been.called;
+        expect(calendar.rights.getPublicRight).to.have.been.calledWith;
+        expect(calendar.rights.getShareeRight).to.have.been.calledWith(userId);
+      });
 
-    it('should return true if user is attendee of the event and but user have sharee write rights on the calendar', function() {
-      shareeRight = CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ_WRITE;
+      it('should return true if user is attendee of the event and but user have sharee write rights on the calendar', function() {
+        shareeRight = CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ_WRITE;
 
-      expect(calUIAuthorizationService.canModifyEvent(calendar, event, userId)).to.be.true;
-      expect(calEventUtils.isOrganizer).to.have.been.calledWith(event);
-      expect(calendar.rights.getPublicRight).to.have.been.calledWith;
-      expect(calendar.rights.getShareeRight).to.have.been.calledWith(userId);
+        expect(calUIAuthorizationService.canModifyEvent(calendar, event, userId)).to.be.true;
+        expect(calendar.isOwner).to.have.been.calledWith(userId);
+        expect(calEventUtils.isOrganizer).to.not.have.been.called;
+        expect(calendar.rights.getPublicRight).to.have.been.calledWith;
+        expect(calendar.rights.getShareeRight).to.have.been.calledWith(userId);
+      });
+
+      it('should return true if user is attendee of the event and but user have sharee admin rights on the calendar', function() {
+        shareeRight = CAL_CALENDAR_SHARED_RIGHT.SHAREE_ADMIN;
+
+        expect(calUIAuthorizationService.canModifyEvent(calendar, event, userId)).to.be.true;
+        expect(calendar.isOwner).to.have.been.calledWith(userId);
+        expect(calEventUtils.isOrganizer).to.not.have.been.called;
+        expect(calendar.rights.getPublicRight).to.have.been.calledWith;
+        expect(calendar.rights.getShareeRight).to.have.been.calledWith(userId);
+      });
     });
   });
 
