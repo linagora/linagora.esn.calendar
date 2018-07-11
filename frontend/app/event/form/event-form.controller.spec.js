@@ -6,13 +6,15 @@ var expect = chai.expect;
 
 describe('The CalEventFormController controller', function() {
   var Cache, calendarTest, canModifyEventResult, eventTest, owner, user, start, end;
-  var calendarHomeServiceMock, calAttendeesDenormalizerService, calAttendeeService, calEventFreeBusyConfirmationModalService;
-  var CAL_ICAL, calFreebusyService;
-  var $rootScope;
+  var calendarHomeServiceMock, calEventServiceMock;
+  var calAttendeesDenormalizerService, calAttendeeService, calEventFreeBusyConfirmationModalService, CAL_ICAL, calFreebusyService;
+  var $rootScope, $modal;
 
   beforeEach(function() {
     eventTest = {};
     var self = this;
+
+    $modal = sinon.spy();
 
     canModifyEventResult = true;
 
@@ -103,7 +105,7 @@ describe('The CalEventFormController controller', function() {
       }
     ];
 
-    this.calEventServiceMock = {
+    calEventServiceMock = {
       createEvent: sinon.spy(function() {
         return $q.when({});
       }),
@@ -172,10 +174,11 @@ describe('The CalEventFormController controller', function() {
       $provide.decorator('calendarUtils', function($delegate) {
         return angular.extend($delegate, calendarUtilsMock);
       });
+      $provide.value('$modal', $modal);
       $provide.value('calAttendeesDenormalizerService', calAttendeesDenormalizerService);
       $provide.value('calEventFreeBusyConfirmationModalService', calEventFreeBusyConfirmationModalService);
       $provide.value('calendarHomeService', calendarHomeServiceMock);
-      $provide.value('calEventService', self.calEventServiceMock);
+      $provide.value('calEventService', calEventServiceMock);
       $provide.value('calendarService', self.calendarServiceMock);
       $provide.value('session', sessionMock);
       $provide.value('Cache', Cache);
@@ -270,7 +273,7 @@ describe('The CalEventFormController controller', function() {
           end: this.moment('2013-02-08 13:30'),
           location: 'aLocation'
         });
-        this.calEventServiceMock.createEvent = function() {
+        calEventServiceMock.createEvent = function() {
           done();
         };
         this.initController();
@@ -288,7 +291,7 @@ describe('The CalEventFormController controller', function() {
           location: 'aLocation',
           gracePeriodTaskId: '123456'
         });
-        this.calEventServiceMock.modifyEvent = function() {
+        calEventServiceMock.modifyEvent = function() {
           done();
         };
         this.initController();
@@ -312,7 +315,7 @@ describe('The CalEventFormController controller', function() {
           etag: '123456'
         });
 
-        this.calEventServiceMock.modifyEvent = function() {
+        calEventServiceMock.modifyEvent = function() {
           done();
         };
         this.initController();
@@ -343,13 +346,13 @@ describe('The CalEventFormController controller', function() {
           }]
         });
 
-        this.calEventServiceMock.createEvent = sinon.spy();
+        calEventServiceMock.createEvent = sinon.spy();
         this.initController();
         this.scope.attendees.users[0].freeBusy = 'busy';
         this.scope.submit();
         this.rootScope.$digest();
 
-        expect(this.calEventServiceMock.createEvent).to.not.have.been.called;
+        expect(calEventServiceMock.createEvent).to.not.have.been.called;
         expect(calEventFreeBusyConfirmationModalService).to.have.been.called;
       });
     });
@@ -662,7 +665,7 @@ describe('The CalEventFormController controller', function() {
             end: end
           });
           this.$state.is = sinon.stub().returns(true);
-          this.calEventServiceMock.modifyEvent = sinon.spy(function(path, event, oldEvent, etag, onCancel, options) { // eslint-disable-line
+          calEventServiceMock.modifyEvent = sinon.spy(function(path, event, oldEvent, etag, onCancel, options) { // eslint-disable-line
             expect(options).to.deep.equal({
               graceperiod: true,
               notifyFullcalendar: true
@@ -717,14 +720,14 @@ describe('The CalEventFormController controller', function() {
             }]
           });
 
-          this.calEventServiceMock.modifyEvent = sinon.spy(function() {
+          calEventServiceMock.modifyEvent = sinon.spy(function() {
             return $q.when();
           });
 
           this.scope.modifyEvent();
           this.scope.$digest();
 
-          expect(this.calEventServiceMock.modifyEvent).to.have.been.calledWith(sinon.match.any, this.scope.editedEvent);
+          expect(calEventServiceMock.modifyEvent).to.have.been.calledWith(sinon.match.any, this.scope.editedEvent);
         });
 
         it('should send modify request if deep changes (attendees)', function() {
@@ -760,7 +763,7 @@ describe('The CalEventFormController controller', function() {
             attendees: this.scope.attendees.users
           });
 
-          this.calEventServiceMock.modifyEvent = sinon.spy(function() {
+          calEventServiceMock.modifyEvent = sinon.spy(function() {
             return $q.when();
           });
 
@@ -772,7 +775,7 @@ describe('The CalEventFormController controller', function() {
           var expectedPath = '/calendars/' + this.calendarHomeId + '/' + calendarId;
 
           expect(this.$state.is).to.have.been.called;
-          expect(this.calEventServiceMock.modifyEvent).to.have.been.calledWith(expectedPath, this.scope.editedEvent, this.scope.event, this.scope.etag, sinon.match.any, {
+          expect(calEventServiceMock.modifyEvent).to.have.been.calledWith(expectedPath, this.scope.editedEvent, this.scope.event, this.scope.etag, sinon.match.any, {
             graceperiod: true,
             notifyFullcalendar: this.$state.is()
           });
@@ -973,7 +976,7 @@ describe('The CalEventFormController controller', function() {
 
           var self = this;
 
-          this.calEventServiceMock.modifyEvent = sinon.spy(function(path, event, oldEvent, etag) {
+          calEventServiceMock.modifyEvent = sinon.spy(function(path, event, oldEvent, etag) {
             expect(event.title).to.equal('title');
             expect(oldEvent.title).to.equal('oldtitle');
             expect(path).to.equal('/calendars/' + owner._id + '/' + self.calendars[1].id + '/eventID');
@@ -986,7 +989,7 @@ describe('The CalEventFormController controller', function() {
 
           this.scope.$digest();
 
-          expect(this.calEventServiceMock.modifyEvent).to.have.been.called;
+          expect(calEventServiceMock.modifyEvent).to.have.been.called;
         });
 
         it('should removeAllException if rrule has been changed', function() {
@@ -1071,11 +1074,11 @@ describe('The CalEventFormController controller', function() {
             etag: '123123'
           });
 
-          this.calEventServiceMock.modifyEvent = sinon.stub().returns($q.when(true));
+          calEventServiceMock.modifyEvent = sinon.stub().returns($q.when(true));
           this.scope.modifyEvent();
           this.scope.$digest();
 
-          expect(this.calEventServiceMock.modifyEvent).to.have.been.calledOnce;
+          expect(calEventServiceMock.modifyEvent).to.have.been.calledOnce;
           expect(restoreSpy).to.have.been.calledOnce;
         });
 
@@ -1103,11 +1106,11 @@ describe('The CalEventFormController controller', function() {
             attendees: attendees
           });
 
-          this.calEventServiceMock.modifyEvent = sinon.stub().returns($q.when(false));
+          calEventServiceMock.modifyEvent = sinon.stub().returns($q.when(false));
           this.scope.modifyEvent();
           this.scope.$digest();
 
-          expect(this.calEventServiceMock.modifyEvent).to.have.been.calledOnce;
+          expect(calEventServiceMock.modifyEvent).to.have.been.calledOnce;
           expect(restoreSpy).to.not.have.been.called;
           expect(this.calOpenEventForm).to.have.been.calledWith(sinon.match.any, this.scope.editedEvent);
         });
@@ -1126,7 +1129,7 @@ describe('The CalEventFormController controller', function() {
             start: start,
             end: end
           });
-          this.calEventServiceMock.changeParticipation = function(path, event, emails, _status_) { // eslint-disable-line
+          calEventServiceMock.changeParticipation = function(path, event, emails, _status_) { // eslint-disable-line
             status = _status_;
 
             return $q.when({});
@@ -1153,7 +1156,7 @@ describe('The CalEventFormController controller', function() {
             start: start,
             end: end
           });
-          this.calEventServiceMock.changeParticipation = function(path, event, emails, _status_) { // eslint-disable-line
+          calEventServiceMock.changeParticipation = function(path, event, emails, _status_) { // eslint-disable-line
             status = _status_;
 
             return $q.when(null);
@@ -1197,7 +1200,7 @@ describe('The CalEventFormController controller', function() {
       it('should update the event', function() {
         var status;
 
-        this.calEventServiceMock.changeParticipation = function(path, event, emails, _status_) { // eslint-disable-line
+        calEventServiceMock.changeParticipation = function(path, event, emails, _status_) { // eslint-disable-line
           status = _status_;
 
           return $q.when({});
@@ -1213,7 +1216,7 @@ describe('The CalEventFormController controller', function() {
       it('should call calEventService.changeParticipation', function() {
         this.scope.changeParticipation('ACCEPTED');
 
-        expect(this.calEventServiceMock.changeParticipation).to.have.been.called;
+        expect(calEventServiceMock.changeParticipation).to.have.been.called;
         expect(this.scope.$hide).to.not.have.been.called;
       });
     });
@@ -1231,7 +1234,7 @@ describe('The CalEventFormController controller', function() {
 
       it('should call createEvent with options.notifyFullcalendar true only if the state is calendar.main', function() {
         this.$state.is = sinon.stub().returns(true);
-        this.calEventServiceMock.createEvent = sinon.spy(function(calendar, event, options) {
+        calEventServiceMock.createEvent = sinon.spy(function(calendar, event, options) {
           expect(options).to.deep.equal({
             graceperiod: true,
             notifyFullcalendar: true
@@ -1319,7 +1322,7 @@ describe('The CalEventFormController controller', function() {
       });
 
       it('should call calOpenEventForm on cancelled task', function() {
-        this.calEventServiceMock.createEvent = function() {
+        calEventServiceMock.createEvent = function() {
           return $q.when(false);
         };
 
@@ -1334,7 +1337,7 @@ describe('The CalEventFormController controller', function() {
         this.scope.$digest();
 
         expect(this.$state.is).to.have.been.called;
-        expect(this.calEventServiceMock.createEvent).to.have.been.calledWith(calendarTest, this.scope.editedEvent, {
+        expect(calEventServiceMock.createEvent).to.have.been.calledWith(calendarTest, this.scope.editedEvent, {
           graceperiod: true,
           notifyFullcalendar: this.$state.is()
         });
@@ -1352,7 +1355,7 @@ describe('The CalEventFormController controller', function() {
           name: 'owner OWNER',
           displayName: 'owner OWNER'
         });
-        expect(this.calEventServiceMock.createEvent).to.have.been.calledWith(calendarTest, this.scope.editedEvent, {
+        expect(calEventServiceMock.createEvent).to.have.been.calledWith(calendarTest, this.scope.editedEvent, {
           graceperiod: true,
           notifyFullcalendar: this.$state.is()
         });
@@ -1371,11 +1374,11 @@ describe('The CalEventFormController controller', function() {
       it('should restore attendees and reopen form when event creation failed', function() {
         var restoreSpy = sinon.spy(this.calEventUtils, 'resetStoredEvents');
 
-        this.calEventServiceMock.createEvent = sinon.stub().returns($q.when(false));
+        calEventServiceMock.createEvent = sinon.stub().returns($q.when(false));
         this.scope.createEvent();
         this.scope.$digest();
 
-        expect(this.calEventServiceMock.createEvent).to.have.been.calledOnce;
+        expect(calEventServiceMock.createEvent).to.have.been.calledOnce;
         expect(restoreSpy).to.not.have.been.called;
         expect(this.calOpenEventForm).to.have.been.calledWith(sinon.match.any, this.scope.editedEvent);
       });
@@ -1402,83 +1405,205 @@ describe('The CalEventFormController controller', function() {
     });
 
     describe('changeParticipation function', function() {
-      beforeEach(function() {
-        this.scope.event = this.scope.event = this.CalendarShell.fromIncompleteShell({
-          start: this.moment('2013-02-08 12:30'),
-          end: end,
-          organizer: {
-            email: 'owner@test.com'
-          },
-          attendees: [{
-            email: 'owner@test.com'
-          }]
-        });
-        this.initController();
-        this.scope.editedEvent.setOrganizerPartStat('DECLINED');
-      });
-
-      describe('when isOrganizer is false', function() {
+      describe('non-recurring event', function() {
         beforeEach(function() {
-          this.scope.isOrganizer = false;
+          this.scope.event = this.scope.event = this.CalendarShell.fromIncompleteShell({
+            start: this.moment('2013-02-08 12:30'),
+            end: end,
+            organizer: {
+              email: 'owner@test.com'
+            },
+            attendees: [{
+              email: 'owner@test.com'
+            }]
+          });
+          this.initController();
+          this.scope.editedEvent.setOrganizerPartStat('DECLINED');
         });
 
-        it('should call changeParticipation and broadcast on CAL_EVENTS.EVENT_ATTENDEES_UPDATE', function(done) {
-          this.scope.$on(this.CAL_EVENTS.EVENT_ATTENDEES_UPDATE, function() {
-            expect(this.scope.calendarOwnerAsAttendee).to.deep.equal({
-              email: 'user@test.com',
-              partstat: 'ACCEPTED'
-            });
-            expect(this.scope.editedEvent.changeParticipation).to.have.been.calledWith('ACCEPTED', ['user@test.com']);
+        describe('when isOrganizer is false', function() {
+          beforeEach(function() {
+            this.scope.isOrganizer = false;
+          });
+
+          it('should call changeParticipation and broadcast on CAL_EVENTS.EVENT_ATTENDEES_UPDATE', function(done) {
+            this.scope.$on(this.CAL_EVENTS.EVENT_ATTENDEES_UPDATE, function() {
+              expect(this.scope.calendarOwnerAsAttendee).to.deep.equal({
+                email: 'user@test.com',
+                partstat: 'ACCEPTED'
+              });
+              expect(this.scope.editedEvent.changeParticipation).to.have.been.calledWith('ACCEPTED', ['user@test.com']);
+
+              done();
+            }.bind(this));
+
+            this.scope.editedEvent.changeParticipation = sinon.spy();
+            this.scope.calendarOwnerAsAttendee = {
+              email: 'user@test.com'
+            };
+            this.scope.changeParticipation('ACCEPTED');
+          });
+        });
+
+        describe('when calendar owner is event organizer', function() {
+          beforeEach(function() {
+            this.session.user = owner;
+
+            this.scope.calendarOwnerAsAttendee = {
+              email: 'owner@test.com'
+            };
+          });
+
+          it('should modify attendees list and broadcast on CAL_EVENTS.EVENT_ATTENDEES_UPDATE', function(done) {
+            this.scope.$on(this.CAL_EVENTS.EVENT_ATTENDEES_UPDATE, function() {
+              expect(this.scope.editedEvent.attendees).to.shallowDeepEqual([{
+                email: 'owner@test.com',
+                partstat: 'ACCEPTED'
+              }]);
+              expect(this.scope.calendarOwnerAsAttendee).shallowDeepEqual({
+                email: 'owner@test.com',
+                partstat: 'ACCEPTED'
+              });
+
+              done();
+            }.bind(this));
+
+            this.scope.changeParticipation('ACCEPTED');
+          });
+
+          it('should not call broadcast if no change in the status', function(done) {
+            var broadcastSpy = sinon.spy();
+
+            this.scope.$on(this.CAL_EVENTS.EVENT_ATTENDEES_UPDATE, broadcastSpy);
+
+            this.scope.editedEvent.changeParticipation = sinon.spy();
+
+            this.scope.changeParticipation('DECLINED');
+
+            expect(broadcastSpy).to.not.have.been.called;
 
             done();
-          }.bind(this));
+          });
+        });
+      });
 
-          this.scope.editedEvent.changeParticipation = sinon.spy();
+      describe('read only recurring event', function() {
+        var master, instance, attendeeEmail, attendeeStatus;
+
+        beforeEach(function() {
+          master = this.CalendarShell.fromIncompleteShell({
+            path: 'path',
+            start: this.moment('2013-02-08 12:30'),
+            end: this.moment('2013-02-08 13:30'),
+            organizer: {
+              email: 'owner@test.com'
+            },
+            attendees: [{
+              email: 'owner@test.com'
+            }, {
+              email: 'user@test.com'
+            }],
+            rrule: {
+              freq: 'DAILY',
+              interval: 2,
+              count: 3
+            }
+          });
+
+          instance = master.expand()[0];
+
+          sinon.stub(instance, 'getModifiedMaster').returns($q.when(master));
+
+          calEventServiceMock.changeParticipation = sinon.spy(function() { // eslint-disable-line
+            return $q.when({});
+          });
+
+          attendeeEmail = 'user@test.com';
+          attendeeStatus = 'ACCEPTED';
+
+          this.scope.event = instance;
+          this.session.user = owner;
+          this.initController();
+        });
+
+        it('should call $modal', function() {
+          this.scope.calendarOwnerAsAttendee = {
+            email: attendeeEmail
+          };
+          this.scope.changeParticipation(attendeeStatus);
+
+          $rootScope.$digest();
+
+          expect($modal).to.have.been.calledWith(sinon.match({
+            templateUrl: '/calendar/app/event/form/modals/edit-instance-or-series-modal.html',
+            placement: 'center'
+          }));
+        });
+
+        it('should change participation on whole series when user choose it', function() {
           this.scope.calendarOwnerAsAttendee = {
             email: 'user@test.com'
           };
           this.scope.changeParticipation('ACCEPTED');
+
+          $rootScope.$digest();
+
+          expect($modal).to.have.been.calledWith(sinon.match({
+            templateUrl: '/calendar/app/event/form/modals/edit-instance-or-series-modal.html',
+            controller: sinon.match.func.and(sinon.match(function(controller) {
+              var $scope = {
+                $hide: sinon.spy(),
+                $broadcast: sinon.spy()
+              };
+
+              controller($scope, attendeeEmail, instance, attendeeStatus);
+
+              $scope.editChoice = 'all';
+
+              $scope.submit();
+              $rootScope.$digest();
+
+              expect(instance.getModifiedMaster).to.have.been.calledWith(true);
+              expect($scope.$hide).to.have.been.calledOnce;
+              expect(calEventServiceMock.changeParticipation).to.have.been.calledWith(master.path, master, owner.emails, attendeeStatus);
+
+              return true;
+            })),
+            placement: 'center'
+          }));
         });
-      });
 
-      describe('when calendar owner is event organizer', function() {
-        beforeEach(function() {
-          this.session.user = owner;
-
+        it('should change participation on one instance when user choose it', function() {
           this.scope.calendarOwnerAsAttendee = {
-            email: 'owner@test.com'
+            email: 'user@test.com'
           };
-        });
-
-        it('should modify attendees list and broadcast on CAL_EVENTS.EVENT_ATTENDEES_UPDATE', function(done) {
-          this.scope.$on(this.CAL_EVENTS.EVENT_ATTENDEES_UPDATE, function() {
-            expect(this.scope.editedEvent.attendees).to.shallowDeepEqual([{
-              email: 'owner@test.com',
-              partstat: 'ACCEPTED'
-            }]);
-            expect(this.scope.calendarOwnerAsAttendee).shallowDeepEqual({
-              email: 'owner@test.com',
-              partstat: 'ACCEPTED'
-            });
-
-            done();
-          }.bind(this));
-
           this.scope.changeParticipation('ACCEPTED');
-        });
 
-        it('should not call broadcast if no change in the status', function(done) {
-          var broadcastSpy = sinon.spy();
+          $rootScope.$digest();
 
-          this.scope.$on(this.CAL_EVENTS.EVENT_ATTENDEES_UPDATE, broadcastSpy);
+          expect($modal).to.have.been.calledWith(sinon.match({
+            templateUrl: '/calendar/app/event/form/modals/edit-instance-or-series-modal.html',
+            controller: sinon.match.func.and(sinon.match(function(controller) {
+              var $scope = {
+                $hide: sinon.spy(),
+                $broadcast: sinon.spy()
+              };
 
-          this.scope.editedEvent.changeParticipation = sinon.spy();
+              controller($scope, attendeeEmail, instance, attendeeStatus);
 
-          this.scope.changeParticipation('DECLINED');
+              $scope.editChoice = 'this';
 
-          expect(broadcastSpy).to.not.have.been.called;
+              $scope.submit();
+              $rootScope.$digest();
 
-          done();
+              expect(instance.getModifiedMaster).to.not.have.been.called;
+              expect($scope.$hide).to.have.been.calledOnce;
+              expect(calEventServiceMock.changeParticipation).to.have.been.calledWith(instance.path, instance, owner.emails, attendeeStatus);
+
+              return true;
+            })),
+            placement: 'center'
+          }));
         });
       });
     });
@@ -1500,7 +1625,7 @@ describe('The CalEventFormController controller', function() {
         this.scope.submitSuggestion();
         this.scope.$digest();
 
-        expect(this.calEventServiceMock.sendCounter).to.have.been.calledWith(suggestedEvent);
+        expect(calEventServiceMock.sendCounter).to.have.been.calledWith(suggestedEvent);
         expect(this.notificationFactory.weakInfo).to.have.been.calledWith('Calendar -', 'Your proposal has been sent');
       });
 
@@ -1511,7 +1636,7 @@ describe('The CalEventFormController controller', function() {
           end: end
         });
 
-        this.calEventServiceMock.sendCounter = sinon.stub().returns($q.reject(new Error('Pouet')));
+        calEventServiceMock.sendCounter = sinon.stub().returns($q.reject(new Error('Pouet')));
 
         this.scope.event = this.CalendarShell.fromIncompleteShell({
           start: start,
@@ -1520,7 +1645,7 @@ describe('The CalEventFormController controller', function() {
         this.initController();
 
         this.scope.submitSuggestion().then(function() {
-          expect(self.calEventServiceMock.sendCounter).to.have.been.calledWith(suggestedEvent);
+          expect(calEventServiceMock.sendCounter).to.have.been.calledWith(suggestedEvent);
           expect(self.notificationFactory.weakError).to.have.been.calledWith('Calendar -', 'An error occurred, please try again');
           done();
         });
@@ -1549,14 +1674,14 @@ describe('The CalEventFormController controller', function() {
           }
         });
         this.initController();
-        this.calEventServiceMock.modifyEvent = sinon.spy(function() {
+        calEventServiceMock.modifyEvent = sinon.spy(function() {
           return $q.when();
         });
 
         this.scope.editedEvent = this.scope.event.clone();
         this.scope.updateAlarm();
 
-        expect(this.calEventServiceMock.modifyEvent).to.have.not.been.called;
+        expect(calEventServiceMock.modifyEvent).to.have.not.been.called;
       });
 
       it('should call calEventService.modifyEvent with updateAlarm when alarm is changed', function() {
@@ -1579,7 +1704,7 @@ describe('The CalEventFormController controller', function() {
           attendee: 'test@open-paas.org'
         };
 
-        this.calEventServiceMock.modifyEvent = sinon.spy(function(path, event, oldEvent, etag, onCancel) { // eslint-disable-line
+        calEventServiceMock.modifyEvent = sinon.spy(function(path, event, oldEvent, etag, onCancel) { // eslint-disable-line
           expect(path).to.equal('/calendars/' + owner._id + '/' + calendarTest.id + '/eventID');
           expect(etag).to.equal('123456');
           expect(event.alarm.trigger.toICALString()).to.equal('-P2D');
@@ -1590,7 +1715,7 @@ describe('The CalEventFormController controller', function() {
 
         this.scope.updateAlarm();
 
-        expect(this.calEventServiceMock.modifyEvent).to.have.been.called;
+        expect(calEventServiceMock.modifyEvent).to.have.been.called;
       });
     });
 

@@ -10,6 +10,7 @@
     $scope,
     $state,
     $log,
+    $modal,
     $q,
     _,
     calEventFreeBusyConfirmationModalService,
@@ -239,11 +240,11 @@
         });
       }
 
-      function _changeParticipationAsAttendee() {
+      function _changeParticipationAsAttendee(event) {
         var status = $scope.calendarOwnerAsAttendee.partstat;
 
         $scope.restActive = true;
-        calEventService.changeParticipation($scope.editedEvent.path, $scope.event, session.user.emails, status).then(function(response) {
+        calEventService.changeParticipation((event && event.path) || $scope.editedEvent.path, event || $scope.event, session.user.emails, status).then(function(response) {
           if (!response) {
             return;
           }
@@ -344,6 +345,46 @@
             $scope.editedEvent.setOrganizerPartStat(status);
             $scope.$broadcast(CAL_EVENTS.EVENT_ATTENDEES_UPDATE);
           }
+        } else if ($scope.editedEvent.isInstance()) {
+          $modal({
+            templateUrl: '/calendar/app/event/form/modals/edit-instance-or-series-modal.html',
+            resolve: {
+              attendeeEmail: function() {
+                return $scope.calendarOwnerAsAttendee.email;
+              },
+              event: function() {
+                return $scope.editedEvent;
+              },
+              status: function() {
+                return status;
+              }
+            },
+            controller: function($scope, attendeeEmail, event, status) {
+              $scope.editChoice = 'this';
+
+              $scope.submit = function() {
+                $scope.$hide();
+
+                ($scope.editChoice === 'this' ? updateInstance : updateMaster)();
+              };
+
+              function updateMaster() {
+                event.getModifiedMaster(true).then(function(eventMaster) {
+                  $scope.$broadcast(CAL_EVENTS.EVENT_ATTENDEES_UPDATE);
+
+                  _changeParticipationAsAttendee(eventMaster);
+                });
+              }
+
+              function updateInstance() {
+                event.changeParticipation(status, [attendeeEmail]);
+                $scope.$broadcast(CAL_EVENTS.EVENT_ATTENDEES_UPDATE);
+
+                _changeParticipationAsAttendee();
+              }
+            },
+            placement: 'center'
+          });
         } else {
           $scope.editedEvent.changeParticipation(status, [$scope.calendarOwnerAsAttendee.email]);
           $scope.$broadcast(CAL_EVENTS.EVENT_ATTENDEES_UPDATE);
