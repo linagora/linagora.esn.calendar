@@ -6,7 +6,6 @@
 
   function calMiniCalendarEventSourceBuilderService(
     $q,
-    $log,
     _,
     miniCalendarService,
     calendarEventSourceBuilder,

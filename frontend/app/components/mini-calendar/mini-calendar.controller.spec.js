@@ -6,7 +6,7 @@ var expect = chai.expect;
 
 describe('The miniCalendarController controller', function() {
   var $scope, $rootScope, $controller, $q, userId, calMoment, fcMethodMock, calendarServiceMock, initController,
-    miniCalendarServiceMock, UI_CONFIG_MOCK, calendar, calendarResult, calendarCurrentViewMock,
+    miniCalendarServiceMock, UI_CONFIG_MOCK, calendar, calendarResult, calendarCurrentViewMock, calendarVisibilityService,
     CAL_EVENTS, calendarHomeService, calMiniCalendarEventSourceBuilderService, calWrapper, element, event, userAndExternalCalendars, publicCalendar;
 
   function sameDayMatcher(day) {
@@ -51,6 +51,10 @@ describe('The miniCalendarController controller', function() {
 
         return deferred.promise;
       }
+    };
+
+    calendarVisibilityService = {
+      isHidden: sinon.stub()
     };
 
     userId = 'userId';
@@ -111,6 +115,7 @@ describe('The miniCalendarController controller', function() {
       $provide.value('miniCalendarService', miniCalendarServiceMock);
       $provide.value('calendarCurrentView', calendarCurrentViewMock);
       $provide.value('calendarHomeService', calendarHomeService);
+      $provide.value('calendarVisibilityService', calendarVisibilityService);
       $provide.value('calMiniCalendarEventSourceBuilderService', calMiniCalendarEventSourceBuilderService);
       $provide.constant('CAL_UI_CONFIG', UI_CONFIG_MOCK);
     });
@@ -128,6 +133,8 @@ describe('The miniCalendarController controller', function() {
     initController = function() {
       $controller('miniCalendarController', {$scope: $scope});
     };
+
+    calendarVisibilityService.isHidden.returns($q.when(false));
   }));
 
   afterEach(function() {
@@ -392,6 +399,17 @@ describe('The miniCalendarController controller', function() {
       expect(calMiniCalendarEventSourceBuilderService).to.have.been.calledWith(calendar, [calendarResult]);
     });
 
+    it('should filter calendars which are hidden', function() {
+      calendarVisibilityService.isHidden.onFirstCall().returns($q.when(true));
+      $scope.calendarReady(calendar);
+      $scope.$digest();
+
+      expect(calendarVisibilityService.isHidden).to.have.been.calledOnce;
+      expect(calendarVisibilityService.isHidden).to.have.been.calledWith(calendarResult);
+      expect(calMiniCalendarEventSourceBuilderService).to.have.been.calledOnce;
+      expect(calMiniCalendarEventSourceBuilderService).to.have.been.calledWith(calendar, []);
+    });
+
     function testRerender(nameOfEvent) {
       return function() {
         var event = {id: 'anId', start: calMoment()};
@@ -413,6 +431,28 @@ describe('The miniCalendarController controller', function() {
     it('should call refetchEvents on CAL_EVENTS.ITEM_REMOVE', testRerender('ITEM_MODIFICATION'));
 
     it('should call refetchEvents on CAL_EVENTS.ITEM_ADD', testRerender('ITEM_ADD'));
+  });
+
+  describe('When calendar view is toggled', function() {
+    beforeEach(function() {
+      initController();
+    });
+
+    it('should remove event source and rebuild it', function() {
+      calendarVisibilityService.isHidden.onFirstCall().returns($q.when(false));
+      calendarVisibilityService.isHidden.onSecondCall().returns($q.when(true));
+      $scope.calendarReady(calendar);
+      $scope.$digest();
+
+      expect(calendarVisibilityService.isHidden).to.have.been.calledOnce;
+      expect(calMiniCalendarEventSourceBuilderService).to.have.been.calledOnce;
+
+      $rootScope.$broadcast(CAL_EVENTS.CALENDARS.TOGGLE_VIEW, event);
+      $scope.$digest();
+
+      expect(calendarVisibilityService.isHidden).to.have.been.calledTwice;
+      expect(calMiniCalendarEventSourceBuilderService).to.have.been.calledTwice;
+    });
   });
 
   describe('the eventRender function', function() {
