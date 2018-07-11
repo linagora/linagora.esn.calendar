@@ -78,7 +78,7 @@ module.exports = dependencies => {
   }
 
   function _ackMessage(message) {
-    return amqpClient ? amqpClient.ack(message) : Promise.reject(new Error('No client available to ack message'));
+    return amqpClient ? Promise.resolve(amqpClient.ack(message)) : Promise.reject(new Error('No client available to ack message'));
   }
 
   function _checkMandatoryFields(jsonMessage = {}) {
