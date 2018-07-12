@@ -1,4 +1,4 @@
-(function() {
+(function(angular) {
   'use strict';
 
   angular.module('esn.calendar')
@@ -12,15 +12,14 @@
     calMoment,
     CAL_UI_CONFIG,
     CAL_EVENTS,
-    calendarEventSource,
     calendarService,
     miniCalendarService,
     calMiniCalendarEventSourceBuilderService,
     notificationFactory,
     calendarHomeService,
     calendarCurrentView,
-    calCachedEventSource,
     userAndExternalCalendars,
+    calendarVisibilityService,
     calFullUiConfiguration) {
 
       var miniCalendarDisplay = false;
@@ -46,6 +45,7 @@
         $rootScope.$on(CAL_EVENTS.ITEM_MODIFICATION, rerender),
         $rootScope.$on(CAL_EVENTS.REVERT_MODIFICATION, rerender),
         $rootScope.$on(CAL_EVENTS.CALENDAR_REFRESH, rerender),
+        $rootScope.$on(CAL_EVENTS.CALENDARS.TOGGLE_VIEW, onToggleCalendarView),
         $rootScope.$on(CAL_EVENTS.HOME_CALENDAR_VIEW_CHANGE, function(event, view) {
           $scope.homeCalendarViewMode = view.name;
           var start = view.name === 'month' ? calMoment(view.start).add(15, 'days') : view.start;
@@ -141,22 +141,33 @@
       }
 
       function buildUserCalendarsEventSource() {
-        return getOwnCalendars()
+        return getDisplayableCalendars()
           .then(buildEventSource)
           .then(addEventSource)
           .catch(function(error) {
-            notificationFactory.weakError('Could not retrieve user calendars', error.message);
-            $log.error('Could not retrieve user calendars for user minicalendar', error);
+            notificationFactory.weakError('Can not retrieve user calendars', error.message);
+            $log.error('Can not retrieve user calendars for minicalendar', error);
           }
         );
       }
 
-      function getOwnCalendars() {
+      function getDisplayableCalendars() {
         return calendarHomeService.getUserCalendarHomeId()
           .then(calendarService.listPersonalAndAcceptedDelegationCalendars)
-          .then(function(calendars) {
-            return userAndExternalCalendars(calendars).userCalendars || [];
+          .then(function(calendars) { return userAndExternalCalendars(calendars).userCalendars || []; })
+          .then(filterHiddenCalendars);
+      }
+
+      function filterHiddenCalendars(calendars) {
+        return $q.all(calendars.map(function(calendar) {
+          return calendarVisibilityService.isHidden(calendar).then(function(hidden) {
+            return { hidden: hidden, calendar: calendar };
           });
+        })).then(function(calendarHiddenStatuses) {
+          return calendarHiddenStatuses
+            .filter(function(item) { return !item.hidden; })
+            .map(function(item) { return item.calendar; });
+        });
       }
 
       function buildEventSource(calendars) {
@@ -177,6 +188,10 @@
         });
       }
 
+      function onToggleCalendarView() {
+        onCalendarsChange();
+      }
+
       function onCalendarsChange() {
         return removeEventSources().then(buildUserCalendarsEventSource);
       }
@@ -193,4 +208,4 @@
         });
       }
     }
-})();
+})(angular);
