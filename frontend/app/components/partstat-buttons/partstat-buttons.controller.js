@@ -8,14 +8,17 @@
     var self = this;
 
     self.$onInit = $onInit;
-    self.isCurrentAttendeePartstat = isCurrentAttendeePartstat;
+    self.isCurrentPartstat = isCurrentPartstat;
     self.changeParticipation = changeParticipation;
 
     function $onInit() {
       self.canSuggestChanges = calEventUtils.canSuggestChanges(self.event, session.user);
+      self.currentPartstat = calEventUtils.getUserAttendee(self.event).partstat;
     }
 
     function changeParticipation(partstat) {
+      self.currentPartstat = partstat;
+
       if ($attrs.changePartstat) {
         self.changePartstat({partstat: partstat});
       } else {
@@ -42,8 +45,8 @@
       }
     }
 
-    function isCurrentAttendeePartstat(partstat) {
-      return (calEventUtils.getUserAttendee(self.event) || {}).partstat === partstat;
+    function isCurrentPartstat(partstat) {
+      return self.currentPartstat === partstat;
     }
   }
 })(angular);
