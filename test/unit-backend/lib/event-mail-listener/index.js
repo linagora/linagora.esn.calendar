@@ -5,8 +5,8 @@ const sinon = require('sinon');
 const Q = require('q');
 const mockery = require('mockery');
 
-describe('EventMailListener module', function() {
-  let amqpClient, amqpClientProviderMock, userMock, loggerMock, caldavClientMock, caldavClientLib, pubsubMock;
+describe('The EventMailListener module', function() {
+  let amqpClient, amqpClientProviderMock, userMock, loggerMock, caldavClientMock, caldavClientLib, pubsubMock, subscribe;
   let processMessageFunction, jsonMessage, calendarModulePath, moduleConfig, esnConfigMock, getConfig;
   let exchanges, defaultExchange;
 
@@ -26,8 +26,7 @@ describe('EventMailListener module', function() {
     };
 
     amqpClient = {
-      ack: sinon.stub().returns(true),
-      subscribeToDurableQueue: sinon.stub().returns(Promise.resolve())
+      ack: sinon.stub().returns(true)
     };
 
     amqpClientProviderMock = {
@@ -73,6 +72,16 @@ describe('EventMailListener module', function() {
       return caldavClientMock;
     };
 
+    subscribe = sinon.stub();
+
+    pubsubMock = {
+      global: {
+        topic: sinon.stub().returns({
+          subscribe
+        })
+      }
+    };
+
     mockery.registerMock('../caldav-client', caldavClientLib);
 
     this.moduleHelpers.addDep('amqpClientProvider', amqpClientProviderMock);
@@ -91,7 +100,8 @@ describe('EventMailListener module', function() {
         .then(function() {
 
           expect(loggerMock.info).to.have.been.calledWith('CalEventMailListener : Missing configuration in mongoDB, fallback to default james:events');
-          expect(amqpClient.subscribeToDurableQueue).to.have.been.calledWith(defaultExchange, defaultExchange, sinon.match.func);
+          expect(pubsubMock.global.topic).to.have.been.calledWith(defaultExchange);
+          expect(subscribe).to.have.been.calledWith(sinon.match.func, { durable: true });
 
           done();
         })
@@ -147,7 +157,7 @@ describe('EventMailListener module', function() {
         .init()
         .then(function() {
 
-          expect(amqpClient.subscribeToDurableQueue).to.have.been.calledTwice;
+          expect(subscribe).to.have.been.calledTwice;
 
           done();
         })
@@ -164,7 +174,7 @@ describe('EventMailListener module', function() {
       this.requireModule()
         .init()
         .then(function() {
-          processMessageFunction = amqpClient.subscribeToDurableQueue.firstCall.args[2];
+          processMessageFunction = subscribe.firstCall.args[0];
           processMessageFunction(jsonMessage);
 
           expect(loggerMock.warn).to.have.been.calledWith('CalEventMailListener : Missing some mandatory fields, event ignored');
@@ -183,7 +193,7 @@ describe('EventMailListener module', function() {
       this.requireModule()
         .init()
         .then(function() {
-          processMessageFunction = amqpClient.subscribeToDurableQueue.firstCall.args[2];
+          processMessageFunction = subscribe.firstCall.args[0];
           processMessageFunction(jsonMessage);
 
           expect(loggerMock.warn).to.have.been.calledWith('CalEventMailListener : Missing some mandatory fields, event ignored');
@@ -202,7 +212,7 @@ describe('EventMailListener module', function() {
       this.requireModule()
         .init()
         .then(function() {
-          processMessageFunction = amqpClient.subscribeToDurableQueue.firstCall.args[2];
+          processMessageFunction = subscribe.firstCall.args[0];
           processMessageFunction(jsonMessage);
 
           expect(loggerMock.warn).to.have.been.calledWith('CalEventMailListener : Missing some mandatory fields, event ignored');
@@ -221,7 +231,7 @@ describe('EventMailListener module', function() {
       this.requireModule()
         .init()
         .then(function() {
-          processMessageFunction = amqpClient.subscribeToDurableQueue.firstCall.args[2];
+          processMessageFunction = subscribe.firstCall.args[0];
           processMessageFunction(jsonMessage);
 
           expect(loggerMock.warn).to.have.been.calledWith('CalEventMailListener : Missing some mandatory fields, event ignored');
@@ -246,7 +256,7 @@ describe('EventMailListener module', function() {
       this.requireModule()
         .init()
         .then(function() {
-          processMessageFunction = amqpClient.subscribeToDurableQueue.firstCall.args[2];
+          processMessageFunction = subscribe.firstCall.args[0];
           processMessageFunction(jsonMessage, originalMessage);
 
           setTimeout(function() {
@@ -269,7 +279,7 @@ describe('EventMailListener module', function() {
       this.requireModule()
         .init()
         .then(function() {
-          processMessageFunction = amqpClient.subscribeToDurableQueue.firstCall.args[2];
+          processMessageFunction = subscribe.firstCall.args[0];
           processMessageFunction(jsonMessage);
 
           expect(amqpClient.ack).to.not.have.been.called;
@@ -290,7 +300,7 @@ describe('EventMailListener module', function() {
       this.requireModule()
         .init()
         .then(function() {
-          processMessageFunction = amqpClient.subscribeToDurableQueue.firstCall.args[2];
+          processMessageFunction = subscribe.firstCall.args[0];
           processMessageFunction(jsonMessage, originalMessage);
 
           expect(caldavClientMock.iTipRequest).to.have.been.calledWith('userId', jsonMessage);

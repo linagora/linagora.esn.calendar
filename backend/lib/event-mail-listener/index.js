@@ -2,17 +2,19 @@ const CONSTANTS = require('../constants');
 
 module.exports = dependencies => {
   const esnConfig = dependencies('esn-config');
+  const pubsub = dependencies('pubsub').global;
   const amqpClientProvider = dependencies('amqpClientProvider');
   const logger = dependencies('logger');
   const userModule = dependencies('user');
   const caldavClient = require('../caldav-client')(dependencies);
-  let amqpClient;
 
   return {
     init
   };
 
   function init() {
+    logger.info('CalEventMailListener: Initializing...');
+
     return _getConfiguration()
       .then(config => {
         if (config && config.exchanges && config.exchanges.length) {
@@ -30,11 +32,7 @@ module.exports = dependencies => {
   function _subscribe(exchange) {
     logger.debug(`CalEventMailListener: registering listener on exchange ${exchange}`);
 
-    return amqpClientProvider.getClient()
-      .then(client => (amqpClient = client))
-      // For simplicity, queue name is the same as the exchange one
-      .then(() => amqpClient.subscribeToDurableQueue(exchange, exchange, _processMessage))
-      .catch(err => logger.error(`Can not setup AMQP client to process '${exchange}' exchanges. Emails will not be processed correctly until a new subsriber is up and running`, err));
+    return pubsub.topic(exchange).subscribe(_processMessage, { durable: true });
   }
 
   function _getConfiguration() {
@@ -78,7 +76,7 @@ module.exports = dependencies => {
   }
 
   function _ackMessage(message) {
-    return amqpClient ? Promise.resolve(amqpClient.ack(message)) : Promise.reject(new Error('No client available to ack message'));
+    return amqpClientProvider.getClient().then(client => (client ? client.ack(message) : Promise.reject(new Error('No client available to ack message'))));
   }
 
   function _checkMandatoryFields(jsonMessage = {}) {
