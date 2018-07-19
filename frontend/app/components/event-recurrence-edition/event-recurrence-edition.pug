@@ -24,8 +24,8 @@
       .on-days(ng-if="vm.event.rrule.freq === 'WEEKLY'")
         span.col-xs-3 #{__('On days')}:
         div.col-xs-9.labels
-          label.checkbox.checkbox-inline(ng-repeat="day in vm.days")
-            input.force-position-initial.form-control(ng-model="day.selected", ng-change="vm.toggleWeekdays(day.value)", type="checkbox", ng-disabled="!vm.canModifyEventRecurrence")
+          label.checkbox.checkbox-inline(ng-repeat="day in vm.days", ng-class="{ disabled: !vm.canModifyEventRecurrence }")
+            input.force-position-initial(ng-model="day.selected", ng-change="vm.toggleWeekdays(day.value)", type="checkbox", ng-disabled="!vm.canModifyEventRecurrence")
             i.input-helper
               span.force-absolute-center {{day.shortName}}
       .end
