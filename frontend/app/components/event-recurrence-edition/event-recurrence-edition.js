@@ -48,10 +48,10 @@
     self.CAL_RECUR_FREQ = CAL_RECUR_FREQ;
     self.toggleWeekdays = toggleWeekdays;
     self.resetUntil = resetUntil;
+    self.setDefaultUntilDate = setDefaultUntilDate;
     self.resetCount = resetCount;
     self.setRRULE = setRRULE;
     self.CAL_MAX_RRULE_COUNT = CAL_MAX_RRULE_COUNT;
-
     activate();
 
     ////////////
@@ -111,6 +111,31 @@
 
     function resetCount() {
       self.event.rrule.count = undefined;
+    }
+
+    function setDefaultUntilDate(freq) {
+      var until = new Date();
+
+      switch (freq) {
+        case 'DAILY': {
+          until.setDate(until.getDate() + 1);
+          break;
+        }
+        case 'WEEKLY': {
+          until.setDate(until.getDate() + 7);
+          break;
+        }
+        case 'MONTHLY': {
+          until.setMonth(until.getMonth() + 1);
+          break;
+        }
+        case 'YEARLY': {
+          until.setFullYear(until.getFullYear() + 1);
+          break;
+        }
+      }
+      resetCount();
+      self.event.rrule.until = until;
     }
 
     function setRRULE() {
