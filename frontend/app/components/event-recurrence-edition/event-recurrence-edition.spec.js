@@ -163,4 +163,47 @@ describe('The event-recurrence-edition component', function() {
       expect(this.eleScope.vm.event.rrule).to.be.deep.equals({freq: 'WEEKLY', interval: 1});
     });
   });
+
+  describe('The setDefaultUntilDate function', function() {
+    var dateCheck;
+    var dateCurrent;
+
+    beforeEach(function() {
+      this.initDirective(this.$scope);
+      dateCurrent = new Date();
+      dateCheck = new Date();
+
+      this.eleScope.vm.event = {
+        rrule: {}
+      };
+    });
+
+    it('should set until is next day if the frequency is "DAILY"', function() {
+      dateCheck.setDate(dateCurrent.getDate() + 1);
+      this.eleScope.vm.setDefaultUntilDate('DAILY');
+      expect(this.eleScope.vm.event.rrule.count).to.be.undefined;
+      expect(this.eleScope.vm.event.rrule.until.getDate()).to.be.equals(dateCheck.getDate());
+    });
+
+    it('should set until is next week if the frequency is "WEEKLY"', function() {
+      dateCheck.setDate(dateCurrent.getDate() + 7);
+      this.eleScope.vm.setDefaultUntilDate('WEEKLY');
+      expect(this.eleScope.vm.event.rrule.count).to.be.undefined;
+      expect(this.eleScope.vm.event.rrule.until.getDate()).to.be.equals(dateCheck.getDate());
+    });
+
+    it('should set until is next month if the frequency is "MONTHLY"', function() {
+      dateCheck.setMonth(dateCurrent.getMonth() + 1);
+      this.eleScope.vm.setDefaultUntilDate('MONTHLY');
+      expect(this.eleScope.vm.event.rrule.count).to.be.undefined;
+      expect(this.eleScope.vm.event.rrule.until.getDate()).to.be.equals(dateCheck.getDate());
+    });
+
+    it('should set until is next year if the frequency is "YEARLY"', function() {
+      dateCheck.setFullYear(dateCurrent.getFullYear() + 1);
+      this.eleScope.vm.setDefaultUntilDate('YEARLY');
+      expect(this.eleScope.vm.event.rrule.count).to.be.undefined;
+      expect(this.eleScope.vm.event.rrule.until.getDate()).to.be.equals(dateCheck.getDate());
+    });
+  });
 });
