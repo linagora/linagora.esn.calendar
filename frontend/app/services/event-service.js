@@ -43,8 +43,25 @@
       self.searchEvents = searchEvents;
       self.getEventByUID = getEventByUID;
       self.getEventFromICSUrl = getEventFromICSUrl;
+      self.onEventCreatedOrUpdated = onEventCreatedOrUpdated;
 
       ////////////
+
+      /**
+       * Get the event from backend and push it in several caches.
+       *
+       * @param {String} calendarId
+       * @param {String} eventUID
+       */
+      function onEventCreatedOrUpdated(calendarId, eventUID) {
+        return getEvent(calPathBuilder.forEventId(calendarId, eventUID)).then(function(event) {
+          calCachedEventSource.registerUpdate(event);
+          calMasterEventCache.save(event);
+          calendarEventEmitter.emitModifiedEvent(event);
+
+          return event;
+        });
+      }
 
       /**
        * List all events between a specific range [start..end] in a calendar defined by its path.<

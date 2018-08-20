@@ -414,7 +414,12 @@
 
       function onEventCreateUpdateResponse(success) {
         if (success) {
-          return calEventUtils.resetStoredEvents();
+          calEventUtils.resetStoredEvents();
+
+          return calEventService.onEventCreatedOrUpdated($scope.calendar.id, $scope.editedEvent.uid)
+            .catch(function(err) {
+              $log.warn('Failed to apply post create/update operations on event', err);
+            });
         }
 
         $scope.editedEvent.attendees = $scope.initialAttendees;
