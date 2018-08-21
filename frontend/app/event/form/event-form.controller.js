@@ -27,7 +27,7 @@
     session,
     calPathBuilder,
     esnI18nService,
-    calMoment,
+    calPartstatUpdateNotificationService,
     CAL_ATTENDEE_OBJECT_TYPE,
     CAL_RELATED_EVENT_TYPES,
     CAL_EVENTS,
@@ -241,21 +241,16 @@
       }
 
       function _changeParticipationAsAttendee(event) {
-        var status = $scope.calendarOwnerAsAttendee.partstat;
+        var partstat = $scope.calendarOwnerAsAttendee.partstat;
 
         $scope.restActive = true;
-        calEventService.changeParticipation((event && event.path) || $scope.editedEvent.path, event || $scope.event, session.user.emails, status).then(function(response) {
+        calEventService.changeParticipation((event && event.path) || $scope.editedEvent.path, event || $scope.event, session.user.emails, partstat).then(function(response) {
           if (!response) {
             return;
           }
 
           if (!$scope.canModifyEvent) {
-            var icalPartStatToReadableStatus = Object.create(null);
-
-            icalPartStatToReadableStatus.ACCEPTED = 'You will attend this meeting';
-            icalPartStatToReadableStatus.DECLINED = 'You will not attend this meeting';
-            icalPartStatToReadableStatus.TENTATIVE = 'You may attend this meeting';
-            _displayNotification(notificationFactory.weakInfo, 'Calendar -', icalPartStatToReadableStatus[status]);
+            calPartstatUpdateNotificationService(partstat);
           }
         }, function() {
           _displayNotification(notificationFactory.weakError, 'Event participation modification failed', '; Please refresh your calendar');

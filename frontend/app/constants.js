@@ -100,6 +100,12 @@
       COUNTER: 'counter'
     })
 
+    .constant('CAL_PARTSTAT_READABLE_CONFIRMATION_MESSAGE', {
+      ACCEPTED: 'You will attend this meeting',
+      DECLINED: 'You will not attend this meeting',
+      TENTATIVE: 'You may attend this meeting'
+    })
+
     .constant('CAL_ICAL', {
       partstat: {
         needsaction: 'NEEDS-ACTION',

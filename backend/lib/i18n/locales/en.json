@@ -251,5 +251,6 @@
   "All the events": "All the events",
   "%s attendees": "%s attendees",
   "1 attendee": "1 attendee",
-  "No attendees": "No attendees"
+  "No attendees": "No attendees",
+  "Error while getting updated event": "Error while getting updated event"
 }

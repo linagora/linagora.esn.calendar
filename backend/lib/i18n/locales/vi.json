@@ -251,5 +251,6 @@
   "All the events": "Tất cả các sự kiện",
   "%s attendees": "%s người tham dự",
   "1 attendee": "1 người tham dự",
-  "No attendees": "Không có người tham dự"
+  "No attendees": "Không có người tham dự",
+  "Error while getting updated event": "Lỗi khi nhận sự kiện được cập nhật"
 }
