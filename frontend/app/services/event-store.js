@@ -55,7 +55,7 @@
       var indexOfFirstInEnlargedPeriod = _.sortedIndex(
           store.eventsSortedByStart,
           {
-            start: period.start.clone().subtract(calMoment.duration(store.maxEventsDuration).add(1, 'day'))
+            start: period.start.clone().subtract(calMoment.duration(store.maxEventsDuration, 'seconds').add(1, 'day'))
           },
           function(event) {
             return event.start.unix();
