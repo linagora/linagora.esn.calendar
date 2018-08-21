@@ -14,6 +14,7 @@
     notificationFactory,
     calOpenEventForm,
     calEventDateSuggestionModal,
+    calPartstatUpdateNotificationService,
     session,
     INVITATION_MESSAGE_HEADERS,
     CAL_EVENT_METHOD,
@@ -73,7 +74,7 @@
       $q.when(event)
         .then(selectMasterEventOrException)
         .then(bindEventToController)
-        .then(notify('Participation updated!'), notify('Error while getting updated event'));
+        .then(displayPartstatNotification, notify('Error while getting updated event'));
     }
 
     function onPartstatChangeError() {
@@ -155,6 +156,10 @@
 
     function bindEventToController(event) {
       self.event = event;
+    }
+
+    function displayPartstatNotification() {
+      calPartstatUpdateNotificationService(getUserAttendee(self.event).partstat);
     }
 
     function notify(text) {

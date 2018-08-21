@@ -251,5 +251,6 @@
   "All the events": "Tous les événements",
   "%s attendees": "%s participants",
   "1 attendee": "1 participant",
-  "No attendees": "Pas de participants"
+  "No attendees": "Pas de participants",
+  "Error while getting updated event": "Une erreur s'est produite en récupérant l'évènement mis à jour"
 }
