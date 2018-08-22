@@ -24,6 +24,7 @@
 
     function buildProvider(calendarHomeId) {
       return new esnSearchProvider({
+        uid: 'op.events',
         name: esnI18nService.translate('Events'),
         fetch: function(query) {
           var offset = 0;
