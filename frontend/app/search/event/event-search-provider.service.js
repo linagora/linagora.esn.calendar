@@ -64,7 +64,7 @@
               });
           }
         },
-        buildFetchContext: function(options) { return $q.when(options.query); },
+        buildFetchContext: function(options) { return $q.when(options.query && options.query.text); },
         templateUrl: '/calendar/app/search/event/event-search-item.html',
         activeOn: ['calendar']
       });
