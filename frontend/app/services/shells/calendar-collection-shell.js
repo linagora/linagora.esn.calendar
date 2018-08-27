@@ -144,7 +144,9 @@
      * @returns {user} return the owner of the calendar
      */
     function getOwner() {
-      return calendarUsersCache.getUser(this.rights.getOwnerId());
+      var ownerId = this.rights.getOwnerId();
+
+      return ownerId && calendarUsersCache.getUser(ownerId);
     }
 
     /**
