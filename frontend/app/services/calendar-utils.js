@@ -67,18 +67,12 @@
     }
 
     /**
-     * When selecting a single cell, ensure that the end date is 1 hours more than the start date at least.
+     * Return the date when selecting a single cell.
      * @param {Date} start
      * @param {Date} end
      */
     function getDateOnCalendarSelect(start, end) {
-      if (end.diff(start, 'minutes') === 30) {
-        var newEnd = calMoment(start).add(1, 'hours');
-
-        return { start: start, end: newEnd };
-      } else {
-        return { start: start, end: end };
-      }
+      return { start: start, end: end };
     }
   }
 

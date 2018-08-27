@@ -29,22 +29,11 @@ describe('The calendarUtils service', function() {
   }));
 
   describe('the getDateOnCalendarSelect function', function() {
-    it('should add 30 minutes to end if diff is 30 minutes and start is an hour', function() {
-      var start = self.calMoment('2013-02-08 09:00:00');
-      var end = self.calMoment('2013-02-08 09:30:00');
-      var expectedStart = self.calMoment('2013-02-08 09:00:00');
-      var expectedEnd = self.calMoment('2013-02-08 10:00:00');
-      var date = self.calendarUtils.getDateOnCalendarSelect(start, end);
-
-      expect(expectedStart.isSame(date.start)).to.be.true;
-      expect(expectedEnd.isSame(date.end)).to.be.true;
-    });
-
-    it('should add 30 minutes to end if diff is 30 minutes and start is an half hour', function() {
+    it('should have the same date in input and output', function() {
       var start = self.calMoment('2013-02-08 09:30:00');
       var end = self.calMoment('2013-02-08 10:00:00');
-      var expectedStart = self.calMoment('2013-02-08 09:30:00');
-      var expectedEnd = self.calMoment('2013-02-08 10:30:00');
+      var expectedStart = start.clone();
+      var expectedEnd = end.clone();
       var date = self.calendarUtils.getDateOnCalendarSelect(start, end);
 
       expect(expectedStart.isSame(date.start)).to.be.true;
