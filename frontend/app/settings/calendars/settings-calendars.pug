@@ -8,7 +8,7 @@ sub-header
     .list
       cal-settings-calendars-item(ng-repeat="calendar in ctrl.userCalendars", calendar="calendar", on-remove="ctrl.remove", display-owner="false", state-to-go="'calendar.edit'")
 
-  .calendar-list
+  .calendar-list(feature-flag="linagora.esn.calendar.features.isSharingCalendarEnabled")
     .title
       h3 #{__('Shared calendars')}
     .list

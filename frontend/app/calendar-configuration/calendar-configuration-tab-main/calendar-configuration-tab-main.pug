@@ -14,7 +14,7 @@
           .form-control
         i.color-picker-value(ng-style="{'background-color': $ctrl.calendar.color}")
 
-.settings-access
+.settings-access(feature-flag="linagora.esn.calendar.features.isSharingCalendarEnabled")
   .calendar-public-access
     .public-access-line.public-access-visibility-line
       i.mdi.mdi-account-multiple.big
