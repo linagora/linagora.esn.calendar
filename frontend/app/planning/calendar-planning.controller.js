@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .controller('CalCalendarPlanningController', CalCalendarPlanningController);
 
-  function CalCalendarPlanningController(_, $rootScope, $alert, $q, $window, $timeout, session, esnWithPromiseResult, calOpenEventForm, calCachedEventSource, calendarEventSource, calendarVisibilityService, calendarService, calFullCalendarPlanningRenderEventService, CAL_UI_CONFIG, CAL_MAX_CALENDAR_RESIZE_HEIGHT, CAL_EVENTS) {
+  function CalCalendarPlanningController(_, $rootScope, $alert, $q, $window, $timeout, session, esnWithPromiseResult, calOpenEventForm, calCachedEventSource, calendarEventSource, calendarVisibilityService, calendarService, calFullCalendarPlanningRenderEventService, CAL_UI_CONFIG, CAL_MAX_CALENDAR_RESIZE_HEIGHT, CAL_EVENTS, calFullUiConfiguration) {
     var self = this;
     var windowJQuery = angular.element($window);
     var calendarDeffered = $q.defer();
@@ -35,6 +35,7 @@
       self.calendarHomeId = session.user._id;
       self.calendarReady = calendarDeffered.resolve.bind(calendarDeffered);
       self.uiConfig = CAL_UI_CONFIG.planning;
+      self.uiConfig.locale = getLocale();
       self.uiConfig.defaultView = self.viewMode;
       self.uiConfig.eventClick = onEventClick;
       self.uiConfig.eventRender = eventRender;
@@ -53,7 +54,6 @@
           });
         })
         .catch(displayCalendarError);
-
       windowJQuery.resize(resizeCalendarHeight);
     }
 
@@ -157,6 +157,10 @@
         height = height > CAL_MAX_CALENDAR_RESIZE_HEIGHT ? CAL_MAX_CALENDAR_RESIZE_HEIGHT : height;
         calendar.fullCalendar('option', 'height', height);
       }), 0);
+    }
+
+    function getLocale() {
+      return calFullUiConfiguration.configureLocaleForCalendar(CAL_UI_CONFIG).calendar.locale;
     }
   }
 })(angular);
