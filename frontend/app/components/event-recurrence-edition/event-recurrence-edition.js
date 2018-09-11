@@ -42,9 +42,11 @@
     }
   }
 
-  function EventRecurrenceEditionController(moment, esnI18nService, CAL_RECUR_FREQ, CAL_WEEK_DAYS, CAL_MAX_RRULE_COUNT) {
+  function EventRecurrenceEditionController(moment, calMoment, esnI18nService, CAL_RECUR_FREQ, CAL_WEEK_DAYS, CAL_MAX_RRULE_COUNT) {
     var self = this;
 
+    self.event = self._event;
+    self.getMinDate = getMinDate;
     self.CAL_RECUR_FREQ = CAL_RECUR_FREQ;
     self.toggleWeekdays = toggleWeekdays;
     self.resetUntil = resetUntil;
@@ -55,6 +57,14 @@
     activate();
 
     ////////////
+
+    function getMinDate() {
+      var calNow = calMoment();
+      var calEventStart = calMoment(self.event.start);
+      var calMin = calNow.isBefore(calEventStart) ? calEventStart : calNow;
+
+      return calMin.format('YYYY-MM-DD');
+    }
 
     function activate() {
       self._event.getModifiedMaster().then(function(master) {

@@ -6,7 +6,8 @@ var expect = chai.expect;
 
 describe('The event-recurrence-edition component', function() {
 
-  var esnI18nService;
+  var esnI18nService, calMoment;
+  var calNow;
 
   beforeEach(function() {
 
@@ -19,6 +20,12 @@ describe('The event-recurrence-edition component', function() {
     angular.mock.module('esn.calendar', function($provide) {
       $provide.value('esnI18nService', esnI18nService);
     });
+
+    angular.mock.inject(function(_calMoment_) {
+      calMoment = _calMoment_;
+    });
+
+    calNow = calMoment();
   });
 
   beforeEach(inject(['$compile', '$rootScope', function($c, $r) {
@@ -89,6 +96,30 @@ describe('The event-recurrence-edition component', function() {
       this.eleScope.vm.event.rrule.byday = ['SU', 'WE', 'TU', 'MO'];
       this.eleScope.vm.toggleWeekdays('FR');
       expect(this.eleScope.vm.event.rrule.byday).to.deep.equal(['MO', 'TU', 'WE', 'FR', 'SU']);
+    });
+  });
+
+  describe('at end date min value', function() {
+    it('should be today', function() {
+      this.$scope.event.start = calMoment('2017-09-11 09:30');
+      this.$scope.event.rrule = {
+        freq: 'WEEKLY'
+      };
+      this.initDirective(this.$scope);
+      var calMinDateAsString = this.eleScope.vm.getMinDate();
+
+      expect(calMinDateAsString).to.be.equal(calNow.format('YYYY-MM-DD'));
+    });
+
+    it('should be the event start date', function() {
+      this.$scope.event.start = calMoment().add(7, 'days');
+      this.$scope.event.rrule = {
+        freq: 'WEEKLY'
+      };
+      this.initDirective(this.$scope);
+      var calMinDateAsString = this.eleScope.vm.getMinDate();
+
+      expect(calMinDateAsString).to.be.equal(this.$scope.event.start.format('YYYY-MM-DD'));
     });
   });
 

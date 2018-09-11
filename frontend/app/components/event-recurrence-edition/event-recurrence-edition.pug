@@ -55,7 +55,7 @@
                   ng-model="vm.event.rrule.until",
                   ng-focus="selectEndRadioButton(2)",
                   data-autoclose="1",
-                  data-min-date="today",
+                  data-min-date="{{vm.getMinDate()}}",
                   data-start-week="1",
                   data-date-format="yyyy/MM/dd",
                   bs-datepicker
