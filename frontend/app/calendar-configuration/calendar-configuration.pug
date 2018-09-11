@@ -18,13 +18,15 @@
             calendar = "$ctrl.calendar",
             calendar-home-id = "$ctrl.calendarHomeId"
             new-calendar= "$ctrl.newCalendar",
-            public-selection = "$ctrl.publicSelection",
+            public-selection = "$ctrl.publicSelection"
           )
           calendar-configuration-tab-delegation(
+            ng-if="$ctrl.calendarOwner",
             ng-show='$ctrl.selectedTab === "delegation"',
             delegations="$ctrl.delegations",
             selected-sharee-right="$ctrl.selectedShareeRight",
             new-users-groups= "$ctrl.newUsersGroups",
             add-user-group = "$ctrl.addUserGroup",
             remove-user-group = "$ctrl.removeUserGroup",
+            calendar-owner = "$ctrl.calendarOwner"
           )

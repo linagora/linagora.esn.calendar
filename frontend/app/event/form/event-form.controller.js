@@ -159,15 +159,15 @@
       function setOrganizer() {
         return $scope.calendar.getOwner()
           .then(function(owner) {
-            $scope.editedEvent.organizer = { displayName: userUtils.displayNameOf(owner), emails: owner.emails };
-            $scope.editedEvent.attendees.push($scope.editedEvent.organizer);
-            $scope.editedEvent.setOrganizerPartStat();
+            if (owner) {
+              // Calendar can have no owner in case of resource. Need to defined a behaviors for resources
+
+              $scope.editedEvent.organizer = { displayName: userUtils.displayNameOf(owner), emails: owner.emails };
+              $scope.editedEvent.attendees.push($scope.editedEvent.organizer);
+              $scope.editedEvent.setOrganizerPartStat();
+            }
 
             return owner;
-          }).catch(function() {
-            // Here getOwner() work only with user. Need to defined a behaviors for resources
-            // By this catch we allow event creation
-            return;
           });
       }
 
