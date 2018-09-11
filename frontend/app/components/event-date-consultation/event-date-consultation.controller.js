@@ -6,7 +6,7 @@
 
   function calEventDateConsultationController() {
     var self = this,
-        isAllDay = self.event.allDay,
+        isFull24HoursDay = self.event.full24HoursDay,
         isOverOneDayOnly = self.event.isOverOneDayOnly(),
         eventStart = self.event.start,
         eventEnd = self.event.end;
@@ -21,7 +21,7 @@
     }
 
     function formatStartDate() {
-      if (!isAllDay && isOverOneDayOnly) {
+      if (!isFull24HoursDay && isOverOneDayOnly) {
         self.start = eventStart.format('MMM D HH:mm');
         self.startVerbose = eventStart.format('MMM D HH:mm');
       } else if (isOverOneDayOnly) {
@@ -33,9 +33,9 @@
     }
 
     function formatEndDate() {
-      if (!isAllDay && isOverOneDayOnly) {
+      if (!isFull24HoursDay && isOverOneDayOnly) {
         self.end = self.endVerbose = eventEnd.format('HH:mm');
-      } else if (!isAllDay && !isOverOneDayOnly) {
+      } else if (!isFull24HoursDay && !isOverOneDayOnly) {
         self.end = eventEnd.format('MMM D');
         self.endVerbose = eventEnd.format('MMM D');
       } else if (!isOverOneDayOnly) {

@@ -5,20 +5,26 @@
     .factory('calFullCalendarRenderEventService', calFullCalendarRenderEventService);
 
   function calFullCalendarRenderEventService(
+    $rootScope,
     escapeHtmlUtils,
     matchmedia,
     session,
     calEventUtils,
     calUIAuthorizationService,
     ESN_MEDIA_QUERY_SM_XS,
-    CAL_MAX_DURATION_OF_SMALL_EVENT
+    CAL_MAX_DURATION_OF_SMALL_EVENT,
+    CAL_REDRAW_MULTI_DAY_EVENT,
+    calMoment
   ) {
     return function(calendar) {
       return function(event, element, view) {
         var timeDiv = element.find('.fc-time');
         var eventTitle = calEventUtils.getEventTitle(event);
         var titleDiv = getFixedTitleDiv(element, eventTitle);
+        var titleElement = element.find('.fc-title');
 
+        redrawMultiDayEvent(event, element, titleDiv, eventTitle);
+        formatMultiDayEvent(event, titleDiv, eventTitle, view, element, titleElement, calendar);
         addTooltipToEvent(element, eventTitle);
         appendLocation(element, timeDiv, event.location);
         appendDescription(element, event.description);
@@ -32,6 +38,58 @@
         setEventRights(calendar, event);
       };
     };
+
+    function formatMultiDayEvent(event, titleDiv, eventTitle, view, element, titleElement, calendar) {
+
+      titleElement.css('display', 'flex');
+      titleElement.css('align-items', 'center');
+
+      if (event.multiDay && view.name !== 'month') {
+        if (event.start.week() !== view.start.week()) {
+          titleDiv.text(eventTitle);
+        }
+        titleDiv.text(eventTitle + ' - ' + calMoment(event.start._i).utc(event.start).format('LT'));
+      }
+      if ((view.name === 'agendaDay' || view.name === 'dayWithDisplayedEvent') && event.start.date() !== view.start.date()) {
+        titleDiv.text(eventTitle);
+        element.css('margin-left', '10px');
+        element.css('border-radius', '0');
+        element.addClass('multi-day');
+
+        var beforeElement = document.createElement('div');
+
+        beforeElement.setAttribute('class', 'multi-day-before');
+        beforeElement.style.borderRight = '7px solid' + calendar.color;
+        element.prepend(beforeElement);
+
+      }
+      if ((view.name === 'agendaDay' || view.name === 'dayWithDisplayedEvent') && event.end.date() !== view.end.date()) {
+        if (event.start.date() !== view.start.date()) {
+          titleDiv.text(eventTitle);
+        }
+        element.css('margin-right', '10px');
+        element.css('border-radius', '0');
+        element.addClass('multi-day');
+
+        var afterElement = document.createElement('div');
+
+        afterElement.setAttribute('class', 'multi-day-after');
+        afterElement.style.borderLeft = '7px solid' + calendar.color;
+        element.append(afterElement);
+      }
+    }
+
+    function redrawMultiDayEvent(event) {
+      if (event.multiDay && !event.multiDayEventRedrawed) {
+        var newEvent = event;
+
+        newEvent.end = event.end.clone().add(1, 'day');
+        newEvent.startEditable = false;
+        newEvent.multiDayEventRedrawed = true;
+
+        $rootScope.$broadcast(CAL_REDRAW_MULTI_DAY_EVENT, newEvent);
+      }
+    }
 
     function adaptTitleWhenShortEvent(event, element, titleDiv, timeDiv, eventTitle) {
       var eventDurationInMinute = event.end.diff(event.start, 'minutes');

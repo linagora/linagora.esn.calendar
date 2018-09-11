@@ -16,7 +16,7 @@
 
     function $onInit() {
       self.dateFormat = esnI18nDateFormatService.getLongDateFormat();
-      self.allDay = self.event.allDay;
+      self.full24HoursDay = self.event.full24HoursDay;
       // on load, ensure that duration between start and end is stored inside editedEvent
       self.onEndDateChange();
     }
@@ -28,7 +28,7 @@
     }
 
     function getMinDate() {
-      if (self.allDay) {
+      if (self.full24HoursDay) {
         return calMoment(self.event.start).subtract(1, 'days').format('YYYY-MM-DD');
       }
 
@@ -38,7 +38,7 @@
     function setEventDates() {
       var start, end;
 
-      if (self.allDay) {
+      if (self.full24HoursDay) {
         self.previousStart = self.event.start.clone();
         self.previousEnd = self.event.end.clone();
 
