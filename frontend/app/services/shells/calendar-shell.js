@@ -198,7 +198,15 @@
         this.ensureAlarmCoherence();
       },
 
-      get allDay() { return this.vevent.getFirstProperty('dtstart').type === 'date'; },
+      get allDay() { return this.end.diff(this.start, 'day') >= 1; },
+
+      get full24HoursDay() { return this.vevent.getFirstProperty('dtstart') ? this.vevent.getFirstProperty('dtstart').type === 'date' : false; },
+
+      get multiDay() { return this.allDay && !this.full24HoursDay; },
+
+      get multiDayEventRedrawed() { return this.__multiDayEventRedrawed; },
+
+      set multiDayEventRedrawed(value) { this.__multiDayEventRedrawed = value; },
 
       get recurrenceId() {
         if (!this.__recurrenceId) {
@@ -407,7 +415,7 @@
 
           // all-day events have special recurrenceId which does not have TZ
           // i.e. they are 'floating' which means we can not compare recurrence like in non all-day events
-          if ((that.allDay && isSameDay(instance.recurrenceId, new Date(recurenceIdAsDate.getFullYear(), recurenceIdAsDate.getMonth(), recurenceIdAsDate.getDate()))) || instance.recurrenceId.isSame(recId.toJSDate())) {
+          if ((that.full24HoursDay && isSameDay(instance.recurrenceId, new Date(recurenceIdAsDate.getFullYear(), recurenceIdAsDate.getMonth(), recurenceIdAsDate.getDate()))) || instance.recurrenceId.isSame(recId.toJSDate())) {
             that.vcalendar.removeSubcomponent(vevent);
             break;
           }
@@ -808,7 +816,7 @@
       var endDay = parseInt(this.end.format('D'), 10);
       var endHour = this.end.format('HH:mm');
 
-      if (this.allDay) {
+      if (this.full24HoursDay) {
         return this.end.clone().subtract(1, 'day').isSame(this.start, 'day');
       } else {
         //for the second condition it is necessary to consider the event that finish at the next day at 12 am is over one day only

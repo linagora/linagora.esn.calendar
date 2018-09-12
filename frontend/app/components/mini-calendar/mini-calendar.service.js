@@ -16,7 +16,7 @@
       var day = calMoment(event.start);
       var end = calMoment(event.end || event.start);
 
-      if (!(event.allDay && event.end)) {
+      if (!(event.full24HoursDay && event.end)) {
         end.add(1, 'days');
       }
 
@@ -26,7 +26,7 @@
       }
 
       //subtract one minute if the event finish at midnight to fix the condition day.isSame(end, 'day')
-      if (!event.allDay && event.end && event.end.hour() === 0 && event.end.minute() === 0) {
+      if (!event.full24HoursDay && event.end && event.end.hour() === 0 && event.end.minute() === 0) {
         end.subtract(1, 'minutes');
       }
 

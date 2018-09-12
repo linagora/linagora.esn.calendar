@@ -80,7 +80,7 @@ describe('The miniCalendarService service', function() {
     it('should exclude the technical end date for allday events', function() {
       event.start = calMoment('2015-11-30');
       event.end = calMoment('2015-12-01');
-      event.allDay = true;
+      event.full24HoursDay = true;
       miniCalenderService.forEachDayOfEvent(event, spy);
 
       expect(spy).to.have.been.calledOnce;

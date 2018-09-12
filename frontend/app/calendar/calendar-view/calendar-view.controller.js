@@ -31,7 +31,8 @@
     CAL_EVENTS,
     calDefaultValue,
     CAL_MAX_CALENDAR_RESIZE_HEIGHT,
-    CAL_SPINNER_TIMEOUT_DURATION
+    CAL_SPINNER_TIMEOUT_DURATION,
+    CAL_REDRAW_MULTI_DAY_EVENT
   ) {
       var windowJQuery = angular.element($window);
       var calendarDeffered = $q.defer();
@@ -95,6 +96,7 @@
         $rootScope.$on(CAL_EVENTS.CALENDAR_REFRESH, _rerenderCalendar),
         $rootScope.$on(CAL_EVENTS.CALENDAR_UNSELECT, _unselectCalendar),
         $rootScope.$on(CAL_EVENTS.CALENDARS.ADD, _addCalendar),
+        $rootScope.$on(CAL_REDRAW_MULTI_DAY_EVENT, _updateEvent),
         $rootScope.$on(CAL_EVENTS.CALENDARS.REMOVE, _removeCalendar),
         $rootScope.$on(CAL_EVENTS.CALENDARS.TODAY, _viewToday),
         $rootScope.$on(CAL_EVENTS.CALENDARS.TOGGLE_VIEW, _toggleView),
@@ -292,6 +294,12 @@
       function _rerenderCalendar() {
         calendarPromise.then(function(calendar) {
           calendar.fullCalendar('refetchEvents');
+        });
+      }
+
+      function _updateEvent(event, newEvent) {
+        calendarPromise.then(function(calendar) {
+          calendar.fullCalendar('updateEvent', newEvent);
         });
       }
 

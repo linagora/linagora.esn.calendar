@@ -72,7 +72,7 @@ describe('The calEventDateSuggestionController', function() {
           event: {
             start: startTestMoment,
             end: endTestMoment,
-            allDay: true
+            full24HoursDay: true
           }
         };
         var ctrl = initController(bindings);
@@ -116,7 +116,7 @@ describe('The calEventDateSuggestionController', function() {
           event: {
             start: startTestMoment,
             end: endTestMoment,
-            allDay: false
+            full24HoursDay: false
           }
         };
 
@@ -139,7 +139,7 @@ describe('The calEventDateSuggestionController', function() {
           event: {
             start: origStart.clone(),
             end: origEnd.clone(),
-            allDay: false
+            full24HoursDay: false
           }
         };
         var ctrl = initController(bindings);
@@ -150,7 +150,7 @@ describe('The calEventDateSuggestionController', function() {
         expect(ctrl.event.end.hasTime()).to.be.true;
         expect(ctrl.diff).to.equal(1 * HOUR);
 
-        ctrl.allDay = true;
+        ctrl.full24HoursDay = true;
         ctrl.setEventDates();
 
         expect(ctrl.event.start.format('YYYY-MM-DD')).to.equal('2013-02-08');
@@ -159,7 +159,7 @@ describe('The calEventDateSuggestionController', function() {
         expect(ctrl.event.end.hasTime()).to.be.false;
         expect(ctrl.diff).to.equal(24 * HOUR);
 
-        ctrl.allDay = false;
+        ctrl.full24HoursDay = false;
         ctrl.setEventDates();
 
         expect(ctrl.event.start.format('YYYY-MM-DD HH:mm:ss')).to.equal('2013-02-08 09:30:00');
@@ -185,7 +185,7 @@ describe('The calEventDateSuggestionController', function() {
           event: {
             start: startTestMoment,
             end: endTestMoment,
-            allDay: true
+            full24HoursDay: true
           }
         };
         var ctrl = initController(bindings);
