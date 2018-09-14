@@ -84,7 +84,6 @@
         var newEvent = event;
 
         newEvent.end = event.end.clone().add(1, 'day');
-        newEvent.startEditable = false;
         newEvent.multiDayEventRedrawed = true;
 
         $rootScope.$broadcast(CAL_REDRAW_MULTI_DAY_EVENT, newEvent);

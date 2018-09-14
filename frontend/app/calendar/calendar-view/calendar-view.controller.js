@@ -160,24 +160,34 @@
       }
 
       function eventDropAndResize(drop, event, delta, revert) {
-        var newEvent = event.clone();
+        var oldEvent = event.clone();
 
-        newEvent.start = event.start;
-        newEvent.end = event.end;
-        newEvent.path = newEvent.path || '/calendars/' + $scope.calendarHomeId + '/' + calDefaultValue.get('calendarId');
+        // Draging event on day display to allDay display
+        if (event.allDay && !event.multiDay && !event.full24HoursDay) {
+          oldEvent.start.stripTime();
+          oldEvent.end.stripTime().add(1, 'day');
+        }
+        // Draging event on allDay display to day display
+        if (event.start.hasTime() && (!oldEvent.start.hasTime() || oldEvent.multiDay)) {
+          oldEvent.start = event.start;
+          oldEvent.end = event.start.clone().endOf('day');
+          delta = null;
+        }
 
-        var oldEvent = newEvent.clone();
+        oldEvent.path = oldEvent.path || '/calendars/' + $scope.calendarHomeId + '/' + calDefaultValue.get('calendarId');
+
+        var newEvent = oldEvent.clone();
 
         if (drop) {
-          oldEvent.start.subtract(delta);
+          newEvent.start = oldEvent.start.clone().add(delta);
         }
-        oldEvent.end.subtract(delta);
+        newEvent.end = oldEvent.end.clone().add(delta);
 
         calEventService.checkAndUpdateEvent(newEvent, _updateEvent, _editEvent, _cancel);
 
         function _editEvent() {
           _cancel();
-          calOpenEventForm($scope.calendarHomeId, event);
+          calOpenEventForm($scope.calendarHomeId, newEvent);
         }
 
         function _cancel() {
