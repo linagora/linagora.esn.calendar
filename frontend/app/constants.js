@@ -399,7 +399,15 @@
       id: 'linagora.esn.calendar',
       title: 'Calendar',
       icon: '/calendar/images/calendar-icon.svg',
-      homePage: 'calendar.main'
+      homePage: 'calendar.main',
+      config: {
+        template: 'calendar-config-form',
+        displayIn: {
+          user: false,
+          domain: true,
+          platform: true
+        }
+      }
     })
 
     .constant('CAL_WEBSOCKET', {
