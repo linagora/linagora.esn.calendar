@@ -198,7 +198,17 @@
         this.ensureAlarmCoherence();
       },
 
-      get allDay() { return this.end.diff(this.start, 'day') >= 1; },
+      get allDay() {
+        var isAllDay = false;
+        var startDay = parseInt(this.start.format('D'), 10);
+        var endDay = parseInt(this.end.format('D'), 10);
+
+        if (!(endDay === startDay) || this.end.diff(this.start, 'day') >= 1) {
+          return true;
+        }
+
+        return isAllDay;
+       },
 
       get full24HoursDay() { return this.vevent.getFirstProperty('dtstart') ? this.vevent.getFirstProperty('dtstart').type === 'date' : false; },
 

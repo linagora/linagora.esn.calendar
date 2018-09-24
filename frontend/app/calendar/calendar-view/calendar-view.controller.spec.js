@@ -673,9 +673,19 @@ describe('The calendarViewController', function() {
         path: 'aPath',
         etag: 'anEtag',
         start: this.calMoment('2016-01-01 09:00'),
-        end: this.calMoment('2016-01-01 10:10'),
+        end: this.calMoment('2016-01-01 10:00'),
         clone: function() {
           return newEvent; // eslint-disable-line
+        }
+      };
+
+      var event = {
+        path: 'aPath',
+        etag: 'anEtag',
+        start: this.calMoment('2016-01-01 09:00'),
+        end: this.calMoment('2016-01-01 10:10'),
+        clone: function() {
+          return oldEvent;
         }
       };
 
@@ -689,22 +699,12 @@ describe('The calendarViewController', function() {
         }
       };
 
-      var event = {
-        path: 'aPath',
-        etag: 'anEtag',
-        start: this.calMoment('2016-01-01 09:00'),
-        end: this.calMoment('2016-01-01 10:10'),
-        clone: function() {
-          return newEvent;
-        }
-      };
-
       this.controller('calendarViewController', {$scope: this.scope});
       var delta = this.calMoment.duration(10, 'minutes');
 
       this.scope.eventDropAndResize(false, event, delta);
-      expect(oldEvent.start.isSame(this.calMoment('2016-01-01 09:00'))).to.be.true;
-      expect(oldEvent.end.isSame(this.calMoment('2016-01-01 10:00'))).to.be.true;
+      expect(newEvent.start.isSame(this.calMoment('2016-01-01 09:00'))).to.be.true;
+      expect(newEvent.end.isSame(this.calMoment('2016-01-01 10:10'))).to.be.true;
       expect(this.calEventServiceMock.checkAndUpdateEvent).to.have.been.calledWith(newEvent, sinon.match.func, sinon.match.func, sinon.match.func);
     });
 
@@ -713,13 +713,13 @@ describe('The calendarViewController', function() {
         path: 'aPath',
         etag: 'anEtag',
         start: this.calMoment('2016-01-01 09:00'),
-        end: this.calMoment('2016-01-01 10:10'),
+        end: this.calMoment('2016-01-01 10:00'),
         clone: function() {
           return newEvent; // eslint-disable-line
         }
       };
 
-      var newEvent = {
+      var event = {
         path: 'aPath',
         etag: 'anEtag',
         start: this.calMoment('2016-01-01 09:00'),
@@ -729,13 +729,13 @@ describe('The calendarViewController', function() {
         }
       };
 
-      var event = {
+      var newEvent = {
         path: 'aPath',
         etag: 'anEtag',
         start: this.calMoment('2016-01-01 09:00'),
-        end: this.calMoment('2016-01-01 10:10'),
+        end: this.calMoment('2016-01-01 10:00'),
         clone: function() {
-          return newEvent;
+          return oldEvent;
         }
       };
 
@@ -744,8 +744,8 @@ describe('The calendarViewController', function() {
       this.controller('calendarViewController', {$scope: this.scope});
       this.scope.eventDropAndResize(true, event, delta);
 
-      expect(oldEvent.start.isSame(this.calMoment('2016-01-01 08:50'))).to.be.true;
-      expect(oldEvent.end.isSame(this.calMoment('2016-01-01 10:00'))).to.be.true;
+      expect(newEvent.start.isSame(this.calMoment('2016-01-01 09:10'))).to.be.true;
+      expect(newEvent.end.isSame(this.calMoment('2016-01-01 10:10'))).to.be.true;
       expect(this.calEventServiceMock.checkAndUpdateEvent).to.have.been.calledWith(newEvent, sinon.match.func, sinon.match.func, sinon.match.func);
     });
 
@@ -753,6 +753,7 @@ describe('The calendarViewController', function() {
       var event = {
         path: 'aPath',
         etag: 'anEtag',
+        start: this.calMoment(),
         end: this.calMoment(),
         clone: function() {
           return event;
@@ -786,6 +787,7 @@ describe('The calendarViewController', function() {
     it('should call calendarService.checkAndUpdateEvent with a built path if scope.event.path does not exist', function(done) {
       var event = {
         etag: 'anEtag',
+        start: this.calMoment(),
         end: this.calMoment(),
         clone: function() {
           return event;
