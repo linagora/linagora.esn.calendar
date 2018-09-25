@@ -22,11 +22,9 @@
 
 **Developers**
 
-- @abiton Xpts
 - @akhouaji Xpts
-- @chamerling Xpts
-- @mfrere Xpts
 - @rboyer Xpts
+- @maberkih Xpts
 
 - Total points: Y - 3 (documentation)
 - Focus Factor: 0.X
@@ -34,4 +32,4 @@
 
 ## List of tasks
 
-- #800 Xpt Issue title
+- #NNN Xpt Issue title
