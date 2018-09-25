@@ -53,8 +53,8 @@
        * @param {String} calendarId
        * @param {String} eventUID
        */
-      function onEventCreatedOrUpdated(calendarId, eventUID) {
-        return getEvent(calPathBuilder.forEventId(calendarId, eventUID)).then(function(event) {
+      function onEventCreatedOrUpdated(calendarHomeId, calendarId, eventUID) {
+        return getEvent(calPathBuilder.forEventId(calendarHomeId, calendarId, eventUID)).then(function(event) {
           calCachedEventSource.registerUpdate(event);
           calMasterEventCache.save(event);
           calendarEventEmitter.emitModifiedEvent(event);

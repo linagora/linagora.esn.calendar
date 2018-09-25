@@ -120,8 +120,8 @@
           recurrenceId: null
         },
         resolve: {
-          event: function($log, $q, $stateParams, $state, calPathBuilder, calEventService, calEventUtils, notificationFactory) {
-            var eventPath = calPathBuilder.forEventId($stateParams.calendarHomeId, $stateParams.eventId);
+          event: function($log, $q, $stateParams, $state, calPathBuilder, calDefaultValue, calEventService, calEventUtils, notificationFactory) {
+            var eventPath = calPathBuilder.forEventId($stateParams.calendarHomeId, calDefaultValue.get('calendarId'), $stateParams.eventId);
             var editedEvent = calEventUtils.getEditedEvent();
 
             if (editedEvent && Object.keys(editedEvent).length) {
