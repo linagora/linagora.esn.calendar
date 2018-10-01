@@ -83,6 +83,7 @@
        * early and the calendar offset is wrong so wait with a timeout.
        */
       $scope.uiConfig.calendar.eventAfterAllRender = $scope.resizeCalendarHeight;
+      $scope.uiConfig.calendar.windowResize = $scope.resizeCalendarHeight;
       $scope.uiConfig.calendar.viewRender = viewRender;
       $scope.uiConfig.calendar.eventClick = $scope.eventClick;
       $scope.uiConfig.calendar.eventResize = $scope.eventDropAndResize.bind(null, false);
