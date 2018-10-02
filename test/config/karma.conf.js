@@ -66,8 +66,6 @@ module.exports = function(config) {
       'frontend/components/dynamic-directive/dist/dynamic-directive.min.js',
       'frontend/components/angularjs-naturalsort/dist/naturalSortVersion.min.js',
       'frontend/components/bootstrap/dist/js/bootstrap.min.js',
-      'frontend/components/summernote/dist/summernote.js',
-      'frontend/components/angular-summernote/dist/angular-summernote.min.js',
       'frontend/components/autosize/dist/autosize.min.js',
       'frontend/components/offline/offline.min.js',
       'frontend/components/matchmedia-ng/matchmedia-ng.js',
