@@ -1,4 +1,4 @@
-image: linagora/node-test-base:8
+image: node:8
 
 stages:
   - test
@@ -22,10 +22,10 @@ test:
   script:
     - npm i
     - npm update
-    - bower i --allow-root
+    - ./node_modules/bower/bin/bower i --allow-root
     - ln -s ${PWD}/node_modules/linagora.esn.resource node_modules/linagora-rse/node_modules/
     - ln -s ${PWD}/node_modules/linagora.esn.dav.import node_modules/linagora-rse/node_modules/
-    - grunt
+    - ./node_modules/grunt/bin/grunt
 
 deploy_dev:
   stage: deploy_dev
@@ -57,4 +57,4 @@ release:
     - triggers
   script:
     - if [ -z "${VERSION}" ]; then exit 0; fi
-    - grunt release:${VERSION}
+    - ./node_modules/grunt/bin/grunt release:${VERSION}
