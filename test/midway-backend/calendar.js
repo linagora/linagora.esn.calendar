@@ -350,7 +350,9 @@ describe('The Calendar calendars API /api/calendars', function() {
         eventUid: 'event_' + counter++
       };
       message.ics = fs.readFileSync(__dirname + '/fixtures/completeMeeting.ics').toString('utf8');
-      this.helpers.redis.publishConfiguration();
+      setTimeout(() => {
+        this.helpers.redis.publishConfiguration();
+      }, 200);
       this.helpers.elasticsearch.saveTestConfiguration(this.helpers.callbacks.noError(done));
     });
 
