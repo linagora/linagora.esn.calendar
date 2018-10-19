@@ -32,7 +32,7 @@
     calDefaultValue,
     CAL_MAX_CALENDAR_RESIZE_HEIGHT,
     CAL_SPINNER_TIMEOUT_DURATION,
-    CAL_EVENT_RENDER_UPDATE
+    CAL_REDRAW_MULTI_DAY_EVENT
   ) {
       var windowJQuery = angular.element($window);
       var calendarDeffered = $q.defer();
@@ -97,7 +97,7 @@
         $rootScope.$on(CAL_EVENTS.CALENDAR_REFRESH, _rerenderCalendar),
         $rootScope.$on(CAL_EVENTS.CALENDAR_UNSELECT, _unselectCalendar),
         $rootScope.$on(CAL_EVENTS.CALENDARS.ADD, _addCalendar),
-        $rootScope.$on(CAL_EVENT_RENDER_UPDATE, _updateEvent),
+        $rootScope.$on(CAL_REDRAW_MULTI_DAY_EVENT, _updateEvent),
         $rootScope.$on(CAL_EVENTS.CALENDARS.REMOVE, _removeCalendar),
         $rootScope.$on(CAL_EVENTS.CALENDARS.TODAY, _viewToday),
         $rootScope.$on(CAL_EVENTS.CALENDARS.TOGGLE_VIEW, _toggleView),

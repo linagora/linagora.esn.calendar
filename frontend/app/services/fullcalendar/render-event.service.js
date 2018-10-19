@@ -13,7 +13,7 @@
     calUIAuthorizationService,
     ESN_MEDIA_QUERY_SM_XS,
     CAL_MAX_DURATION_OF_SMALL_EVENT,
-    CAL_EVENT_RENDER_UPDATE,
+    CAL_REDRAW_MULTI_DAY_EVENT,
     calMoment
   ) {
     return function(calendar) {
@@ -86,7 +86,7 @@
         newEvent.end = event.end.clone().add(1, 'day');
         newEvent.multiDayEventRedrawed = true;
 
-        $rootScope.$broadcast(CAL_EVENT_RENDER_UPDATE, newEvent);
+        $rootScope.$broadcast(CAL_REDRAW_MULTI_DAY_EVENT, newEvent);
       }
     }
 
@@ -210,12 +210,8 @@
 
     function setEventRights(calendar, event) {
       if (!calUIAuthorizationService.canModifyEvent(calendar, event, session.user._id)) {
-        var newEvent = event;
-
-        if (newEvent.editable || newEvent.editable === undefined) {
-          newEvent.editable = false;
-          $rootScope.$broadcast(CAL_EVENT_RENDER_UPDATE, newEvent);
-        }
+        event.startEditable = false;
+        event.durationEditable = false;
       }
     }
 
