@@ -284,7 +284,7 @@ describe('The calFullCalendarRenderEventService service', function() {
       expect(canModifyEvent).to.have.been.calledWith(calendar, event, session.user._id);
     });
 
-    it('should set editable to false if the current user can not edit event', function() {
+    it('should set startEditable and durationEditable to false if the current user can not edit event', function() {
       var canModifyEvent = sinon.stub(calUIAuthorizationService, 'canModifyEvent').returns(false);
 
       event.organizer = {
@@ -297,7 +297,8 @@ describe('The calFullCalendarRenderEventService service', function() {
       this.calFullCalendarRenderEventService(calendar)(event, element, view);
       this.$rootScope.$digest();
 
-      expect(event.editable).to.be.false;
+      expect(event.startEditable).to.be.false;
+      expect(event.durationEditable).to.be.false;
       expect(canModifyEvent).to.have.been.calledWith(calendar, event, session.user._id);
     });
   });

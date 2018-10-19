@@ -486,7 +486,7 @@
 
     .constant('CAL_CACHED_EVENT_SOURCE_UPDATE', 'update')
 
-    .constant('CAL_EVENT_RENDER_UPDATE', 'renderUpdate')
+    .constant('CAL_REDRAW_MULTI_DAY_EVENT', 'redraw')
 
     .constant('CAL_ALARM_TRIGGER', [{
       value: undefined,
