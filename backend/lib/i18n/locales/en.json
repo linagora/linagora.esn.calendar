@@ -259,5 +259,9 @@
   "You will attend this meeting": "You will attend this meeting",
   "You will not attend this meeting": "You will not attend this meeting",
   "Your permission": "Your permission",
-  "Your proposal has been sent": "Your proposal has been sent"
+  "Your proposal has been sent": "Your proposal has been sent",
+  "An unknown error occured while updating the event": "An unknown error occured while updating the event",
+  "Unable to update the event": "Unable to update the event",
+  "The event has not been found": "The event has not been found",
+  "An error occured on our side, please contact administrator if problem persists": "An error occured on our side, please contact administrator if problem persists"
 }

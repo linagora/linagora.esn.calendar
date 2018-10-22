@@ -259,5 +259,9 @@
   "You will attend this meeting": "Bạn sẽ tham dự sự kiện này",
   "You will not attend this meeting": "Bạn sẽ không tham dự sự kiện này",
   "Your permission": "Quyền của bạn",
-  "Your proposal has been sent": "Đề xuất của bạn đã được gửi đi"
+  "Your proposal has been sent": "Đề xuất của bạn đã được gửi đi",
+  "An unknown error occured while updating the event": "Đã xảy ra lỗi không xác định khi cập nhật sự kiện",
+  "Unable to update the event": "Không thể cập nhật sự kiện",
+  "The event has not been found": "Sự kiện chưa được tìm thấy",
+  "An error occured on our side, please contact administrator if problem persists": "Đã xảy ra lỗi ở phía chúng tôi, vui lòng liên hệ với quản trị viên nếu sự cố vẫn tiếp diễn"
 }
