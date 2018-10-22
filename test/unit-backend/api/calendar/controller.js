@@ -72,7 +72,8 @@ describe('The calendar controller', function() {
 
           return callback(null, {
             headers: {etag: etag},
-            body: ics
+            body: ics,
+            getLocale: sinon.spy()
           });
         };
 
@@ -89,7 +90,7 @@ describe('The calendar controller', function() {
       setMock();
     });
 
-    it('should send 400 if the attendee does not exist in the vevent', function(done) {
+    it('should redirect to error page with error 400 if the attendee does not exist in the vevent', function(done) {
       var req = {
         eventPayload: {
           calendarURI: 'uri',
@@ -98,16 +99,18 @@ describe('The calendar controller', function() {
         user: {
           _id: 'c3po'
         },
-        davserver: 'davserver'
+        davserver: 'davserver',
+        getLocale: sinon.spy()
       };
 
       var res = {
         status: function(status) {
-          expect(status).to.equal(400);
+          expect(status).to.equal(200);
 
           return {
-            json: function(err) {
-              expect(err).to.exist;
+            render: function(page, context) {
+              expect(page).to.equal('../event-consultation-app/error');
+              expect(context.error).to.deep.equals({code: 400});
               done();
             }
           };
@@ -118,7 +121,7 @@ describe('The calendar controller', function() {
     });
 
     describe('when the vevent has the attendee', function() {
-      it('should send a request to the davserver to fetch the event, and return 500 if request fails', function(done) {
+      it('should send a request to the davserver to fetch the event, and should redirect to error page if request fails', function(done) {
         requestMock = function(options, callback) {
           expect(options.method).to.equal('GET');
           expect(options.url).to.equal([
@@ -134,11 +137,11 @@ describe('The calendar controller', function() {
 
         var res = {
           status: function(status) {
-            expect(status).to.equal(500);
+            expect(status).to.equal(200);
 
             return {
-              json: function(err) {
-                expect(err).to.exist;
+              render: function(page) {
+                expect(page).to.equal('../event-consultation-app/error');
                 done();
               }
             };
@@ -173,17 +176,12 @@ describe('The calendar controller', function() {
 
           var res = {
             status: function(status) {
-              expect(status).to.equal(500);
+              expect(status).to.equal(200);
 
               return {
-                json: function(err) {
-                  expect(err).to.exist;
-
-                  return {
-                    end: function() {
-                      done();
-                    }
-                  };
+                render: function(page) {
+                  expect(page).to.equal('../event-consultation-app/error');
+                  done();
                 }
               };
             }
@@ -192,7 +190,7 @@ describe('The calendar controller', function() {
           controller.changeParticipation(req, res);
         });
 
-        it('should retry doing put if 412 up to 12 time', function(done) {
+        it('should retry doing put if 412 up to 12 times', function(done) {
           var time = 0;
 
           callbackAfterGetDone = function() {
@@ -221,14 +219,20 @@ describe('The calendar controller', function() {
           var res = {
             status: function(status) {
               expect(status).to.equal(200);
-              done();
+
+              return {
+                render: function(page) {
+                  expect(page).to.equal('../event-consultation-app/index');
+                  done();
+                }
+              };
             }
           };
 
           controller.changeParticipation(req, res);
         });
 
-        it('should fail if put fail with 412 more than 12 time', function(done) {
+        it('should fail if put fail with 412 more than 12 times', function(done) {
           callbackAfterGetDone = function() {
             requestMock = function(options, callback) {
               expect(options.method).to.equal('PUT');
@@ -253,10 +257,12 @@ describe('The calendar controller', function() {
 
           var res = {
             status: function(status) {
-              expect(status).to.equal(500);
+              expect(status).to.equal(200);
 
               return {
-                json: function() {
+                render: function(page, context) {
+                  expect(page).to.equal('../event-consultation-app/error');
+                  expect(context.error).to.deep.equals({code: 500});
                   done();
                 }
               };
@@ -303,7 +309,7 @@ describe('The calendar controller', function() {
         });
 
         describe('if the user cannot be found', function() {
-          it('should send 500 if the user search returns an error', function(done) {
+          it('should redirect to the error page with 500 if the user search returns an error', function(done) {
             userModuleMock.findByEmail = sinon.spy(function(email, callback) {
               expect(email).to.equal(req.eventPayload.attendeeEmail);
               callback(new Error());
@@ -319,11 +325,12 @@ describe('The calendar controller', function() {
             var controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
             var res = {
               status: function(status) {
-                expect(status).to.equal(500);
+                expect(status).to.equal(200);
 
                 return {
-                  json: function() {
-                    expect(userModuleMock.findByEmail).to.have.been.called;
+                  render: function(page, context) {
+                    expect(page).to.equal('../event-consultation-app/error');
+                    expect(context.error).to.deep.equals({code: 500});
                     done();
                   }
                 };
@@ -333,7 +340,7 @@ describe('The calendar controller', function() {
             controller.changeParticipation(req, res);
           });
 
-          it('should send 500 if the esn baseUrl cannot be retrieved form the config', function(done) {
+          it('should redirect to error page with 500 if the esn baseUrl cannot be retrieved form the config', function(done) {
             helpers.config.getBaseUrl = sinon.spy(function(user, callback) {
               callback(new Error());
             });
@@ -348,11 +355,12 @@ describe('The calendar controller', function() {
             var controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
             var res = {
               status: function(status) {
-                expect(status).to.equal(500);
+                expect(status).to.equal(200);
 
                 return {
-                  json: function() {
-                    expect(helpers.config.getBaseUrl).to.have.been.called;
+                  render: function(page, context) {
+                    expect(page).to.equal('../event-consultation-app/error');
+                    expect(context.error).to.deep.equals({code: 500});
                     done();
                   }
                 };
