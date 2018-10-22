@@ -84,6 +84,13 @@ module.exports = dependencies => {
       });
   }
 
+  function redirectToStaticErrorPage(req, res, error) {
+    res.status(200).render('../event-consultation-app/error', {
+      error,
+      locale: req.getLocale()
+    });
+  }
+
   function changeParticipationSuccess(res, vcalendar, req) {
     const attendeeEmail = req.eventPayload.attendeeEmail;
 
@@ -119,7 +126,7 @@ module.exports = dependencies => {
 
     request({method: 'GET', url: url, headers: {ESNToken: ESNToken}}, (err, response) => {
       if (err || response.statusCode < 200 || response.statusCode >= 300) {
-        return res.status(500).json({error: {code: 500, message: 'Error while modifying event', details: err ? err.message : response.body}});
+        return redirectToStaticErrorPage(req, res, { code: response.statusCode });
       }
 
       const icalendar = new ICAL.parse(response.body);
