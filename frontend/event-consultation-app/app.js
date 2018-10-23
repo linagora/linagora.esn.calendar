@@ -12,6 +12,7 @@
     'esn.constants',
     'esn.constants',
     'esn.core',
+    'esn.cache',
     'esn.header',
     'esn.http',
     'esn.i18n',
