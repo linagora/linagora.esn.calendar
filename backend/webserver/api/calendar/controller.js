@@ -84,16 +84,26 @@ module.exports = dependencies => {
       });
   }
 
+  function redirectToStaticErrorPage(req, res, error) {
+    res.status(200).render('../event-consultation-app/error', {
+      error,
+      locale: req.getLocale()
+    });
+  }
+
   function changeParticipationSuccess(res, vcalendar, req) {
     const attendeeEmail = req.eventPayload.attendeeEmail;
 
     userModule.findByEmail(attendeeEmail, (err, found) => {
       if (err) {
-        return res.status(500).json({error: {code: 500, message: 'Error while redirecting after participation change', details: err.message}});
+        logger.error('Error while redirecting after participation change', err);
+        redirectToStaticErrorPage(req, res, { code: 500 });
       } else if (!found) {
         configHelpers.getBaseUrl(null, (err, baseUrl) => {
           if (err) {
-            return res.status(500).json({error: {code: 500, message: 'Error while rendering event consultation page', details: err.message}});
+            logger.error('Error while rendering event consultation page', err);
+
+            return redirectToStaticErrorPage(req, res, { code: 500 });
           }
 
           invitation.link.generateActionLinks(baseUrl, req.eventPayload).then(links => {
@@ -114,12 +124,14 @@ module.exports = dependencies => {
   function tryUpdateParticipation(url, ESNToken, res, req, numTry) {
     numTry = numTry ? numTry + 1 : 1;
     if (numTry > MAX_TRY_NUMBER) {
-      return res.status(500).json({error: {code: 500, message: 'Exceeded max number of try for atomic update of event'}});
+      logger.error('Exceeded max number of try for atomic update of event');
+
+      return redirectToStaticErrorPage(req, res, { code: 500 });
     }
 
     request({method: 'GET', url: url, headers: {ESNToken: ESNToken}}, (err, response) => {
       if (err || response.statusCode < 200 || response.statusCode >= 300) {
-        return res.status(500).json({error: {code: 500, message: 'Error while modifying event', details: err ? err.message : response.body}});
+        return redirectToStaticErrorPage(req, res, { code: response && response.statusCode });
       }
 
       const icalendar = new ICAL.parse(response.body);
@@ -131,7 +143,9 @@ module.exports = dependencies => {
       const attendees = events.map(vevent => jcalHelper.getVeventAttendeeByMail(vevent, attendeeEmail)).filter(Boolean);
 
       if (!attendees.length) {
-        return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'Attendee does not exist.'}});
+        logger.error(`Can not find the attendee ${attendeeEmail} in the event`);
+
+        return redirectToStaticErrorPage(req, res, { code: 400 });
       }
 
       attendees.forEach(attendee => {
@@ -142,7 +156,7 @@ module.exports = dependencies => {
         if (!err && response.statusCode === 412) {
           tryUpdateParticipation(url, ESNToken, res, req, numTry);
         } else if (err || response.statusCode < 200 || response.statusCode >= 300) {
-          res.status(500).json({error: {code: 500, message: 'Error while modifying event', details: err ? err.message : response.body}}).end();
+          redirectToStaticErrorPage(req, res, { code: response && response.statusCode });
         } else {
           changeParticipationSuccess(res, vcalendar, req);
         }

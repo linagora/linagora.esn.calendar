@@ -114,7 +114,9 @@ module.exports = function(config) {
       'frontend/app/configuration/configuration.run.js',
       'frontend/app/services/cal-default-value.run.js',
       'frontend/app/services/websocket/listener.run.js',
-      'frontend/event-consultation-app/app.js'
+      'frontend/event-consultation-app/app.js',
+      'frontend/event-consultation-app/error.js',
+      'frontend/event-consultation-app/error-display/**/*.js'
     ],
     frameworks: ['mocha'],
     colors: true,
