@@ -26,6 +26,7 @@
     'ngSanitize',
     'op.dynamicDirective',
     'restangular',
+    'ngPromiseExtras',
     'uuid4'
   ]);
 
