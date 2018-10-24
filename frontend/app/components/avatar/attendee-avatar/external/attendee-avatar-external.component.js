@@ -9,6 +9,6 @@
         isOrganizer: '<'
       },
       controllerAs: 'ctrl',
-      controller: 'CalAttendeeAvatarController'
+      controller: 'CalAttendeeExternalAvatarController'
     });
 })();
