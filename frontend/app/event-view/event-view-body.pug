@@ -1,5 +1,5 @@
 .cal-event-view-body
-  .event-body
+  .event-body.col-xs-12.col-md-6
     .event-meta
       h4 #{__('Event details')}
       .title.event-view-block
@@ -18,7 +18,6 @@
     .invitation-block
       h4 #{__('Invitations')}
       .participation-block
-        i.mdi.mdi-account-check
         cal-event-participation(change-participation="ctrl.changeParticipation", user-as-attendee="ctrl.userAsAttendee")
       div
         cal-attendee-tabs(selected-tab="ctrl.selectedTab")

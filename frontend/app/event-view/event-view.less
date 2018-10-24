@@ -1,19 +1,19 @@
 @cal-footer-participation-height: 50px;
 
 .cal-event-view-body {
-  .flex;
   .flex-direction(column);
-  
+  .flex-vertical-centered;
+
   min-height: ~"calc(100vh - @{header-height})";
   font-size: 1.5rem;
-  
+
   .event-body {
     .flex;
     .flex-direction(column);
-    
+
     flex:1;
     padding-bottom: ~"calc(@{cal-footer-participation-height} + 15px)";
-  
+
     .event-meta, .invitation-block {
       padding: 0 15px;
 
@@ -22,8 +22,8 @@
       }
     }
 
-    .event-meta {  
-      h4 {     
+    .event-meta {
+      h4 {
         padding-bottom: 10px;
       }
 
@@ -40,11 +40,11 @@
 
         div {
           text-align: justify;
-        }        
+        }
       }
 
       i {
-        font-size: 2rem;  
+        font-size: 2rem;
         padding-right: 10px;
       }
     }
@@ -95,7 +95,7 @@
 
     position: fixed;
     bottom: 0;
-    border-top: 1px solid @inputBorderColor;    
+    border-top: 1px solid @inputBorderColor;
     height: @cal-footer-participation-height;
     width: 100%;
     background-color: @app-gray;
@@ -105,8 +105,6 @@
 @media (min-width: @screen-md-min) {
   .cal-event-view-body {
     .event-body {
-      .flex-direction(row);
-
       .event-meta, .invitation-block {
         flex-basis: 50%;
 
@@ -121,8 +119,8 @@
 
       .invitation-block {
         .participation-block {
-          .flex;
           .flex-vertical-centered;
+          .flex-horizontal-centered;
 
           padding: 15px 0;
 
