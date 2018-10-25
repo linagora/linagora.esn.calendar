@@ -272,6 +272,10 @@
           return;
         }
 
+        if ($scope.editedEvent.attendees.length > 0 && !$scope.editedEvent.organizer) {
+          setOrganizer();
+        }
+
         $scope.restActive = true;
         _hideModal();
 
