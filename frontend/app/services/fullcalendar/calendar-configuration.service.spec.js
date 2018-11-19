@@ -7,7 +7,7 @@ var expect = chai.expect;
 describe('The calFullUiConfiguration service', function() {
   var $q,
   $httpBackend,
-  $translate,
+  esnI18nService,
   calFullUiConfiguration,
   esnConfig,
   esnUserConfigurationService,
@@ -48,7 +48,7 @@ describe('The calFullUiConfiguration service', function() {
     _$rootScope_,
     _$q_,
     _$httpBackend_,
-    _$translate_,
+    _esnI18nService_,
     _calFullUiConfiguration_,
     _esnUserConfigurationService_,
     _CAL_UI_CONFIG_,
@@ -58,7 +58,7 @@ describe('The calFullUiConfiguration service', function() {
     esnUserConfigurationService = _esnUserConfigurationService_;
     $q = _$q_;
     $httpBackend = _$httpBackend_;
-    $translate = _$translate_;
+    esnI18nService = _esnI18nService_;
     CAL_UI_CONFIG = _CAL_UI_CONFIG_;
     CAL_FULLCALENDAR_LOCALE = _CAL_FULLCALENDAR_LOCALE_;
   }));
@@ -85,7 +85,7 @@ describe('The calFullUiConfiguration service', function() {
       $httpBackend.expectPOST('/api/configurations?scope=user', payload).respond(httpResponse);
       calFullUiConfiguration.get()
         .then(function(uiConfiguration) {
-          expect(uiConfiguration).to.deep.equal(CAL_UI_CONFIG);
+          expect(uiConfiguration).to.shallowDeepEqual(CAL_UI_CONFIG);
           expect(esnUserConfigurationService.get).to.have.been.calledOnce;
           expect(esnUserConfigurationService.get).to.have.been.calledWith(moduleConfiguration, moduleName);
 
@@ -223,27 +223,19 @@ describe('The calFullUiConfiguration service', function() {
   });
 
   describe('The configureLocaleForCalendar function', function() {
-    function _setPreferredLanguage(locale) {
-      $translate.preferredLanguage = sinon.spy(function() {
+    function _setLocale(locale) {
+      esnI18nService.getLocale = sinon.spy(function() {
         return locale;
       });
     }
 
-    it('should set calendar locale configuration with default value if no preferred locale', function() {
-      _setPreferredLanguage(null);
-
-      var config = calFullUiConfiguration.configureLocaleForCalendar(uiConfig);
-
-      expect(config.calendar.locale).to.be.equal(CAL_FULLCALENDAR_LOCALE.default);
-    });
-
-    it('should set calendar locale configuration with default value if preferred locale is not supported by fullcalendar', function() {
+    it('should set calendar locale configuration with default value if currently used locale is not supported by fullcalendar', function() {
       [
         'key',
         'key//local',
         'l.i'
       ].forEach(function(locale) {
-      _setPreferredLanguage(locale);
+      _setLocale(locale);
 
       var config = calFullUiConfiguration.configureLocaleForCalendar(uiConfig);
 
@@ -259,7 +251,7 @@ describe('The calFullUiConfiguration service', function() {
         'fr_Ca',
         'FR_ca'
       ].forEach(function(locale) {
-      _setPreferredLanguage(locale);
+      _setLocale(locale);
 
       var config = calFullUiConfiguration.configureLocaleForCalendar(uiConfig);
 
@@ -276,7 +268,7 @@ describe('The calFullUiConfiguration service', function() {
         'fr_-/ca',
         'fr:./ca'
       ].forEach(function(locale) {
-      _setPreferredLanguage(locale);
+      _setLocale(locale);
 
       var config = calFullUiConfiguration.configureLocaleForCalendar(uiConfig);
 
@@ -290,7 +282,7 @@ describe('The calFullUiConfiguration service', function() {
         'fR///local',
         'FR.i'
       ].forEach(function(locale) {
-      _setPreferredLanguage(locale);
+      _setLocale(locale);
 
       var config = calFullUiConfiguration.configureLocaleForCalendar(uiConfig);
 

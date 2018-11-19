@@ -6,7 +6,7 @@
 
   function calFullUiConfiguration(
     $q,
-    $translate,
+    esnI18nService,
     calBusinessHoursService,
     esnUserConfigurationService,
     _,
@@ -84,7 +84,8 @@
 
     function configureLocaleForCalendar(config) {
       var uiConfig = angular.extend({}, config);
-      var currentLocale = $translate.preferredLanguage() || CAL_FULLCALENDAR_LOCALE.default;
+      var currentLocale = esnI18nService.getLocale();
+
       var calendarLocale = _findFullCalendarLocale(currentLocale);
 
       uiConfig.calendar.locale = calendarLocale;
