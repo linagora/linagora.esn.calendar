@@ -1,5 +1,3 @@
-'use strict';
-
 const _ = require('lodash');
 const WEBSOCKET = require('../../lib/constants').WEBSOCKET;
 
@@ -14,6 +12,12 @@ module.exports = dependencies => {
 
   function notify(topic, msg) {
     let userIds;
+
+    if (msg.import) {
+      logger.debug('Imported events are not published to websockets');
+
+      return;
+    }
 
     try {
       userIds = [parseEventPath(msg.eventPath).userId];
