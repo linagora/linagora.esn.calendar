@@ -11,10 +11,10 @@ module.exports = dependencies => {
   };
 
   function getLocaleForUser(user) {
-    return Q.ninvoke(esnConfig('locale').inModule('core').forUser(user), 'get');
+    return Q.ninvoke(esnConfig('language').inModule('core').forUser(user, true), 'get');
   }
 
   function getLocaleForSystem() {
-    return Q.ninvoke(esnConfig('locale').inModule('core'), 'get');
+    return Q.ninvoke(esnConfig('language').inModule('core'), 'get');
   }
 };
