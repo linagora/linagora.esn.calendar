@@ -46,6 +46,27 @@ describe('The websocket event handler module', function() {
       expect(this.helper.getUserSocketsFromNamespace.secondCall).to.have.been.calledWith(shareeId);
     });
 
+    it('should not emit in websocket if msg.import if truethy', function() {
+      var websockets = [
+        {emit: sinon.spy()}
+      ];
+      var message = {
+        import: true,
+        event: 'ICS',
+        eventPath: `calendar/${userId}/events/1213.ics`,
+        shareeIds: [
+          `principals/users/${shareeId}`
+        ]
+      };
+      var module = require(this.moduleHelpers.backendPath + '/ws/handlers/event')(this.moduleHelpers.dependencies);
+      var stub = sinon.stub(this.helper, 'getUserSocketsFromNamespace');
+
+      stub.returns(websockets);
+      module.notify(topic, message);
+
+      expect(websockets[0].emit).to.not.have.been.called;
+    });
+
     it('should emit message on all the websockets', function() {
       var websockets = [
         {emit: sinon.spy()},
