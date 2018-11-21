@@ -9,11 +9,13 @@
     escapeHtmlUtils,
     matchmedia,
     session,
+    calConfigurationService,
     calEventUtils,
     calUIAuthorizationService,
     ESN_MEDIA_QUERY_SM_XS,
     CAL_MAX_DURATION_OF_SMALL_EVENT,
     CAL_REDRAW_MULTI_DAY_EVENT,
+    ESN_DATETIME_TIME_FORMATS,
     calMoment
   ) {
     return function(calendar) {
@@ -94,8 +96,10 @@
       var eventDurationInMinute = event.end.diff(event.start, 'minutes');
 
       if ((eventDurationInMinute <= CAL_MAX_DURATION_OF_SMALL_EVENT.DESKTOP) && element.find('.fc-time').length && element.find('.fc-title').length) {
+        var timeFormat = calConfigurationService.use24hourFormat() ? ESN_DATETIME_TIME_FORMATS.format24 : ESN_DATETIME_TIME_FORMATS.format12;
+
         timeDiv.remove();
-        titleDiv.text(event.start.format('hh:mm') + ' - ' + eventTitle);
+        titleDiv.text(event.start.format(timeFormat) + ' - ' + eventTitle);
       }
     }
 

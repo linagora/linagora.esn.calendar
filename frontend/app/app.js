@@ -45,6 +45,7 @@
     'material.components.tooltip',
     'material.components.radioButton',
     'uuid4',
-    'esn.onscroll'
+    'esn.onscroll',
+    'esn.datetime'
   ]);
 })();
