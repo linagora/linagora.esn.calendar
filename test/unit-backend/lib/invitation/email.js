@@ -49,7 +49,7 @@ describe('The invitation email module', function() {
     };
 
     esnConfigMock = function(confName) {
-      expect(confName).to.equal('locale');
+      expect(confName).to.equal('language');
       return {
         inModule: function(mod) {
           expect(mod).to.equal('core');
