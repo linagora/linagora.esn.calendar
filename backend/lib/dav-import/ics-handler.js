@@ -7,6 +7,7 @@ const START_LINE = /^BEGIN:VEVENT\r?$/;
 const END_LINE = /^END:VEVENT\r?$/;
 
 module.exports = function(dependencies) {
+  const logger = dependencies('logger');
   const client = require('../caldav-client')(dependencies);
 
   return {
@@ -56,12 +57,19 @@ module.exports = function(dependencies) {
 
     const vevent = jcal.icsAsVcalendar(item);
     const vCalendar = new ICAL.Component(['vcalendar', [], []]);
-    const eventId = vevent.getFirstPropertyValue('uid');
-
-    vevent.removeProperty('organizer');
-    vevent.addPropertyWithValue('organizer', `mailto:${user.preferredEmail}`);
-
     vCalendar.addSubcomponent(vevent);
+
+    const eventId = vevent.getFirstPropertyValue('uid');
+    const organizer = jcal.getOrganizerEmail(vCalendar.toJSON());
+    const attendees = jcal.getAttendeesEmails(vCalendar.toJSON());
+
+    if (organizer !== user.preferredEmail && !attendees.includes(user.preferredEmail)) {
+      const eventSummary = vevent.getFirstPropertyValue('summary');
+
+      logger.warn(`The user ${user.preferredEmail} is not organizer or attendee the imported event it will be ignored : ${eventId} - ${eventSummary}`);
+
+      return q.resolve();
+    }
 
     return client.importEvent({id: user._id.toString()}, calendarUri, eventId, vCalendar);
   }

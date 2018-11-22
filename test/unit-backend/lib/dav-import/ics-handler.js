@@ -3,11 +3,10 @@
 const mockery = require('mockery');
 const sinon = require('sinon');
 const chai = require('chai');
-const ICAL = require('@linagora/ical.js');
 const expect = chai.expect;
 
 describe('The calendar backend/lib/dav-import/ics-handler module', function() {
-  let getModule, jcalHelper, davEndpoint, token, davServerMock, authMock;
+  let getModule, davEndpoint, token, davServerMock, authMock;
 
   beforeEach(function() {
     davEndpoint = 'http://davendpoint:8003';
@@ -15,7 +14,6 @@ describe('The calendar backend/lib/dav-import/ics-handler module', function() {
   });
 
   beforeEach(function() {
-    jcalHelper = require('../../../../backend/lib/helpers/jcal');
 
     authMock = {
       token: {
@@ -265,26 +263,8 @@ describe('The calendar backend/lib/dav-import/ics-handler module', function() {
         });
     });
 
-    it('should call dav client to put events', function(done) {
+    it('should call dav client to put events if the user is organizer', function(done) {
       const item = [
-        'BEGIN:VEVENT',
-        'CREATED:20150612T072032Z',
-        'LAST-MODIFIED:20150612T072032Z',
-        'DTSTAMP:20150612T072032Z',
-        'DTSTART:20150612T130000Z',
-        'DURATION:PT30M',
-        'TRANSP:OPAQUE',
-        'SEQUENCE:0',
-        'SUMMARY:Démo OPENPAAS',
-        'DESCRIPTION:Présentation de OPENPAAS',
-        'CLASS:PUBLIC',
-        'PRIORITY:5',
-        'ORGANIZER;X-OBM-ID=302;CN=organizerFirstName organizerLastName:MAILTO:organizer@open-paas.org',
-        'UID:123456789',
-        'END:VEVENT'
-      ].join('\n');
-
-      const itemChanged = [
         'BEGIN:VEVENT',
         'CREATED:20150612T072032Z',
         'LAST-MODIFIED:20150612T072032Z',
@@ -302,10 +282,45 @@ describe('The calendar backend/lib/dav-import/ics-handler module', function() {
         'END:VEVENT'
       ].join('\n');
 
-      const vCalendar = new ICAL.Component(['vcalendar', [], []]);
-      const vevent = jcalHelper.icsAsVcalendar(itemChanged);
+      const user = {
+        _id: '123',
+        preferredEmail: 'user1@test.test'
+      };
+      const calendarId = '123';
+      const target = `/calendar/userId/${calendarId}.json`;
 
-      vCalendar.addSubcomponent(vevent);
+      clientMock = {
+        importEvent: sinon.spy(() => Promise.resolve(true))
+      };
+
+      getModule().importItem(item, { target, user })
+        .then(res => {
+          expect(clientMock.importEvent).to.have.been.called;
+          expect(res).to.be.true;
+          done();
+        }, err => done(err)).catch(done);
+    });
+
+    it('should call dav client to put events if the user is attendee', function(done) {
+      const item = [
+        'BEGIN:VEVENT',
+        'CREATED:20150612T072032Z',
+        'LAST-MODIFIED:20150612T072032Z',
+        'DTSTAMP:20150612T072032Z',
+        'DTSTART:20150612T130000Z',
+        'DURATION:PT30M',
+        'TRANSP:OPAQUE',
+        'SEQUENCE:0',
+        'SUMMARY:Démo OPENPAAS',
+        'DESCRIPTION:Présentation de OPENPAAS',
+        'CLASS:PUBLIC',
+        'PRIORITY:5',
+        'ORGANIZER;X-OBM-ID=302;CN=organizerFirstName organizerLastName:MAILTO:organizer@open-paas.org',
+        'UID:f1514f44bf39311568d640721cbc555071ca90e08d3349ccae43e1787553988ae047fe',
+        'ATTENDEE;CUTYPE=INDIVIDUAL;RSVP=TRUE;CN=organizerFirstName organizerLastName;PARTSTAT=ACCEPTED;X-OBM-ID=302:mailto:organizer@open-paas.org',
+        'ATTENDEE;CUTYPE=INDIVIDUAL;RSVP=TRUE;CN=user1 user1;PARTSTAT=NEED-ACTION;X-OBM-ID=302:mailto:user1@test.test',
+        'END:VEVENT'
+      ].join('\n');
 
       const user = {
         _id: '123',
@@ -323,7 +338,45 @@ describe('The calendar backend/lib/dav-import/ics-handler module', function() {
           expect(clientMock.importEvent).to.have.been.called;
           expect(res).to.be.true;
           done();
-        });
+        }, err => done(err)).catch(done);
+    });
+
+    it('should not call dav client to put events if the user is not the organizer or a attendee', function(done) {
+      const item = [
+        'BEGIN:VEVENT',
+        'CREATED:20150612T072032Z',
+        'LAST-MODIFIED:20150612T072032Z',
+        'DTSTAMP:20150612T072032Z',
+        'DTSTART:20150612T130000Z',
+        'DURATION:PT30M',
+        'TRANSP:OPAQUE',
+        'SEQUENCE:0',
+        'SUMMARY:Démo OPENPAAS',
+        'DESCRIPTION:Présentation de OPENPAAS',
+        'CLASS:PUBLIC',
+        'PRIORITY:5',
+        'ORGANIZER;X-OBM-ID=302;CN=organizerFirstName organizerLastName:MAILTO:organizer@open-paas.org',
+        'UID:f1514f44bf39311568d640721cbc555071ca90e08d3349ccae43e1787553988ae047fe',
+        'ATTENDEE;CUTYPE=INDIVIDUAL;RSVP=TRUE;CN=organizerFirstName organizerLastName;PARTSTAT=ACCEPTED;X-OBM-ID=302:mailto:organizer@open-paas.org',
+        'END:VEVENT'
+      ].join('\n');
+
+      const user = {
+        _id: '123',
+        preferredEmail: 'user1@test.test'
+      };
+      const calendarId = '123';
+      const target = `/calendar/userId/${calendarId}.json`;
+
+      clientMock = {
+        importEvent: sinon.spy(() => Promise.resolve(true))
+      };
+
+      getModule().importItem(item, { target, user })
+        .then(() => {
+          expect(clientMock.importEvent).to.not.have.been.called;
+          done();
+        }, err => done(err)).catch(done);
     });
   });
 });
