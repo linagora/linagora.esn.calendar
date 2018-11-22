@@ -8,11 +8,13 @@
     $q,
     esnI18nService,
     calBusinessHoursService,
+    calConfigurationService,
     esnUserConfigurationService,
     _,
     CAL_UI_CONFIG,
     CAL_USER_CONFIGURATION,
-    CAL_FULLCALENDAR_LOCALE
+    CAL_FULLCALENDAR_LOCALE,
+    ESN_DATETIME_TIME_FORMATS
   ) {
     var _isDeclinedEventsHidden = false;
 
@@ -53,7 +55,8 @@
 
           return uiConfig;
         })
-        .then(configureLocaleForCalendar);
+        .then(configureLocaleForCalendar)
+        .then(_configureTimeFormatForCalendar);
     }
 
     function _workingDays() {
@@ -89,6 +92,16 @@
       var calendarLocale = _findFullCalendarLocale(currentLocale);
 
       uiConfig.calendar.locale = calendarLocale;
+
+      return uiConfig;
+    }
+
+    function _configureTimeFormatForCalendar(config) {
+      var uiConfig = angular.extend({}, config);
+      var timeFormat = calConfigurationService.use24hourFormat() ? ESN_DATETIME_TIME_FORMATS.format24 : ESN_DATETIME_TIME_FORMATS.format12;
+
+      uiConfig.calendar.timeFormat = timeFormat;
+      uiConfig.calendar.slotLabelFormat = timeFormat;
 
       return uiConfig;
     }

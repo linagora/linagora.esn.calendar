@@ -9,6 +9,7 @@ describe('The calFullUiConfiguration service', function() {
   $httpBackend,
   esnI18nService,
   calFullUiConfiguration,
+  calConfigurationService,
   esnConfig,
   esnUserConfigurationService,
 
@@ -17,7 +18,8 @@ describe('The calFullUiConfiguration service', function() {
   businessHours,
   uiConfig,
   CAL_UI_CONFIG,
-  CAL_FULLCALENDAR_LOCALE;
+  CAL_FULLCALENDAR_LOCALE,
+  ESN_DATETIME_TIME_FORMATS;
 
   beforeEach(function() {
     angular.mock.module('esn.calendar');
@@ -50,17 +52,21 @@ describe('The calFullUiConfiguration service', function() {
     _$httpBackend_,
     _esnI18nService_,
     _calFullUiConfiguration_,
+    _calConfigurationService_,
     _esnUserConfigurationService_,
     _CAL_UI_CONFIG_,
-    _CAL_FULLCALENDAR_LOCALE_
+    _CAL_FULLCALENDAR_LOCALE_,
+    _ESN_DATETIME_TIME_FORMATS_
   ) {
     calFullUiConfiguration = _calFullUiConfiguration_;
+    calConfigurationService = _calConfigurationService_;
     esnUserConfigurationService = _esnUserConfigurationService_;
     $q = _$q_;
     $httpBackend = _$httpBackend_;
     esnI18nService = _esnI18nService_;
     CAL_UI_CONFIG = _CAL_UI_CONFIG_;
     CAL_FULLCALENDAR_LOCALE = _CAL_FULLCALENDAR_LOCALE_;
+    ESN_DATETIME_TIME_FORMATS = _ESN_DATETIME_TIME_FORMATS_;
   }));
 
   describe('The get function', function() {
@@ -93,6 +99,78 @@ describe('The calFullUiConfiguration service', function() {
         });
 
       $httpBackend.flush();
+    });
+
+    describe('The _configureTimeFormatForCalendar function', function() {
+      it('should set timeFormat and slotLabelFormat when user uses 12 hours format', function(done) {
+        calConfigurationService.use24hourFormat = sinon.stub().returns(true);
+
+        var payload = [
+          {
+            name: moduleName,
+            keys: moduleConfiguration
+          }
+        ];
+        var httpResponse = [
+          {
+            name: moduleName,
+            configurations: [{
+              name: 'workingDays',
+              value: null
+            }]
+          }
+        ];
+
+        sinon.spy(esnUserConfigurationService, 'get');
+        $httpBackend.expectPOST('/api/configurations?scope=user', payload).respond(httpResponse);
+        calFullUiConfiguration.get()
+          .then(function(uiConfiguration) {
+            expect(uiConfiguration.calendar).to.shallowDeepEqual({
+              timeFormat: ESN_DATETIME_TIME_FORMATS.format24,
+              slotLabelFormat: ESN_DATETIME_TIME_FORMATS.format24
+            });
+            expect(calConfigurationService.use24hourFormat).to.have.been.calledOnce;
+
+            done();
+          });
+
+        $httpBackend.flush();
+      });
+
+      it('should set timeFormat and slotLabelFormat when user uses 24 hours format', function(done) {
+        calConfigurationService.use24hourFormat = sinon.stub().returns(false);
+
+        var payload = [
+          {
+            name: moduleName,
+            keys: moduleConfiguration
+          }
+        ];
+        var httpResponse = [
+          {
+            name: moduleName,
+            configurations: [{
+              name: 'workingDays',
+              value: null
+            }]
+          }
+        ];
+
+        sinon.spy(esnUserConfigurationService, 'get');
+        $httpBackend.expectPOST('/api/configurations?scope=user', payload).respond(httpResponse);
+        calFullUiConfiguration.get()
+          .then(function(uiConfiguration) {
+            expect(uiConfiguration.calendar).to.shallowDeepEqual({
+              timeFormat: ESN_DATETIME_TIME_FORMATS.format12,
+              slotLabelFormat: ESN_DATETIME_TIME_FORMATS.format12
+            });
+            expect(calConfigurationService.use24hourFormat).to.have.been.calledOnce;
+
+            done();
+          });
+
+        $httpBackend.flush();
+      });
     });
 
     describe('The _setOnlyWorkingDays function', function() {
