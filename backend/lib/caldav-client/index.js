@@ -160,8 +160,8 @@ module.exports = dependencies => {
     }));
   }
 
-  function getCalendarList(userId) {
-    return _requestCaldav({ userId }, (url, token) => ({
+  function getCalendarList(userId, urlParams = null) {
+    return _requestCaldav({ userId, urlParams}, (url, token) => ({
       method: 'GET',
       url: url,
       json: true,
