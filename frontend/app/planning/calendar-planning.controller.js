@@ -36,6 +36,7 @@
       self.calendarReady = calendarDeffered.resolve.bind(calendarDeffered);
       self.uiConfig = CAL_UI_CONFIG.planning;
       self.uiConfig.locale = getLocale();
+      self.uiConfig.timeFormat = _getTimeFormat();
       self.uiConfig.defaultView = self.viewMode;
       self.uiConfig.eventClick = onEventClick;
       self.uiConfig.eventRender = eventRender;
@@ -161,6 +162,10 @@
 
     function getLocale() {
       return calFullUiConfiguration.configureLocaleForCalendar(CAL_UI_CONFIG).calendar.locale;
+    }
+
+    function _getTimeFormat() {
+      return calFullUiConfiguration.configureTimeFormatForCalendar(CAL_UI_CONFIG).calendar.timeFormat;
     }
   }
 })(angular);

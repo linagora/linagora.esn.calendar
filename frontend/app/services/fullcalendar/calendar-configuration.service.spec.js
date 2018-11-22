@@ -101,7 +101,7 @@ describe('The calFullUiConfiguration service', function() {
       $httpBackend.flush();
     });
 
-    describe('The _configureTimeFormatForCalendar function', function() {
+    describe('The configureTimeFormatForCalendar function', function() {
       it('should set timeFormat and slotLabelFormat when user uses 12 hours format', function(done) {
         calConfigurationService.use24hourFormat = sinon.stub().returns(true);
 

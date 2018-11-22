@@ -25,6 +25,7 @@
 
     var service = {
       configureLocaleForCalendar: configureLocaleForCalendar,
+      configureTimeFormatForCalendar: configureTimeFormatForCalendar,
       get: get,
       isDeclinedEventsHidden: isDeclinedEventsHidden,
       setHiddenDeclinedEvents: setHiddenDeclinedEvents
@@ -56,7 +57,7 @@
           return uiConfig;
         })
         .then(configureLocaleForCalendar)
-        .then(_configureTimeFormatForCalendar);
+        .then(configureTimeFormatForCalendar);
     }
 
     function _workingDays() {
@@ -96,7 +97,7 @@
       return uiConfig;
     }
 
-    function _configureTimeFormatForCalendar(config) {
+    function configureTimeFormatForCalendar(config) {
       var uiConfig = angular.extend({}, config);
       var timeFormat = calConfigurationService.use24hourFormat() ? ESN_DATETIME_TIME_FORMATS.format24 : ESN_DATETIME_TIME_FORMATS.format12;
 
