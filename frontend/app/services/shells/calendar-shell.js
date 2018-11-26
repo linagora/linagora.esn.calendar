@@ -152,6 +152,9 @@
       get sequence() { return this.vevent.getFirstPropertyValue('sequence') || 0; },
       set sequence(value) { this.vevent.updatePropertyWithValue('sequence', value); },
 
+      get xOpenpaasVideoconference() { return this.vevent.getFirstPropertyValue('x-openpaas-videoconference') || undefined; },
+      set xOpenpaasVideoconference(value) { this.vevent.updatePropertyWithValue('x-openpaas-videoconference', value); },
+
       get start() {
         if (!this.__start) {
           this.__start = calMoment(this.icalEvent.startDate);

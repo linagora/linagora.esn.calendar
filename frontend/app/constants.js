@@ -339,7 +339,7 @@
      * When checking if an event has been modified in the event form, these JSON
      * keys on the calendar shell will be checked.
      */
-    .constant('CAL_EVENT_MODIFY_COMPARE_KEYS', ['attendees', 'title', 'start', 'end', 'allDay', 'location', 'description', 'rrule', 'alarm', 'class'])
+    .constant('CAL_EVENT_MODIFY_COMPARE_KEYS', ['attendees', 'title', 'start', 'end', 'allDay', 'location', 'description', 'rrule', 'alarm', 'class', 'xOpenpaasVideoconference'])
 
     /**
      * When checking rrule comparison, these JSON keys on the rrule shell will be checked.

@@ -10,7 +10,7 @@
             ng-options="item.value as (item.label | esnI18n) for item in vm.CAL_RECUR_FREQ",
             ng-change="vm.setRRULE()",
             ng-disabled="!vm.canModifyEventRecurrence")
-    .form-group.event-recurrence-flex-container(ng-show="vm.freq")
+    .form-group.event-recurrence-flex-container.event-subelement-flex-container(ng-show="vm.freq")
       .interval
         span.col-xs-3 #{__('Interval')}:
         .col-xs-9
