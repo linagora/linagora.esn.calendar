@@ -65,7 +65,7 @@
       var organizerMail = event && event.organizer && (event.organizer.email || event.organizer.emails[0]);
       user = user || session.user;
 
-      return !organizerMail || _.contains(organizerMail, user.emails);
+      return !organizerMail || _.contains(user.emails, organizerMail);
     }
 
     function hasSignificantChange(oldEvent, newEvent) {
