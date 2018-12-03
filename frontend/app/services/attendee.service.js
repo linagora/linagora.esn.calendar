@@ -15,7 +15,8 @@
       logResourceDetailsError: logResourceDetailsError,
       splitAttendeesFromType: splitAttendeesFromType,
       splitAttendeesFromTypeWithResourceDetails: splitAttendeesFromTypeWithResourceDetails,
-      userAsAttendee: userAsAttendee
+      userAsAttendee: userAsAttendee,
+      emailAsAttendee: emailAsAttendee
     };
 
     function filterDuplicates(attendees) {
@@ -151,6 +152,14 @@
       user.cutype = CAL_ICAL.cutype.individual;
 
       return user;
+    }
+
+    function emailAsAttendee(email) {
+      return {
+        email: email,
+        displayName: email,
+        cutype: CAL_ICAL.cutype.individual
+      };
     }
   }
 })(angular);

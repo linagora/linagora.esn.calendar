@@ -129,5 +129,117 @@ describe('The calAttendeesDenormalizerService service', function() {
 
       $rootScope.$digest();
     });
+
+    it('should resolve inner groups members', function(done) {
+      var member1 = {
+        objectType: 'user',
+        id: '1',
+        member: {
+          _id: '1',
+          preferredEmail: 'user1@open-paas.org',
+          firstname: 'john',
+          lastname: 'doe'
+        }
+      };
+      var member2 = {
+        objectType: 'user',
+        id: '2',
+        member: {
+          _id: '2',
+          preferredEmail: 'user2@open-paas.org',
+          firstname: 'jane',
+          lastname: 'doe'
+        }
+      };
+      var member3 = {
+        objectType: 'group',
+        id: 'g1',
+        member: {
+          _id: '3',
+          email: 'group2@open-paas.org',
+          members: [
+            {
+              objectType: 'user',
+              id: '3',
+              member: {
+                _id: '3',
+                preferredEmail: 'user3@open-paas.org',
+                firstname: 'jane',
+                lastname: 'doe'
+              }
+            },
+            {
+              objectType: 'user',
+              id: '4',
+              member: {
+                _id: '4',
+                preferredEmail: 'user4@open-paas.org',
+                firstname: 'jane',
+                lastname: 'doe'
+              }
+            }
+          ]
+        }
+      };
+      var members1 = [member1, member2, member3];
+      var resolver = sinon.stub();
+
+      resolver.withArgs(group.email).returns($q.when(members1));
+      resolver.withArgs(member3.member.email).returns($q.when(member3.member.members));
+
+      esnMemberResolverRegistry.getResolver.returns({resolve: resolver});
+
+      calAttendeesDenormalizerService([group]).then(function(result) {
+        expect(esnMemberResolverRegistry.getResolver).to.have.been.calledWith('group');
+        expect(resolver).to.have.been.calledTwice;
+        expect(resolver).to.have.been.calledWith(group.email);
+        expect(resolver).to.have.been.calledWith(member3.member.email);
+        expect(result).to.shallowDeepEqual([
+          {email: 'user1@open-paas.org', cutype: 'INDIVIDUAL'},
+          {email: 'user2@open-paas.org', cutype: 'INDIVIDUAL'},
+          {email: 'user3@open-paas.org', cutype: 'INDIVIDUAL'},
+          {email: 'user4@open-paas.org', cutype: 'INDIVIDUAL'}
+        ]);
+        done();
+      });
+
+      $rootScope.$digest();
+    });
+
+    it('should resolve email members', function(done) {
+      var member1 = {
+        objectType: 'user',
+        id: '1',
+        member: {
+          _id: '1',
+          preferredEmail: 'user1@open-paas.org',
+          firstname: 'john',
+          lastname: 'doe'
+        }
+      };
+      var member2 = {
+        objectType: 'email',
+        id: 'user2@open-paas.org',
+        member: 'user2@open-paas.org'
+      };
+      var members1 = [member1, member2];
+      var resolver = sinon.stub();
+
+      resolver.withArgs(group.email).returns($q.when(members1));
+      esnMemberResolverRegistry.getResolver.returns({resolve: resolver});
+
+      calAttendeesDenormalizerService([group]).then(function(result) {
+        expect(esnMemberResolverRegistry.getResolver).to.have.been.calledWith('group');
+        expect(resolver).to.have.been.calledOnce;
+        expect(resolver).to.have.been.calledWith(group.email);
+        expect(result).to.shallowDeepEqual([
+          {email: 'user1@open-paas.org', cutype: 'INDIVIDUAL'},
+          {email: 'user2@open-paas.org', cutype: 'INDIVIDUAL'}
+        ]);
+        done();
+      });
+
+      $rootScope.$digest();
+    });
   });
 });

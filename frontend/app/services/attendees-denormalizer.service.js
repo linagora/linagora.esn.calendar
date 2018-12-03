@@ -24,6 +24,15 @@
     }
 
     function groupMemberResolver(attendee) {
+      var memberTransformers = {
+        user: function(attendee) {
+          return $q.when(calAttendeeService.userAsAttendee(attendee));
+        },
+        email: function(attendee) {
+          return $q.when(calAttendeeService.emailAsAttendee(attendee));
+        },
+        group: groupMemberResolver
+      };
       var resolver = esnMemberResolverRegistry.getResolver('group');
 
       if (!resolver) {
@@ -31,9 +40,15 @@
       }
 
       return resolver.resolve(attendee.email).then(function(members) {
-        return members.map(function(member) {
-          return calAttendeeService.userAsAttendee(member.member);
-        });
+        return $q.all(members.map(function(member) {
+          var memberTransformer = memberTransformers[member.objectType];
+
+          if (!memberTransformer) {
+            return calAttendeeService.emailAsAttendee(member.member);
+          }
+
+          return memberTransformer(member.member);
+        }));
       });
     }
   }
