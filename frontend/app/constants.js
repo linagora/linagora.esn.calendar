@@ -282,6 +282,10 @@
 
     .constant('CAL_DEFAULT_EVENT_COLOR', '#2196f3')
 
+    .constant('CAL_DEFAULT_NAME', '#default')
+
+    .constant('CAL_TRANSLATED_DEFAULT_NAME', 'My agenda')
+
     .constant('CAL_CALENDAR_TYPE', {
       USER: 'user',
       RESOURCE: 'resource'

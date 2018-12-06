@@ -6,6 +6,7 @@
 
   function CalendarCollectionShellFactory(
     _,
+    calendarUtils,
     calPathBuilder,
     calPathParser,
     calendarUsersCache,
@@ -16,7 +17,8 @@
     CAL_CALENDAR_PUBLIC_RIGHT,
     CAL_CALENDAR_SHARED_RIGHT,
     CAL_CALENDAR_PROPERTIES,
-    CAL_CALENDAR_TYPE
+    CAL_CALENDAR_TYPE,
+    CAL_DEFAULT_NAME
   ) {
     /**
      * A shell that wraps an caldav calendar component.
@@ -27,7 +29,7 @@
     function CalendarCollectionShell(calendar) {
       var ownerId;
 
-      this.name = calendar[CAL_CALENDAR_PROPERTIES.name] || 'Events';
+      this.name = calendar[CAL_CALENDAR_PROPERTIES.name] === CAL_DEFAULT_NAME ? calendarUtils.getTranslatedDefaultName() : calendar[CAL_CALENDAR_PROPERTIES.name];
       this.color = calendar[CAL_CALENDAR_PROPERTIES.color] || CAL_DEFAULT_EVENT_COLOR;
       this.description = calendar[CAL_CALENDAR_PROPERTIES.description] || '';
       this.source = calendar[CAL_CALENDAR_PROPERTIES.source] && getCalendarCollectionShell(calendar[CAL_CALENDAR_PROPERTIES.source]);
