@@ -4,14 +4,15 @@
   angular.module('esn.calendar')
     .factory('calendarUtils', calendarUtils);
 
-  function calendarUtils(calMoment) {
+  function calendarUtils(calMoment, esnI18nService, CAL_TRANSLATED_DEFAULT_NAME) {
     var service = {
       prependMailto: prependMailto,
       removeMailto: removeMailto,
       fullmailOf: fullmailOf,
       getNewStartDate: getNewStartDate,
       getNewEndDate: getNewEndDate,
-      getDateOnCalendarSelect: getDateOnCalendarSelect
+      getDateOnCalendarSelect: getDateOnCalendarSelect,
+      getTranslatedDefaultName: getTranslatedDefaultName
     };
 
     return service;
@@ -73,6 +74,10 @@
      */
     function getDateOnCalendarSelect(start, end) {
       return { start: start, end: end };
+    }
+
+    function getTranslatedDefaultName() {
+      return esnI18nService.translate(CAL_TRANSLATED_DEFAULT_NAME).toString();
     }
   }
 
