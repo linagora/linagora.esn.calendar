@@ -13,6 +13,7 @@ module.exports = dependencies => {
   const i18nLib = require('./../i18n')(dependencies);
   const invitationLink = require('./link')(dependencies);
   const linksHelper = require('../helpers/links')(dependencies);
+  const processors = require('./processors')(dependencies);
 
   return {
     send
@@ -44,6 +45,13 @@ module.exports = dependencies => {
       linksHelper.getEventInCalendar(ics)
     ])
     .then(result => {
+      const [, attendee] = result;
+
+      return processors.process(method, { attendeeEmail, attendee, ics })
+        .then(({ ics }) => ({ result, ics }))
+        .catch(() => ({result, ics}));
+    })
+    .then(({ result, ics }) => {
       const [baseUrl, attendee, , seeInCalendarLink] = result;
       const attendeePreferedEmail = attendee ? attendee.email || attendee.emails[0] : attendeeEmail;
       const isExternalUser = !attendee;
