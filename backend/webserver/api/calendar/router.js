@@ -7,6 +7,7 @@ module.exports = dependencies => {
   const calendarMW = require('./middleware')(dependencies);
   const authorizationMW = dependencies('authorizationMW');
   const collaborationMW = dependencies('collaborationMW');
+  const domainMW = dependencies('domainMW');
   const davMiddleware = dependencies('davserver').davMiddleware;
   const tokenMW = dependencies('tokenMW');
   const router = express.Router();
@@ -67,6 +68,7 @@ module.exports = dependencies => {
    */
   router.post('/event/invite',
     authorizationMW.requiresAPILogin,
+    domainMW.loadSessionDomain,
     controller.sendInvitation);
 
   /**

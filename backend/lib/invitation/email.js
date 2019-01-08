@@ -19,7 +19,7 @@ module.exports = dependencies => {
     send
   };
 
-  function send(user, attendeeEmail, method, ics, calendarURI, eventPath) {
+  function send(user, attendeeEmail, method, ics, calendarURI, eventPath, domain) {
     if (!user || !user.domains || !user.domains.length) {
       return Promise.reject(new Error('User must be an User object'));
     }
@@ -45,9 +45,9 @@ module.exports = dependencies => {
       linksHelper.getEventInCalendar(ics)
     ])
     .then(result => {
-      const [, attendee] = result;
+      const [, attendeeAsUser] = result;
 
-      return processors.process(method, { attendeeEmail, attendee, ics })
+      return processors.process(method, { attendeeEmail, attendeeAsUser, ics, user, domain })
         .then(({ ics }) => ({ result, ics }))
         .catch(() => ({result, ics}));
     })

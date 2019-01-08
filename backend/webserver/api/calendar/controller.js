@@ -75,7 +75,7 @@ module.exports = dependencies => {
 
     const notificationPromise = notify ? invitation.email.send : () => Promise.resolve();
 
-    notificationPromise(req.user, email, method, event, calendarURI, eventPath)
+    notificationPromise(req.user, email, method, event, calendarURI, eventPath, req.domain)
       .then(() => res.status(200).end())
       .catch(err => {
         logger.error('Error when trying to send invitations to attendees', err);
