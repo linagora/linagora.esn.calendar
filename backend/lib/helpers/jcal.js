@@ -139,15 +139,6 @@ function getIcalEvent(icalendar) {
    }
  */
 function jcal2content(icalendar, baseUrl = '') {
-
-  function getTimezoneOfIcalDate(icalDatetime) {
-    if (icalDatetime.isDate) {
-      return '';
-    }
-
-    return icalDatetime.zone === ICAL.Timezone.utcTimezone ? 'UTC' : icalDatetime.timezone;
-  }
-
   const vcalendar = ICAL.Component.fromString(icalendar);
   const vevent = vcalendar.getFirstSubcomponent('vevent');
   const method = vcalendar.getFirstPropertyValue('method');
@@ -239,6 +230,14 @@ function jcal2content(icalendar, baseUrl = '') {
   }
 
   return content;
+}
+
+function getTimezoneOfIcalDate(icalDatetime) {
+  if (icalDatetime.isDate) {
+    return '';
+  }
+
+  return icalDatetime.zone === ICAL.Timezone.utcTimezone ? 'UTC' : icalDatetime.timezone;
 }
 
 function getAttendeesEmails(icalendar) {
