@@ -62,6 +62,12 @@ html.mail
               td(colspan="4") #{content.event.location}
               td.indent-right
                 a(href=`https://www.openstreetmap.org/search?query=${content.event.location}`) #{translate('Map')}
+          if (content.event.videoconferenceLink)
+            tr
+              td.indent
+                img(src="cid:videoconference", alt=translate('Videoconference'))
+              td(colspan="5")
+                a(href=content.event.videoconferenceLink) #{translate('Join the videoconference')}
           tr
             td.indent
               img(src="cid:account-multiple", alt=translate('Attendees'))

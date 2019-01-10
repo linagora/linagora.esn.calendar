@@ -13,12 +13,13 @@ module.exports = dependencies => {
   const i18nLib = require('./../i18n')(dependencies);
   const invitationLink = require('./link')(dependencies);
   const linksHelper = require('../helpers/links')(dependencies);
+  const processors = require('./processors')(dependencies);
 
   return {
     send
   };
 
-  function send(user, attendeeEmail, method, ics, calendarURI, eventPath) {
+  function send(user, attendeeEmail, method, ics, calendarURI, eventPath, domain) {
     if (!user || !user.domains || !user.domains.length) {
       return Promise.reject(new Error('User must be an User object'));
     }
@@ -44,6 +45,14 @@ module.exports = dependencies => {
       linksHelper.getEventInCalendar(ics)
     ])
     .then(result => {
+      const [, attendeeAsUser] = result;
+      const emailContentOverrides = {};
+
+      return processors.process(method, { attendeeEmail, attendeeAsUser, ics, user, domain, emailContentOverrides })
+        .then(({ ics, emailContentOverrides }) => ({ result, ics, emailContentOverrides }))
+        .catch(() => ({ result, ics, emailContentOverrides }));
+    })
+    .then(({ result, ics, emailContentOverrides }) => {
       const [baseUrl, attendee, , seeInCalendarLink] = result;
       const attendeePreferedEmail = attendee ? attendee.email || attendee.emails[0] : attendeeEmail;
       const isExternalUser = !attendee;
@@ -51,7 +60,7 @@ module.exports = dependencies => {
       return i18nLib.getI18nForMailer(attendee).then(i18nConf => {
         let subject = 'Unknown method';
         const userEmail = user.email || user.emails[0];
-        const event = jcal2content(ics, baseUrl);
+        const event = { ...jcal2content(ics, baseUrl), ...emailContentOverrides };
         const template = { name: 'event.invitation', path: TEMPLATES_PATH };
         const i18n = i18nConf.i18n;
         let inviteMessage;

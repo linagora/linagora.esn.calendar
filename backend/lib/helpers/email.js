@@ -17,6 +17,8 @@ function filterEventAttachments(event) {
         return !!event.comment;
       case 'resource.png':
         return event.hasResources;
+      case 'videoconference.png':
+        return !!event.videoconferenceLink;
       default:
         return true;
     }
