@@ -108,6 +108,8 @@
     }
 
     function _findFullCalendarLocale(locale) {
+      if (locale === 'zh') locale = 'zh-tw';
+
       return locale.replace(/([a-zA-Z]+)([\W_]+)?([a-zA-Z]+)?/g, function(match, language, separator, country) {
         var languageAndCountryLocale = language && country ? language.toLowerCase() + '-' + country.toLowerCase() : null;
         var languageLocale = language ? language.toLowerCase() : null;
