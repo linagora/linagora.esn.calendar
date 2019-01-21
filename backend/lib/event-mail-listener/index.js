@@ -67,7 +67,7 @@ module.exports = dependencies => {
 
       function logError(msg) {
         return err => {
-          logger.error(`CalEventMailListener[${message.uid}] : ${msg}`, err.message);
+          logger.error(`CalEventMailListener[${message.uid}] : ${msg}`, err && err.message);
           logger.debug(`CalEventMailListener[${message.uid}]`, err);
         };
       }

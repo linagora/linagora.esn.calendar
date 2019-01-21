@@ -227,6 +227,24 @@ describe('Caldav-client helper', function() {
           });
     });
 
+    it('should reject if status code is unexpected', function(done) {
+      const requestMock = function(opts, callback) {
+        callback(null, { statusCode: 502 }, '');
+      };
+
+      mockery.registerMock('request', requestMock);
+
+      this.requireModule().iTipRequest(userId, jcal)
+        .then(() => done(new Error('should not occur')))
+        .catch(err => {
+          expect(err).to.exist;
+          expect(err.message).to.match(/Invalid response status from DAV server 502/);
+          expect(authMock.token.getNewToken).to.have.been.calledWith({ user: userId });
+          expect(davServerMock.utils.getDavEndpoint).to.have.been.called;
+          done();
+        });
+    });
+
     it('should call request with the built parameters and resolve with its results if it succeeds', function(done) {
       const requestMock = function(opts, callback) {
         expect(opts).to.deep.equal(request);
