@@ -233,7 +233,7 @@ module.exports = dependencies => {
       .spread((eventUrl, newToken) => Q.nfcall(request, formatRequest(eventUrl, newToken.token)))
       .spread(response => {
         if (response.statusCode < 200 || response.statusCode >= 300) {
-          return Q.reject(response.body);
+          return Q.reject(new Error(`Invalid response status from DAV server ${response.statusCode}`));
         }
 
         return formatResult ? formatResult(response) : response.body;
