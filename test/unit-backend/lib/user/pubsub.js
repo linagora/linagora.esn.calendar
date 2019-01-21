@@ -99,7 +99,7 @@ describe('The calendar user module', function() {
         requestStatus = 501;
 
         localpubsub.topics[topic].handler(fakeUser).then(() => {
-          expect(loggerErrorSpy).to.have.been.calledWith(`Error while request calDav server for new user ${fakeUser._id} default calendar creation with the message: ${requestBody}`);
+          expect(loggerErrorSpy).to.have.been.calledWith(`Error while request calDav server for new user ${fakeUser._id} default calendar creation with the message: Error: Invalid response status from DAV server ${requestStatus}`);
           done();
         }).catch(done);
       });

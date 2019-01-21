@@ -125,7 +125,7 @@ describe('The calendar resource module', function() {
         requestStatus = 501;
 
         localpubsub.topics['resource:created'].handler(fakeResource).then(() => {
-          expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${fakeResource.creator} with the message: ${requestBody}`);
+          expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${fakeResource.creator} with the message: Error: Invalid response status from DAV server ${requestStatus}`);
           expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.CREATED.SUBJECT, text: RESOURCE.ERROR.MAIL.CREATED.MESSAGE });
           done();
         }).catch(done);
@@ -260,7 +260,7 @@ describe('The calendar resource module', function() {
         requestStatus = 501;
 
         localpubsub.topics['resource:deleted'].handler(fakeResource).then(() => {
-          expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${fakeResource.creator} with the message: ${requestBody}`);
+          expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${fakeResource.creator} with the message: Error: Invalid response status from DAV server ${requestStatus}`);
           expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.REMOVED.SUBJECT, text: RESOURCE.ERROR.MAIL.REMOVED.MESSAGE });
           done();
         }).catch(done);
@@ -333,7 +333,7 @@ describe('The calendar resource module', function() {
         requestStatus = 501;
 
         localpubsub.topics['resource:updated'].handler(fakeResource).then(() => {
-          expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${fakeResource.creator} with the message: ${requestBody}`);
+          expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${fakeResource.creator} with the message: Error: Invalid response status from DAV server ${requestStatus}`);
           expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.UPDATED.SUBJECT, text: RESOURCE.ERROR.MAIL.UPDATED.MESSAGE });
           done();
         }).catch(done);
