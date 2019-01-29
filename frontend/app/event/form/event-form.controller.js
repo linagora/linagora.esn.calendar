@@ -253,7 +253,7 @@
             calPartstatUpdateNotificationService(partstat);
           }
         }, function() {
-          _displayNotification(notificationFactory.weakError, 'Event participation modification failed', '; Please refresh your calendar');
+          _displayNotification(notificationFactory.weakError, 'Event participation modification failed', 'Please refresh your calendar');
         }).finally(function() {
           $scope.restActive = false;
         });
