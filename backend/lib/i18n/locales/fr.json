@@ -25,7 +25,7 @@
   "30 minutes": "30 minutes",
   "5 hours": "5 heures",
   "5 minutes": "5 minutes",
-  "; Please refresh your calendar": "; Actualisez votre calendrier",
+  "Please refresh your calendar": "Actualisez votre calendrier",
   "Accept the resource reservation?": "Accepter la réservation de la ressource?",
   "Accepted": "Accepté",
   "Accepted: %s (%s)": "Accepté: %s (%s)",
