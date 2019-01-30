@@ -51,7 +51,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
           cal-entities-autocomplete-input.cal-user-autocomplete-input(
             exclude-current-user='excludeCurrentUserFromSuggestedAttendees',
             ng-hide='!canModifyEventAttendees',
-            types='[{{::CAL_ATTENDEE_OBJECT_TYPE.user}}, {{::CAL_ATTENDEE_OBJECT_TYPE.group}}, {{::CAL_ATTENDEE_OBJECT_TYPE.contact}}]',
+            types='[CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.group, CAL_ATTENDEE_OBJECT_TYPE.contact]',
             original-entities='attendees.users',
             mutable-entities='newAttendees',
             place-holder="Attendees",
@@ -61,7 +61,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
           )
           cal-entities-autocomplete-input(
             ng-hide='!canModifyEventAttendees',
-            types='[{{::CAL_ATTENDEE_OBJECT_TYPE.resource}}]',
+            types='[CAL_ATTENDEE_OBJECT_TYPE.resource]',
             original-entities='attendees.resources',
             mutable-entities='newResources',
             place-holder="Resources",
