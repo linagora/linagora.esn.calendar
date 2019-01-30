@@ -38,7 +38,7 @@
         entity.email = entity.displayName;
       }
 
-      if (self.excludeUnknownUsers && !entity._id) {
+      if (self.excludeUnknownUsers && !entity.objectType) {
         return false;
       }
 

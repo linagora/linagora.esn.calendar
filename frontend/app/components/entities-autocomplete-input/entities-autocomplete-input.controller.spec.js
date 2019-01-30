@@ -346,7 +346,7 @@ describe('The calEntitiesAutocompleteInputController', function() {
 
       it('should return true if added entity is an OP user', function() {
         var displayName = 'plain@email.com';
-        var entity = { displayName: displayName, _id: 'test' };
+        var entity = { displayName: displayName, objectType: 'user' };
         var ctrl = initController({ excludeUnknownUsers: true });
 
         expect(ctrl.onAddingEntity(entity)).to.be.true;
