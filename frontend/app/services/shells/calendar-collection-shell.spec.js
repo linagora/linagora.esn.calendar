@@ -7,7 +7,7 @@ var expect = chai.expect;
 describe('CalendarCollectionShell factory', function() {
   var $rootScope, Cache, CalendarCollectionShell, calPathBuilder, calendarRightShell, calendar, calendarSource, calDefaultValue, CAL_CALENDAR_PUBLIC_RIGHT,
     CAL_CALENDAR_SHARED_RIGHT, calendarSharedRight, calendarPublicRight, calendarOwner, calendarOwnerId, publicCalendarOwnerId, subscriptionId, calendarHomeId, id,
-    CAL_CALENDAR_PROPERTIES, calendarType;
+    CAL_CALENDAR_PROPERTIES, CAL_CALENDAR_TYPE, calendarType, calResourceService, calendarResourceId, resourceCalendarOwner;
 
   beforeEach(function() {
     calendarHomeId = '56095ccccbd51b7318ce6d0c';
@@ -40,6 +40,9 @@ describe('CalendarCollectionShell factory', function() {
     };
     calendarOwnerId = 'ownerId';
 
+    resourceCalendarOwner = { name: 'resource' };
+    calendarResourceId = 'resourceId';
+
     calendarRightShell = sinon.spy(function() {
       return {
         getOwnerId: function() {
@@ -53,6 +56,9 @@ describe('CalendarCollectionShell factory', function() {
         },
         getCalendarType: function() {
           return calendarType;
+        },
+        getResourceId: function() {
+          return calendarResourceId;
         }
       };
     });
@@ -78,14 +84,26 @@ describe('CalendarCollectionShell factory', function() {
   );
 
   beforeEach(function() {
-    angular.mock.inject(function(_$rootScope_, _CalendarCollectionShell_, _calPathBuilder_, _calDefaultValue_, _CAL_CALENDAR_PUBLIC_RIGHT_, _CAL_CALENDAR_SHARED_RIGHT_, _CAL_CALENDAR_PROPERTIES_) {
+    angular.mock.inject(function(
+      _$rootScope_,
+      _CalendarCollectionShell_,
+      _calPathBuilder_,
+      _calDefaultValue_,
+      _calResourceService_,
+      _CAL_CALENDAR_PUBLIC_RIGHT_,
+      _CAL_CALENDAR_SHARED_RIGHT_,
+      _CAL_CALENDAR_PROPERTIES_,
+      _CAL_CALENDAR_TYPE_
+    ) {
       $rootScope = _$rootScope_;
       CalendarCollectionShell = _CalendarCollectionShell_;
       calPathBuilder = _calPathBuilder_;
       calDefaultValue = _calDefaultValue_;
+      calResourceService = _calResourceService_;
       CAL_CALENDAR_PUBLIC_RIGHT = _CAL_CALENDAR_PUBLIC_RIGHT_;
       CAL_CALENDAR_SHARED_RIGHT = _CAL_CALENDAR_SHARED_RIGHT_;
       CAL_CALENDAR_PROPERTIES = _CAL_CALENDAR_PROPERTIES_;
+      CAL_CALENDAR_TYPE = _CAL_CALENDAR_TYPE_;
     });
   });
 
@@ -508,6 +526,25 @@ describe('CalendarCollectionShell factory', function() {
 
       calendarCollectionShell.getOwner().then(function(owner) {
         expect(owner).to.deep.equal(calendarOwner);
+
+        done();
+      });
+
+      $rootScope.$digest();
+    });
+
+    it('should return the calendar owner from a calendar', function(done) {
+      sinon.stub(calResourceService, 'getResource', function() {
+        return $q.when(resourceCalendarOwner);
+      });
+
+      var calendarCollectionShell = new CalendarCollectionShell(calendar);
+
+      calendarCollectionShell.type = CAL_CALENDAR_TYPE.RESOURCE;
+
+      calendarCollectionShell.getOwner().then(function(owner) {
+        expect(owner).to.deep.equal(resourceCalendarOwner);
+        expect(calResourceService.getResource).to.have.been.called;
 
         done();
       });
