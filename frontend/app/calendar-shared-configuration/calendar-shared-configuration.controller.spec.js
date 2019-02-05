@@ -55,8 +55,8 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
 
   beforeEach(function() {
     calendarHomeId = 'calendarHomeId';
-    user = {_id: 1};
-    anotherUser = {_id: 2};
+    user = {id: 1};
+    anotherUser = {id: 2};
     calendar = {_id: 3, href: 'href'};
     anotherCalendar = {_id: 4};
     angular.mock.inject(function(_$rootScope_, _$controller_, _$q_, _$log_, _$state_, _calendarService_, _calendarHomeService_, _calCalendarRightComparatorService_, _notificationFactory_, _session_, _CAL_CALENDAR_SHARED_TYPE_) {
@@ -127,7 +127,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       expect(spy).to.not.have.been.called;
     });
 
-    it('should return when user is not an OpenPaas user (no _id field)', function() {
+    it('should return when user is not an OpenPaas People (no id field)', function() {
       var spy = sinon.stub(calendarService, 'listPublicCalendars');
       var controller = initController();
 
@@ -162,7 +162,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       controller.onUserAdded(user);
       $rootScope.$digest();
 
-      expect(listPublicCalendarsStub).to.have.been.calledWith(user._id);
+      expect(listPublicCalendarsStub).to.have.been.calledWith(user.id);
       expect(listPersonalAndAcceptedDelegationCalendarsStub).to.have.been.calledWith(calendarHomeId);
       expect(calendarService.listDelegationCalendars).to.have.been.calledWith(session.user._id, 'noresponse');
       expect(controller.calendarsPerUser).to.shallowDeepEqual([{ user: user, source: 'href', calendar: calendar }, { user: user, source: 'delegatedsource', calendar: sharedCalendar }]);
@@ -189,7 +189,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       controller.onUserAdded(user);
       $rootScope.$digest();
 
-      expect(listPublicCalendarsStub).to.have.been.calledWith(user._id);
+      expect(listPublicCalendarsStub).to.have.been.calledWith(user.id);
       expect(listPersonalAndAcceptedDelegationCalendarsStub).to.have.been.calledWith(calendarHomeId);
       expect(userAndExternalCalendars).to.have.been.calledWith([subscribed]);
       expect(calendarService.listDelegationCalendars).to.have.been.calledWith(session.user._id, 'noresponse');
@@ -230,7 +230,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       controller.onUserAdded(user);
       $rootScope.$digest();
 
-      expect(listPublicCalendarsStub).to.have.been.calledWith(user._id);
+      expect(listPublicCalendarsStub).to.have.been.calledWith(user.id);
       expect(listPersonalAndAcceptedDelegationCalendarsStub).to.have.been.calledWith(calendarHomeId);
       expect(userAndExternalCalendars).to.have.been.calledWith();
       expect(calendarService.listDelegationCalendars).to.have.been.calledWith(session.user._id, 'noresponse');
@@ -247,7 +247,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       controller.onUserAdded(user);
       $rootScope.$digest();
 
-      expect(listPublicCalendarsStub).to.have.been.calledWith(user._id);
+      expect(listPublicCalendarsStub).to.have.been.calledWith(user.id);
       expect(calendarService.listDelegationCalendars).to.have.been.calledWith(session.user._id, 'noresponse');
       expect(logSpy).to.have.been.calledOnce;
       expect(controller.calendarsPerUser).to.be.empty;
@@ -257,7 +257,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
   describe('the onAddingUser function', function() {
     var $tag;
 
-    it('should return false if the $tag do not contain the _id field', function() {
+    it('should return false if the $tag do not contain the id field', function() {
       $tag = {};
 
       var controller = initController();
@@ -265,9 +265,9 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       expect(controller.onAddingUser($tag)).to.be.false;
     });
 
-    it('should return true if the $tag contain the _id field', function() {
+    it('should return true if the $tag contain the id field', function() {
       $tag = {
-        _id: '11111111'
+        id: '11111111'
       };
 
       var controller = initController();
@@ -288,7 +288,7 @@ describe('The CalCalendarSharedConfigurationController controller', function() {
       expect(calendarService.listDelegationCalendars).to.have.been.calledWith(session.user._id, 'noresponse');
     });
 
-    it('should not change the controller calendars when user is not an OpenPaas user (no _id field)', function() {
+    it('should not change the controller calendars when user is not an OpenPaas user (no id field)', function() {
         var controller = initController();
 
         controller.calendarsPerUser.push({calendar: calendar, user: user});
