@@ -40,7 +40,7 @@
     //////////////////////
 
     function $onInit() {
-      getNoResponseDelegationCalendarsForUser(session.user).then(function(noResponseDelegationCalendarsForUser) {
+      getNoResponseDelegationCalendarsForCurrentUser().then(function(noResponseDelegationCalendarsForUser) {
         noResponseDelegationCalendars = new NoResponseDelegationCalendars(noResponseDelegationCalendarsForUser);
       });
     }
@@ -51,7 +51,7 @@
 
     NoResponseDelegationCalendars.prototype.getCalendarsForUser = function(user) {
       return this._noResponseDelegationCalendars.filter(function(noResponseDelegationCalendar) {
-        return noResponseDelegationCalendar.user._id === user._id;
+        return noResponseDelegationCalendar.user.id === user.id;
       });
     };
 
@@ -78,7 +78,7 @@
     }
 
     function getPublicCalendarsForUser(user) {
-      return calendarService.listPublicCalendars(user._id).then(function(calendars) {
+      return calendarService.listPublicCalendars(user.id).then(function(calendars) {
           return calendars.map(function(calendar) {
             return {
               user: user,
@@ -90,8 +90,8 @@
         });
     }
 
-    function getNoResponseDelegationCalendarsForUser(user) {
-      return calendarService.listDelegationCalendars(user._id, 'noresponse')
+    function getNoResponseDelegationCalendarsForCurrentUser() {
+      return calendarService.listDelegationCalendars(session.user._id, 'noresponse')
         .then(function(delegationCalendars) {
           return delegationCalendars.map(function(delegationCalendar) {
             return {
@@ -114,7 +114,7 @@
     }
 
     function onUserAdded(user) {
-      if (!user || !user._id) {
+      if (!user || !user.id) {
         return;
       }
 
@@ -129,21 +129,21 @@
           self.calendarsPerUser = self.calendarsPerUser.concat(filteredCalendars);
         })
         .catch(function(err) {
-          $log.error('Can not get shared calendars for user', user._id, err);
+          $log.error('Can not get shared calendars for user', user.id, err);
         });
     }
 
     function onAddingUser($tags) {
-      return !!$tags._id;
+      return !!$tags.id;
     }
 
     function onUserRemoved(user) {
-      if (!user || !user._id) {
+      if (!user || !user.id) {
         return;
       }
 
       _.remove(self.calendarsPerUser, function(calendarPerUser) {
-        return calendarPerUser.user._id === user._id;
+        return calendarPerUser.user.id === user.id;
       });
     }
 
