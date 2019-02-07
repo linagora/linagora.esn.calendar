@@ -26,9 +26,7 @@
     }
 
     function _findTimezone(tzid) {
-      if (tzid === 'UTC') {
-        return ICAL.Timezone.utcTimezone;
-      } else if (TIMEZONES.zones[tzid]) {
+      if (TIMEZONES.zones[tzid]) {
         return _buildTimezone(tzid, TIMEZONES.zones[tzid]);
       } else {
         return _findTimezone(TIMEZONES.aliases[tzid].aliasTo);
@@ -176,22 +174,22 @@
           aliasTo: 'Asia/Yekaterinburg'
         },
         'Etc/GMT': {
-          aliasTo: 'UTC'
+          aliasTo: 'Etc/UTC'
         },
         'Etc/GMT+0': {
-          aliasTo: 'UTC'
+          aliasTo: 'Etc/UTC'
         },
         'Etc/UCT': {
-          aliasTo: 'UTC'
+          aliasTo: 'Etc/UTC'
         },
         'Etc/UTC': {
-          aliasTo: 'UTC'
+          aliasTo: 'Etc/UTC'
         },
         'Etc/Unversal': {
-          aliasTo: 'UTC'
+          aliasTo: 'Etc/UTC'
         },
         'Etc/Zulu': {
-          aliasTo: 'UTC'
+          aliasTo: 'Etc/UTC'
         },
         'Europe/Belfast': {
           aliasTo: 'Europe/London'
@@ -203,16 +201,16 @@
           aliasTo: 'Pacific/Fiji'
         },
         GMT: {
-          aliasTo: 'UTC'
+          aliasTo: 'Etc/UTC'
         },
         'GMT Standard Time': {
           aliasTo: 'Europe/London'
         },
         'GMT+0': {
-          aliasTo: 'UTC'
+          aliasTo: 'Etc/UTC'
         },
         GMT0: {
-          aliasTo: 'UTC'
+          aliasTo: 'Etc/UTC'
         },
         'GTB Standard Time': {
           aliasTo: 'Europe/Bucharest'
@@ -224,7 +222,7 @@
           aliasTo: 'America/Godthab'
         },
         Greenwich: {
-          aliasTo: 'UTC'
+          aliasTo: 'Etc/UTC'
         },
         'Greenwich Standard Time': {
           aliasTo: 'Atlantic/Reykjavik'
@@ -374,7 +372,7 @@
           aliasTo: 'Europe/Istanbul'
         },
         UCT: {
-          aliasTo: 'UTC'
+          aliasTo: 'Etc/UTC'
         },
         'US Eastern Standard Time': {
           aliasTo: 'America/Indiana/Indianapolis'
@@ -401,7 +399,7 @@
           aliasTo: 'Asia/Ulaanbaatar'
         },
         Universal: {
-          aliasTo: 'UTC'
+          aliasTo: 'Etc/UTC'
         },
         'Venezuela Standard Time': {
           aliasTo: 'America/Caracas'
@@ -428,16 +426,21 @@
           aliasTo: 'Asia/Yakutsk'
         },
         Z: {
-          aliasTo: 'UTC'
+          aliasTo: 'Etc/UTC'
         },
         Zulu: {
-          aliasTo: 'UTC'
+          aliasTo: 'Etc/UTC'
         },
         utc: {
-          aliasTo: 'UTC'
+          aliasTo: 'Etc/UTC'
         }
       },
       zones: {
+        'Etc/UTC': {
+          ics: 'BEGIN:VTIMEZONE\r\nTZID:Etc/UTC\r\nBEGIN:STANDARD\r\nTZOFFSETFROM:+0000\r\nTZOFFSETTO:+0000\r\nTZNAME:UTC\r\nDTSTART:19700101T000000\r\nEND:STANDARD\r\nEND:VTIMEZONE',
+          latitude: '+0000000',
+          longitude: '+0000000'
+        },
         'Africa/Abidjan': {
           ics: 'BEGIN:VTIMEZONE\r\nTZID:Africa/Abidjan\r\nBEGIN:STANDARD\r\nTZOFFSETFROM:+0000\r\nTZOFFSETTO:+0000\r\nTZNAME:GMT\r\nDTSTART:19700101T000000\r\nEND:STANDARD\r\nEND:VTIMEZONE',
           latitude: '+0051900',
