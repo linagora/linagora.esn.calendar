@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .controller('CalPartstatButtonsController', CalPartstatButtonsController);
 
-  function CalPartstatButtonsController($attrs, calEventService, calEventUtils, session) {
+  function CalPartstatButtonsController($attrs, calEventService, calEventUtils, calendarService, session) {
     var self = this;
 
     self.$onInit = $onInit;
@@ -13,7 +13,19 @@
 
     function $onInit() {
       self.canSuggestChanges = calEventUtils.canSuggestChanges(self.event, session.user);
-      self.currentPartstat = calEventUtils.getUserAttendee(self.event).partstat;
+
+      var attendee = calEventUtils.getUserAttendee(self.event);
+
+      if (!attendee) {
+        calendarService.getCalendar(self.event.calendarHomeId, self.event.calendarId).then(function(calendar) {
+          return calendar.getOwner();
+        }).then(function(owner) {
+          attendee = calEventUtils.getUserAttendee(self.event, owner);
+          self.currentPartstat = attendee.partstat;
+        });
+      }
+
+      self.currentPartstat = attendee.partstat;
     }
 
     function changeParticipation(partstat) {
