@@ -36,6 +36,8 @@
       if (!entity.id) {
         entity.id = entity.displayName;
         entity.email = entity.displayName;
+      } else {
+        entity._id = entity.id
       }
 
       if (self.excludeUnknownUsers && !entity.objectType) {
