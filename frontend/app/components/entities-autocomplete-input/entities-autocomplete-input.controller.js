@@ -37,7 +37,8 @@
         entity.id = entity.displayName;
         entity.email = entity.displayName;
       } else {
-        entity._id = entity.id
+        entity._id = entity.id;
+        entity.preferredEmail = entity.email;
       }
 
       if (self.excludeUnknownUsers && !entity.objectType) {

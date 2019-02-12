@@ -1,5 +1,9 @@
 .cal-attendee-avatar
-  a.avatar(href="", ng-attr-title='{{::ctrl.getDisplayName()}}')
+  a.avatar(href="", ng-if="ctrl.attendee._id" profile-popover-card="{{ ctrl.attendee }}" profile-popover-card-show-mobile)
+    esn-avatar(user-id="ctrl.attendee.id", user-email="ctrl.attendee.email")
+    .partstat
+      cal-partstat-icon(partstat="ctrl.attendee.partstat")
+  a.avatar(href="", ng-if="!ctrl.attendee._id" ng-attr-title='{{::ctrl.getDisplayName()}}')
     esn-avatar(user-id="ctrl.attendee.id", user-email="ctrl.attendee.email")
     .partstat
       cal-partstat-icon(partstat="ctrl.attendee.partstat")

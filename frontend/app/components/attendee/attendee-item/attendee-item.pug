@@ -2,7 +2,10 @@
   cal-attendee-avatar(attendee='ctrl.attendee')
   .attendee-item-meta
     .name
-      span {{ctrl.attendee.displayName}}
+      span(ng-if="ctrl.attendee._id" profile-popover-card="{{ ctrl.attendee }}" profile-popover-card-show-mobile)
+        | {{ctrl.attendee.displayName}}
+      span(ng-if="!ctrl.attendee._id" ng-attr-title='{{::ctrl.attendee.displayName}}')
+        | {{ctrl.attendee.displayName}}
     .details
       span.organizer(ng-if="ctrl.isOrganizer") #{__('Organizer')}
       span.separator -
