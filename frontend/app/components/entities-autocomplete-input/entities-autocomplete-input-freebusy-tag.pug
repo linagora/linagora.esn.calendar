@@ -1,5 +1,10 @@
 .cal-entities-autocomplete-input-tag
-  .esn-chip
+  .esn-chip(ng-if="data._id" profile-popover-card="{{ data }}" profile-popover-card-show-mobile)
+    .left-tag
+      cal-freebusy-icon(status="data.freeBusy")
+    span {{ ::$getDisplayText() }}
+    i.mdi.mdi-close-circle(ng-click="$removeTag()")
+  .esn-chip(ng-if="!data._id" title="{{ data.email }}")
     .left-tag
       cal-freebusy-icon(status="data.freeBusy")
     span {{ ::$getDisplayText() }}
