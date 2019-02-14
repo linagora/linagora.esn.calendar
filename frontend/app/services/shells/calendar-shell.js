@@ -21,7 +21,25 @@
   angular.module('esn.calendar')
          .factory('CalendarShell', CalendarShellFactory);
 
-  function CalendarShellFactory($q, _, ICAL, jstz, uuid4, calendarUtils, calEventAPI, calMoment, calMasterEventCache, calPathBuilder, calPathParser, CalRRuleShell, CalVAlarmShell, userUtils, CAL_EVENT_MODIFY_COMPARE_KEYS, CAL_ICAL, CAL_EVENT_CLASS) {
+  function CalendarShellFactory(
+    $q,
+    _,
+    ICAL,
+    jstz,
+    uuid4,
+    calendarUtils,
+    calEventAPI,
+    calMoment,
+    calMasterEventCache,
+    calPathBuilder,
+    calPathParser,
+    CalRRuleShell,
+    CalVAlarmShell,
+    userUtils,
+    CAL_EVENT_MODIFY_COMPARE_KEYS,
+    CAL_ICAL,
+    CAL_EVENT_CLASS
+  ) {
     var localTimezone = jstz.determine().name();
 
     function CalendarShell(vcomponent, extendedProperties) {

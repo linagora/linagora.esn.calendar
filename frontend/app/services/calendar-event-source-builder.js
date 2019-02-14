@@ -20,7 +20,7 @@
     };
 
     function _buildEventSource(calendar) {
-      return calCachedEventSource.wrapEventSource(calendar.getUniqueId(), calendarEventSource(calendar, function(error) {
+      return calCachedEventSource.wrapEventSource(calendar, calendarEventSource(calendar, function(error) {
         $log.error('Could not retrieve event sources for calendar', calendar.getUniqueId(), error);
       }));
     }

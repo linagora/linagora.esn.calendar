@@ -11,6 +11,8 @@
     calFullUiConfiguration,
     calEventStore,
     calEventUtils,
+    calUIAuthorizationService,
+    session,
     CAL_CACHED_EVENT_SOURCE_ADD,
     CAL_CACHED_EVENT_SOURCE_DELETE,
     CAL_CACHED_EVENT_SOURCE_UPDATE,
@@ -156,14 +158,27 @@
       return defer.promise;
     }
 
-    function wrapEventSource(calendarUniqueId, calendarSource) {
+    function wrapEventSource(calendar, calendarSource) {
       return function(start, end, timezone, callback) {
-        fetchEventOnlyIfNeeded(start, end, timezone, calendarUniqueId, calendarSource)
+        fetchEventOnlyIfNeeded(start, end, timezone, calendar.getUniqueId(), calendarSource)
           .then(filterEndBeforeStartEvents)
           .then(function(events) {
-            return callback(_handleDeclinedEvents(applySavedChange(start, end, calendarUniqueId, events)));
+            return setEditable(calendar, events);
+          })
+          .then(function(events) {
+            return callback(_handleDeclinedEvents(applySavedChange(start, end, calendar.getUniqueId(), events)));
           });
       };
+    }
+
+    function setEditable(calendar, events) {
+      return events.map(function(event) {
+        if (!calUIAuthorizationService.canModifyEvent(calendar, event, session.user._id)) {
+          event.editable = false;
+        }
+
+        return event;
+      });
     }
 
     function filterEndBeforeStartEvents(events) {

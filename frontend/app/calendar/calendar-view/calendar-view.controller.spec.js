@@ -425,7 +425,7 @@ describe('The calendarViewController', function() {
       this.scope.$digest();
       this.rootScope.$broadcast(this.CAL_EVENTS.CALENDARS.ADD, calendar);
       expect(calendarEventSourceMock).to.have.been.calledWith(calendar, this.scope.displayCalendarError);
-      expect(this.calCachedEventSourceMock.wrapEventSource).to.have.been.calledWith(id, source);
+      expect(this.calCachedEventSourceMock.wrapEventSource).to.have.been.calledWith(calendar, source);
       expect(this.scope.eventSourcesMap[id]).to.deep.equals({
         events: wrappedSource,
         backgroundColor: 'color'
@@ -510,9 +510,9 @@ describe('The calendarViewController', function() {
     this.scope.calendarReady(this.calendar);
     this.scope.$digest();
     expect(this.calCachedEventSourceMock.wrapEventSource).to.have.been.calledTwice;
-    expect(this.calCachedEventSourceMock.wrapEventSource).to.have.been.calledWithExactly('uniqueId1', sinon.match.array);
+    expect(this.calCachedEventSourceMock.wrapEventSource).to.have.been.calledWithExactly(this.calendars[0], sinon.match.array);
 
-    expect(this.calCachedEventSourceMock.wrapEventSource).to.have.been.calledWithExactly('uniqueId2', sinon.match.array);
+    expect(this.calCachedEventSourceMock.wrapEventSource).to.have.been.calledWithExactly(this.calendars[1], sinon.match.array);
   });
 
   it('should emit addEventSource on CAL_EVENTS.CALENDARS.TOGGLE_VIEW and eventData.hidden is false', function() {
