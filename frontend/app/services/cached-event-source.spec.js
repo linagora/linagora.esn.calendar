@@ -13,6 +13,12 @@ describe('The calCachedEventSource service', function() {
     self.calendarUniqueId = 'a/cal/id';
     self.userEmail = 'aAttendee@open-paas.org';
 
+    self.calendar = {
+      getUniqueId: function() {
+        return self.calendarUniqueId;
+      }
+    };
+
     self.eventSource = function(start, end, timezone, callback) { // eslint-disable-line
       callback(self.events);
     };
@@ -100,7 +106,7 @@ describe('The calCachedEventSource service', function() {
         callback(self.events);
       });
 
-      self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, eventSource)(self.start, self.end, self.timezone, self.originalCallback);
+      self.calCachedEventSource.wrapEventSource(self.calendar, eventSource)(self.start, self.end, self.timezone, self.originalCallback);
       self.$rootScope.$apply();
       expect(self.originalCallback).to.have.been.calledOnce;
       expect(self.originalCallback).to.have.been.calledWithExactly(self.events);
@@ -111,7 +117,7 @@ describe('The calCachedEventSource service', function() {
       self.modifiedEvent.id = 3;
       self.modifiedEvent.calendarUniqueId = 'anOtherCalendar';
       self.calCachedEventSource.registerAdd(self.modifiedEvent);
-      self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, null, self.originalCallback);
+      self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(self.start, self.end, null, self.originalCallback);
       self.$rootScope.$apply();
       expect(self.originalCallback).to.have.been.calledWithExactly(self.events);
     });
@@ -128,7 +134,7 @@ describe('The calCachedEventSource service', function() {
         title: 'I am ending before I start...'
       });
 
-      self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, null, self.originalCallback);
+      self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(self.start, self.end, null, self.originalCallback);
       self.$rootScope.$apply();
 
       expect(self.originalCallback).to.have.been.calledWithExactly([self.events[0], self.events[1]]);
@@ -140,7 +146,7 @@ describe('The calCachedEventSource service', function() {
         callback(self.events);
       });
 
-      var wrappedEventSource = self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, eventSource);
+      var wrappedEventSource = self.calCachedEventSource.wrapEventSource(self.calendar, eventSource);
 
       self.originalCallback = sinon.spy(function(events) {
         expect(_.sortBy(events, 'id')).to.deep.equals(_.sortBy(self.events, 'id'));
@@ -159,7 +165,7 @@ describe('The calCachedEventSource service', function() {
       ['registerAdd', 'registerDelete', 'registerUpdate'].forEach(function(action) {
         self.calCachedEventSource[action](self.modifiedEvent);
         self.calCachedEventSource.deleteRegistration(self.modifiedEvent);
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, self.timezone, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(self.start, self.end, self.timezone, self.originalCallback);
         self.$rootScope.$apply();
         expect(self.originalCallback).to.have.been.calledWithExactly(self.events);
       }, this);
@@ -173,7 +179,7 @@ describe('The calCachedEventSource service', function() {
         var undo = self.calCachedEventSource[action](self.modifiedEvent);
 
         undo();
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, self.timezone, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(self.start, self.end, self.timezone, self.originalCallback);
         self.$rootScope.$apply();
         expect(self.originalCallback).to.have.been.calledWithExactly(self.events);
       }, this);
@@ -182,7 +188,7 @@ describe('The calCachedEventSource service', function() {
     describe('registerUpdate function', function() {
       it('should take a event and make wrapped event sources replace event with same id from the original source by this one', function() {
         self.calCachedEventSource.registerUpdate(self.modifiedEvent);
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, self.timezone, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(self.start, self.end, self.timezone, self.originalCallback);
         self.$rootScope.$apply();
         expect(self.originalCallback).to.have.been.calledWithExactly([self.events[0], self.modifiedEvent]);
       });
@@ -190,7 +196,7 @@ describe('The calCachedEventSource service', function() {
       it('should take an event and make wrapped event sources add this one if it does not exist', function() {
         self.modifiedEvent.id = 3;
         self.calCachedEventSource.registerUpdate(self.modifiedEvent);
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, self.timezone, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(self.start, self.end, self.timezone, self.originalCallback);
         self.$rootScope.$apply();
         expect(self.originalCallback).to.have.been.calledWithExactly(self.events.concat(self.modifiedEvent));
       });
@@ -210,7 +216,7 @@ describe('The calCachedEventSource service', function() {
         self.modifiedEvent.expand = sinon.stub().returns([subEvent]);
 
         self.calCachedEventSource.registerUpdate(self.modifiedEvent);
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, self.timezone, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(self.start, self.end, self.timezone, self.originalCallback);
         self.$rootScope.$apply();
 
         expect(self.modifiedEvent.isRecurring).to.have.been.called;
@@ -246,7 +252,7 @@ describe('The calCachedEventSource service', function() {
         self.events.push(deletedSubEvent);
 
         self.calCachedEventSource.registerUpdate(self.modifiedEvent);
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, self.timezone, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(self.start, self.end, self.timezone, self.originalCallback);
         self.$rootScope.$apply();
 
         expect(self.modifiedEvent.isRecurring).to.have.been.called;
@@ -287,7 +293,7 @@ describe('The calCachedEventSource service', function() {
         self.events.push(modifiedSubInstanceBefore);
 
         self.calCachedEventSource.registerUpdate(self.modifiedEvent);
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, self.timezone, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(self.start, self.end, self.timezone, self.originalCallback);
         self.$rootScope.$apply();
 
         expect(self.modifiedEvent.isRecurring).to.have.been.called;
@@ -326,7 +332,7 @@ describe('The calCachedEventSource service', function() {
         self.modifiedEvent.isRecurring = sinon.stub().returns(true);
         self.events = [];
 
-        var wrapedEventSource = self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource);
+        var wrapedEventSource = self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource);
 
         self.calCachedEventSource.registerUpdate(self.modifiedEvent);
         wrapedEventSource(self.start, self.end, self.timezone, self.originalCallback);
@@ -368,7 +374,7 @@ describe('The calCachedEventSource service', function() {
         self.modifiedEvent.expand = sinon.stub().returns([correctSubEvent, invalidSubEvent]);
 
         self.calCachedEventSource.registerUpdate(self.modifiedEvent);
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, self.timezone, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(self.start, self.end, self.timezone, self.originalCallback);
         self.$rootScope.$apply();
 
         expect(self.modifiedEvent.isRecurring).to.have.been.called;
@@ -428,7 +434,7 @@ describe('The calCachedEventSource service', function() {
         expect(self.modifiedEvent.expand(inFirstPeriod._period[0], inThirdPeriod._period[1])).to.deep.equals([inFirstPeriod, inSecondPeriod, inThirdPeriod]);
         //meta-testing end
 
-        var wrapEventSource = self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource);
+        var wrapEventSource = self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource);
 
         self.calCachedEventSource.registerUpdate(self.modifiedEvent);
 
@@ -498,15 +504,15 @@ describe('The calCachedEventSource service', function() {
 
         self.calCachedEventSource.registerUpdate(self.modifiedEvent);
 
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(inSecondPeriod._period[0], inSecondPeriod._period[1], self.timezone, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(inSecondPeriod._period[0], inSecondPeriod._period[1], self.timezone, self.originalCallback);
         self.$rootScope.$apply();
         expect(self.originalCallback.firstCall).to.have.been.calledWithExactly([inSecondPeriod]);
 
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(inSecondPeriod._period[0], inThirdPeriod._period[1], self.timezone, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(inSecondPeriod._period[0], inThirdPeriod._period[1], self.timezone, self.originalCallback);
         self.$rootScope.$apply();
         expect(self.originalCallback.secondCall).to.have.been.calledWithExactly([inSecondPeriod, inThirdPeriod]);
 
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(inFirstPeriod._period[0], inThirdPeriod._period[1], self.timezone, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(inFirstPeriod._period[0], inThirdPeriod._period[1], self.timezone, self.originalCallback);
         self.$rootScope.$apply();
         expect(self.originalCallback.thirdCall).to.have.been.calledWithExactly([inFirstPeriod, inSecondPeriod, inThirdPeriod]);
       });
@@ -515,7 +521,7 @@ describe('The calCachedEventSource service', function() {
     describe('registerDelete function', function() {
       it('should take a event and make wrapped event sources delete event with same id from the original source', function() {
         self.calCachedEventSource.registerDelete(self.modifiedEvent);
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, self.timezone, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(self.start, self.end, self.timezone, self.originalCallback);
         self.$rootScope.$apply();
         expect(self.originalCallback).to.have.been.calledWithExactly([self.events[0]]);
       });
@@ -526,7 +532,7 @@ describe('The calCachedEventSource service', function() {
       it('should take a event and make wrapped event sources add this event if it is in the requested period and one the same calendar', function() {
         self.modifiedEvent.id = 3;
         self.calCachedEventSource.registerAdd(self.modifiedEvent);
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, null, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(self.start, self.end, null, self.originalCallback);
         self.$rootScope.$apply();
         expect(self.originalCallback).to.have.been.calledWithExactly(self.events.concat(self.modifiedEvent));
       });
@@ -536,7 +542,7 @@ describe('The calCachedEventSource service', function() {
         self.modifiedEvent.start = self.calMoment('1984-01-06 10:00');
         self.modifiedEvent.end = self.calMoment('1984-01-07 01:00');
         self.calCachedEventSource.registerAdd(self.modifiedEvent);
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, null, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(self.start, self.end, null, self.originalCallback);
         self.$rootScope.$apply();
         expect(self.originalCallback).to.have.been.calledWithExactly(self.events.concat(self.modifiedEvent));
       });
@@ -546,7 +552,7 @@ describe('The calCachedEventSource service', function() {
         self.modifiedEvent.start = self.calMoment('1984-01-07 23:59');
         self.modifiedEvent.end = self.calMoment('1984-01-08 00:45');
         self.calCachedEventSource.registerAdd(self.modifiedEvent);
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, null, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(self.start, self.end, null, self.originalCallback);
         self.$rootScope.$apply();
         expect(self.originalCallback).to.have.been.calledWithExactly(self.events.concat(self.modifiedEvent));
       });
@@ -572,7 +578,7 @@ describe('The calCachedEventSource service', function() {
         self.modifiedEvent.isRecurring = sinon.stub().returns(true);
         self.modifiedEvent.expand = sinon.stub().returns([correctSubEvent, invalidSubEvent]);
         self.calCachedEventSource.registerAdd(self.modifiedEvent);
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, null, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(self.start, self.end, null, self.originalCallback);
         self.$rootScope.$apply();
         expect(self.modifiedEvent.isRecurring).to.have.been.called;
         expect(self.modifiedEvent.expand).to.have.been.calledWith(self.start.clone().subtract(1, 'day'), self.end.clone().add(1, 'day'));
@@ -583,7 +589,7 @@ describe('The calCachedEventSource service', function() {
         self.modifiedEvent.id = 3;
         self.modifiedEvent.calendarUniqueId = 'this_is_an_other_id';
         self.calCachedEventSource.registerAdd(self.modifiedEvent);
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, null, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(self.start, self.end, null, self.originalCallback);
         self.$rootScope.$apply();
         expect(self.originalCallback).to.have.been.calledWithExactly(self.events);
       });
@@ -593,7 +599,7 @@ describe('The calCachedEventSource service', function() {
         self.modifiedEvent.start = self.calMoment([1983, 11, 31, 10, 0]);
         self.modifiedEvent.end = self.calMoment([1983, 11, 31, 23, 0]);
         self.calCachedEventSource.registerAdd(self.modifiedEvent);
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, null, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(self.start, self.end, null, self.originalCallback);
         self.$rootScope.$apply();
         expect(self.originalCallback).to.have.been.calledWithExactly(self.events);
       });
@@ -603,7 +609,7 @@ describe('The calCachedEventSource service', function() {
         self.modifiedEvent.start = self.calMoment([1984, 0, 8, 0, 30]);
         self.modifiedEvent.end = self.calMoment([1984, 0, 8, 0, 45]);
         self.calCachedEventSource.registerAdd(self.modifiedEvent);
-        self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, self.eventSource)(self.start, self.end, null, self.originalCallback);
+        self.calCachedEventSource.wrapEventSource(self.calendar, self.eventSource)(self.start, self.end, null, self.originalCallback);
         self.$rootScope.$apply();
         expect(self.originalCallback).to.have.been.calledWithExactly(self.events);
       });
@@ -633,7 +639,7 @@ describe('The calCachedEventSource service', function() {
         callback(events);
       });
 
-      return self.calCachedEventSource.wrapEventSource(self.calendarUniqueId, eventSource)(self.start, self.end, self.timezone, self.originalCallback);
+      return self.calCachedEventSource.wrapEventSource(self.calendar, eventSource)(self.start, self.end, self.timezone, self.originalCallback);
     }
 
     function newEvent(attrs) {
