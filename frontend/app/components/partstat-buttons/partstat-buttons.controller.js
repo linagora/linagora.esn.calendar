@@ -16,16 +16,18 @@
 
       var attendee = calEventUtils.getUserAttendee(self.event);
 
-      if (!attendee) {
-        calendarService.getCalendar(self.event.calendarHomeId, self.event.calendarId).then(function(calendar) {
-          return calendar.getOwner();
-        }).then(function(owner) {
-          attendee = calEventUtils.getUserAttendee(self.event, owner);
-          self.currentPartstat = attendee.partstat;
-        });
+      if (attendee) {
+        self.currentPartstat = attendee.partstat;
+
+        return;
       }
 
-      self.currentPartstat = attendee.partstat;
+      calendarService.getCalendar(self.event.calendarHomeId, self.event.calendarId).then(function(calendar) {
+        return calendar.getOwner();
+      }).then(function(owner) {
+        attendee = calEventUtils.getUserAttendee(self.event, owner);
+        self.currentPartstat = attendee.partstat;
+      });
     }
 
     function changeParticipation(partstat) {
