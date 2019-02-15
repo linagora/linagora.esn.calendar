@@ -157,7 +157,9 @@
           return calendar.id === calendarId;
         });
 
-        return $q.when(calendar[0]);
+        if (calendar && calendar.length) {
+          return $q.when(calendar[0]);
+        }
       }
 
       return calendarAPI.getCalendar(calendarHomeId, calendarId, defaultCalendarApiOptions)
