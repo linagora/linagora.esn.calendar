@@ -125,7 +125,7 @@
 
     function buildEventSourceForCalendar(calendar) {
       return {
-        events: calCachedEventSource.wrapEventSource(calendar.getUniqueId(), calendarEventSource(calendar, displayCalendarError)),
+        events: calCachedEventSource.wrapEventSource(calendar, calendarEventSource(calendar, displayCalendarError)),
         backgroundColor: calendar.color
       };
     }

@@ -148,9 +148,25 @@
      * @return {CalendarCollectionShell}  an array of CalendarCollectionShell
      */
     function getCalendar(calendarHomeId, calendarId) {
+      //Make the cache great again !!!!!
+      var calendar = null;
+      var calendars = calendarsCache[calendarHomeId];
+
+      if (calendars && calendars.length) {
+        calendar = _.filter(calendars, function(calendar) {
+          return calendar.id === calendarId;
+        });
+
+        return $q.when(calendar[0]);
+      }
+
       return calendarAPI.getCalendar(calendarHomeId, calendarId, defaultCalendarApiOptions)
         .then(function(calendar) {
-          return new CalendarCollectionShell(calendar);
+          var calendarShell = new CalendarCollectionShell(calendar);
+          calendarsCache[calendarHomeId] ? calendarsCache[calendarHomeId].push(calendarShell) :
+            calendarsCache[calendarHomeId] = [calendarShell];
+
+          return calendarShell;
         });
     }
 
