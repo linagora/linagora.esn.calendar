@@ -6,8 +6,8 @@ var expect = chai.expect;
 
 describe('The calWebsocketListenerService service', function() {
   var $rootScope, $q, $log, scope, liveNotification, calWebsocketListenerService, CAL_ICAL, CAL_WEBSOCKET;
-  var CalendarShellMock, calEventServiceMock, calendarServiceMock, calendarEventEmitterMock, calMasterEventCacheMock, calCachedEventSourceMock;
-  var calendarHomeId, calendarId, calendarPath, calendarSourceHomeId, calendarSourceId, calendarSourcePath;
+  var CalendarShellMock, calEventServiceMock, calendarServiceMock, calendarEventEmitterMock, calMasterEventCacheMock, calCachedEventSourceMock, CalendarMock, calUIAuthorizationServiceMock;
+  var calendarHomeId, calendarId, calendarPath, calendarSourceHomeId, calendarSourceId, calendarSourcePath, canModifyMock;
 
   beforeEach(function() {
     var liveNotificationMock = function(namespace) {
@@ -21,7 +21,25 @@ describe('The calWebsocketListenerService service', function() {
       };
     };
 
-    calendarServiceMock = {};
+    CalendarMock = {
+      rights: {
+        getShareeRight: sinon.spy(),
+        getPublicRight: sinon.spy()
+      },
+      isOwner: sinon.spy()
+    };
+
+    calUIAuthorizationServiceMock = {
+      canModifyEvent: function() {
+        return canModifyMock;
+      }
+    };
+
+    calendarServiceMock = {
+      getCalendar: function() {
+        return $q.when(CalendarMock);
+      }
+    };
     calendarId = 'calendarId';
     calendarHomeId = 'calendarHomeId';
     calendarPath = calendarHomeId + '/' + calendarId + '.json';
@@ -78,6 +96,7 @@ describe('The calWebsocketListenerService service', function() {
       $provide.value('calCachedEventSource', calCachedEventSourceMock);
       $provide.value('calEventService', calEventServiceMock);
       $provide.value('calendarService', calendarServiceMock);
+      $provide.value('calUIAuthorizationService', calUIAuthorizationServiceMock);
       $provide.value('Cache', function() {});
     });
   });
@@ -140,6 +159,7 @@ describe('The calWebsocketListenerService service', function() {
       };
 
       testUpdateCalCachedEventSourceAndFcEmit = function(wsCallback, expectedCacheMethod, expectedEmitMethod, eventSourcePath) {
+        canModifyMock = true;
         var event = {id: 'id', calendarId: 'calId'};
         var path = eventSourcePath || 'path';
         var etag = 'etag';
@@ -154,10 +174,11 @@ describe('The calWebsocketListenerService service', function() {
       };
 
       testUpdateCalMasterEventCache = function(wsCallback, expectedCacheMethod) {
-        var event = {id: 'id', calendarId: 'calId'};
+        canModifyMock = false;
+        var event = {id: 'id', calendarId: 'calId', editable: false};
         var path = 'path';
         var etag = 'etag';
-        var resultingEvent = CalendarShellMock.from(event, {etag: etag, path: path});
+        var resultingEvent = CalendarShellMock.from(event, {etag: etag, path: path, editable: false});
 
         wsCallback({event: event, eventPath: path, etag: etag});
         scope.$digest();
@@ -260,7 +281,7 @@ describe('The calWebsocketListenerService service', function() {
         var event = {id: 'id', calendarId: 'calId'};
         var path = 'path';
         var etag = 'etag';
-        var resultingEvent = CalendarShellMock.from(event, {etag: etag, path: path});
+        var resultingEvent = CalendarShellMock.from(event, {etag: etag, path: path, editable: false});
 
         wsEventModifyListener({event: event, eventPath: path, etag: etag});
         scope.$digest();
@@ -274,7 +295,7 @@ describe('The calWebsocketListenerService service', function() {
         var event = {id: 'id', calendarId: 'calId'};
         var path = 'path';
         var etag = 'etag';
-        var resultingEvent = CalendarShellMock.from(event, {etag: etag, path: path});
+        var resultingEvent = CalendarShellMock.from(event, {etag: etag, path: path, editable: false});
 
         wsEventModifyListener({event: event, eventPath: path, etag: etag});
         scope.$digest();

@@ -9,7 +9,8 @@
     $log,
     livenotification,
     calCachedEventSource,
-    calEventService,
+    calUIAuthorizationService,
+    session,
     calPathParser,
     calendarEventEmitter,
     calendarService,
@@ -90,7 +91,13 @@
         $log.debug('Calendar Event created/updated', type, msg);
         var event = CalendarShell.from(msg.event, {etag: msg.etag, path: getEventPath(msg)});
 
-        _udpateEventCacheAndNotify(event);
+        calendarService.getCalendar(event.calendarHomeId, event.calendarId).then(function(calendar) {
+          if (!calUIAuthorizationService.canModifyEvent(calendar, event, session.user._id)) {
+            event.editable = false;
+          }
+
+          _udpateEventCacheAndNotify(event);
+        });
       }
 
       function _onEventReply(type, msg) {
