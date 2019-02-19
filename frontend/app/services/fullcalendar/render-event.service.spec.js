@@ -6,8 +6,7 @@ var expect = chai.expect;
 
 describe('The calFullCalendarRenderEventService service', function() {
   var $q, element, session, calendar, fcTitle, fcTime, fcContent, eventIconsDivInMobile, event, calendarService, calUIAuthorizationService, view, self;
-  var calConfigurationService;
-  var ESN_DATETIME_TIME_FORMATS;
+  var esnDatetimeServiceMock, format12, format24;
 
   function Element() {
     this.innerElements = {};
@@ -75,6 +74,12 @@ describe('The calFullCalendarRenderEventService service', function() {
       }
     };
 
+    format12 = 'h:mm A';
+    format24 = 'H:mm';
+    esnDatetimeServiceMock = {
+      getTimeFormat: sinon.stub().returns('')
+    };
+
     angular.mock.module('esn.calendar');
     angular.mock.module('esn.ical');
     angular.mock.module(function($provide) {
@@ -85,6 +90,7 @@ describe('The calFullCalendarRenderEventService service', function() {
       });
       $provide.value('calendarService', calendarService);
       $provide.value('calUIAuthorizationService', calUIAuthorizationService);
+      $provide.value('esnDatetimeService', esnDatetimeServiceMock);
     });
 
     var vcalendar = {};
@@ -132,19 +138,16 @@ describe('The calFullCalendarRenderEventService service', function() {
     $rootScope,
     calFullCalendarRenderEventService,
     calEventUtils,
-    _calConfigurationService_,
     calMoment,
     CalendarShell,
     escapeHtmlUtils,
     matchmedia,
     ESN_MEDIA_QUERY_SM_XS,
-    CAL_MAX_DURATION_OF_SMALL_EVENT,
-    _ESN_DATETIME_TIME_FORMATS_
+    CAL_MAX_DURATION_OF_SMALL_EVENT
   ) {
     this.calFullCalendarRenderEventService = calFullCalendarRenderEventService;
     this.calEventUtils = calEventUtils;
     $q = _$q_;
-    calConfigurationService = _calConfigurationService_;
     this.$rootScope = $rootScope;
     this.calMoment = calMoment;
     this.CalendarShell = CalendarShell;
@@ -152,7 +155,6 @@ describe('The calFullCalendarRenderEventService service', function() {
     this.matchmedia = matchmedia;
     this.ESN_MEDIA_QUERY_SM_XS = ESN_MEDIA_QUERY_SM_XS;
     this.CAL_MAX_DURATION_OF_SMALL_EVENT = CAL_MAX_DURATION_OF_SMALL_EVENT;
-    ESN_DATETIME_TIME_FORMATS = _ESN_DATETIME_TIME_FORMATS_;
     event.start = calMoment();
     event.end = event.start.add(this.CAL_MAX_DURATION_OF_SMALL_EVENT.DESKTOP, 'minutes');
     this.recurrentEventIcon = angular.element('<i class="mdi mdi-sync"/>');
@@ -241,14 +243,14 @@ describe('The calFullCalendarRenderEventService service', function() {
       fcTime.remove = sinon.spy();
       fcTitle.text = sinon.spy();
 
-      calConfigurationService.use24hourFormat = sinon.stub().returns(false);
+      esnDatetimeServiceMock.getTimeFormat = sinon.stub().returns(format12);
 
       this.calFullCalendarRenderEventService(calendar)(event, element, view);
       this.$rootScope.$digest();
 
       expect(fcTime.remove).to.have.been.calledOnce;
-      expect(calConfigurationService.use24hourFormat).to.have.been.calledOnce;
-      expect(fcTitle.text).to.have.been.calledWith(event.start.format(ESN_DATETIME_TIME_FORMATS.format12) + ' - ' + event.title);
+      expect(esnDatetimeServiceMock.getTimeFormat).to.have.been.calledOnce;
+      expect(fcTitle.text).to.have.been.calledWith(event.start.format(format12) + ' - ' + event.title);
     }));
 
     it('should display event title instead of time if the event duration under the max duration of a small event when user uses 24 hours format', angular.mock.inject(function() {
@@ -257,14 +259,14 @@ describe('The calFullCalendarRenderEventService service', function() {
       fcTime.remove = sinon.spy();
       fcTitle.text = sinon.spy();
 
-      calConfigurationService.use24hourFormat = sinon.stub().returns(true);
+      esnDatetimeServiceMock.getTimeFormat = sinon.stub().returns(format24);
 
       this.calFullCalendarRenderEventService(calendar)(event, element, view);
       this.$rootScope.$digest();
 
       expect(fcTime.remove).to.have.been.calledOnce;
-      expect(calConfigurationService.use24hourFormat).to.have.been.calledOnce;
-      expect(fcTitle.text).to.have.been.calledWith(event.start.format(ESN_DATETIME_TIME_FORMATS.format24) + ' - ' + event.title);
+      expect(esnDatetimeServiceMock.getTimeFormat).to.have.been.calledOnce;
+      expect(fcTitle.text).to.have.been.calledWith(event.start.format(format24) + ' - ' + event.title);
     }));
   });
 

@@ -8,13 +8,12 @@
     $q,
     esnI18nService,
     calBusinessHoursService,
-    calConfigurationService,
+    esnDatetimeService,
     esnUserConfigurationService,
     _,
     CAL_UI_CONFIG,
     CAL_USER_CONFIGURATION,
-    CAL_FULLCALENDAR_LOCALE,
-    ESN_DATETIME_TIME_FORMATS
+    CAL_FULLCALENDAR_LOCALE
   ) {
     var _isDeclinedEventsHidden = false;
 
@@ -99,7 +98,7 @@
 
     function configureTimeFormatForCalendar(config) {
       var uiConfig = angular.extend({}, config);
-      var timeFormat = calConfigurationService.use24hourFormat() ? ESN_DATETIME_TIME_FORMATS.format24 : ESN_DATETIME_TIME_FORMATS.format12;
+      var timeFormat = esnDatetimeService.getTimeFormat();
 
       uiConfig.calendar.timeFormat = timeFormat;
       uiConfig.calendar.slotLabelFormat = timeFormat;
