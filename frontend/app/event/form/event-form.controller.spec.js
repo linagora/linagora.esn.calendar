@@ -132,6 +132,11 @@ describe('The CalEventFormController controller', function() {
       })
     };
 
+    var esnDatetimeServiceMock = {
+      getTimeFormat: sinon.stub().returns(''),
+      is24hourFormat: sinon.stub().returns(true)
+    };
+
     var sessionMock = {
       user: user,
       ready: {
@@ -181,6 +186,7 @@ describe('The CalEventFormController controller', function() {
       $provide.value('calendarHomeService', calendarHomeServiceMock);
       $provide.value('calEventService', calEventServiceMock);
       $provide.value('calendarService', self.calendarServiceMock);
+      $provide.value('esnDatetimeService', esnDatetimeServiceMock);
       $provide.value('session', sessionMock);
       $provide.value('Cache', Cache);
       $provide.value('notificationFactory', self.notificationFactory);
