@@ -10,10 +10,12 @@
     self.$onInit = $onInit;
 
     function $onInit() {
-      self.calendar.isResource() ? initResource() : initCalendar();
+      initDetails();
+
+      self.calendar.isResource() && initResourceIcon();
     }
 
-    function initCalendar() {
+    function initDetails() {
       if (!self.showDetails) {
         return;
       }
@@ -23,11 +25,7 @@
       });
     }
 
-    function initResource() {
-      if (self.showDetails) {
-        self.details = self.calendar.source.description;
-      }
-
+    function initResourceIcon() {
       self.resourceIcon = CAL_RESOURCE.DEFAULT_ICON;
 
       return calResourceService.getResourceIcon(self.calendar.source.calendarHomeId)
@@ -40,7 +38,13 @@
     }
 
     function getOwnerDisplayName() {
-      return self.calendar.getOwner().then(userUtils.displayNameOf);
+      return self.calendar.getOwner().then(function(owner) {
+        if (self.calendar.isResource()) {
+          return owner.name;
+        }
+
+        return userUtils.displayNameOf(owner);
+      });
     }
   }
 })(angular);

@@ -78,13 +78,13 @@ describe('The CalendarsListItemController controller', function() {
     });
 
     describe('When calendar is a resource', function() {
-      it('should set details from calendar source description', function() {
+      it('should set details from resource name', function() {
         var controller = initController();
 
         $httpBackend.expectGET('/linagora.esn.resource/api/resources/' + calendar.source.calendarHomeId).respond(resource);
 
         calendar.isResource.returns(true);
-        calendar.getOwner.returns($q.when());
+        calendar.getOwner.returns($q.when(resource));
         userUtils.displayNameOf.returns(displayName);
         controller.showDetails = true;
         controller.calendar = calendar;
@@ -93,9 +93,9 @@ describe('The CalendarsListItemController controller', function() {
         $httpBackend.flush();
         $rootScope.$digest();
 
-        expect(calendar.getOwner).to.not.have.been.called;
+        expect(calendar.getOwner).to.have.been.calledWith;
         expect(userUtils.displayNameOf).to.not.have.been.called;
-        expect(controller.details).to.equal(calendar.source.description);
+        expect(controller.details).to.equal(resource.name);
       });
     });
 

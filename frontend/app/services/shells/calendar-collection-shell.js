@@ -12,6 +12,7 @@
     calendarUsersCache,
     calDefaultValue,
     CalendarRightShell,
+    calResourceService,
     session,
     CAL_DEFAULT_EVENT_COLOR,
     CAL_CALENDAR_PUBLIC_RIGHT,
@@ -146,6 +147,10 @@
      * @returns {user} return the owner of the calendar
      */
     function getOwner() {
+      if (this.isResource()) {
+        return calResourceService.getResource(this.rights.getResourceId());
+      }
+
       var ownerId = this.rights.getOwnerId();
 
       return ownerId && calendarUsersCache.getUser(ownerId);
