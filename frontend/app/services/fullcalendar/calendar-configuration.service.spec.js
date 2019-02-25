@@ -9,17 +9,18 @@ describe('The calFullUiConfiguration service', function() {
   $httpBackend,
   esnI18nService,
   calFullUiConfiguration,
-  calConfigurationService,
+  esnDatetimeServiceMock,
   esnConfig,
   esnUserConfigurationService,
 
+  format12,
+  format24,
   moduleName,
   moduleConfiguration,
   businessHours,
   uiConfig,
   CAL_UI_CONFIG,
-  CAL_FULLCALENDAR_LOCALE,
-  ESN_DATETIME_TIME_FORMATS;
+  CAL_FULLCALENDAR_LOCALE;
 
   beforeEach(function() {
     angular.mock.module('esn.calendar');
@@ -41,8 +42,15 @@ describe('The calFullUiConfiguration service', function() {
       return $q.when(businessHours);
     });
 
+    format12 = 'h:mm A';
+    format24 = 'H:mm';
+    esnDatetimeServiceMock = {
+      getTimeFormat: sinon.stub().returns('')
+    };
+
     angular.mock.module(function($provide) {
       $provide.value('esnConfig', esnConfig);
+      $provide.value('esnDatetimeService', esnDatetimeServiceMock);
     });
   });
 
@@ -52,21 +60,17 @@ describe('The calFullUiConfiguration service', function() {
     _$httpBackend_,
     _esnI18nService_,
     _calFullUiConfiguration_,
-    _calConfigurationService_,
     _esnUserConfigurationService_,
     _CAL_UI_CONFIG_,
-    _CAL_FULLCALENDAR_LOCALE_,
-    _ESN_DATETIME_TIME_FORMATS_
+    _CAL_FULLCALENDAR_LOCALE_
   ) {
     calFullUiConfiguration = _calFullUiConfiguration_;
-    calConfigurationService = _calConfigurationService_;
     esnUserConfigurationService = _esnUserConfigurationService_;
     $q = _$q_;
     $httpBackend = _$httpBackend_;
     esnI18nService = _esnI18nService_;
     CAL_UI_CONFIG = _CAL_UI_CONFIG_;
     CAL_FULLCALENDAR_LOCALE = _CAL_FULLCALENDAR_LOCALE_;
-    ESN_DATETIME_TIME_FORMATS = _ESN_DATETIME_TIME_FORMATS_;
   }));
 
   describe('The get function', function() {
@@ -103,7 +107,7 @@ describe('The calFullUiConfiguration service', function() {
 
     describe('The configureTimeFormatForCalendar function', function() {
       it('should set timeFormat and slotLabelFormat when user uses 12 hours format', function(done) {
-        calConfigurationService.use24hourFormat = sinon.stub().returns(true);
+        esnDatetimeServiceMock.getTimeFormat = sinon.stub().returns(format12);
 
         var payload = [
           {
@@ -126,10 +130,10 @@ describe('The calFullUiConfiguration service', function() {
         calFullUiConfiguration.get()
           .then(function(uiConfiguration) {
             expect(uiConfiguration.calendar).to.shallowDeepEqual({
-              timeFormat: ESN_DATETIME_TIME_FORMATS.format24,
-              slotLabelFormat: ESN_DATETIME_TIME_FORMATS.format24
+              timeFormat: format12,
+              slotLabelFormat: format12
             });
-            expect(calConfigurationService.use24hourFormat).to.have.been.calledOnce;
+            expect(esnDatetimeServiceMock.getTimeFormat).to.have.been.calledOnce;
 
             done();
           });
@@ -138,7 +142,7 @@ describe('The calFullUiConfiguration service', function() {
       });
 
       it('should set timeFormat and slotLabelFormat when user uses 24 hours format', function(done) {
-        calConfigurationService.use24hourFormat = sinon.stub().returns(false);
+        esnDatetimeServiceMock.getTimeFormat = sinon.stub().returns(format24);
 
         var payload = [
           {
@@ -161,10 +165,10 @@ describe('The calFullUiConfiguration service', function() {
         calFullUiConfiguration.get()
           .then(function(uiConfiguration) {
             expect(uiConfiguration.calendar).to.shallowDeepEqual({
-              timeFormat: ESN_DATETIME_TIME_FORMATS.format12,
-              slotLabelFormat: ESN_DATETIME_TIME_FORMATS.format12
+              timeFormat: format24,
+              slotLabelFormat: format24
             });
-            expect(calConfigurationService.use24hourFormat).to.have.been.calledOnce;
+            expect(esnDatetimeServiceMock.getTimeFormat).to.have.been.calledOnce;
 
             done();
           });
