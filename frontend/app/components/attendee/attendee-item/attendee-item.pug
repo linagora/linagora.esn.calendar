@@ -3,7 +3,7 @@
   .attendee-item-meta
     .name
       span(
-        profile-popover-card="{{ ctrl.attendee }}"
+        profile-popover-card='{ source: "ctrl.attendee", property: "id" }'
         profile-popover-card-hide-on-element-scroll='.modal-body'
         profile-popover-card-alternative-title='{{ ::ctrl.attendee.displayName }}'
         profile-popover-card-show-mobile
