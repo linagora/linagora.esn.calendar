@@ -3,7 +3,8 @@
 const expect = require('chai').expect,
       sinon = require('sinon'),
       mockery = require('mockery'),
-      moment = require('moment');
+      moment = require('moment'),
+      { parseString } = require('xml2js');
 
 const DEFAULT_CALENDAR_URI = 'events';
 
@@ -551,4 +552,161 @@ describe('Caldav-client helper', function() {
 
   });
 
+  describe('The getMultipleEventsFromPaths function', function() {
+    const buildRequestBody = paths => {
+      let hrefs = '';
+
+      paths.forEach(path => {
+        hrefs += `<D:href>${path}</D:href>`;
+      });
+
+      return `<?xml version="1.0" encoding="utf-8" ?>
+              <C:calendar-multiget xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+                <D:prop>
+                  <D:getetag/>
+                  <C:calendar-data/>
+                </D:prop>
+                ${hrefs}
+              </C:calendar-multiget>`;
+    };
+
+    beforeEach(function() {
+      request = {
+        method: 'REPORT',
+        url: `${davEndpoint}/calendars`,
+        headers: {
+          ESNToken: token,
+          'Content-Type': 'application/xml',
+          Accept: 'application/xml'
+        }
+      };
+    });
+
+    it('should return an empty array if there is no paths', function(done) {
+      this.requireModule()
+        .getMultipleEventsFromPaths(userId, [])
+        .then(events => {
+          expect(events).to.deep.equal([]);
+          done();
+        })
+        .catch(err => done(err || 'should resolve'));
+    });
+
+    it('should reject if token retrieval fails', function(done) {
+      authMock.token.getNewToken = sinon.spy((opts, callback) => callback(new Error()));
+
+      this.requireModule()
+        .getMultipleEventsFromPaths(userId, [''])
+        .catch(err => {
+          expect(err).to.exist;
+            expect(authMock.token.getNewToken).to.have.been.calledWith({ user: userId });
+            expect(davServerMock.utils.getDavEndpoint).to.have.been.called;
+            done();
+        });
+    });
+
+    it('should call request with the built parameters and reject if it fails', function(done) {
+      const path = 'eventPath';
+
+      request.body = buildRequestBody([path]);
+
+      const requestMock = (opts, callback) => {
+        expect(opts).to.deep.equal(request);
+
+        callback(new Error());
+      };
+
+      mockery.registerMock('request', requestMock);
+
+      this.requireModule()
+        .getMultipleEventsFromPaths(userId, [path])
+        .catch(err => {
+          expect(err).to.exist;
+          expect(authMock.token.getNewToken).to.have.been.calledWith({ user: userId });
+          expect(davServerMock.utils.getDavEndpoint).to.have.been.called;
+          done();
+        });
+    });
+
+    it('should return a list of events which have status is "HTTP/1.1 200 OK"', function(done) {
+      const paths = [
+        'eventPath1',
+        'eventPath2',
+        'eventPath3'
+      ];
+
+      const responseBody = `<?xml version="1.0" encoding="utf-8" ?>
+                            <d:multistatus xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+                              <d:response>
+                                <d:href>eventPath1</d:href>
+                                <d:propstat>
+                                  <d:prop>
+                                    <d:getetag>"fffff-abcd1"</d:getetag>
+                                    <cal:calendar-data>calendar-data1</cal:calendar-data>
+                                  </d:prop>
+                                  <d:status>HTTP/1.1 200 OK</d:status>
+                                </d:propstat>
+                              </d:response>
+                              <d:response>
+                                <d:href>eventPath2</d:href>
+                                <d:propstat>
+                                  <d:prop></d:prop>
+                                  <d:status>HTTP/1.1 404 Not Found</d:status>
+                                </d:propstat>
+                              </d:response>
+                              <d:response>
+                                <d:href>eventPath3</d:href>
+                                <d:propstat>
+                                  <d:prop>
+                                    <d:getetag>"fffff-abcd3"</d:getetag>
+                                    <cal:calendar-data>calendar-data3</cal:calendar-data>
+                                  </d:prop>
+                                  <d:status>HTTP/1.1 200 OK</d:status>
+                                </d:propstat>
+                              </d:response>
+                            </d:multistatus>`;
+
+      request.body = buildRequestBody(paths);
+
+      const xmlToJsonObject = xmlString => new Promise((resolve, reject) => {
+        parseString(xmlString, (err, result) => {
+          if (err) reject(err);
+
+          resolve(result['C:calendar-multiget']);
+        });
+      });
+
+      const requestMock = (opts, callback) => {
+        Promise.all([
+          xmlToJsonObject(request.body),
+          xmlToJsonObject(opts.body)
+        ]).then(result => {
+          request.body = result[0];
+          opts.body = result[1];
+
+          expect(opts).to.deep.equal(request);
+
+          callback(null, { body: responseBody, statusCode: 200 }, responseBody);
+        }).catch(err => callback(err));
+      };
+
+      mockery.registerMock('request', requestMock);
+
+      this.requireModule()
+        .getMultipleEventsFromPaths(userId, paths)
+        .then(events => {
+          expect(events).to.deep.equal([{
+            etag: '"fffff-abcd1"',
+            ical: 'calendar-data1',
+            path: 'eventPath1'
+          }, {
+            etag: '"fffff-abcd3"',
+            ical: 'calendar-data3',
+            path: 'eventPath3'
+          }]);
+          done();
+        })
+        .catch(err => done(err || 'should resolve'));
+    });
+  });
 });
