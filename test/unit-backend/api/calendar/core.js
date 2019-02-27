@@ -340,35 +340,40 @@ describe('The calendar core module', function() {
     });
 
     it('should call the search module with good params and return the events retireved through the caldav-client', function(done) {
-      var query = {
+      const query = {
         search: 'search',
         userId: 'userId',
         calendarId: 'calendarId'
       };
-      var esResult = {
-        total_count: 3,
-        list: [{_id: 'userId--event1'}, {_id: 'userId--event2'}, {_id: 'userId--event3'}]
+      const esResult = {
+        total_count: 2,
+        list: [{_id: 'userId--event1'}, {_id: 'userId--event2'}]
       };
+
       searchLibMock.searchEvents = function(q, callback) {
         expect(q).to.deep.equal(query);
+
         return callback(null, esResult);
       };
-      caldavClientMock.getEvent = sinon.stub();
-      caldavClientMock.getEvent.onFirstCall().returns(q.when({ ical: 'event1', etag: 'etag1' })).onSecondCall().returns(q.reject('error2')).onThirdCall().returns(q.when({ ical: 'event3', etag: 'etag3' }));
+
+      caldavClientMock.getMultipleEventsFromPaths = sinon.stub();
+      caldavClientMock.getMultipleEventsFromPaths.returns(q.when([
+        { ical: 'event1', etag: 'etag1', path: 'event1path' },
+        { ical: 'event2', etag: 'etag2', path: 'event2path' }
+      ]));
 
       caldavClientMock.getEventPath = sinon.stub();
-      caldavClientMock.getEventPath.onFirstCall().returns('event1path').onSecondCall().returns('event3path');
+      caldavClientMock.getEventPath.onFirstCall().returns('event1path').onSecondCall().returns('event2path');
 
       this.module.searchEvents(query, function(err, results) {
         expect(err).to.not.exist;
-        [0, 1, 2].forEach(function(i) {expect(caldavClientMock.getEvent).to.have.been.calledWith(query.userId, query.calendarId, esResult.list[i]._id.split('--')[1]);});
-        [0, 2].forEach(function(i) {expect(caldavClientMock.getEventPath).to.have.been.calledWith(query.userId, query.calendarId, esResult.list[i]._id.split('--')[1]);});
+        expect(caldavClientMock.getMultipleEventsFromPaths).to.have.been.calledWith(query.userId, ['event1path', 'event2path']);
+        [0, 1].forEach(function(i) {expect(caldavClientMock.getEventPath).to.have.been.calledWith(query.userId, query.calendarId, esResult.list[i]._id.split('--')[1]);});
         expect(results).to.deep.equal({
           total_count: esResult.total_count,
           results: [
-            { uid: 'event1', event: 'event1', path: 'event1path', etag: 'etag1'},
-            { uid: 'event2', error: 'error2'},
-            { uid: 'event3', event: 'event3', path: 'event3path', etag: 'etag3'}
+            { event: 'event1', path: 'event1path', etag: 'etag1'},
+            { event: 'event2', path: 'event2path', etag: 'etag2'}
           ]
         });
         done();

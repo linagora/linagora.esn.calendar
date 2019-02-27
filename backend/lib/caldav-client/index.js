@@ -7,6 +7,7 @@ const _ = require('lodash');
 const path = require('path');
 const uuidV4 = require('uuid/v4');
 const ICAL = require('@linagora/ical.js');
+const { parseString } = require('xml2js');
 
 const JSON_CONTENT_TYPE = 'application/json';
 const DEFAULT_CALENDAR_NAME = 'Events';
@@ -26,6 +27,7 @@ module.exports = dependencies => {
     getCalendarAsTechnicalUser,
     getCalendarList,
     getEvent,
+    getMultipleEventsFromPaths,
     getEventFromUrl,
     updateEvent,
     getEventInDefaultCalendar,
@@ -222,12 +224,57 @@ module.exports = dependencies => {
     }));
   }
 
+  function getMultipleEventsFromPaths(userId, paths = []) {
+    if (!paths.length) {
+      return Promise.resolve([]);
+    }
+
+    let hrefs = '';
+
+    paths.forEach(path => {
+      hrefs += `<D:href>${path}</D:href>`;
+    });
+
+    return _requestCaldav({ userId, isRootPath: true }, (url, token) => ({
+      method: 'REPORT',
+      url,
+      headers: {
+        ESNToken: token,
+        'Content-Type': 'application/xml',
+        Accept: 'application/xml'
+      },
+      body: `<?xml version="1.0" encoding="utf-8" ?>
+            <C:calendar-multiget xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
+              <D:prop>
+                <D:getetag/>
+                <C:calendar-data/>
+              </D:prop>
+              ${hrefs}
+            </C:calendar-multiget>`
+    }))
+    .then(data => Q.nfcall(parseString, data))
+    .then(parsedData => parsedData['d:multistatus']['d:response'].map(item => {
+      const propstat = item['d:propstat'][0];
+      const path = item['d:href'][0];
+
+      if (propstat['d:status'][0] !== 'HTTP/1.1 200 OK') {
+        return logger.error('Cannot fetch the event', path, propstat['d:status'][0]);
+      }
+
+      return {
+        etag: propstat['d:prop'][0]['d:getetag'][0],
+        ical: propstat['d:prop'][0]['cal:calendar-data'][0],
+        path
+      };
+    }).filter(Boolean));
+  }
+
   function _requestCaldav(options, formatRequest, formatResult) {
-    const { userId, calendarUri, eventUid, getNewTokenFn, urlParams } = options;
+    const { userId, calendarUri, eventUid, getNewTokenFn, urlParams, isRootPath} = options;
     const getNewToken = getNewTokenFn || Q.nfcall(token.getNewToken, { user: userId });
 
     return Q.all([
-      _buildEventUrl(userId, calendarUri, eventUid, urlParams),
+      _buildEventUrl({ isRootPath, userId, calendarUri, eventUid, urlParams }),
       getNewToken
     ])
       .spread((eventUrl, newToken) => Q.nfcall(request, formatRequest(eventUrl, newToken.token)))
@@ -240,10 +287,14 @@ module.exports = dependencies => {
       });
   }
 
-  function _buildEventUrl(userId, calendarUri, eventUid, urlParams) {
-    let path = !eventUid && calendarUri ? `/calendars/${userId}/${calendarUri}.json` : getEventPath(userId, calendarUri, eventUid);
+  function _buildEventUrl({ isRootPath, userId, calendarUri, eventUid, urlParams }) {
+    let path = '/calendars';
 
-    path = urlParams ? path + `?${urlParams}` : path;
+    if (!isRootPath) {
+      path = !eventUid && calendarUri ? `/calendars/${userId}/${calendarUri}.json` : getEventPath(userId, calendarUri, eventUid);
+
+      path = urlParams ? path + `?${urlParams}` : path;
+    }
 
     return new Promise(resolve => davserver.getDavEndpoint(davserver => resolve(urljoin(davserver, path))));
   }

@@ -1,7 +1,6 @@
 'use strict';
 
 const async = require('async');
-const Q = require('q');
 const getEventUidFromElasticsearchId = require('../../../lib/search/denormalize').getEventUidFromElasticsearchId;
 
 module.exports = dependencies => {
@@ -175,27 +174,18 @@ module.exports = dependencies => {
         return callback(null, output);
       }
 
-      const eventPromises = esResult.list.map((esEvent, index) => {
-        const eventUid = getEventUidFromElasticsearchId(esEvent._id);
+      const paths = esResult.list.map(event => caldavClient.getEventPath(query.userId, query.calendarId, getEventUidFromElasticsearchId(event._id)));
 
-        return caldavClient.getEvent(query.userId, query.calendarId, eventUid).then(event => {
+      caldavClient.getMultipleEventsFromPaths(query.userId, paths)
+        .then(events => events.map(({ ical, etag, path }, index) => {
           output.results[index] = {
-            uid: eventUid,
-            path: caldavClient.getEventPath(query.userId, query.calendarId, eventUid),
-            event: event.ical,
-            etag: event.etag
+            path,
+            event: ical,
+            etag
           };
-        }, error => {
-          output.results[index] = {
-            uid: eventUid,
-            error: error
-          };
-        });
-      });
-
-      Q.allSettled(eventPromises).finally(() => {
-        callback(null, output);
-      });
+        }))
+        .then(() => callback(null, output))
+        .catch(err => callback(err));
     });
   }
 };

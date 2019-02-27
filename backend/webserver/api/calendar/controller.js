@@ -203,10 +203,6 @@ module.exports = dependencies => {
       res.header('X-ESN-Items-Count', eventsData.total_count);
 
       eventsData.results.forEach(eventData => {
-        if (eventData.error) {
-          return logger.error('The search cannot fetch event', eventData.eventUid, eventData.error);
-        }
-
         davItems.push({
           _links: {
             self: {
