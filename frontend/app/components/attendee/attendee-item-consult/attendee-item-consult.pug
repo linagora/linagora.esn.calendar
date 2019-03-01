@@ -5,6 +5,6 @@
     .cal-participation-status
       i.mdi.mdi(ng-class='ctrl.PARTSTAT_ICONS[ctrl.attendee.partstat]')
   .name
-    a.send-email(ng-href="mailto:{{::ctrl.attendee.email}}" op-inbox-compose op-inbox-compose-display-name="{{::ctrl.attendee.name}}") {{::ctrl.attendee.name}}
+    a.send-email(ng-href="mailto:{{::ctrl.attendee.email}}" op-inbox-compose op-inbox-compose-users="[ctrl.attendee]") {{::ctrl.attendee.name}}
     small(ng-if='ctrl.isOrganizer')
       | #{__('Organizer')}

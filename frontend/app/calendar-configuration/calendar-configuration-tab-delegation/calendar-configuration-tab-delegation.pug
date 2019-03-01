@@ -15,7 +15,7 @@ hr
     a.user-avatar(href="", ng-attr-title='delegation.user.displayName')
       esn-avatar(user-id="delegation.user.id", user-email="delegation.user.preferredEmail")
     .user-name
-      a(ng-href="mailto:{{::delegation.user.preferredEmail}}" op-inbox-compose op-inbox-compose-display-name="{{::delegation.user.displayName}}") {{ delegation.user.displayName }}
+      a(ng-href="mailto:{{::delegation.user.preferredEmail}}" op-inbox-compose op-inbox-compose-users="[delegation.user]") {{ delegation.user.displayName }}
   .select-delegation
     .select
       select.form-control(ng-model='delegation.selection')
