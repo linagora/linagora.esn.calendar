@@ -97,7 +97,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
                   span #{__('Organizer')}
                 i.mdi.mdi-account-edit
               .meta
-                a(ng-href="mailto:{{::editedEvent.organizer.email}}" op-inbox-compose op-inbox-compose-display-name="{{::editedEvent.organizer.name || editedEvent.organizer.displayName}}")
+                a(ng-href="mailto:{{::editedEvent.organizer.email}}" op-inbox-compose op-inbox-compose-users="[editedEvent.organizer]")
                   span.name(ng-if="editedEvent.organizer.name || editedEvent.organizer.displayName") {{editedEvent.organizer.name || editedEvent.organizer.displayName}}
                   span.separator -
                   span.email {{::editedEvent.organizer.email}}
