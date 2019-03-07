@@ -174,7 +174,7 @@ module.exports = dependencies => {
         return callback(null, output);
       }
 
-      const paths = esResult.list.map(event => caldavClient.getEventPath(query.userId, query.calendarId, getEventUidFromElasticsearchId(event._id)));
+      const paths = esResult.list.map(event => caldavClient.getEventPath(event._source.userId, event._source.calendarId, getEventUidFromElasticsearchId(event._id)));
 
       caldavClient.getMultipleEventsFromPaths(query.userId, paths)
         .then(events => events.map(({ ical, etag, path }, index) => {

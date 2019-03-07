@@ -339,15 +339,17 @@ describe('The calendar core module', function() {
       });
     });
 
-    it('should call the search module with good params and return the events retireved through the caldav-client', function(done) {
+    it('should call the search module with good params and return the events retrieved through the caldav-client', function(done) {
       const query = {
         search: 'search',
-        userId: 'userId',
-        calendarId: 'calendarId'
+        userId: 'userId'
       };
       const esResult = {
         total_count: 2,
-        list: [{_id: 'userId--event1'}, {_id: 'userId--event2'}]
+        list: [
+          { _id: 'userId--event1', _source: { userId: 'userId', calendarId: 'calendarId' } },
+          { _id: 'userId--event2', _source: { userId: 'userId', calendarId: 'calendarId' } }
+        ]
       };
 
       searchLibMock.searchEvents = function(q, callback) {
@@ -368,7 +370,7 @@ describe('The calendar core module', function() {
       this.module.searchEvents(query, function(err, results) {
         expect(err).to.not.exist;
         expect(caldavClientMock.getMultipleEventsFromPaths).to.have.been.calledWith(query.userId, ['event1path', 'event2path']);
-        [0, 1].forEach(function(i) {expect(caldavClientMock.getEventPath).to.have.been.calledWith(query.userId, query.calendarId, esResult.list[i]._id.split('--')[1]);});
+        [0, 1].forEach(function(i) {expect(caldavClientMock.getEventPath).to.have.been.calledWith(esResult.list[i]._source.userId, esResult.list[i]._source.calendarId, esResult.list[i]._id.split('--')[1]);});
         expect(results).to.deep.equal({
           total_count: esResult.total_count,
           results: [
