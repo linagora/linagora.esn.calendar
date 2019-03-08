@@ -87,6 +87,7 @@ describe('The calendar configuration controller', function() {
 
     calendarRight = {
       getPublicRight: sinon.spy(),
+      updatePublic: sinon.spy(),
       getShareeRight: sinon.spy(),
       getAllUserRight: sinon.stub().returns([]),
       getAllShareeRights: sinon.stub().returns([]),
@@ -484,7 +485,10 @@ describe('The calendar configuration controller', function() {
         calendarConfigurationController.newCalendar = true;
         calendarConfigurationController.calendar = {
           color: 'aColor',
-          name: 'N'
+          name: 'N',
+          rights: {
+            updatePublic: sinon.spy()
+          }
         };
 
         notificationFactoryMock.weakInfo = sinon.spy();
