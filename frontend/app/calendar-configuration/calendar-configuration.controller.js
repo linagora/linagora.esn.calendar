@@ -133,6 +133,8 @@
               case CAL_CALENDAR_PUBLIC_RIGHT.READ:
               case CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE:
               case CAL_CALENDAR_PUBLIC_RIGHT.PRIVATE:
+                self.calendar.rights.updatePublic(self.publicSelection);
+
                 return calendarAPI.modifyPublicRights(self.calendarHomeId, self.calendar.id, { public_right: self.publicSelection });
               default:
                 return $q.when();
@@ -174,6 +176,8 @@
         }
 
         if (publicRightChanged) {
+          self.calendar.rights.updatePublic(self.publicSelection);
+
           updateActions.push(calendarAPI.modifyPublicRights(self.calendarHomeId, self.calendar.id, { public_right: self.publicSelection }));
         }
 
