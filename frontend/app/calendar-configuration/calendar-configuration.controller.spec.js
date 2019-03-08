@@ -690,7 +690,7 @@ describe('The calendar configuration controller', function() {
         calendarConfigurationController.publicSelection = 'publicSelection';
         calendarConfigurationController.newCalendar = false;
         calendarConfigurationController.delegations = [{
-          user: { _id: 'id', preferredEmail: 'preferredEmail' },
+          user: { _id: 'id', email: 'userEmail' },
           selection: 'selectedShareeRight'
         }];
 
@@ -699,7 +699,7 @@ describe('The calendar configuration controller', function() {
 
         expect(notificationFactoryMock.weakInfo).to.have.been.called;
         expect(calendarRight.removeShareeRight).to.have.been.calledWith('1');
-        expect(calendarRight.updateSharee).to.have.been.calledWith('id', 'preferredEmail', 'selectedShareeRight');
+        expect(calendarRight.updateSharee).to.have.been.calledWith('id', 'userEmail', 'selectedShareeRight');
         expect(stateMock.go).to.have.been.called;
         expect(calendarService.modifyRights).to.have.been.calledWith(
           calendarConfigurationController.calendarHomeId,
