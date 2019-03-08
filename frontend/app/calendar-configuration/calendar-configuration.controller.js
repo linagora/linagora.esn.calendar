@@ -147,7 +147,7 @@
         });
 
         self.delegations.forEach(function(line) {
-          self.calendar.rights.updateSharee(line.user._id, line.user.preferredEmail, line.selection);
+          self.calendar.rights.updateSharee(line.user._id, line.user.email, line.selection);
         });
 
         var rightChanged = !self.calendar.rights.equals(self.oldCalendar.rights);
