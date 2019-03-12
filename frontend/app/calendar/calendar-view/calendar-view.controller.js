@@ -244,11 +244,14 @@
       }
 
       function _addCalendar(event, calendar) {
-        $scope.eventSourcesMap[calendar.getUniqueId()] = buildEventSourceForCalendar(calendar);
+        if ($scope.calendars && !_.find($scope.calendars, { uniqueId: calendar.uniqueId })) {
+          $scope.calendars.push(calendar);
+          $scope.eventSourcesMap[calendar.getUniqueId()] = buildEventSourceForCalendar(calendar);
 
-        calendarPromise.then(function(cal) {
-          cal.fullCalendar('addEventSource', $scope.eventSourcesMap[calendar.getUniqueId()]);
-        });
+          calendarPromise.then(function(cal) {
+            cal.fullCalendar('addEventSource', $scope.eventSourcesMap[calendar.getUniqueId()]);
+          });
+        }
       }
 
       function _changeView(event, action) {

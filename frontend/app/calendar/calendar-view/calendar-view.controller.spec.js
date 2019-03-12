@@ -402,8 +402,8 @@ describe('The calendarViewController', function() {
   });
 
   describe('The CAL_EVENTS.CALENDARS.ADD listener', function() {
-    it('should add an event source for this calendar in fullcalendar', function() {
-      var id = 'uniqueId';
+    it('should not add calendar to scope and eventSources if already present', function() {
+      var id = 'uniqueId1';
       var calendar = {
         href: 'href',
         uniqueId: 'id',
@@ -423,15 +423,67 @@ describe('The calendarViewController', function() {
       });
       this.scope.calendarReady(this.calendar);
       this.scope.$digest();
+
+      var expectedScopeCalendars = angular.copy(this.scope.calendars);
+      var expectedScopeEventSourcesMap = angular.copy(this.scope.eventSourcesMap);
+
       this.rootScope.$broadcast(this.CAL_EVENTS.CALENDARS.ADD, calendar);
+
+      this.scope.$digest();
+
+      expect(this.scope.calendars).to.deep.equals(expectedScopeCalendars);
+      expect(this.scope.eventSourcesMap).to.deep.equals(expectedScopeEventSourcesMap);
+
+      // Should be called twice when controller inits
+      expect(fullCalendarSpy).to.have.been.calledTwice;
+    });
+
+    it('should add calendar to scope and eventSources is not present', function() {
+      var id = 'uniqueId3';
+      var calendar = {
+        href: 'href',
+        uniqueId: 'id3',
+        color: 'color',
+        getUniqueId: function() {
+          return id;
+        }
+      };
+      var source = 'source';
+      var wrappedSource = 'source';
+      var calendarEventSourceMock = sinon.stub().returns(source);
+
+      this.calCachedEventSourceMock.wrapEventSource = sinon.stub().returns(wrappedSource);
+      this.controller('calendarViewController', {
+        $scope: this.scope,
+        calendarEventSource: calendarEventSourceMock
+      });
+      this.scope.calendarReady(this.calendar);
+      this.scope.$digest();
+
+      var expectedScopeCalendars = angular.copy(this.scope.calendars);
+      var expectedScopeEventSourcesMap = angular.copy(this.scope.eventSourcesMap);
+
+      expectedScopeCalendars.push(calendar);
+
+      this.rootScope.$broadcast(this.CAL_EVENTS.CALENDARS.ADD, calendar);
+
+      this.scope.$digest();
+
+      expect(this.scope.calendars).to.deep.equals(expectedScopeCalendars);
+      expect(this.scope.eventSourcesMap).to.not.deep.equals(expectedScopeEventSourcesMap);
+
       expect(calendarEventSourceMock).to.have.been.calledWith(calendar, this.scope.displayCalendarError);
       expect(this.calCachedEventSourceMock.wrapEventSource).to.have.been.calledWith(calendar, source);
+
+      expect(this.scope.calendars[2]).to.deep.equals(calendar);
       expect(this.scope.eventSourcesMap[id]).to.deep.equals({
         events: wrappedSource,
         backgroundColor: 'color'
       });
 
       expect(fullCalendarSpy).to.have.been.calledWith('addEventSource', this.scope.eventSourcesMap[id]);
+      // Should be called 2 times when controller inits and once when adding calendar
+      expect(fullCalendarSpy).to.have.been.calledThrice;
     });
   });
 
