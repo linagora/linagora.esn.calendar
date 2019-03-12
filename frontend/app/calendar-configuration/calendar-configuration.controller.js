@@ -48,7 +48,7 @@
           if ($stateParams.calendarUniqueId) {
             var splitUniqueId = CalendarCollectionShell.splitUniqueId($stateParams.calendarUniqueId);
 
-            return calendarService.getCalendar(calendarHomeId, splitUniqueId.calendarId);
+            return calendarService.getCalendar(calendarHomeId, splitUniqueId.calendarId, true);
           }
         })
         .then(function(calendar) {

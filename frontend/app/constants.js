@@ -284,6 +284,8 @@
 
     .constant('CAL_DEFAULT_NAME', '#default')
 
+    .constant('CAL_OLD_DEFAULT_ID', 'Events')
+
     .constant('CAL_TRANSLATED_DEFAULT_NAME', 'My agenda')
 
     .constant('CAL_CALENDAR_TYPE', {
