@@ -14,8 +14,7 @@
     calEventService,
     esnSearchProvider,
     CAL_EVENTS,
-    ELEMENTS_PER_REQUEST,
-    esnI18nService
+    ELEMENTS_PER_REQUEST
   ) {
 
     return function() {
@@ -25,7 +24,7 @@
     function buildProvider(calendarHomeId) {
       return new esnSearchProvider({
         uid: 'op.events',
-        name: esnI18nService.translate('Events'),
+        name: 'Events',
         fetch: function(query) {
           var offset = 0;
 
