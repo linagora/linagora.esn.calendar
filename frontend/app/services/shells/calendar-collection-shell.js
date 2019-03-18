@@ -19,7 +19,8 @@
     CAL_CALENDAR_SHARED_RIGHT,
     CAL_CALENDAR_PROPERTIES,
     CAL_CALENDAR_TYPE,
-    CAL_DEFAULT_NAME
+    CAL_DEFAULT_NAME,
+    CAL_OLD_DEFAULT_ID
   ) {
     /**
      * A shell that wraps an caldav calendar component.
@@ -76,6 +77,7 @@
     CalendarCollectionShell.prototype.isWritable = isWritable;
     CalendarCollectionShell.prototype.getCalendarType = getCalendarType;
     CalendarCollectionShell.prototype.getResourceId = getResourceId;
+    CalendarCollectionShell.prototype.isOldDefaultCalendar = isOldDefaultCalendar;
 
     CalendarCollectionShell.toDavCalendar = toDavCalendar;
     CalendarCollectionShell.from = from;
@@ -267,6 +269,10 @@
       return this.isAdmin(userId) ||
         this.rights.getShareeRight(userId) === CAL_CALENDAR_SHARED_RIGHT.SHAREE_READ_WRITE ||
         this.rights.getPublicRight() === CAL_CALENDAR_PUBLIC_RIGHT.READ_WRITE;
+    }
+
+    function isOldDefaultCalendar() {
+      return this.id === CAL_OLD_DEFAULT_ID;
     }
   }
 })();

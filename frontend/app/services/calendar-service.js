@@ -12,9 +12,9 @@
     calCalendarSubscriptionApiService,
     CalendarCollectionShell,
     CAL_EVENTS,
-    CalendarRightShell
+    CalendarRightShell,
+    calendarsCache
   ) {
-    var calendarsCache = {};
     var defaultCalendarApiOptions = { withRights: true };
 
     this.addAndEmit = addAndEmit;
@@ -56,17 +56,17 @@
           vcalendars.push(vcal);
         });
 
-        calendarsCache[calendarHomeId] = vcalendars;
+        calendarsCache.setList(vcalendars);
 
-        return calendarsCache[calendarHomeId];
+        return vcalendars;
       }
 
-      calendarsCache[calendarHomeId] = calendarsCache[calendarHomeId] ||
+      var calendars = calendarsCache.getList(calendarHomeId) ||
         calendarAPI
           .listCalendars(calendarHomeId, options || defaultCalendarApiOptions)
           .then(createCalendarsShell);
 
-      return $q.when(calendarsCache[calendarHomeId]);
+      return $q.when(calendars);
     }
 
     /**
@@ -145,31 +145,21 @@
      * Get a calendar
      * @param  {String}     calendarHomeId  The calendar home id
      * @param  {String}     calendarId      The calendar id
+     * @param  {String}     skipCache       Option to skip the cache fetch
      * @return {CalendarCollectionShell}  an array of CalendarCollectionShell
      */
-    function getCalendar(calendarHomeId, calendarId) {
-      //Make the cache great again !!!!!
-      var calendar = null;
-      var calendars = calendarsCache[calendarHomeId];
+    function getCalendar(calendarHomeId, calendarId, skipCache) {
 
-      if (calendars && calendars.length) {
-        calendar = _.filter(calendars, function(calendar) {
-          return calendar.id === calendarId;
-        });
+      function createCalendarShell(calendar) {
+        var vcal = new CalendarCollectionShell(calendar);
+        calendarsCache.set(vcal);
 
-        if (calendar && calendar.length) {
-          return $q.when(calendar[0]);
-        }
+        return vcal;
       }
 
-      return calendarAPI.getCalendar(calendarHomeId, calendarId, defaultCalendarApiOptions)
-        .then(function(calendar) {
-          var calendarShell = new CalendarCollectionShell(calendar);
-          calendarsCache[calendarHomeId] ? calendarsCache[calendarHomeId].push(calendarShell) :
-            calendarsCache[calendarHomeId] = [calendarShell];
-
-          return calendarShell;
-        });
+      return (!skipCache && $q.when(calendarsCache.get(calendarHomeId, calendarId))) ||
+          calendarAPI.getCalendar(calendarHomeId, calendarId, defaultCalendarApiOptions)
+            .then(createCalendarShell);
     }
 
     /**
@@ -189,7 +179,7 @@
     function removeAndEmit(calendarHomeId, calendar) {
       var uniqueId = CalendarCollectionShell.buildUniqueId(calendarHomeId, calendar.id);
 
-      _.remove(calendarsCache[calendarHomeId], { id: calendar.id });
+      calendarsCache.remove(calendarHomeId, calendar.id);
       $rootScope.$broadcast(CAL_EVENTS.CALENDARS.REMOVE, { uniqueId: uniqueId });
     }
 
@@ -209,27 +199,23 @@
     }
 
     function addAndEmit(calendarHomeId, calendar) {
-      if (!calendarsCache[calendarHomeId]) {
-        calendarsCache[calendarHomeId] = [];
-      }
-
-      var isIn = _.find(calendarsCache[calendarHomeId], function(cached) {
-        return cached.id === calendar.id;
-      });
+      var isIn = calendarsCache.get(calendarHomeId, calendar.id);
 
       if (!isIn) {
-        (calendarsCache[calendarHomeId]).push(calendar);
+        calendarsCache.set(calendar);
         $rootScope.$broadcast(CAL_EVENTS.CALENDARS.ADD, calendar);
       }
+
     }
 
     function updateCache(calendarHomeId, calendar) {
-      (calendarsCache[calendarHomeId] || []).forEach(function(cal, index) {
-        if (calendar.id === cal.id) {
-          calendar.selected = calendarsCache[calendarHomeId][index].selected;
-          calendarsCache[calendarHomeId][index] = calendar;
-        }
-      });
+      var calendarCached = calendarsCache.get(calendarHomeId, calendar.id);
+
+      if (calendarCached) {
+        calendar.selected = calendarCached.selected;
+      }
+
+      calendarsCache.set(calendar);
     }
 
     /**

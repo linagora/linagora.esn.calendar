@@ -10,7 +10,7 @@
       $scope.calendarHomeId = calendarHomeId;
       $scope.businessHours = businessHours;
 
-      calendarService.getCalendar(calendarHomeId, CAL_DEFAULT_OLD_CALENDAR_ID)
+      calendarService.getCalendar(calendarHomeId, CAL_DEFAULT_OLD_CALENDAR_ID, true)
         .then(function(calendar) {
           return calendar && calendar.id;
         })
