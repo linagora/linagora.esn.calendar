@@ -14,8 +14,7 @@
     calEventService,
     esnSearchProvider,
     CAL_EVENTS,
-    ELEMENTS_PER_REQUEST,
-    esnI18nService
+    ELEMENTS_PER_REQUEST
   ) {
 
     return function() {
@@ -25,7 +24,7 @@
     function buildProvider(calendarHomeId) {
       return new esnSearchProvider({
         uid: 'op.events',
-        name: esnI18nService.translate('Events'),
+        name: 'Events',
         fetch: function(query) {
           var offset = 0;
 
@@ -66,7 +65,8 @@
         },
         buildFetchContext: function(options) { return $q.when(options.query && options.query.text); },
         templateUrl: '/calendar/app/search/event/event-search-item.html',
-        activeOn: ['calendar']
+        activeOn: ['calendar'],
+        placeHolder: 'Search in events'
       });
     }
   }
