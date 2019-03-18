@@ -199,13 +199,8 @@
     }
 
     function addAndEmit(calendarHomeId, calendar) {
-      var isIn = calendarsCache.get(calendarHomeId, calendar.id);
-
-      if (!isIn) {
-        calendarsCache.set(calendar);
-        $rootScope.$broadcast(CAL_EVENTS.CALENDARS.ADD, calendar);
-      }
-
+      calendarsCache.set(calendar);
+      $rootScope.$broadcast(CAL_EVENTS.CALENDARS.ADD, calendar);
     }
 
     function updateCache(calendarHomeId, calendar) {
