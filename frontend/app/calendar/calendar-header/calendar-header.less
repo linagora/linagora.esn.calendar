@@ -1,11 +1,12 @@
 @ui-state-hover: rgba(0,0,0,0.2);
-@allday-background: #f7f7f7;
+@allday-background: @body-bg;
 
 .fc-toolbar {
-  background-color: @subHeaderBackground;
+  background-color: @headerBackground;
 
   h2 {
     text-transform: none;
+    color: @headerTextColor;
   }
 
   .ui-state-active {
@@ -13,6 +14,7 @@
   }
 
   .ui-button {
+    color: @headerTextColor;
 
     &.ui-state-disabled {
       .opacity(@opacity-btn-disabled);
@@ -21,7 +23,7 @@
     &:hover {
       background: inherit;
       background-color: @darkPrimaryColor;
-      color: @m-white !important; /* override material-admin value */
+      color: @headerTextColor;
     }
   }
 
@@ -65,12 +67,17 @@
       width: 36px;
       height: 36px;
       margin-top: 0;
+      color: @headerTextColor;
 
       & > span {
         font-size: 23px;
         width: 36px;
       }
     }
+  }
+
+  .fc-today {
+    color: @accentColor !important; /* override material-admin value */
   }
 }
 
@@ -84,6 +91,7 @@
 .fc thead td, .fc thead th {
   border-color: @subHeaderBackground;
   border-right: 0;
+
   &.fc-axis {
     text-align: center;
   }
@@ -91,7 +99,7 @@
 
 .fc th {
   background-color: @subHeaderBackground;
-  color: @textPrimaryColor;
+  color: @subHeaderTextColor;
   font-size: 12px;
   font-weight: 500;
 }
