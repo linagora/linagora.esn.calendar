@@ -38,6 +38,10 @@ function denormalize(data) {
 
   event.attendees = _.map(event.attendees, (data, email) => ({email: email, cn: data.cn}));
 
+  if (event.resources) {
+    event.resources = _.map(event.resources, (data, email) => ({ email: email, cn: data.cn }));
+  }
+
   return event;
 }
 
