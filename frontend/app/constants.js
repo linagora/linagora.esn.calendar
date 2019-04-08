@@ -413,7 +413,8 @@
           domain: true,
           platform: true
         }
-      }
+      },
+      disableable: true
     })
 
     .constant('CAL_WEBSOCKET', {
