@@ -45,7 +45,7 @@ describe('search helpers', function() {
           email: 'janedoe@open-paas.org',
           cn: 'Jane Doe'
         }],
-        resources: {},
+        resources: [],
         hasResources: false
       });
     });
@@ -123,7 +123,7 @@ describe('search helpers', function() {
           email: 'janedoe@open-paas.org',
           cn: 'Jane Doe'
         }],
-        resources: {},
+        resources: [],
         hasResources: false
       });
     });
@@ -186,6 +186,26 @@ describe('search helpers', function() {
           email: 'johndoe@open-paas.org',
           cn: 'John Doe'
         }, {
+          email: 'janedoe@open-paas.org',
+          cn: 'Jane Doe'
+        }]
+      });
+    });
+
+    it('should parse jcal formatted event when the event contain resource', function() {
+      ics = fs.readFileSync(`${this.calendarModulePath}/test/unit-backend/fixtures/withResources.ics`).toString('utf8');
+      data = {
+        ics: ics,
+        userId: 'userId',
+        uid: 'uid',
+        calendarId: 'calendarId'
+      };
+      expect(this.denormalize.denormalize(data)).to.shallowDeepEqual({
+        attendees: [{
+          email: 'johndoe@open-paas.org',
+          cn: 'John Doe'
+        }],
+        resources: [{
           email: 'janedoe@open-paas.org',
           cn: 'Jane Doe'
         }]
