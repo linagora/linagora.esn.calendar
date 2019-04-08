@@ -2,7 +2,7 @@
 
 var express = require('express');
 
-module.exports = dependencies => {
+module.exports = (dependencies, moduleName) => {
   const controller = require('./controller')(dependencies);
   const calendarMW = require('./middleware')(dependencies);
   const authorizationMW = dependencies('authorizationMW');
@@ -10,6 +10,7 @@ module.exports = dependencies => {
   const domainMW = dependencies('domainMW');
   const davMiddleware = dependencies('davserver').davMiddleware;
   const tokenMW = dependencies('tokenMW');
+  const moduleMW = dependencies('moduleMW');
   const router = express.Router();
 
   /**
@@ -47,6 +48,11 @@ module.exports = dependencies => {
 
   router.post('/inviteattendees', (req, res) => res.redirect('/calendar/api/calendars/event/invite'));
 
+  router.all('/event/invite*',
+    authorizationMW.requiresAPILogin,
+    moduleMW.requiresModuleIsEnabledInCurrentDomain(moduleName)
+  );
+
   /**
    * @swagger
    * /event/invite:
@@ -67,7 +73,6 @@ module.exports = dependencies => {
    *         $ref: "#/responses/cm_500"
    */
   router.post('/event/invite',
-    authorizationMW.requiresAPILogin,
     domainMW.loadSessionDomain,
     controller.sendInvitation);
 
