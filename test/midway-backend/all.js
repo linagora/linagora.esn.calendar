@@ -89,6 +89,7 @@ beforeEach(function(done) {
   Promise.all([
     esnConf.setup('users.idx', 'users'),
     esnConf.setup('events.idx', 'events'),
+    esnConf.setup('core.events.idx', 'core.events'),
     esnConf.setup('contacts.idx', 'contacts'),
     esnConf.setup('resources.idx', 'resources')
   ]).then(() => done())

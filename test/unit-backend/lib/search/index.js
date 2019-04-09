@@ -265,13 +265,7 @@ describe('The calendar search Module', function() {
           },
           query: {
             bool: {
-              filter: {
-                and: [{
-                  term: {
-                    userId: 'userId'
-                  }
-                }]
-              },
+              filter: [{ term: { userId: 'userId' } }],
               must: {
                 range: {
                   start: {
