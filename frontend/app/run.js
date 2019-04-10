@@ -4,8 +4,7 @@
   angular.module('esn.calendar')
     .run(runBlock);
 
-  function runBlock(esnModuleRegistry, calRegisterTimezones, CAL_MODULE_METADATA) {
+  function runBlock(calRegisterTimezones) {
     calRegisterTimezones();
-    esnModuleRegistry.add(CAL_MODULE_METADATA);
   }
 })();

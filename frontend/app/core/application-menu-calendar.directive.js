@@ -7,7 +7,7 @@
   function applicationMenuCalendar(applicationMenuTemplateBuilder, CAL_MODULE_METADATA) {
     var directive = {
       restrict: 'E',
-      template: applicationMenuTemplateBuilder('/#/calendar', { url: CAL_MODULE_METADATA.icon }, 'Calendar'),
+      template: applicationMenuTemplateBuilder('/#/calendar', { url: CAL_MODULE_METADATA.icon }, 'Calendar', 'core.modules.linagora.esn.calendar.enabled', true),
       replace: true
     };
 

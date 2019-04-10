@@ -11,6 +11,7 @@
         templateUrl: '/calendar/app/index',
         abstract: true,
         resolve: {
+          isModuleActive: isModuleActive,
           calendarHomeId: function(calendarHomeService) {
             return calendarHomeService.getUserCalendarHomeId();
           },
@@ -146,5 +147,15 @@
           }
         }
       });
+  }
+
+  function isModuleActive($location, calendarConfiguration) {
+    return calendarConfiguration.get('enabled', true).then(function(isEnabled) {
+      if (!isEnabled) {
+        $location.path('/');
+      }
+    }).catch(function() {
+      $location.path('/');
+    });
   }
 })(angular);

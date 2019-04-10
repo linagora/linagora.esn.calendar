@@ -2,10 +2,16 @@
 
 const express = require('express');
 
-module.exports = dependencies => {
+module.exports = (dependencies, moduleName) => {
   const controller = require('./controller')(dependencies),
         authorizationMW = dependencies('authorizationMW'),
+        moduleMW = dependencies('moduleMW'),
         router = express.Router();
+
+  router.all('/*',
+    authorizationMW.requiresAPILogin,
+    moduleMW.requiresModuleIsEnabledInCurrentDomain(moduleName)
+  );
 
   /**
    * @swagger
@@ -24,7 +30,7 @@ module.exports = dependencies => {
    *       500:
    *         $ref: "#/responses/cm_500"
    */
-  router.get('/next', authorizationMW.requiresAPILogin, controller.getNextEvent);
+  router.get('/next', controller.getNextEvent);
 
   /**
    * @swagger
@@ -43,7 +49,7 @@ module.exports = dependencies => {
    *       500:
    *         $ref: "#/responses/cm_500"
    */
-  router.delete('/next', authorizationMW.requiresAPILogin, controller.cancelNextEvent);
+  router.delete('/next', controller.cancelNextEvent);
 
   /**
    * @swagger
@@ -64,7 +70,7 @@ module.exports = dependencies => {
    *       500:
    *         $ref: "#/responses/cm_500"
    */
-  router.post('/', authorizationMW.requiresAPILogin, controller.newEventInDefaultCalendar);
+  router.post('/', controller.newEventInDefaultCalendar);
 
   return router;
 };
