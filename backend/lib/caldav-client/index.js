@@ -1,5 +1,3 @@
-'use strict';
-
 const request = require('request');
 const urljoin = require('url-join');
 const Q = require('q');
@@ -8,6 +6,7 @@ const path = require('path');
 const uuidV4 = require('uuid/v4');
 const ICAL = require('@linagora/ical.js');
 const { parseString } = require('xml2js');
+const { parseEventPath } = require('../helpers/event');
 
 const JSON_CONTENT_TYPE = 'application/json';
 const DEFAULT_CALENDAR_NAME = 'Events';
@@ -25,6 +24,8 @@ module.exports = dependencies => {
     updateCalendarAsTechnicalUser,
     deleteCalendarsAsTechnicalUser,
     getCalendarAsTechnicalUser,
+    getAllCalendarsInDomainAsTechnicalUser,
+    getAllEventsInCalendarAsTechnicalUser,
     getCalendarList,
     getEvent,
     getMultipleEventsFromPaths,
@@ -123,6 +124,65 @@ module.exports = dependencies => {
           color: calendar['apple:color']
         };
       });
+  }
+
+  function getAllEventsInCalendarAsTechnicalUser(options) {
+    const { calendarUri, domainId, calendarHomeId } = options;
+    const requestOptions = {
+      userId: calendarHomeId,
+      calendarUri,
+      getNewTokenFn: technicalUserHelper.getTechnicalUserToken(domainId)
+    };
+
+    return _requestCaldav(requestOptions, (url, token) => ({
+      method: 'GET',
+      url: `${url}?allEvents=true`,
+      json: true,
+      headers: {
+        ESNToken: token,
+        Accept: JSON_CONTENT_TYPE
+      }
+    })).then(data => data._embedded['dav:item'].map(item => {
+      const { userId, calendarId, eventUid } = parseEventPath(item._links.self.href);
+
+      return {
+        ics: item.data,
+        userId,
+        calendarId,
+        eventUid
+      };
+    }));
+  }
+
+  function getAllCalendarsInDomainAsTechnicalUser(domainId) {
+    const requestOptions = {
+      getNewTokenFn: technicalUserHelper.getTechnicalUserToken(domainId),
+      isRootPath: true
+    };
+
+    return _requestCaldav(requestOptions, (url, token) => ({
+      method: 'GET',
+      url,
+      json: true,
+      headers: {
+        ESNToken: token,
+        Accept: JSON_CONTENT_TYPE
+      }
+    })).then(data => {
+      const calendars = [];
+
+      Object.keys(data).forEach(calendarHomeId => {
+        data[calendarHomeId].forEach(calendarUri => {
+          calendars.push({
+            domainId,
+            calendarHomeId,
+            calendarUri
+          });
+        });
+      });
+
+      return calendars;
+    });
   }
 
   function createEventInDefaultCalendar(user, options) {

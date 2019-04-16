@@ -18,6 +18,7 @@ const AwesomeCalendarModule = new AwesomeModule('linagora.esn.calendar', {
     new Dependency(Dependency.TYPE_NAME, 'linagora.esn.core.esn-config', 'esn-config'),
     new Dependency(Dependency.TYPE_NAME, 'linagora.esn.core.elasticsearch', 'elasticsearch'),
     new Dependency(Dependency.TYPE_NAME, 'linagora.esn.core.user', 'user'),
+    new Dependency(Dependency.TYPE_NAME, 'linagora.esn.core.domain', 'domain'),
     new Dependency(Dependency.TYPE_NAME, 'linagora.esn.core.collaboration', 'collaboration'),
     new Dependency(Dependency.TYPE_NAME, 'linagora.esn.core.activitystreams', 'activitystreams'),
     new Dependency(Dependency.TYPE_NAME, 'linagora.esn.core.pubsub', 'pubsub'),

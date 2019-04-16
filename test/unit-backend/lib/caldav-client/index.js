@@ -707,4 +707,110 @@ describe('The caldav-client module', function() {
         .catch(err => done(err || 'should resolve'));
     });
   });
+
+  describe('The getAllCalendarsInDomainAsTechnicalUser function', function() {
+    it('should reject if failed to get technical user token', function(done) {
+      const domainId = 'aff2018';
+      const error = new Error('something wrong');
+
+      mockery.registerMock('../helpers/technical-user', () => ({
+        getTechnicalUserToken: _domainId => {
+          expect(_domainId).to.equal(domainId);
+
+          return Promise.reject(error);
+        }
+      }));
+
+      getModule().getAllCalendarsInDomainAsTechnicalUser(domainId)
+        .catch(err => {
+          expect(err).to.deep.equal(error);
+          done();
+        });
+    });
+
+    it('should send request with correct params to get all the calendars in a domain as a technical user', function(done) {
+      const domainId = 'aff2018';
+      const technicalUserToken = 'technicalToken';
+
+      mockery.registerMock('../helpers/technical-user', () => ({
+        getTechnicalUserToken: _domainId => {
+          expect(_domainId).to.equal(domainId);
+
+          return Promise.resolve({
+            token: technicalUserToken
+          });
+        }
+      }));
+
+      mockery.registerMock('request', options => {
+        expect(options).to.shallowDeepEqual({
+          method: 'GET',
+          url: `${davEndpoint}/calendars`,
+          json: true,
+          headers: {
+            ESNToken: technicalUserToken,
+            Accept: 'application/json'
+          }
+        });
+        done();
+      });
+
+      getModule().getAllCalendarsInDomainAsTechnicalUser(domainId);
+    });
+  });
+
+  describe('The getAllEventsInCalendarAsTechnicalUser function', function() {
+    it('should reject if failed to get technical user token', function(done) {
+      const domainId = 'aff2018';
+      const calendarUri = 'foo';
+      const calendarHomeId = 'bar';
+      const error = new Error('something wrong');
+
+      mockery.registerMock('../helpers/technical-user', () => ({
+        getTechnicalUserToken: _domainId => {
+          expect(_domainId).to.equal(domainId);
+
+          return Promise.reject(error);
+        }
+      }));
+
+      getModule().getAllEventsInCalendarAsTechnicalUser({ calendarUri, domainId, calendarHomeId })
+        .catch(err => {
+          expect(err).to.deep.equal(error);
+          done();
+        });
+    });
+
+    it('should send request with correct params to get all the events in a calendar as a technical user', function(done) {
+      const domainId = 'aff2018';
+      const technicalUserToken = 'technicalToken';
+      const calendarUri = 'foo';
+      const calendarHomeId = 'bar';
+
+      mockery.registerMock('../helpers/technical-user', () => ({
+        getTechnicalUserToken: _domainId => {
+          expect(_domainId).to.equal(domainId);
+
+          return Promise.resolve({
+            token: technicalUserToken
+          });
+        }
+      }));
+
+      mockery.registerMock('request', options => {
+        expect(options).to.shallowDeepEqual({
+          method: 'GET',
+          url: `${davEndpoint}/calendars/${calendarHomeId}/${calendarUri}.json?allEvents=true`,
+          json: true,
+          headers: {
+            ESNToken: technicalUserToken,
+            Accept: 'application/json'
+          }
+        });
+        done();
+      });
+
+      getModule().getAllEventsInCalendarAsTechnicalUser({ calendarUri, domainId, calendarHomeId });
+    });
+  });
 });
