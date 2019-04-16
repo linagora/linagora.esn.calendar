@@ -1,6 +1,4 @@
-'use strict';
-
-const expect = require('chai').expect,
+const { expect } = require('chai'),
       sinon = require('sinon'),
       mockery = require('mockery'),
       moment = require('moment'),
@@ -8,8 +6,9 @@ const expect = require('chai').expect,
 
 const DEFAULT_CALENDAR_URI = 'events';
 
-describe('Caldav-client helper', function() {
+describe('The caldav-client module', function() {
   let authMock, davServerMock, request, davEndpoint, userId, calendarId, eventId, token, jcal;
+  let getModule;
 
   beforeEach(function() {
     davEndpoint = 'http://davendpoint:8003';
@@ -40,9 +39,8 @@ describe('Caldav-client helper', function() {
 
     this.moduleHelpers.addDep('auth', authMock);
     this.moduleHelpers.addDep('davserver', davServerMock);
-    this.requireModule = function() {
-      return require(this.calendarModulePath + '/backend/lib/caldav-client')(this.moduleHelpers.dependencies);
-    };
+
+    getModule = () => require(`${this.calendarModulePath}/backend/lib/caldav-client`)(this.moduleHelpers.dependencies);
   });
 
   describe('the getEvent function', function() {
@@ -59,7 +57,7 @@ describe('Caldav-client helper', function() {
         return callback(new Error());
       });
 
-      this.requireModule()
+      getModule()
         .getEvent(userId, 'calendarId', 'eventUid')
         .then(
           function() {
@@ -83,7 +81,7 @@ describe('Caldav-client helper', function() {
 
       mockery.registerMock('request', requestMock);
 
-      this.requireModule()
+      getModule()
         .getEvent(userId, calendarId, eventId)
         .then(
           function() {
@@ -107,7 +105,7 @@ describe('Caldav-client helper', function() {
 
       mockery.registerMock('request', requestMock);
 
-      this.requireModule()
+      getModule()
         .getEvent(userId, calendarId, eventId)
         .then(
           function(event) {
@@ -131,7 +129,7 @@ describe('Caldav-client helper', function() {
 
       mockery.registerMock('request', requestMock);
 
-      this.requireModule()
+      getModule()
         .getEvent(userId, null, eventId)
         .then(
           function(event) {
@@ -155,7 +153,7 @@ describe('Caldav-client helper', function() {
 
       mockery.registerMock('request', requestMock);
 
-      this.requireModule()
+      getModule()
         .getEvent(userId, calendarId)
         .then(
           function(event) {
@@ -189,7 +187,7 @@ describe('Caldav-client helper', function() {
         return callback(new Error());
       });
 
-      this.requireModule()
+      getModule()
         .iTipRequest(userId, calendarId, eventId, jcal)
         .then(
           function() {
@@ -213,7 +211,7 @@ describe('Caldav-client helper', function() {
 
       mockery.registerMock('request', requestMock);
 
-      this.requireModule()
+      getModule()
         .iTipRequest(userId, jcal)
         .then(
           function() {
@@ -235,7 +233,7 @@ describe('Caldav-client helper', function() {
 
       mockery.registerMock('request', requestMock);
 
-      this.requireModule().iTipRequest(userId, jcal)
+      getModule().iTipRequest(userId, jcal)
         .then(() => done(new Error('should not occur')))
         .catch(err => {
           expect(err).to.exist;
@@ -255,7 +253,7 @@ describe('Caldav-client helper', function() {
 
       mockery.registerMock('request', requestMock);
 
-      this.requireModule()
+      getModule()
         .iTipRequest(userId, jcal)
         .then(
           function(event) {
@@ -287,7 +285,7 @@ describe('Caldav-client helper', function() {
         return callback(new Error());
       });
 
-      this.requireModule().getCalendarList(userId).then(() => done('Test should have failed'), () => done());
+      getModule().getCalendarList(userId).then(() => done('Test should have failed'), () => done());
     });
 
     it('should call request with the built parameters and reject if it fails', function(done) {
@@ -299,7 +297,7 @@ describe('Caldav-client helper', function() {
 
       mockery.registerMock('request', requestMock);
 
-      this.requireModule().getCalendarList(userId).then(() => done('Test should have failed'), () => done());
+      getModule().getCalendarList(userId).then(() => done('Test should have failed'), () => done());
     });
 
     it('should call request with the built parameters and reject if response is an error', function(done) {
@@ -313,7 +311,7 @@ describe('Caldav-client helper', function() {
 
       mockery.registerMock('request', requestMock);
 
-      this.requireModule().getCalendarList(userId).then(() => done('Test should have failed'), () => done());
+      getModule().getCalendarList(userId).then(() => done('Test should have failed'), () => done());
     });
 
     it('should call request with the built parameters and resolve with an empty list if response is not a calendar list', function(done) {
@@ -329,7 +327,7 @@ describe('Caldav-client helper', function() {
 
       mockery.registerMock('request', requestMock);
 
-      this.requireModule().getCalendarList(userId).then(list => {
+      getModule().getCalendarList(userId).then(list => {
         expect(list).to.deep.equal([]);
 
         done();
@@ -376,7 +374,7 @@ describe('Caldav-client helper', function() {
 
       mockery.registerMock('request', requestMock);
 
-      this.requireModule().getCalendarList(userId).then(list => {
+      getModule().getCalendarList(userId).then(list => {
         expect(list).to.deep.equal([
           {
             id: 'events',
@@ -415,7 +413,7 @@ describe('Caldav-client helper', function() {
         done();
       });
 
-      this.requireModule().getEventInDefaultCalendar({ id: userId }, eventId);
+      getModule().getEventInDefaultCalendar({ id: userId }, eventId);
     });
 
   });
@@ -439,7 +437,7 @@ describe('Caldav-client helper', function() {
         done();
       });
 
-      this.requireModule().storeEvent({ id: userId }, calendarId, eventId, event);
+      getModule().storeEvent({ id: userId }, calendarId, eventId, event);
     });
 
   });
@@ -463,7 +461,7 @@ describe('Caldav-client helper', function() {
         done();
       });
 
-      this.requireModule().storeEventInDefaultCalendar({ id: userId }, eventId, event);
+      getModule().storeEventInDefaultCalendar({ id: userId }, eventId, event);
     });
 
   });
@@ -483,7 +481,7 @@ describe('Caldav-client helper', function() {
         done();
       });
 
-      this.requireModule().deleteEvent({ id: userId }, calendarId, eventId);
+      getModule().deleteEvent({ id: userId }, calendarId, eventId);
     });
 
   });
@@ -503,7 +501,7 @@ describe('Caldav-client helper', function() {
         done();
       });
 
-      this.requireModule().deleteEventInDefaultCalendar({ id: userId }, eventId);
+      getModule().deleteEventInDefaultCalendar({ id: userId }, eventId);
     });
 
   });
@@ -547,7 +545,7 @@ describe('Caldav-client helper', function() {
         done();
       });
 
-      this.requireModule().createEventInDefaultCalendar({ id: userId }, { summary, location, start });
+      getModule().createEventInDefaultCalendar({ id: userId }, { summary, location, start });
     });
 
   });
@@ -583,7 +581,7 @@ describe('Caldav-client helper', function() {
     });
 
     it('should return an empty array if there is no paths', function(done) {
-      this.requireModule()
+      getModule()
         .getMultipleEventsFromPaths(userId, [])
         .then(events => {
           expect(events).to.deep.equal([]);
@@ -595,7 +593,7 @@ describe('Caldav-client helper', function() {
     it('should reject if token retrieval fails', function(done) {
       authMock.token.getNewToken = sinon.spy((opts, callback) => callback(new Error()));
 
-      this.requireModule()
+      getModule()
         .getMultipleEventsFromPaths(userId, [''])
         .catch(err => {
           expect(err).to.exist;
@@ -618,7 +616,7 @@ describe('Caldav-client helper', function() {
 
       mockery.registerMock('request', requestMock);
 
-      this.requireModule()
+      getModule()
         .getMultipleEventsFromPaths(userId, [path])
         .catch(err => {
           expect(err).to.exist;
@@ -692,7 +690,7 @@ describe('Caldav-client helper', function() {
 
       mockery.registerMock('request', requestMock);
 
-      this.requireModule()
+      getModule()
         .getMultipleEventsFromPaths(userId, paths)
         .then(events => {
           expect(events).to.deep.equal([{
