@@ -20,14 +20,12 @@ module.exports = {
   mongodb: {
     host: 'mongo',
     port: 27017,
-    dbName: 'tests',
-    connectionString: 'mongodb://mongo:27017/tests'
+    connectionString: 'mongodb://mongo/tests'
   },
 
   elasticsearch: {
     host: 'elasticsearch',
     port: 9200,
-    tries_index: 10,
     interval_index: 1000
   },
 

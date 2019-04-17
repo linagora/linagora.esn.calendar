@@ -5,41 +5,26 @@ var async = require('async');
 describe('The Calendar calendars API /api/calendars', function() {
   var user, user3, community;
   var password = 'secret';
-  var moduleName = 'linagora.esn.calendar';
   var davserver;
 
   beforeEach(function(done) {
     var self = this;
 
-    this.helpers.modules.initMidway(moduleName, function(err) {
+    self.helpers.api.applyDomainDeployment('linagora_IT', function(err, models) {
       if (err) {
         return done(err);
       }
+      user = models.users[0];
+      user3 = models.users[2];
+      community = models.communities[1];
+      self.models = models;
 
-      self.helpers.api.applyDomainDeployment('linagora_IT', function(err, models) {
-        if (err) {
-          return done(err);
-        }
-        user = models.users[0];
-        user3 = models.users[2];
-        community = models.communities[1];
-        self.models = models;
+      self.helpers.davserver.saveTestConfiguration(function() {
+        davserver = self.helpers.davserver.runServer('An event !');
 
-        self.helpers.davserver.saveTestConfiguration(function() {
-          davserver = self.helpers.davserver.runServer('An event !');
-
-          done();
-        });
+        done();
       });
     });
-
-  });
-
-  beforeEach(function() {
-    var expressApp = require('../../../backend/webserver/application')(this.helpers.modules.current.deps);
-
-    expressApp.use('/api', this.helpers.modules.current.lib.api);
-    this.app = this.helpers.modules.getWebServer(expressApp);
   });
 
   afterEach(function(done) {
@@ -84,7 +69,7 @@ describe('The Calendar calendars API /api/calendars', function() {
       });
     });
 
-    it('should return 500 if type is not equal to "created"', function(done) {
+    it('should return 500 if type is not equal to "created" nor "updated"', function(done) {
       var self = this;
       this.helpers.api.loginAsUser(this.app, user.emails[0], password, function(err, requestAsMember) {
         if (err) {
@@ -93,7 +78,7 @@ describe('The Calendar calendars API /api/calendars', function() {
         var req = requestAsMember(request(self.app).post('/api/calendars/community/' + community._id + '/events'));
         req.send({
           event_id: '1234',
-          type: 'updated',
+          type: 'foo',
           event: 'ICS'
         });
         req.expect(500, done);

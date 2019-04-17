@@ -8,73 +8,65 @@ const { parseString } = require('xml2js');
 describe('The Calendar events search API', function() {
   let user;
   const password = 'secret';
-  const moduleName = 'linagora.esn.calendar';
   let dav, davServer, caldavConfiguration;
 
   beforeEach(function(done) {
     const self = this;
 
-    this.helpers.modules.initMidway(moduleName, function(err) {
+    self.helpers.api.applyDomainDeployment('linagora_IT', function(err, models) {
       if (err) {
         return done(err);
       }
+      user = models.users[0];
+      self.models = models;
 
-      self.helpers.api.applyDomainDeployment('linagora_IT', function(err, models) {
-        if (err) {
-          return done(err);
-        }
-        user = models.users[0];
-        self.models = models;
+      dav = express();
+      dav.use((req, res, next) => {
+        let body = '';
 
-        dav = express();
-        dav.use((req, res, next) => {
-          let body = '';
-
-          req
-          .on('data', chunk => {
-            body += chunk;
-          })
-          .on('end', () => {
-            req.body = body;
-            next();
-          });
+        req
+        .on('data', chunk => {
+          body += chunk;
+        })
+        .on('end', () => {
+          req.body = body;
+          next();
         });
-
-        self.createDavServer = function(done) {
-          const port = self.testEnv.serversConfig.express.port;
-
-          caldavConfiguration = {
-            backend: {
-              url: 'http://localhost:' + port
-            },
-            frontend: {
-              url: 'http://localhost:' + port
-            }
-          };
-
-          davServer = dav.listen(port, function() {
-            self.helpers.requireBackend('core/esn-config')('davserver').store(caldavConfiguration, done);
-          });
-        };
-
-        self.shutdownDav = function(done) {
-          if (!davServer) {
-            return done();
-          }
-
-          try {
-            davServer.close(function() {
-              done();
-            });
-          } catch (e) {
-            done();
-          }
-        };
-
-        done();
       });
-    });
 
+      self.createDavServer = function(done) {
+        const port = self.testEnv.serversConfig.express.port;
+
+        caldavConfiguration = {
+          backend: {
+            url: 'http://localhost:' + port
+          },
+          frontend: {
+            url: 'http://localhost:' + port
+          }
+        };
+
+        davServer = dav.listen(port, function() {
+          self.helpers.requireBackend('core/esn-config')('davserver').store(caldavConfiguration, done);
+        });
+      };
+
+      self.shutdownDav = function(done) {
+        if (!davServer) {
+          return done();
+        }
+
+        try {
+          davServer.close(function() {
+            done();
+          });
+        } catch (err) {
+          done(err);
+        }
+      };
+
+      done();
+    });
   });
 
   beforeEach(function() {
