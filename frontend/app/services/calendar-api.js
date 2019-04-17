@@ -12,7 +12,6 @@
     calPathBuilder,
     calDavRequest,
     calHttpResponseHandler,
-    calGracePeriodResponseHandler,
     notificationFactory,
     _,
     CAL_ACCEPT_HEADER,
@@ -28,7 +27,6 @@
       listCalendars: listCalendars,
       getCalendar: getCalendar,
       listEventsForCalendar: listEventsForCalendar,
-      listAllCalendars: listAllCalendars,
       createCalendar: createCalendar,
       removeCalendar: removeCalendar,
       getRight: getRight,
@@ -116,17 +114,6 @@
 
       return calDavRequest('report', path, JSON_CONTENT_TYPE_HEADER, body)
       .then(davResponseHandler('dav:item'));
-    }
-
-    /**
-     * List all calendar homes and calendars in the calendar root. A dav:root resource, expanded down to all dav:home resouces.
-     * @return {Object}            An array of dav:home items
-     */
-    function listAllCalendars(options) {
-      var path = calPathBuilder.rootPath();
-
-      return calDavRequest('get', path + '/.json', {Accept: CAL_ACCEPT_HEADER}, {}, options)
-      .then(davResponseHandler('dav:home'));
     }
 
     /**

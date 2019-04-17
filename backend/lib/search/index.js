@@ -151,5 +151,8 @@ module.exports = dependencies => {
     logger.info('Subscribing to event updates for indexing');
     pubsub.listen();
     searchHandler = listener.register();
+
+    logger.info('Register reindexing for calendar events');
+    require('./reindex')(dependencies).register();
   }
 };
