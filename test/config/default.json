@@ -31,16 +31,12 @@
     }
   },
   "auth": {
-    "strategies": [
-      "mongo"
-    ],
-    "apiStrategies": [
-      "basic-mongo"
-    ]
+    "strategies": ["mongo"],
+    "apiStrategies": ["basic-mongo"]
   },
   "core": {
     "config": {
-      "db": "./db.json"
+      "db": "db.json"
     }
   }
 }

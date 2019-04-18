@@ -1,46 +1,30 @@
 var expect = require('chai').expect;
 var request = require('supertest');
 var async = require('async');
-var fs = require('fs');
 
 describe('The Calendar calendars API /api/calendars', function() {
   var user, user3, community;
   var password = 'secret';
-  var moduleName = 'linagora.esn.calendar';
   var davserver;
 
   beforeEach(function(done) {
     var self = this;
 
-    this.helpers.modules.initMidway(moduleName, function(err) {
+    self.helpers.api.applyDomainDeployment('linagora_IT', function(err, models) {
       if (err) {
         return done(err);
       }
+      user = models.users[0];
+      user3 = models.users[2];
+      community = models.communities[1];
+      self.models = models;
 
-      self.helpers.api.applyDomainDeployment('linagora_IT', function(err, models) {
-        if (err) {
-          return done(err);
-        }
-        user = models.users[0];
-        user3 = models.users[2];
-        community = models.communities[1];
-        self.models = models;
+      self.helpers.davserver.saveTestConfiguration(function() {
+        davserver = self.helpers.davserver.runServer('An event !');
 
-        self.helpers.davserver.saveTestConfiguration(function() {
-          davserver = self.helpers.davserver.runServer('An event !');
-
-          done();
-        });
+        done();
       });
     });
-
-  });
-
-  beforeEach(function() {
-    var expressApp = require('../../backend/webserver/application')(this.helpers.modules.current.deps);
-
-    expressApp.use('/api', this.helpers.modules.current.lib.api);
-    this.app = this.helpers.modules.getWebServer(expressApp);
   });
 
   afterEach(function(done) {
@@ -85,7 +69,7 @@ describe('The Calendar calendars API /api/calendars', function() {
       });
     });
 
-    it('should return 500 if type is not equal to "created"', function(done) {
+    it('should return 500 if type is not equal to "created" nor "updated"', function(done) {
       var self = this;
       this.helpers.api.loginAsUser(this.app, user.emails[0], password, function(err, requestAsMember) {
         if (err) {
@@ -94,7 +78,7 @@ describe('The Calendar calendars API /api/calendars', function() {
         var req = requestAsMember(request(self.app).post('/api/calendars/community/' + community._id + '/events'));
         req.send({
           event_id: '1234',
-          type: 'updated',
+          type: 'foo',
           event: 'ICS'
         });
         req.expect(500, done);
@@ -307,84 +291,6 @@ describe('The Calendar calendars API /api/calendars', function() {
         });
         req.expect(200, done);
       });
-    });
-  });
-
-  // random fails...
-  describe.skip('/api/calendars/:userId/:calendarId/events.json', function() {
-    var localpubsub, message, counter = 1;
-
-    var search = function(term, expectedSize, done) {
-      const self = this;
-
-      localpubsub.topic('events:event:add').publish(message);
-
-      this.helpers.api.loginAsUser(this.app, user.emails[0], password, function(err, requestAsMember) {
-        if (err) {
-          return done(err);
-        }
-
-        self.helpers.elasticsearch.checkDocumentsIndexed({ index: 'events.idx', type: 'events', ids: [`${message.userId}--${message.eventUid}`] }, function(err) {
-          if (err) {
-            return done(err);
-          }
-          var req = requestAsMember(request(self.app).get('/api/calendars/' + message.userId + '/' + message.calendarId + '/events.json'));
-          req.query({query: term}).expect(200).end(function(err, res) {
-            expect(err).to.not.exist;
-            expect(res.body).to.exist;
-            expect(res.headers['x-esn-items-count']).to.equal(String(expectedSize));
-            done();
-          });
-        });
-      });
-    };
-
-    beforeEach(function() {
-      require('../../backend/lib/search')(this.helpers.modules.current.deps).listen();
-    });
-
-    beforeEach(function(done) {
-      localpubsub = this.helpers.requireBackend('core/pubsub').local;
-      message = {
-        userId: user._id,
-        calendarId: 'myCalendar',
-        eventUid: 'event_' + counter++
-      };
-      message.ics = fs.readFileSync(__dirname + '/fixtures/completeMeeting.ics').toString('utf8');
-      setTimeout(() => {
-        this.helpers.redis.publishConfiguration();
-      }, 200);
-      this.helpers.elasticsearch.saveTestConfiguration(this.helpers.callbacks.noError(done));
-    });
-
-    it('should return nothing with non matching string', function(done) {
-      search.bind(this)('anonmatchingstring', 0, done);
-    });
-
-    it('should return nothing with empty string', function(done) {
-      search.bind(this)('', 0, done);
-    });
-
-    it('should return event with matching summary', function(done) {
-      search.bind(this)('withuser012edi', 1, done);
-    });
-
-    it('should return event with matching description', function(done) {
-      search.bind(this)('Lunch', 1, done);
-    });
-
-    it('should return event with matching organizer', function(done) {
-      search.bind(this)('robert', 1, done);
-    });
-
-    it('should return event with matching attendees', function(done) {
-      var self = this;
-      var searchFunctions = ['first0', 'last1', 'user2', 'Edinson'].map(function(attendee) {
-        return function(callback) {
-          search.bind(self)(attendee, 1, callback);
-        };
-      });
-      async.parallel(searchFunctions, done);
     });
   });
 });

@@ -1,10 +1,7 @@
-'use strict';
-
-const mongoose = require('mongoose');
-
 module.exports = function(dependencies) {
   const localpubsub = dependencies('pubsub').local;
   const logger = dependencies('logger');
+  const mongoose = dependencies('db').mongo.mongoose;
 
   require('./eventmessage.model')(dependencies);
   const EventMessage = mongoose.model('EventMessage');

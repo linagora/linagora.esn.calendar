@@ -47,39 +47,16 @@ const AwesomeCalendarModule = new AwesomeModule('linagora.esn.calendar', {
 
   states: {
     lib: function(dependencies, callback) {
-      const api = require('./webserver/api')(dependencies);
-      const alarm = require('./lib/alarm')(dependencies);
-      const eventMailListener = require('./lib/event-mail-listener')(dependencies);
-      const i18n = require('./lib/i18n')(dependencies);
-      const helpers = require('./lib/helpers');
-      const invitation = require('./lib/invitation')(dependencies);
-      const search = require('./lib/search')(dependencies);
-      const constants = require('./lib/constants');
+      const libModule = require('./lib')(dependencies);
+      const api = require('./webserver/api')(dependencies, libModule);
 
-      return callback(null, {
-        alarm,
-        api,
-        eventMailListener,
-        helpers,
-        invitation,
-        search,
-        i18n,
-        constants
+      callback(null, {
+        ...libModule,
+        api
       });
     },
 
     deploy: function(dependencies, callback) {
-      // Init alarm local pubsub listener
-      this.alarm.init();
-
-      // Init bluebar event listener
-      this.eventMailListener.init();
-
-      // Register the new message type event
-      const message = dependencies('message');
-
-      message.registerMessageType('event', 'EventMessage');
-
       // Register the webapp
       const app = require('./webserver/application')(dependencies);
 
@@ -109,15 +86,9 @@ const AwesomeCalendarModule = new AwesomeModule('linagora.esn.calendar', {
 
     start: function(dependencies, callback) {
       require('./ws').init(dependencies);
-      require('./lib/search')(dependencies).listen();
-      require('./lib/resource')(dependencies).listen();
-      require('./lib/user')(dependencies).listen();
-      require('./lib/config')(dependencies).register();
-      require('./lib/dav-import')(dependencies).init();
 
       dependencies('autoconf') && dependencies('autoconf').addTransformer(require('./lib/autoconf')(dependencies));
-
-      callback();
+      this.start(callback);
     }
   }
 });

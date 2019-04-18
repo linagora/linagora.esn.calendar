@@ -1,20 +1,24 @@
-'use strict';
-
 const chai = require('chai');
 const path = require('path');
-const fs = require('fs-extra');
-const mongoose = require('mongoose');
-const EsnConfig = require('esn-elasticsearch-configuration');
+const EsConfig = require('esn-elasticsearch-configuration');
 const testConfig = require('../config/servers-conf');
 const basePath = path.resolve(__dirname + '/../../node_modules/linagora-rse');
-const tmpPath = path.resolve(__dirname + '/../config/');
 const backendPath = path.normalize(__dirname + '/../../backend');
-let rse;
+
+const MODULE_NAME = 'linagora.esn.calendar';
+
+process.env.NODE_CONFIG = 'test/config';
+process.env.NODE_ENV = 'test';
+process.env.REDIS_HOST = 'redis';
+process.env.REDIS_PORT = 6379;
+process.env.AMQP_HOST = 'rabbitmq';
+process.env.ES_HOST = 'elasticsearch';
+
+const esnConf = new EsConfig(testConfig.elasticsearch);
 
 before(function(done) {
   require('events').EventEmitter.prototype._maxListeners = 100;
-
-  mongoose.Promise = require('q').Promise;
+  let rse;
 
   chai.use(require('chai-shallow-deep-equal'));
   chai.use(require('sinon-chai'));
@@ -23,29 +27,13 @@ before(function(done) {
   this.testEnv = {
     serversConfig: testConfig,
     basePath: basePath,
-    tmp: tmpPath,
     backendPath: backendPath,
     fixtures: path.resolve(basePath, 'test/midway-backend/fixtures'),
-    writeDBConfigFile() {
-      fs.writeFileSync(tmpPath + '/db.json', JSON.stringify({connectionString: 'mongodb://mongo/tests', connectionOptions: {auto_reconnect: false}}));
-    },
-    removeDBConfigFile() {
-      fs.unlinkSync(tmpPath + '/db.json');
-    },
-    initCore(callback) {
-      mongoose.Promise = require('q').Promise;
-      rse.core.init(() => { callback && process.nextTick(callback); });
+    mongoUrl: testConfig.mongodb.connectionString,
+    initCore(callback = () => {}) {
+      rse.core.init(() => process.nextTick(callback));
     }
   };
-
-  process.env.NODE_CONFIG = 'test/config';
-  process.env.NODE_ENV = 'test';
-  process.env.REDIS_HOST = 'redis';
-  process.env.REDIS_PORT = 6379;
-  process.env.AMQP_HOST = 'rabbitmq';
-  process.env.ES_HOST = 'elasticsearch';
-
-  fs.copySync(this.testEnv.fixtures + '/default.mongoAuth.json', this.testEnv.tmp + '/default.json');
 
   rse = require('linagora-rse');
   this.helpers = {};
@@ -56,36 +44,45 @@ before(function(done) {
   rse.test.apiHelpers(this.helpers, this.testEnv);
 
   const manager = this.testEnv.moduleManager.manager;
+  const nodeModulesPath = path.normalize(
+    path.join(__dirname, '../../node_modules/')
+  );
   const loader = manager.loaders.code(require('../../index.js'), true);
+  const nodeModulesLoader = manager.loaders.filesystem(nodeModulesPath, true);
 
   manager.appendLoader(loader);
-  loader.load('linagora.esn.calendar', done);
+  manager.appendLoader(nodeModulesLoader);
+
+  loader.load(MODULE_NAME, done);
 });
 
-// https://github.com/mfncooper/mockery/issues/34
-before(function() {
-  require('canvas');
-  require('ursa');
+before(function(done) {
+  esnConf.setup('core.events.idx', 'core.events')
+    .then(() => done())
+    .catch(err => {
+      console.error('Error while creating ES index for core.events, but launching tests...', err);
+      done();
+    });
 });
 
-after(function() {
-  try {
-    fs.unlinkSync(this.testEnv.tmp + '/default.json');
-  } catch (e) {
-    console.error(e);
-  }
+before(function(done) {
+  const self = this;
 
-  delete process.env.NODE_CONFIG;
-  delete process.env.NODE_ENV;
-});
+  self.helpers.modules.initMidway(MODULE_NAME, err => {
+    if (err) {
+      return done(err);
+    }
 
-beforeEach(function() {
-  this.testEnv.writeDBConfigFile();
+    const expressApp = require(`${self.testEnv.backendPath}/webserver/application`)(self.helpers.modules.current.deps);
+
+    expressApp.use('/api', this.helpers.modules.current.lib.api);
+    self.app = self.helpers.modules.getWebServer(expressApp);
+
+    self.helpers.modules.current.lib.start(err => done(err));
+  });
 });
 
 beforeEach(function(done) {
-  const esnConf = new EsnConfig(testConfig.elasticsearch);
-
   Promise.all([
     esnConf.setup('users.idx', 'users'),
     esnConf.setup('events.idx', 'events'),
@@ -98,11 +95,31 @@ beforeEach(function(done) {
   });
 });
 
-afterEach(function() {
-  try {
-    mongoose.disconnect();
-    this.testEnv.removeDBConfigFile();
-  } catch (e) {
-    console.error(e);
-  }
+afterEach(function(done) {
+  const esnConf = new EsConfig(testConfig.elasticsearch);
+
+  Promise.all([
+    esnConf.deleteIndex('users.idx'),
+    esnConf.deleteIndex('events.idx'),
+    esnConf.deleteIndex('contacts.idx'),
+    esnConf.deleteIndex('resources.idx')
+  ])
+  .then(() => done())
+  .catch(err => {
+    console.error('Error while clear ES indices', err);
+    done();
+  });
+});
+
+afterEach(function(done) {
+  this.helpers.mongo.dropDatabase(err => done(err));
+});
+
+after(function(done) {
+  esnConf.deleteIndex('core.events.idx')
+  .then(() => done())
+  .catch(err => {
+    console.error('Error while clear ES core.events index', err);
+    done();
+  });
 });

@@ -1,31 +1,34 @@
-'use strict';
-
-var expect = require('chai').expect;
-var mockery = require('mockery');
+const expect = require('chai').expect;
+const mockery = require('mockery');
 
 describe('The event message module', function() {
-  var module, localstub, globalstub;
+  let module, localstub, globalstub;
+  let eventMessageMock;
 
   beforeEach(function() {
     localstub = {};
     globalstub = {};
+
+    eventMessageMock = function() {
+      return eventMessageMock;
+    };
+
     this.moduleHelpers.addDep('pubsub', this.helpers.mock.pubsub('', localstub, globalstub));
+    this.moduleHelpers.addDep('db', {
+      mongo: {
+        mongoose: {
+          model: () => eventMessageMock
+        }
+      }
+    });
     mockery.registerMock('./eventmessage.model', function() {});
   });
 
   describe('The save fn', function() {
-
     it('should not publish in topic message:stored if there was an error', function(done) {
-      var eventMessageMock = function() {
-        return eventMessageMock;
-      };
       eventMessageMock.save = function(callback) {
         return callback(new Error());
       };
-
-      this.helpers.mock.models({
-        EventMessage: eventMessageMock
-      });
 
       module = require(this.moduleHelpers.backendPath + '/lib/message/eventmessage.core')(this.moduleHelpers.dependencies);
       module.save({}, function(err) {
@@ -36,21 +39,14 @@ describe('The event message module', function() {
     });
 
     it('should publish in topic message:stored if there is no error', function(done) {
-      var ObjectId = require('bson').ObjectId;
-      var messageSaved = {
+      const ObjectId = require('bson').ObjectId;
+      const messageSaved = {
         _id: new ObjectId()
       };
 
-      var eventMessageMock = function() {
-        return eventMessageMock;
-      };
       eventMessageMock.save = function(callback) {
         return callback(null, messageSaved);
       };
-
-      this.helpers.mock.models({
-        EventMessage: eventMessageMock
-      });
 
       module = require(this.moduleHelpers.backendPath + '/lib/message/eventmessage.core')(this.moduleHelpers.dependencies);
       module.save({}, function(err, saved) {
