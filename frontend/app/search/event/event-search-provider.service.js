@@ -46,7 +46,7 @@
           function _searchInSingleCalendar(context, calendar) {
             var calendarToSearch = calendar.source ? calendar.source : calendar;
 
-            return calEventService.searchEvents(calendarHomeId, calendarToSearch.id, context)
+            return calEventService.searchEventsBasic(calendarHomeId, calendarToSearch.id, context)
               .then(function(events) {
                 offset += events.length;
 

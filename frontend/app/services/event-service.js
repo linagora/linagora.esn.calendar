@@ -40,7 +40,7 @@
       self.modifyEvent = modifyEvent;
       self.checkAndUpdateEvent = checkAndUpdateEvent;
       self.removeEvent = removeEvent;
-      self.searchEvents = searchEvents;
+      self.searchEventsBasic = searchEventsBasic;
       self.getEventByUID = getEventByUID;
       self.getEventFromICSUrl = getEventFromICSUrl;
       self.onEventCreatedOrUpdated = onEventCreatedOrUpdated;
@@ -97,8 +97,8 @@
        * @param  {[type]} options        The query parameters {query: '', limit: 20, offset: 0}
        * @return {[CalendarShell]}       an array of CalendarShell or an empty array if no events have been found
        */
-      function searchEvents(userId, calendarId, options) {
-        return calendarAPI.searchEvents(userId, calendarId, options)
+      function searchEventsBasic(userId, calendarId, options) {
+        return calendarAPI.searchEventsBasic(userId, calendarId, options)
           .then(function(events) {
             return events.reduce(function(shells, icaldata) {
               var vcalendar = ICAL.Component.fromString(icaldata.data);
