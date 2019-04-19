@@ -182,39 +182,48 @@ module.exports = dependencies => {
       calendarId: req.params.calendarId
     };
 
-    calendar.searchEventsBasic(query, (err, eventsData) => {
-      if (err) {
-        return res.status(500).json({error: {code: 500, message: 'Error while searching for events', details: err.message}});
-      }
+    return calendar.searchEventsBasic(query)
+      .then(eventsData => {
+        const { json, totalCount } = _handleSeachResults(eventsData, req.originalUrl);
 
-      const davItems = [];
-      const json = {
+        res.header('X-ESN-Items-Count', totalCount);
+        res.status(200).json(json);
+      })
+      .catch(err => {
+        logger.error(err);
+        res.status(500).json({error: {code: 500, message: 'Error while searching for events', details: err.message}});
+      });
+  }
+
+  function _handleSeachResults(eventsData, originalUrl) {
+    const davItems = [];
+    const json = {
+      _links: {
+        self: {
+          href: originalUrl
+        }
+      },
+      _total_hits: eventsData.total_count,
+      _embedded: {
+        'dav:item': davItems
+      }
+    };
+
+    eventsData.results.forEach(eventData => {
+      davItems.push({
         _links: {
           self: {
-            href: req.originalUrl
+            href: eventData.path
           }
         },
-        _total_hits: eventsData.total_count,
-        _embedded: {
-          'dav:item': davItems
-        }
-      };
-
-      res.header('X-ESN-Items-Count', eventsData.total_count);
-
-      eventsData.results.forEach(eventData => {
-        davItems.push({
-          _links: {
-            self: {
-              href: eventData.path
-            }
-          },
-          data: eventData.event,
-          etag: eventData.etag
-        });
+        data: eventData.event,
+        etag: eventData.etag
       });
-
-      res.status(200).json(json);
     });
+
+    return {
+      json,
+      totalCount: eventsData.total_count
+    };
   }
 };

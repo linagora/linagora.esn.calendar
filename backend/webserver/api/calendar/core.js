@@ -1,6 +1,7 @@
 'use strict';
 
 const async = require('async');
+const Q = require('q');
 const getEventUidFromElasticsearchId = require('../../../lib/search/denormalize').getEventUidFromElasticsearchId;
 
 module.exports = dependencies => {
@@ -159,33 +160,34 @@ module.exports = dependencies => {
     });
   }
 
-  function searchEventsBasic(query, callback) {
-    searchModule.searchEventsBasic(query, (err, esResult) => {
-      if (err) {
-        return callback(err);
-      }
+  function searchEventsBasic(query) {
+    return Q.ninvoke(searchModule, 'searchEventsBasic', query)
+      .then(esResult => _handleElasSeachResults(esResult, query));
+  }
 
-      const output = {
-        total_count: esResult.total_count,
-        results: []
-      };
+  function _handleElasSeachResults(esResult, query) {
+    const output = {
+      total_count: esResult.total_count,
+      results: []
+    };
 
-      if (!esResult.list || esResult.list.length === 0) {
-        return callback(null, output);
-      }
+    if (!esResult.list || esResult.list.length === 0) {
+      return output;
+    }
 
-      const paths = esResult.list.map(event => caldavClient.getEventPath(event._source.userId, event._source.calendarId, getEventUidFromElasticsearchId(event._id)));
+    const paths = esResult.list.map(event => caldavClient.getEventPath(event._source.userId, event._source.calendarId, getEventUidFromElasticsearchId(event._id)));
 
-      caldavClient.getMultipleEventsFromPaths(query.userId, paths)
-        .then(events => events.map(({ ical, etag, path }, index) => {
+    return caldavClient.getMultipleEventsFromPaths(query.userId, paths)
+      .then(events => {
+        events.map(({ ical, etag, path }, index) => {
           output.results[index] = {
             path,
             event: ical,
             etag
           };
-        }))
-        .then(() => callback(null, output))
-        .catch(err => callback(err));
-    });
+        });
+
+        return output;
+      });
   }
 };

@@ -320,7 +320,7 @@ describe('The calendar core module', function() {
       this.module = require(this.moduleHelpers.backendPath + '/webserver/api/calendar/core')(this.moduleHelpers.dependencies);
     });
 
-    it('should call the search module with good params and fail if it fails', function() {
+    it('should call the search module with good params and fail if it fails', function(done) {
       const query = {
         search: 'search',
         limit: '50',
@@ -335,10 +335,12 @@ describe('The calendar core module', function() {
         return callback(new Error());
       };
 
-      this.module.searchEventsBasic(query, function(err, results) {
-        expect(err).to.exist;
-        expect(results).to.not.exist;
-      });
+      this.module.searchEventsBasic(query)
+        .then(() => done(new Error('should not occur')))
+        .catch(err => {
+          expect(err).to.exist;
+          done();
+        });
     });
 
     it('should call the search module with good params and return the events retrieved through the caldav-client', function(done) {
@@ -369,8 +371,7 @@ describe('The calendar core module', function() {
       caldavClientMock.getEventPath = sinon.stub();
       caldavClientMock.getEventPath.onFirstCall().returns('event1path').onSecondCall().returns('event2path');
 
-      this.module.searchEventsBasic(query, function(err, results) {
-        expect(err).to.not.exist;
+      this.module.searchEventsBasic(query).then(results => {
         expect(caldavClientMock.getMultipleEventsFromPaths).to.have.been.calledWith(query.userId, ['event1path', 'event2path']);
         [0, 1].forEach(function(i) {expect(caldavClientMock.getEventPath).to.have.been.calledWith(esResult.list[i]._source.userId, esResult.list[i]._source.calendarId, esResult.list[i]._id.split('--')[1]);});
         expect(results).to.deep.equal({
@@ -381,7 +382,7 @@ describe('The calendar core module', function() {
           ]
         });
         done();
-      });
+      }).catch(err => done(err || new Error('should not occur')));
     });
   });
 });
