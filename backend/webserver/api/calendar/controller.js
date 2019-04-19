@@ -182,7 +182,7 @@ module.exports = dependencies => {
       calendarId: req.params.calendarId
     };
 
-    calendar.searchEvents(query, (err, eventsData) => {
+    calendar.searchEventsBasic(query, (err, eventsData) => {
       if (err) {
         return res.status(500).json({error: {code: 500, message: 'Error while searching for events', details: err.message}});
       }

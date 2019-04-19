@@ -315,25 +315,27 @@ describe('The calendar core module', function() {
     });
   });
 
-  describe('the searchEvents function', function() {
+  describe('the searchEventsBasic function', function() {
     beforeEach(function() {
       this.module = require(this.moduleHelpers.backendPath + '/webserver/api/calendar/core')(this.moduleHelpers.dependencies);
     });
 
     it('should call the search module with good params and fail if it fails', function() {
-      var query = {
+      const query = {
         search: 'search',
         limit: '50',
         offset: 100,
         sortKey: 'date',
         sortOrder: 'desc'
       };
+
       searchLibMock.searchEventsBasic = function(q, callback) {
         expect(q).to.deep.equal(query);
+
         return callback(new Error());
       };
 
-      this.module.searchEvents(query, function(err, results) {
+      this.module.searchEventsBasic(query, function(err, results) {
         expect(err).to.exist;
         expect(results).to.not.exist;
       });
@@ -367,7 +369,7 @@ describe('The calendar core module', function() {
       caldavClientMock.getEventPath = sinon.stub();
       caldavClientMock.getEventPath.onFirstCall().returns('event1path').onSecondCall().returns('event2path');
 
-      this.module.searchEvents(query, function(err, results) {
+      this.module.searchEventsBasic(query, function(err, results) {
         expect(err).to.not.exist;
         expect(caldavClientMock.getMultipleEventsFromPaths).to.have.been.calledWith(query.userId, ['event1path', 'event2path']);
         [0, 1].forEach(function(i) {expect(caldavClientMock.getEventPath).to.have.been.calledWith(esResult.list[i]._source.userId, esResult.list[i]._source.calendarId, esResult.list[i]._id.split('--')[1]);});

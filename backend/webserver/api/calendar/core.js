@@ -17,7 +17,7 @@ module.exports = dependencies => {
 
   return {
     dispatch,
-    searchEvents
+    searchEventsBasic
   };
 
   /**
@@ -159,7 +159,7 @@ module.exports = dependencies => {
     });
   }
 
-  function searchEvents(query, callback) {
+  function searchEventsBasic(query, callback) {
     searchModule.searchEventsBasic(query, (err, esResult) => {
       if (err) {
         return callback(err);
