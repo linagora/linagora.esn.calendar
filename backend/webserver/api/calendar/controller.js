@@ -17,7 +17,8 @@ module.exports = dependencies => {
     dispatchEvent,
     sendInvitation,
     changeParticipation,
-    searchEventsBasic
+    searchEventsBasic,
+    searchEventsAdvanced
   };
 
   function dispatchEvent(req, res) {
@@ -184,14 +185,56 @@ module.exports = dependencies => {
 
     return calendar.searchEventsBasic(query)
       .then(eventsData => {
-        const { json, totalCount } = _handleSeachResults(eventsData, req.originalUrl);
+        const responseJSON = _handleSeachResults(eventsData, req.originalUrl);
 
-        res.header('X-ESN-Items-Count', totalCount);
-        res.status(200).json(json);
+        res.header('X-ESN-Items-Count', eventsData.total_count);
+        res.status(200).json(responseJSON);
       })
       .catch(err => {
-        logger.error(err);
-        res.status(500).json({error: {code: 500, message: 'Error while searching for events', details: err.message}});
+        const details = 'Error while searching for events';
+
+        logger.error(details, err);
+
+        res.status(500).json({
+          error: {
+            code: 500,
+            message: 'Server Error',
+            details
+          }
+        });
+      });
+  }
+
+  function searchEventsAdvanced(req, res) {
+    const query = {
+      calendars: req.body.calendars,
+      search: req.body.query,
+      attendees: req.body.attendees,
+      organizers: req.body.organizers,
+      offset: req.query.offset,
+      limit: req.query.limit,
+      userId: req.user.id
+    };
+
+    return calendar.searchEventsAdvanced(query)
+      .then(eventsData => {
+        const responseJSON = _handleSeachResults(eventsData, req.originalUrl);
+
+        res.header('X-ESN-Items-Count', eventsData.total_count);
+        res.status(200).json(responseJSON);
+      })
+      .catch(err => {
+        const details = 'Error while searching for events';
+
+        logger.error(details, err);
+
+        res.status(500).json({
+          error: {
+            code: 500,
+            message: 'Server Error',
+            details
+          }
+        });
       });
   }
 
@@ -221,9 +264,6 @@ module.exports = dependencies => {
       });
     });
 
-    return {
-      json,
-      totalCount: eventsData.total_count
-    };
+    return json;
   }
 };

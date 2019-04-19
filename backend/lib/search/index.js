@@ -14,6 +14,7 @@ module.exports = dependencies => {
     listen,
     removeEventFromIndex,
     searchEventsBasic,
+    searchEventsAdvanced,
     searchNextEvent
   };
 
@@ -67,6 +68,27 @@ module.exports = dependencies => {
     const filterOccur = _getBasicSearchFilters(query);
 
     return _searchEventsFromElasticsearch({ query, mustOccur, filterOccur }, callback);
+  }
+
+  function searchEventsAdvanced(query) {
+    const filterOccur = _getAdvancedSearchFilters(query);
+    const mustOccur = [_getMultiMatchQuery(query.search)];
+
+    if (Array.isArray(query.attendees) && query.attendees.length) {
+      mustOccur.push({
+        terms: {
+          'attendees.email.full': query.attendees
+        }
+      });
+    }
+
+    return new Promise((resolve, reject) => {
+      _searchEventsFromElasticsearch({ query, mustOccur, filterOccur }, (error, esResults) => {
+        if (error) return reject(error);
+
+        return resolve(esResults);
+      });
+    });
   }
 
   function _searchEventsFromElasticsearch({ query, mustOccur, filterOccur }, callback) {
@@ -153,6 +175,32 @@ module.exports = dependencies => {
       filters.push({
         term: {
           userId
+        }
+      });
+    }
+
+    return filters;
+  }
+
+  function _getAdvancedSearchFilters(query) {
+    const filters = [];
+
+    let calendarIds = [];
+
+    if (Array.isArray(query.calendars) && query.calendars.length) {
+      calendarIds = query.calendars.map(calendar => calendar.calendarId);
+    }
+
+    filters.push({
+      terms: {
+        calendarId: calendarIds
+      }
+    });
+
+    if (Array.isArray(query.organizers) && query.organizers.length) {
+      filters.push({
+        terms: {
+          'organizer.email.full': query.organizers
         }
       });
     }

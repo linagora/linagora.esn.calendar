@@ -179,3 +179,59 @@ Search for events in Elasticsearch
         ]
       }
     }
+
+## POST /api/calendars/search
+
+Search for events in Elasticsearch with advanced options
+
+**Response Headers:**
+
+- Content-Length: Document size
+- Content-Type: application/json
+
+**Request JSON Object:**
+
+- calendars (array): an array of calendar objects to search in
+- query (string): a string to be found in the events' properties
+- organizers (array): an array of organizers' emails
+- attendees (array): an array of attendees' emails
+
+**Request URL Parameters:**
+
+- limit (int): the maximum number of events to be returned
+- offset (int): the starting point of the list of returned events (skipping N members where N=offset)
+
+**Status Codes:**
+
+- 200 OK.
+- 400 Bad Request. Invalid request body or parameters.
+- 401 Unauthorized. The current request does not contains any valid data to be used for authentication.
+- 500 Internal server error.
+
+**Request:**
+
+    POST /api/calendars/events/search?offset=0&limit=30
+    Host: localhost:8080
+
+**Response:**
+
+    HTTP/1.1 200 OK
+    {
+      "_links": {
+        "self": {
+          "href": "/api/calendars/events/search?offset=0&limit=30"
+        }
+      },
+      "_total_hits": 1,
+      "_embedded": {
+        "dav:item": [
+          {
+            "_links": {
+              "self": "/calendars/54be3c051ce82d2c223d96d7/events/17c39404-0a39-4f62-9d23-1b0a12f158f9.ics"
+            },
+            "etag": "\'6464fc058586fff85e3522de255c3e9f\'",
+            "data": [****events as jcal****]
+          }
+        ]
+      }
+    }

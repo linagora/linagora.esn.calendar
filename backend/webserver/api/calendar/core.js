@@ -18,7 +18,8 @@ module.exports = dependencies => {
 
   return {
     dispatch,
-    searchEventsBasic
+    searchEventsBasic,
+    searchEventsAdvanced
   };
 
   /**
@@ -162,6 +163,11 @@ module.exports = dependencies => {
 
   function searchEventsBasic(query) {
     return Q.ninvoke(searchModule, 'searchEventsBasic', query)
+      .then(esResult => _handleElasSeachResults(esResult, query));
+  }
+
+  function searchEventsAdvanced(query) {
+    return searchModule.searchEventsAdvanced(query)
       .then(esResult => _handleElasSeachResults(esResult, query));
   }
 

@@ -385,4 +385,81 @@ describe('The calendar core module', function() {
       }).catch(err => done(err || new Error('should not occur')));
     });
   });
+
+  describe('the searchEventsAdvanced function', function() {
+    const advancedQuery = {
+      calendars: [
+        { userId: '12345', calendarId: '12345' },
+        { userId: '12345', calendarId: '24678' },
+        { userId: '34344', calendarId: '09563' }
+      ],
+      search: 'king',
+      offset: 0,
+      limit: 30,
+      userId: '12345'
+    };
+
+    beforeEach(function() {
+      this.module = require(this.moduleHelpers.backendPath + '/webserver/api/calendar/core')(this.moduleHelpers.dependencies);
+    });
+
+    it('should call the search core module with good params and fail if it fails', function(done) {
+      searchLibMock.searchEventsAdvanced = function(query) {
+        expect(query).to.deep.equal(advancedQuery);
+
+        return Promise.reject(new Error());
+      };
+
+      this.module.searchEventsAdvanced(advancedQuery)
+        .then(() => done(new Error('should not occur')))
+        .catch(err => {
+          expect(err).to.exist;
+          done();
+        });
+    });
+
+    it('should call the search core module with good params and return the events retrieved through the caldav-client if it succeeds', function(done) {
+      const esResult = {
+        total_count: 2,
+        list: [
+          { _id: '12345--event1', _source: { userId: '12345', calendarId: '12345' } },
+          { _id: '12345--event2', _source: { userId: '12345', calendarId: '24678' } }
+        ]
+      };
+
+      searchLibMock.searchEventsAdvanced = function(query) {
+        expect(query).to.deep.equal(advancedQuery);
+
+        return Promise.resolve(esResult);
+      };
+
+      caldavClientMock.getMultipleEventsFromPaths = sinon.stub();
+      caldavClientMock.getMultipleEventsFromPaths.returns(q.when([
+        { ical: 'event1', etag: 'etag1', path: 'event1path' },
+        { ical: 'event2', etag: 'etag2', path: 'event2path' }
+      ]));
+
+      caldavClientMock.getEventPath = sinon.stub();
+      caldavClientMock.getEventPath.onFirstCall().returns('event1path').onSecondCall().returns('event2path');
+
+      this.module.searchEventsAdvanced(advancedQuery).then(results => {
+        expect(caldavClientMock.getMultipleEventsFromPaths).to.have.been.calledWith(advancedQuery.userId, ['event1path', 'event2path']);
+        [0, 1].forEach(i => {
+          expect(caldavClientMock.getEventPath).to.have.been.calledWith(
+            esResult.list[i]._source.userId,
+            esResult.list[i]._source.calendarId,
+            esResult.list[i]._id.split('--')[1]
+          );
+        });
+        expect(results).to.deep.equal({
+          total_count: esResult.total_count,
+          results: [
+            { event: 'event1', path: 'event1path', etag: 'etag1'},
+            { event: 'event2', path: 'event2path', etag: 'etag2'}
+          ]
+        });
+        done();
+      }).catch(err => done(err || new Error('should not occur')));
+    });
+  });
 });
