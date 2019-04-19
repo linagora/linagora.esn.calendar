@@ -41,6 +41,7 @@
       self.checkAndUpdateEvent = checkAndUpdateEvent;
       self.removeEvent = removeEvent;
       self.searchEventsBasic = searchEventsBasic;
+      self.searchEventsAdvanced = searchEventsAdvanced;
       self.getEventByUID = getEventByUID;
       self.getEventFromICSUrl = getEventFromICSUrl;
       self.onEventCreatedOrUpdated = onEventCreatedOrUpdated;
@@ -100,20 +101,49 @@
       function searchEventsBasic(userId, calendarId, options) {
         return calendarAPI.searchEventsBasic(userId, calendarId, options)
           .then(function(events) {
-            return events.reduce(function(shells, icaldata) {
-              var vcalendar = ICAL.Component.fromString(icaldata.data);
-              var vevents = vcalendar.getAllSubcomponents('vevent');
+            return _getCalendarShells(events);
+          });
+      }
 
-              vevents.forEach(function(vevent) {
-                var shell = new CalendarShell(vevent, {path: icaldata._links.self.href, etag: icaldata.etag});
+      /**
+       * Search all events depending on the advanced search options.
+       * @method searchEventsAdvanced
+       * @param {Object} options the search options
+       * @param {CalendarCollectionShell[]} options.calendars the list of CalendarCollectionShell to search in
+       * @param {number} options.offset the starting position to search from
+       * @param {number} options.limit the maximum number of events to be returned
+       * @param {Object} options.query the search query options
+       * @param {Object} options.query.advanced the advanced search options
+       * @param {string} options.query.advanced.contains the string to be found in the events' properties
+       * @param {Array} [options.query.advanced.organizers] the array of organizers to search with
+       * @param {Array} [options.query.advanced.attendees] the array of attendees to search with
+       * @return {[CalendarShell]} an array of CalendarShell or an empty array if no events have been found
+       */
+      function searchEventsAdvanced(options) {
+        if (!Array.isArray(options.calendars) || !options.calendars.length) {
+          return $q.resolve([]);
+        }
 
-                shells.push(shell);
-              });
-
-              return shells;
-            }, []);
+        return calendarAPI.searchEventsAdvanced(options)
+          .then(function(events) {
+            return _getCalendarShells(events);
           })
           .catch($q.reject);
+      }
+
+      function _getCalendarShells(events) {
+        return events.reduce(function(shells, icaldata) {
+          var vcalendar = ICAL.Component.fromString(icaldata.data);
+          var vevents = vcalendar.getAllSubcomponents('vevent');
+
+          vevents.forEach(function(vevent) {
+            var shell = new CalendarShell(vevent, {path: icaldata._links.self.href, etag: icaldata.etag});
+
+            shells.push(shell);
+          });
+
+          return shells;
+        }, []);
       }
 
       /**

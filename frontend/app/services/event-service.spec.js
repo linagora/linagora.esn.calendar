@@ -69,10 +69,10 @@ describe('The calEventService service', function() {
       emitModifiedEvent: sinon.spy()
     };
 
-    angular.mock.module('esn.calendar');
-    angular.mock.module('esn.ical');
+    module('esn.calendar');
+    module('esn.ical');
 
-    angular.mock.module(function($provide) {
+    module(function($provide) {
       $provide.value('tokenAPI', self.tokenAPI);
       $provide.value('jstz', self.jstz);
       $provide.value('uuid4', self.uuid4);
@@ -99,11 +99,12 @@ describe('The calEventService service', function() {
     });
   });
 
-  beforeEach(angular.mock.inject(function(calEventService, $httpBackend, $rootScope, _ICAL_, CalendarShell, calMoment, CAL_EVENTS, CAL_GRACE_DELAY, $window, esnI18nService, calEventAPI) {
+  beforeEach(inject(function(calEventService, $httpBackend, $rootScope, _ICAL_, CalendarShell, calMoment, CAL_EVENTS, CAL_GRACE_DELAY, $window, esnI18nService, calEventAPI, calendarAPI) {
     self.$httpBackend = $httpBackend;
     self.$rootScope = $rootScope;
     self.calEventService = calEventService;
     self.calEventAPI = calEventAPI;
+    self.calendarAPI = calendarAPI;
     self.CalendarShell = CalendarShell;
     self.calMoment = calMoment;
     ICAL = _ICAL_;
@@ -1719,5 +1720,92 @@ describe('The calEventService service', function() {
       self.$httpBackend.flush();
     });
 
+  });
+
+  describe('The searchEventsAdvanced fn', function() {
+    var searchOptions = {
+      calendars: [
+        { id: 'userId1', calendarHomeId: 'userId1' }
+      ],
+      query: {
+        advanced: {
+          contains: 'king'
+        }
+      },
+      offset: 0,
+      limit: 30
+    };
+
+    it('should return an empty array when no calendars are provided in the search options', function(done) {
+      self.calEventService.searchEventsAdvanced({ calendars: [] }).then(function(results) {
+        expect(results).to.be.empty;
+        done();
+      }).catch(function(err) {
+        done(err || new Error('should not happen'));
+      });
+
+      self.$rootScope.$digest();
+    });
+
+    it('should call #calendarAPI.searchEventsAdvanced with good parameters and return an array of events when it succeeds', function(done) {
+      sinon.stub(self.calendarAPI, 'searchEventsAdvanced', function(options) {
+        expect(options).to.deep.equal(searchOptions);
+
+        return $q.resolve([{
+          _links: {
+            self: {
+              href: '/prepath/path/to/calendar/myuid.ics'
+            }
+          },
+          data: 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Sabre//Sabre VObject 4.1.3//EN\nBEGIN:VTIMEZONE\nTZID:Asia/Jakarta\nBEGIN:STANDARD\nTZOFFSETFROM:+0700\nTZOFFSETTO:+0700\nTZNAME:WIB\nDTSTART:19700101T000000\nEND:STANDARD\nEND:VTIMEZONE\nBEGIN:VEVENT\n' +
+            'UID:uid\nTRANSP:OPAQUE\n' +
+            'DTSTART:20190411T060000Z\nDTEND:20190411T070000Z\n' +
+            'CLASS:PUBLIC\nSUMMARY:title\n' +
+            'ORGANIZER;CN=User:mailto:user1@mail.com\n' +
+            'DTSTAMP:20190411T054758Z\n' +
+            'ATTENDEE;PARTSTAT=ACCEPTED;RSVP=FALSE;ROLE=CHAIR;CUTYPE=INDIVIDUAL;CN=User:mailto:user1@mail.com\nEND:VEVENT\nEND:VCALENDAR\n',
+          etag: '"etag"'
+        }]);
+      });
+
+      self.calEventService.searchEventsAdvanced(searchOptions).then(function(events) {
+        expect(events[0].uid).to.equal('uid');
+        expect(events[0].title).to.equal('title');
+        expect(events[0].start.toDate()).to.equalDate(self.calMoment('2019-04-11 06:00:00').toDate());
+        expect(events[0].end.toDate()).to.equalDate(self.calMoment('2019-04-11 06:00:00').toDate());
+        expect(events[0].vcalendar).to.be.an('object');
+        expect(events[0].organizer.name).to.equal('User');
+        expect(events[0].organizer.email).to.equal('user1@mail.com');
+        expect(events[0].attendees[0].name).to.equal('User');
+        expect(events[0].attendees[0].email).to.equal('user1@mail.com');
+        expect(events[0].etag).to.equal('"etag"');
+        expect(events[0].path).to.equal('/prepath/path/to/calendar/myuid.ics');
+
+        done();
+      }).catch(function(err) {
+        done(err || new Error('should not happen'));
+      });
+
+      self.$rootScope.$digest();
+    });
+
+    it('should call #calendarAPI.searchEventsAdvanced with good parameters and fail if it fails', function(done) {
+      sinon.stub(self.calendarAPI, 'searchEventsAdvanced', function(options) {
+        expect(options).to.deep.equal(searchOptions);
+
+        return $q.reject(new Error('it is going to fail'));
+      });
+
+      self.calEventService.searchEventsAdvanced(searchOptions)
+        .then(function() {
+          done(new Error('should not happen'));
+        })
+        .catch(function(err) {
+          expect(err).to.exist;
+          done();
+        });
+
+      self.$rootScope.$digest();
+    });
   });
 });

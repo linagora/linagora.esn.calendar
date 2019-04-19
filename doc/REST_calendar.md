@@ -199,7 +199,7 @@ Search for events in Elasticsearch with advanced options
 **Request URL Parameters:**
 
 - limit (int): the maximum number of events to be returned
-- offset (int): the starting point of the list of returned events (skipping N members where N=offset)
+- offset (int): the starting position to search from (skipping the first N events where N=offset)
 
 **Status Codes:**
 

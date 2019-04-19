@@ -29,14 +29,15 @@ describe('The calendar module apis', function() {
   }
 
   beforeEach(function() {
-    angular.mock.module('esn.calendar');
+    module('esn.calendar');
 
-    angular.mock.module(function($provide) {
+    module(function($provide) {
       $provide.value('notificationFactory', notificationFactoryMock);
     });
 
-    angular.mock.inject(function($httpBackend, calMoment, calendarAPI, calEventAPI, CALENDAR_CONTENT_TYPE_HEADER, CAL_ACCEPT_HEADER, CAL_GRACE_DELAY) {
+    inject(function($httpBackend, calendarRestangular, calMoment, calendarAPI, calEventAPI, CALENDAR_CONTENT_TYPE_HEADER, CAL_ACCEPT_HEADER, CAL_GRACE_DELAY) {
       this.$httpBackend = $httpBackend;
+      this.calendarRestangular = calendarRestangular;
       this.calMoment = calMoment;
       this.calendarAPI = calendarAPI;
       this.calEventAPI = calEventAPI;
@@ -495,6 +496,53 @@ describe('The calendar module apis', function() {
 
     });
 
+    describe('The searchEventsAdvanced request', function() {
+      it('should have a correct request body and return an array of events', function(done) {
+        this.$httpBackend.expectPOST('/calendar/api/calendars/search').respond(davItemsResponse(davItems));
+
+        this.calendarRestangular.addRequestInterceptor(function(requestBody) {
+          expect(requestBody).to.deep.equal({
+            calendars: [
+              { userId: 'userId0', calendarId: 'userId0' },
+              { userId: 'userId0', calendarId: 'calendarId1' },
+              { userId: 'userId1', calendarId: 'calendarId2' }
+            ],
+            query: 'king',
+            organizers: ['user0@open-paas.org', 'user1@open-paas.org'],
+            attendees: ['user0@open-paas.org']
+          });
+        });
+
+        this.calendarAPI.searchEventsAdvanced({
+          calendars: [
+            { id: 'userId0', calendarHomeId: 'userId0' },
+            { id: 'calendarId1', calendarHomeId: 'userId0' },
+            {
+              id: 'calendarId3', calendarHomeId: 'userId0',
+              source: { id: 'calendarId2', calendarHomeId: 'userId1' }
+            }
+          ],
+          query: {
+            advanced: {
+              contains: 'king',
+              organizers: [
+                { id: 'userId0', email: 'user0@open-paas.org' },
+                { id: 'userId1', email: 'user1@open-paas.org' }
+              ],
+              attendees: [{ id: 'userId0', email: 'user0@open-paas.org' }]
+            }
+          },
+          offset: 0,
+          limit: 30
+        }).then(function(result) {
+          expect(result).to.deep.equal(davItems);
+
+          done();
+        }).catch(done);
+
+        this.$httpBackend.flush();
+      });
+    });
   });
 
 });
