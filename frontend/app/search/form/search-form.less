@@ -1,0 +1,72 @@
+event-search-form {
+  .flex-form-group {
+    .flex-start;
+    .align-items(center);
+  }
+
+  .col-xs-12 {
+    padding: 0;
+  }
+
+  .form-group {
+    margin-bottom: 15px;
+  }
+
+  .field-label {
+    min-width: 80px;
+    padding-right: 15px;
+  }
+
+  md-select {
+    margin: 2px 0;
+  }
+}
+
+md-content {
+  .calendar-dropdown-option {
+    &:first-of-type {
+      margin-top: 0;
+    }
+
+    &:last-of-type {
+      margin-bottom: 0;
+    }
+  }
+}
+
+md-select-menu {
+  md-divider {
+    border-top: 1px solid rgba(0, 0, 0, 0.12);
+    display: block;
+    margin: 8px 0;
+  }
+}
+
+.calendar-dropdown-item {
+  display: flex;
+
+  .calendar-dropdown-icon {
+    margin-right: 5px;
+  }
+}
+
+.calendar-dropdown {
+  width: 100%;
+}
+
+.calendar-dropdown-option {
+  padding: 16px 16px;
+  margin: 4px 0;
+}
+
+@media (min-width: @screen-md-min) {
+  event-search-form {
+    .field-label {
+      min-width: 105px;
+    }
+  }
+
+  .calendar-dropdown {
+    width: 30%;
+  }
+}

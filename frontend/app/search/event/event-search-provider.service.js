@@ -5,15 +5,12 @@
     .factory('calSearchEventProviderService', calSearchEventProviderService);
 
   function calSearchEventProviderService(
-    $log,
     $q,
     _,
-    $rootScope,
     calendarHomeService,
     calendarService,
     calEventService,
     esnSearchProvider,
-    CAL_EVENTS,
     ELEMENTS_PER_REQUEST
   ) {
 
@@ -65,6 +62,7 @@
         },
         buildFetchContext: function(options) { return $q.when(options.query && options.query.text); },
         templateUrl: '/calendar/app/search/event/event-search-item.html',
+        searchTemplateUrl: '/calendar/app/search/form/search-form-template.html',
         activeOn: ['calendar'],
         placeHolder: 'Search in events'
       });

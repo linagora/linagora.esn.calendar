@@ -1,0 +1,30 @@
+fieldset
+  .form-group.flex-form-group
+    .field-name.field-label #{__('Search in')}
+    .fg-line
+      calendar-search-form-dropdown(calendars="$ctrl.calendars", selected-cal="$ctrl.query.advanced.cal")
+
+  .form-group.flex-form-group.full-width
+    .field-name.field-label #{__('Keywords')}
+    .fg-line
+      input.input.form-control(type='text', ng-model="$ctrl.query.advanced.contains", autoclose="1", placeholder="{{ 'Keywords contained in events' | esnI18n }}")
+
+  .form-group.flex-form-group.full-width
+    .field-name.field-label #{__('Organizers')}
+    .fg-line
+      users-autocomplete-input(
+        mutable-users='$ctrl.query.advanced.organizers', 
+        on-adding-user='$ctrl.onAddingUser', 
+        should-include-self='true', 
+        placeholder='Enter one or more organizers'
+      )
+
+  .form-group.flex-form-group.full-width
+    .field-name.field-label #{__('Attendees')}
+    .fg-line
+      users-autocomplete-input(
+        mutable-users='$ctrl.query.advanced.attendees', 
+        on-adding-user='$ctrl.onAddingUser', 
+        should-include-self='true', 
+        placeholder='Enter one or more attendees'
+      )
