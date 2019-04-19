@@ -114,8 +114,8 @@ describe('The calendar search Module', function() {
     });
   });
 
-  describe('The searchEvents function', function() {
-    it('should call search.searchDocuments with right parameters using default parameters for unset ones', function() {
+  describe('The searchEventsBasic function', function() {
+    it('should call elasticsearch.searchDocuments with right parameters using default parameters for unset ones', function() {
       const query = {
         search: 'Bruce',
         offset: 10,
@@ -130,7 +130,7 @@ describe('The calendar search Module', function() {
 
       defaultSort[searchConstants.DEFAULT_SORT_KEY] = { order: searchConstants.DEFAULT_SORT_ORDER };
 
-      getModule().searchEvents(query);
+      getModule().searchEventsBasic(query);
       expect(deps.elasticsearch.searchDocuments).to.have.been.calledWith(sinon.match({
         index: 'events.idx',
         type: 'events',
@@ -157,7 +157,7 @@ describe('The calendar search Module', function() {
 
       defaultSort[searchConstants.DEFAULT_SORT_KEY] = { order: searchConstants.DEFAULT_SORT_ORDER };
 
-      getModule().searchEvents(query);
+      getModule().searchEventsBasic(query);
       expect(deps.elasticsearch.searchDocuments).to.have.been.calledWith(sinon.match({
         index: 'events.idx',
         type: 'events',
@@ -169,7 +169,7 @@ describe('The calendar search Module', function() {
       }));
     });
 
-    it('should call search.searchDocuments with right parameters', function() {
+    it('should call elasticsearch.searchDocuments with right parameters', function() {
       const query = {
         search: 'Bruce',
         offset: 10,
@@ -181,7 +181,7 @@ describe('The calendar search Module', function() {
 
       deps.elasticsearch.searchDocuments = sinon.spy();
 
-      getModule().searchEvents(query);
+      getModule().searchEventsBasic(query);
       expect(deps.elasticsearch.searchDocuments).to.have.been.calledWith(sinon.match({
         index: 'events.idx',
         type: 'events',
@@ -207,7 +207,7 @@ describe('The calendar search Module', function() {
         return callback(new Error());
       };
 
-      getModule().searchEvents(query, this.helpers.callbacks.error(done));
+      getModule().searchEventsBasic(query, this.helpers.callbacks.error(done));
     });
 
     it('should send back result when search.searchDocuments is successful', function(done) {
@@ -227,7 +227,7 @@ describe('The calendar search Module', function() {
         }
       });
 
-      getModule().searchEvents(query, function(err, result) {
+      getModule().searchEventsBasic(query, function(err, result) {
         expect(err).to.not.exist;
         expect(result.total_count).to.equal(total);
         expect(result.list).to.deep.equal(hits);
@@ -237,7 +237,7 @@ describe('The calendar search Module', function() {
   });
 
   describe('The searchNextEvent function', function() {
-    it('should call search.searchDocuments with right parameters', function() {
+    it('should call elasticsearch.searchDocuments with right parameters', function() {
       deps.elasticsearch.searchDocuments = sinon.spy();
 
       getModule().searchNextEvent({ id: 'userId' });

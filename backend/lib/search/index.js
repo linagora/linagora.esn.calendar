@@ -13,7 +13,7 @@ module.exports = dependencies => {
     indexEvent,
     listen,
     removeEventFromIndex,
-    searchEvents,
+    searchEventsBasic,
     searchNextEvent
   };
 
@@ -42,24 +42,85 @@ module.exports = dependencies => {
   }
 
   function searchNextEvent(user, callback) {
-    return _searchEvents({
+    const mustOccur = {
       range: {
         start: {
           gt: 'now'
         }
       }
-    }, {
+    };
+
+    const query = {
       limit: 1,
       sortKey: 'start',
       sortOrder: 'asc',
       userId: user.id
-    }, callback);
+    };
+
+    const filterOccur = _getBasicSearchFilters(query);
+
+    return _searchEventsFromElasticsearch({ query, mustOccur, filterOccur }, callback);
   }
 
-  function searchEvents(query, callback) {
-    const terms = query.search;
+  function searchEventsBasic(query, callback) {
+    const mustOccur = _getMultiMatchQuery(query.search);
+    const filterOccur = _getBasicSearchFilters(query);
 
-    return _searchEvents({
+    return _searchEventsFromElasticsearch({ query, mustOccur, filterOccur }, callback);
+  }
+
+  function _searchEventsFromElasticsearch({ query, mustOccur, filterOccur }, callback) {
+    const offset = query.offset || 0;
+    const limit = 'limit' in query ? query.limit : SEARCH.DEFAULT_LIMIT;
+    const sortKey = query.sortKey || SEARCH.DEFAULT_SORT_KEY;
+    const sortOrder = query.sortOrder || SEARCH.DEFAULT_SORT_ORDER;
+    const sort = {};
+
+    sort[sortKey] = {
+      order: sortOrder
+    };
+
+    const esQuery = {
+      query: {
+        bool: {
+          must: mustOccur
+        }
+      },
+      sort
+    };
+
+    if (filterOccur) {
+      esQuery.query.bool.filter = filterOccur;
+    }
+
+    logger.debug('Searching events with options', {
+      userId: query.userId,
+      esQuery,
+      offset,
+      limit,
+      sort
+    });
+
+    elasticsearch.searchDocuments({
+      index: SEARCH.INDEX_NAME,
+      type: SEARCH.TYPE_NAME,
+      from: offset,
+      size: limit,
+      body: esQuery
+    }, (err, result) => {
+      if (err) {
+        return callback(err);
+      }
+
+      callback(null, {
+        total_count: result.hits.total,
+        list: result.hits.hits
+      });
+    });
+  }
+
+  function _getMultiMatchQuery(terms) {
+    return {
       multi_match: {
         query: terms,
         type: 'cross_fields',
@@ -74,75 +135,29 @@ module.exports = dependencies => {
         operator: 'and',
         tie_breaker: 0.5
       }
-    }, query, callback);
+    };
   }
 
-  function _searchEvents(esQuery, query, callback) {
-    const offset = query.offset || 0;
-    const limit = 'limit' in query ? query.limit : SEARCH.DEFAULT_LIMIT;
-    const sortKey = query.sortKey || SEARCH.DEFAULT_SORT_KEY;
-    const sortOrder = query.sortOrder || SEARCH.DEFAULT_SORT_ORDER;
+  function _getBasicSearchFilters({ userId, calendarId }) {
     const filters = [];
-    const sort = {};
 
-    sort[sortKey] = {
-      order: sortOrder
-    };
-
-    const elasticsearchQuery = {
-      query: {
-        bool: {
-          must: esQuery
-        }
-      },
-      sort: sort
-    };
-
-    if (query.calendarId) {
+    if (calendarId) {
       filters.push({
         term: {
-          calendarId: query.calendarId
+          calendarId
         }
       });
     }
 
-    if (query.userId) {
+    if (userId) {
       filters.push({
         term: {
-          userId: query.userId.toString()
+          userId
         }
       });
     }
 
-    if (filters.length) {
-      elasticsearchQuery.query.bool.filter = filters;
-    }
-
-    logger.debug('Searching events with options', {
-      userId: query.userId.toString(),
-      calendarId: query.calendarId,
-      esQuery,
-      offset,
-      limit,
-      sort
-    });
-
-    elasticsearch.searchDocuments({
-      index: SEARCH.INDEX_NAME,
-      type: SEARCH.TYPE_NAME,
-      from: offset,
-      size: limit,
-      body: elasticsearchQuery
-    }, (err, result) => {
-      if (err) {
-        return callback(err);
-      }
-
-      callback(null, {
-        total_count: result.hits.total,
-        list: result.hits.hits
-      });
-    });
+    return filters;
   }
 
   function listen() {

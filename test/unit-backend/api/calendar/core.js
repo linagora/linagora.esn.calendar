@@ -328,7 +328,7 @@ describe('The calendar core module', function() {
         sortKey: 'date',
         sortOrder: 'desc'
       };
-      searchLibMock.searchEvents = function(q, callback) {
+      searchLibMock.searchEventsBasic = function(q, callback) {
         expect(q).to.deep.equal(query);
         return callback(new Error());
       };
@@ -352,7 +352,7 @@ describe('The calendar core module', function() {
         ]
       };
 
-      searchLibMock.searchEvents = function(q, callback) {
+      searchLibMock.searchEventsBasic = function(q, callback) {
         expect(q).to.deep.equal(query);
 
         return callback(null, esResult);
