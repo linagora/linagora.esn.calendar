@@ -17,7 +17,7 @@ module.exports = dependencies => {
     dispatchEvent,
     sendInvitation,
     changeParticipation,
-    searchEvents
+    searchEventsBasic
   };
 
   function dispatchEvent(req, res) {
@@ -171,7 +171,7 @@ module.exports = dependencies => {
     tryUpdateParticipation(url, ESNToken, res, req);
   }
 
-  function searchEvents(req, res) {
+  function searchEventsBasic(req, res) {
     const query = {
       search: req.query.query,
       limit: req.query.limit,
