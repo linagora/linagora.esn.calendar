@@ -1,6 +1,6 @@
 {
   "name": "linagora.esn.calendar",
-  "version": "1.4.7-dev",
+  "version": "0.10.0",
   "description": "Calendar",
   "main": "index.js",
   "scripts": {
