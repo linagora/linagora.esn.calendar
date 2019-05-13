@@ -605,5 +605,11 @@
       'vi',
       'zh-cn',
       'zh-tw'
-    ]});
+    ]})
+
+    .constant('CAL_ADVANCED_SEARCH_CALENDAR_TYPES', {
+      ALL_CALENDARS: 'allCalendars',
+      MY_CALENDARS: 'myCalendars',
+      SHARED_CALENDARS: 'sharedCalendars'
+    });
 })();

@@ -22,7 +22,8 @@
 
     return {
       listEvents: listEvents,
-      searchEvents: searchEvents,
+      searchEventsBasic: searchEventsBasic,
+      searchEventsAdvanced: searchEventsAdvanced,
       getEventByUID: getEventByUID,
       listCalendars: listCalendars,
       getCalendar: getCalendar,
@@ -65,15 +66,15 @@
 
     /**
      * Query a calendar, searching for indexed events depending on the query. The dav:calendar resources will include their dav:item resources.
-     * @method searchEvents
+     * @method searchEventsBasic
      * @param  {[type]} userId         The user id.
      * @param  {[type]} calendarId     The calendar id.
      * @param  {[type]} options        The query parameters {query: '', limit: 20, offset: 0}
      * @return {Object}                An array of dav:item items.
      */
-    function searchEvents(userId, calendarId, options) {
+    function searchEventsBasic(userId, calendarId, options) {
       var query = {
-        query: options.query,
+        query: options.query.text,
         limit: options.limit,
         offset: options.offset,
         sortKey: options.sortKey,
@@ -81,6 +82,60 @@
       };
 
       return calendarRestangular.one(userId).one(calendarId).one('events.json').get(query).then(davResponseHandler('dav:item'));
+    }
+
+    /**
+     * Search for indexed events depending on the advanced search options. The dav:calendar resources will include their dav:item resources.
+     * @method searchEventsAdvanced
+     * @param {Object} options the search options
+     * @param {[CalendarCollectionShell]} options.calendars the array of CalendarCollectionShell to search in
+     * @param {number} options.offset the starting position to search from
+     * @param {number} options.limit the maximum number of events to be returned
+     * @param {Object} options.query the search query options
+     * @param {Object} options.query.advanced the advanced search options
+     * @param {string} options.query.advanced.contains the string to be found in the events' properties
+     * @param {Array} [options.query.advanced.organizers] the array of organizers to search with
+     * @param {Array} [options.query.advanced.attendees] the array of attendees to search with
+     * @return {Object} an array of dav:item items
+     */
+    function searchEventsAdvanced(options) {
+      var calendars = options.calendars.map(function(calendar) {
+        if (calendar.source) {
+          return {
+            userId: calendar.source.calendarHomeId,
+            calendarId: calendar.source.id
+          };
+        }
+
+        return {
+          userId: calendar.calendarHomeId,
+          calendarId: calendar.id
+        };
+      });
+
+      var requestBody = {
+        calendars: calendars,
+        query: options.query.advanced.contains || '',
+        offset: options.offset,
+        limit: options.limit
+      };
+
+      if (options.query.advanced.organizers) {
+        requestBody.organizers = options.query.advanced.organizers.map(function(organizer) {
+          return organizer.email;
+        });
+      }
+
+      if (options.query.advanced.attendees) {
+        requestBody.attendees = options.query.advanced.attendees.map(function(attendee) {
+          return attendee.email;
+        });
+      }
+
+      return calendarRestangular.one('events').one('search').customPOST(requestBody, undefined, {
+        offset: options.offset,
+        limit: options.limit
+      }).then(davResponseHandler('dav:item'));
     }
 
     /**

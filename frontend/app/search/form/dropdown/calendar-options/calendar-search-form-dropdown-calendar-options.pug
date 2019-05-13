@@ -1,0 +1,9 @@
+md-option.calendar-dropdown-option(
+  ng-repeat='calendar in $ctrl.calendarList', 
+  ng-value='calendar.id', 
+)
+  .calendar-dropdown-item
+    .calendar-dropdown-icon
+      i.mdi.mdi-circle(ng-style="::{'color': calendar.color}")
+    .calendar-dropdown-info
+      span {{ ::calendar.name }}

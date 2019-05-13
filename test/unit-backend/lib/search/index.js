@@ -114,8 +114,8 @@ describe('The calendar search Module', function() {
     });
   });
 
-  describe('The searchEvents function', function() {
-    it('should call search.searchDocuments with right parameters using default parameters for unset ones', function() {
+  describe('The searchEventsBasic function', function() {
+    it('should call elasticsearch.searchDocuments with right parameters using default parameters for unset ones', function() {
       const query = {
         search: 'Bruce',
         offset: 10,
@@ -130,7 +130,7 @@ describe('The calendar search Module', function() {
 
       defaultSort[searchConstants.DEFAULT_SORT_KEY] = { order: searchConstants.DEFAULT_SORT_ORDER };
 
-      getModule().searchEvents(query);
+      getModule().searchEventsBasic(query);
       expect(deps.elasticsearch.searchDocuments).to.have.been.calledWith(sinon.match({
         index: 'events.idx',
         type: 'events',
@@ -157,7 +157,7 @@ describe('The calendar search Module', function() {
 
       defaultSort[searchConstants.DEFAULT_SORT_KEY] = { order: searchConstants.DEFAULT_SORT_ORDER };
 
-      getModule().searchEvents(query);
+      getModule().searchEventsBasic(query);
       expect(deps.elasticsearch.searchDocuments).to.have.been.calledWith(sinon.match({
         index: 'events.idx',
         type: 'events',
@@ -169,7 +169,7 @@ describe('The calendar search Module', function() {
       }));
     });
 
-    it('should call search.searchDocuments with right parameters', function() {
+    it('should call elasticsearch.searchDocuments with right parameters', function() {
       const query = {
         search: 'Bruce',
         offset: 10,
@@ -181,7 +181,7 @@ describe('The calendar search Module', function() {
 
       deps.elasticsearch.searchDocuments = sinon.spy();
 
-      getModule().searchEvents(query);
+      getModule().searchEventsBasic(query);
       expect(deps.elasticsearch.searchDocuments).to.have.been.calledWith(sinon.match({
         index: 'events.idx',
         type: 'events',
@@ -207,7 +207,7 @@ describe('The calendar search Module', function() {
         return callback(new Error());
       };
 
-      getModule().searchEvents(query, this.helpers.callbacks.error(done));
+      getModule().searchEventsBasic(query, this.helpers.callbacks.error(done));
     });
 
     it('should send back result when search.searchDocuments is successful', function(done) {
@@ -227,7 +227,7 @@ describe('The calendar search Module', function() {
         }
       });
 
-      getModule().searchEvents(query, function(err, result) {
+      getModule().searchEventsBasic(query, function(err, result) {
         expect(err).to.not.exist;
         expect(result.total_count).to.equal(total);
         expect(result.list).to.deep.equal(hits);
@@ -237,7 +237,7 @@ describe('The calendar search Module', function() {
   });
 
   describe('The searchNextEvent function', function() {
-    it('should call search.searchDocuments with right parameters', function() {
+    it('should call elasticsearch.searchDocuments with right parameters', function() {
       deps.elasticsearch.searchDocuments = sinon.spy();
 
       getModule().searchNextEvent({ id: 'userId' });
@@ -267,6 +267,144 @@ describe('The calendar search Module', function() {
           }
         }
       });
+    });
+  });
+
+  describe('The searchEventsAdvanced function', function() {
+    var advancedQuery;
+
+    beforeEach(function() {
+      advancedQuery = {
+        calendars: [
+          { userId: 'userId1', calendarId: 'userId1' },
+          { userId: 'userId1', calendarId: 'calId1' },
+          { userId: 'userId2', calendarId: 'calId2' }
+        ],
+        search: 'king',
+        offset: 0,
+        limit: 30
+      };
+    });
+
+    it('should call elasticsearch.searchDocuments with correct basic parameters', function() {
+      deps.elasticsearch.searchDocuments = sinon.spy();
+
+      const module = require('../../../../backend/lib/search')(dependencies);
+      const searchConstants = require('../../../../backend/lib/constants').SEARCH;
+      const defaultSort = {};
+
+      defaultSort[searchConstants.DEFAULT_SORT_KEY] = { order: searchConstants.DEFAULT_SORT_ORDER };
+
+      module.searchEventsAdvanced(advancedQuery);
+
+      expect(deps.elasticsearch.searchDocuments).to.have.been.calledWith(sinon.match({
+        index: 'events.idx',
+        type: 'events',
+        from: advancedQuery.offset,
+        size: advancedQuery.limit,
+        body: {
+          sort: defaultSort
+        }
+      }));
+    });
+
+    it('should call elasticsearch.searchDocuments with correct calendars option', function() {
+      deps.elasticsearch.searchDocuments = sinon.spy();
+
+      const module = require('../../../../backend/lib/search')(dependencies);
+
+      module.searchEventsAdvanced(advancedQuery);
+
+      expect(deps.elasticsearch.searchDocuments).to.have.been.calledWith(sinon.match(parameters => {
+        expect(parameters.body.query.bool.filter).to.contain({
+          terms: {
+            calendarId: advancedQuery.calendars.map(calendar => calendar.calendarId)
+          }
+        });
+
+        return true;
+      }));
+    });
+
+    it('should call elasticsearch.searchDocuments with correct parameters including organizers option', function() {
+      deps.elasticsearch.searchDocuments = sinon.spy();
+
+      const module = require('../../../../backend/lib/search')(dependencies);
+
+      advancedQuery.organizers = ['user1997@open-paas.org', 'user0@open-paas.org'];
+
+      module.searchEventsAdvanced(advancedQuery);
+
+      expect(deps.elasticsearch.searchDocuments).to.have.been.calledWith(sinon.match(parameters => {
+        expect(parameters.body.query.bool.filter).to.contain(
+          {
+            terms: {
+              'organizer.email.full': advancedQuery.organizers
+            }
+          }
+        );
+
+        return true;
+      }));
+    });
+
+    it('should call elasticsearch.searchDocuments with correct parameters including attendees option', function() {
+      deps.elasticsearch.searchDocuments = sinon.spy();
+
+      const module = require('../../../../backend/lib/search')(dependencies);
+
+      advancedQuery.attendees = ['user1@open-paas.org', 'user2@open-paas.org'];
+
+      module.searchEventsAdvanced(advancedQuery);
+
+      expect(deps.elasticsearch.searchDocuments).to.have.been.calledWith(sinon.match(parameters => {
+        expect(parameters.body.query.bool.must).to.include(
+          {
+            terms: {
+              'attendees.email.full': advancedQuery.attendees
+            }
+          }
+        );
+
+        return true;
+      }));
+    });
+
+    it('should send back result when elasticsearch.searchDocuments is successful', function(done) {
+      const total = 2;
+      const hits = [{ _id: 1 }, { _id: 2 }];
+
+      deps.elasticsearch.searchDocuments = function(options, callback) {
+        return callback(null, {
+          hits: {
+            total,
+            hits
+          }
+        });
+      };
+
+      const module = require('../../../../backend/lib/search')(dependencies);
+
+      module.searchEventsAdvanced(advancedQuery).then(result => {
+        expect(result.total_count).to.equal(total);
+        expect(result.list).to.deep.equal(hits);
+        done();
+      }).catch(done);
+    });
+
+    it('should send back error when elasticsearch.searchDocuments fails', function(done) {
+      deps.elasticsearch.searchDocuments = function(options, callback) {
+        return callback(new Error());
+      };
+
+      const module = require('../../../../backend/lib/search')(dependencies);
+
+      module.searchEventsAdvanced(advancedQuery)
+        .then(() => done(new Error('should not occur')))
+        .catch(err => {
+          expect(err).to.exist;
+          done();
+        });
     });
   });
 });

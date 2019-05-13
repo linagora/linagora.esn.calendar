@@ -1,6 +1,7 @@
 'use strict';
 
 const async = require('async');
+const Q = require('q');
 const getEventUidFromElasticsearchId = require('../../../lib/search/denormalize').getEventUidFromElasticsearchId;
 
 module.exports = dependencies => {
@@ -17,7 +18,8 @@ module.exports = dependencies => {
 
   return {
     dispatch,
-    searchEvents
+    searchEventsBasic,
+    searchEventsAdvanced
   };
 
   /**
@@ -159,33 +161,39 @@ module.exports = dependencies => {
     });
   }
 
-  function searchEvents(query, callback) {
-    searchModule.searchEvents(query, (err, esResult) => {
-      if (err) {
-        return callback(err);
-      }
+  function searchEventsBasic(query) {
+    return Q.ninvoke(searchModule, 'searchEventsBasic', query)
+      .then(esResult => _handleElasSeachResults(esResult, query));
+  }
 
-      const output = {
-        total_count: esResult.total_count,
-        results: []
-      };
+  function searchEventsAdvanced(query) {
+    return searchModule.searchEventsAdvanced(query)
+      .then(esResult => _handleElasSeachResults(esResult, query));
+  }
 
-      if (!esResult.list || esResult.list.length === 0) {
-        return callback(null, output);
-      }
+  function _handleElasSeachResults(esResult, query) {
+    const output = {
+      total_count: esResult.total_count,
+      results: []
+    };
 
-      const paths = esResult.list.map(event => caldavClient.getEventPath(query.userId, query.calendarId, getEventUidFromElasticsearchId(event._id)));
+    if (!esResult.list || esResult.list.length === 0) {
+      return output;
+    }
 
-      caldavClient.getMultipleEventsFromPaths(query.userId, paths)
-        .then(events => events.map(({ ical, etag, path }, index) => {
+    const paths = esResult.list.map(event => caldavClient.getEventPath(event._source.userId, event._source.calendarId, getEventUidFromElasticsearchId(event._id)));
+
+    return caldavClient.getMultipleEventsFromPaths(query.userId, paths)
+      .then(events => {
+        events.map(({ ical, etag, path }, index) => {
           output.results[index] = {
             path,
             event: ical,
             etag
           };
-        }))
-        .then(() => callback(null, output))
-        .catch(err => callback(err));
-    });
+        });
+
+        return output;
+      });
   }
 };
