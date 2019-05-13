@@ -498,10 +498,10 @@ describe('The calendar module apis', function() {
 
     describe('The searchEventsAdvanced request', function() {
       it('should have a correct request body and return an array of events', function(done) {
-        this.$httpBackend.expectPOST('/calendar/api/calendars/search').respond(davItemsResponse(davItems));
+        this.$httpBackend.expectPOST('/calendar/api/calendars/events/search?limit=30&offset=0').respond(davItemsResponse(davItems));
 
         this.calendarRestangular.addRequestInterceptor(function(requestBody) {
-          expect(requestBody).to.deep.equal({
+          expect(requestBody).to.shallowDeepEqual({
             calendars: [
               { userId: 'userId0', calendarId: 'userId0' },
               { userId: 'userId0', calendarId: 'calendarId1' },
