@@ -254,7 +254,7 @@ describe('The Calendar events search API', function() {
           return done(err);
         }
 
-        const req = requestAsMember(request(this.app).post('/api/calendars/search'));
+        const req = requestAsMember(request(this.app).post('/api/calendars/events/search'));
 
         req.send(requestBody);
         req.expect(400, done);
