@@ -1,6 +1,6 @@
 'use strict';
 
-/* global chai, sinon: false */
+/* global chai, sinon: false, _: false */
 
 var expect = chai.expect;
 
@@ -12,7 +12,8 @@ describe('The calendarService service', function() {
     CalendarRightShellResult,
     calendarApiOptions,
     listCalendars,
-    calendarsCacheMock;
+    calendarsCacheMock,
+    userUtilsMock;
 
   beforeEach(function() {
     self = this;
@@ -33,6 +34,9 @@ describe('The calendarService service', function() {
       get: sinon.stub(),
       set: sinon.stub()
     };
+    userUtilsMock = {
+      displayNameOf: sinon.stub()
+    };
 
     CalendarRightShellResult = {};
     CalendarRightShellMock = sinon.stub().returns(CalendarRightShellResult);
@@ -42,6 +46,7 @@ describe('The calendarService service', function() {
       $provide.value('CalendarCollectionShell', CalendarCollectionShellMock);
       $provide.value('CalendarRightShell', CalendarRightShellMock);
       $provide.value('calendarsCache', calendarsCacheMock);
+      $provide.value('userUtils', userUtilsMock);
     });
   });
 
@@ -964,6 +969,114 @@ describe('The calendarService service', function() {
 
           done();
         }, done);
+
+      this.$rootScope.$digest();
+    });
+  });
+
+  describe('The getOwnerDisplayName fn', function() {
+    var owner = {
+      name: 'User1'
+    };
+    var calendar;
+
+    beforeEach(function() {
+      calendar = {
+        id: 'calendar1',
+        getOwner: sinon.stub()
+      };
+
+      calendar.getOwner.returns($q.resolve(owner));
+    });
+
+    it('should call the getOwner function of the provided calendar and return its owner name, and should not call userUtils service if it is a resource', function(done) {
+      calendar.isResource = function() { return true; };
+
+      this.calendarService.getOwnerDisplayName(calendar).then(function(ownerDisplayName) {
+        expect(calendar.getOwner).to.have.been.calledOnce;
+        expect(ownerDisplayName).to.equal(owner.name);
+        expect(userUtilsMock.displayNameOf).to.have.not.been.called;
+
+        done();
+      }).catch(function() { done(new Error('should not happen')); });
+
+      this.$rootScope.$digest();
+    });
+
+    it('should call the getOwner function of the provided calendar and return its owner name, and call userUtils service if it is not a resource', function(done) {
+      calendar.isResource = function() { return false; };
+      userUtilsMock.displayNameOf.returns($q.resolve(owner.name));
+
+      this.calendarService.getOwnerDisplayName(calendar).then(function(ownerDisplayName) {
+        expect(calendar.getOwner).to.have.been.calledOnce;
+        expect(ownerDisplayName).to.equal(owner.name);
+        expect(userUtilsMock.displayNameOf).to.have.been.calledWith(owner);
+
+        done();
+      }).catch(function() { done(new Error('should not happen')); });
+
+      this.$rootScope.$digest();
+    });
+  });
+
+  describe('The injectCalendarsWithOwnerName fn', function() {
+    var owner = {
+      name: 'User1'
+    };
+    var calendars = [{ id: 'calendar1' }, { id: 'calendar2' }, { id: 'calendar3' }];
+
+    it('should call the getOwnerDisplayName function as many times as the number of the provided calendars and return the equivalent calendars with their owner names injected', function(done) {
+      var getOwnerDisplayNameCallCount = 0;
+
+      calendars.forEach(function(calendar) {
+        calendar.getOwner = sinon.spy(function() {
+          getOwnerDisplayNameCallCount++;
+
+          return $q.resolve(owner);
+        });
+        calendar.isResource = function() { return true; };
+      });
+
+      this.calendarService.injectCalendarsWithOwnerName(calendars).then(function(calendarsWithOwnerName) {
+        expect(getOwnerDisplayNameCallCount).to.equal(calendars.length);
+        expect(calendarsWithOwnerName).to.deep.equal(calendars.map(function(calendar) {
+          return _.assign({}, calendar, { ownerDisplayName: owner.name });
+        }));
+
+        done();
+      }).catch(function() { done(new Error('should not happen')); });
+
+      this.$rootScope.$digest();
+    });
+
+    it('should call the getOwnerDisplayName function as many times as the number of the provided calendars and return the calendar(s) without their owner names injected if the request(s) fail', function(done) {
+      var getOwnerDisplayNameCallCount = 0;
+
+      calendars.forEach(function(calendar) {
+        calendar.getOwner = sinon.spy(function() {
+          getOwnerDisplayNameCallCount++;
+
+          if (calendar.id === calendars[1].id) {
+            return $q.reject('Request to get the calendar\'s owner has failed!');
+          }
+
+          return $q.resolve(owner);
+        });
+        calendar.isResource = function() { return true; };
+      });
+
+      this.calendarService.injectCalendarsWithOwnerName(calendars).then(function(calendarsWithOwnerName) {
+        expect(getOwnerDisplayNameCallCount).to.equal(calendars.length);
+        expect(calendarsWithOwnerName).to.deep.equal(calendars.map(function(calendar) {
+          if (calendar.id === calendars[1].id) {
+            return calendar;
+          }
+
+          return _.assign({}, calendar, { ownerDisplayName: owner.name });
+        }));
+
+        done();
+      }).catch(function() { done(new Error('should not happen')); });
 
       this.$rootScope.$digest();
     });

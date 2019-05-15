@@ -22,31 +22,25 @@ event-search-form {
   }
 }
 
-md-content {
-  .calendar-dropdown-option {
-    &:first-of-type {
-      margin-top: 0;
-    }
-
-    &:last-of-type {
-      margin-bottom: 0;
-    }
-  }
-}
-
-md-select-menu {
-  md-divider {
-    border-top: 1px solid rgba(0, 0, 0, 0.12);
-    display: block;
-    margin: 8px 0;
-  }
+.calendar-dropdown-option-divider {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  margin: 8px 0;
 }
 
 .calendar-dropdown-item {
   display: flex;
 
   .calendar-dropdown-icon {
-    margin-right: 5px;
+    display: flex;
+    align-items: center;
+    margin-right: 8px;
+    font-size: 1.5em;
+  }
+
+  .calendar-dropdown-info {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
   }
 }
 
@@ -54,9 +48,27 @@ md-select-menu {
   width: 100%;
 }
 
-.calendar-dropdown-option {
-  padding: 16px 16px;
-  margin: 4px 0;
+.calendar-dropdown-option.with-owner-name {
+  min-height: 46px;
+  height: 46px;
+  
+  .calendar-dropdown-info {
+    display: flex;
+    flex-direction: column;
+    line-height: normal;
+
+    .owner-display-name {
+      color: @secondaryTextColor;
+      font-size: 12px;
+      margin-top: 3px;
+    }
+  }
+}
+
+.md-select-value {
+  .owner-display-name {
+    display: none;
+  }
 }
 
 @media (min-width: @screen-md-min) {

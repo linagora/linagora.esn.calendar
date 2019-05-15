@@ -27,13 +27,21 @@
     }
 
     function _fetchCalendars() {
-      return calendarService.listPersonalAndAcceptedDelegationCalendars(session.user._id).then(function(calendars) {
+      calendarService.listPersonalAndAcceptedDelegationCalendars(session.user._id).then(function(calendars) {
         var categorizedCalendars = userAndExternalCalendars(calendars);
 
         self.calendars = {
           myCalendars: categorizedCalendars.userCalendars,
           sharedCalendars: (categorizedCalendars.publicCalendars || []).concat(categorizedCalendars.sharedCalendars || [])
         };
+
+        if (self.calendars.sharedCalendars.length === 0) {
+          return;
+        }
+
+        calendarService.injectCalendarsWithOwnerName(self.calendars.sharedCalendars).then(function(sharedCalendars) {
+          self.calendars = _.assign({}, self.calendars, { sharedCalendars: sharedCalendars });
+        });
       });
     }
   }

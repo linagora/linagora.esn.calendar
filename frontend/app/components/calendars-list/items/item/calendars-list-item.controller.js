@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .controller('CalendarsListItemController', CalendarsListItemController);
 
-  function CalendarsListItemController($log, CAL_RESOURCE, calResourceService, userUtils) {
+  function CalendarsListItemController($log, CAL_RESOURCE, calResourceService, calendarService) {
     var self = this;
 
     self.$onInit = $onInit;
@@ -20,7 +20,7 @@
         return;
       }
 
-      return getOwnerDisplayName().then(function(ownerDisplayName) {
+      return calendarService.getOwnerDisplayName(self.calendar).then(function(ownerDisplayName) {
         self.details = ownerDisplayName;
       });
     }
@@ -35,16 +35,6 @@
         .catch(function(err) {
           $log.error(err);
         });
-    }
-
-    function getOwnerDisplayName() {
-      return self.calendar.getOwner().then(function(owner) {
-        if (self.calendar.isResource()) {
-          return owner.name;
-        }
-
-        return userUtils.displayNameOf(owner);
-      });
     }
   }
 })(angular);
