@@ -120,7 +120,8 @@ describe('The calendar search Module', function() {
         search: 'Bruce',
         offset: 10,
         limit: 100,
-        userId: new ObjectId()
+        userId: new ObjectId().toString(),
+        calendarId: new ObjectId().toString()
       };
 
       deps.elasticsearch.searchDocuments = sinon.spy();
@@ -137,7 +138,16 @@ describe('The calendar search Module', function() {
         from: query.offset,
         size: query.limit,
         body: {
-          sort: defaultSort
+          sort: defaultSort,
+          query: {
+            bool: {
+              filter: {
+                term: {
+                  calendarId: query.calendarId
+                }
+              }
+            }
+          }
         }
       }));
     });
@@ -147,7 +157,8 @@ describe('The calendar search Module', function() {
         search: 'Bruce',
         offset: 10,
         limit: 0,
-        userId: new ObjectId()
+        userId: new ObjectId().toString(),
+        calendarId: new ObjectId().toString()
       };
 
       deps.elasticsearch.searchDocuments = sinon.spy();
@@ -164,7 +175,16 @@ describe('The calendar search Module', function() {
         from: query.offset,
         size: 0,
         body: {
-          sort: defaultSort
+          sort: defaultSort,
+          query: {
+            bool: {
+              filter: {
+                term: {
+                  calendarId: query.calendarId
+                }
+              }
+            }
+          }
         }
       }));
     });
@@ -176,7 +196,8 @@ describe('The calendar search Module', function() {
         limit: 100,
         sortKey: 'sortKey',
         sortOrder: 'sortOrder',
-        userId: new ObjectId()
+        userId: new ObjectId().toString(),
+        calendarId: new ObjectId().toString()
       };
 
       deps.elasticsearch.searchDocuments = sinon.spy();
@@ -190,6 +211,15 @@ describe('The calendar search Module', function() {
         body: {
           sort: {
             sortKey: { order: 'sortOrder' }
+          },
+          query: {
+            bool: {
+              filter: {
+                term: {
+                  calendarId: query.calendarId
+                }
+              }
+            }
           }
         }
       }));
@@ -215,7 +245,8 @@ describe('The calendar search Module', function() {
         search: 'Bruce',
         offset: 10,
         limit: 100,
-        userId: new ObjectId()
+        userId: new ObjectId().toString(),
+        calendarId: new ObjectId().toString()
       };
       const total = 10;
       const hits = [{_id: 1}, {_id: 2}];
@@ -255,7 +286,7 @@ describe('The calendar search Module', function() {
           },
           query: {
             bool: {
-              filter: [{ term: { userId: 'userId' } }],
+              filter: { term: { userId: 'userId' } },
               must: {
                 range: {
                   start: {

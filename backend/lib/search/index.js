@@ -58,14 +58,14 @@ module.exports = dependencies => {
       userId: user.id
     };
 
-    const filterOccur = _getBasicSearchFilters(query);
+    const filterOccur = _getNextEventSearchFilter(query);
 
     return _searchEventsFromElasticsearch({ query, mustOccur, filterOccur }, callback);
   }
 
   function searchEventsBasic(query, callback) {
     const mustOccur = _getMultiMatchQuery(query.search);
-    const filterOccur = _getBasicSearchFilters(query);
+    const filterOccur = _getBasicSearchFilter(query);
 
     return _searchEventsFromElasticsearch({ query, mustOccur, filterOccur }, callback);
   }
@@ -160,26 +160,20 @@ module.exports = dependencies => {
     };
   }
 
-  function _getBasicSearchFilters({ userId, calendarId }) {
-    const filters = [];
+  function _getBasicSearchFilter({ calendarId }) {
+    return {
+      term: {
+        calendarId
+      }
+    };
+  }
 
-    if (calendarId) {
-      filters.push({
-        term: {
-          calendarId
-        }
-      });
-    }
-
-    if (userId) {
-      filters.push({
-        term: {
-          userId
-        }
-      });
-    }
-
-    return filters;
+  function _getNextEventSearchFilter({ userId }) {
+    return {
+      term: {
+        userId
+      }
+    };
   }
 
   function _getAdvancedSearchFilters(query) {
