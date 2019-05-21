@@ -5,13 +5,13 @@
 var expect = chai.expect;
 
 describe('The CalendarsListItemController controller', function() {
-  var $controller, $rootScope, $httpBackend, userUtils, CAL_RESOURCE;
+  var $controller, $rootScope, $httpBackend, calendarService, CAL_RESOURCE;
   var calendar, displayName, resource;
 
   beforeEach(function() {
     displayName = 'The user display name';
-    userUtils = {
-      displayNameOf: sinon.stub()
+    calendarService = {
+      getOwnerDisplayName: sinon.stub()
     };
     resource = {
       name: 'home',
@@ -22,7 +22,6 @@ describe('The CalendarsListItemController controller', function() {
         calendarHomeId: '1',
         description: 'The calendar source description'
       },
-      getOwner: sinon.stub(),
       isResource: sinon.stub()
     };
 
@@ -30,7 +29,7 @@ describe('The CalendarsListItemController controller', function() {
     angular.mock.module('esn.calendar');
 
     angular.mock.module(function($provide) {
-      $provide.value('userUtils', userUtils);
+      $provide.value('calendarService', calendarService);
     });
 
     angular.mock.inject(function(_$controller_, _$rootScope_, _$httpBackend_, _CAL_RESOURCE_) {
@@ -46,34 +45,29 @@ describe('The CalendarsListItemController controller', function() {
   }
 
   describe('The $onInit function', function() {
-    it('should set the ctrl.details property when ctrl.showDetails is truely', function() {
-      var owner = {_id: 1};
+    it('should set the ctrl.details property when ctrl.showDetails is truthy', function() {
       var controller = initController();
 
       calendar.isResource.returns(false);
-      calendar.getOwner.returns($q.when(owner));
-      userUtils.displayNameOf.returns(displayName);
+      calendarService.getOwnerDisplayName.returns($q.resolve(displayName));
       controller.showDetails = true;
       controller.calendar = calendar;
       controller.$onInit();
       $rootScope.$digest();
 
-      expect(calendar.getOwner).to.have.been.calledOnce;
-      expect(userUtils.displayNameOf).to.have.been.calledWith(owner);
+      expect(calendarService.getOwnerDisplayName).to.have.been.calledWith(calendar);
       expect(controller.details).to.equal(displayName);
     });
 
     it('should not set the ctrl.details property when ctrl.showDetails is falsy', function() {
       var controller = initController();
 
-      calendar.getOwner.returns($q.when());
-      userUtils.displayNameOf.returns(displayName);
+      calendarService.getOwnerDisplayName.returns($q.resolve(displayName));
       controller.calendar = calendar;
       controller.$onInit();
       $rootScope.$digest();
 
-      expect(calendar.getOwner).to.not.have.been.called;
-      expect(userUtils.displayNameOf).to.not.have.been.called;
+      expect(calendarService.getOwnerDisplayName).to.have.not.been.called;
       expect(controller.details).to.not.be.defined;
     });
 
@@ -84,8 +78,7 @@ describe('The CalendarsListItemController controller', function() {
         $httpBackend.expectGET('/linagora.esn.resource/api/resources/' + calendar.source.calendarHomeId).respond(resource);
 
         calendar.isResource.returns(true);
-        calendar.getOwner.returns($q.when(resource));
-        userUtils.displayNameOf.returns(displayName);
+        calendarService.getOwnerDisplayName.returns($q.resolve(resource.name));
         controller.showDetails = true;
         controller.calendar = calendar;
 
@@ -93,8 +86,7 @@ describe('The CalendarsListItemController controller', function() {
         $httpBackend.flush();
         $rootScope.$digest();
 
-        expect(calendar.getOwner).to.have.been.calledWith;
-        expect(userUtils.displayNameOf).to.not.have.been.called;
+        expect(calendarService.getOwnerDisplayName).to.have.been.called;
         expect(controller.details).to.equal(resource.name);
       });
     });

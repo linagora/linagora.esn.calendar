@@ -13,7 +13,8 @@
     CalendarCollectionShell,
     CAL_EVENTS,
     CalendarRightShell,
-    calendarsCache
+    calendarsCache,
+    userUtils
   ) {
     var defaultCalendarApiOptions = { withRights: true };
 
@@ -36,6 +37,8 @@
     this.updateAndEmit = updateAndEmit;
     this.updateInviteStatus = updateInviteStatus;
     this.updateSubscription = updateSubscription;
+    this.injectCalendarsWithOwnerName = injectCalendarsWithOwnerName;
+    this.getOwnerDisplayName = getOwnerDisplayName;
     ////////////
 
     /**
@@ -297,6 +300,38 @@
 
           return calendar;
         });
+    }
+
+    /**
+     * Inject the owner name of each of the provided calendars into its "ownerDisplayName" property.
+     * @param {[CalendarCollectionShell]} calendars the array of calendars that need to be injected with their owner names
+     * @return {Promise<[CalendarCollectionShell]>} a Promise that resolves to the equivalent calendars with their owner names injected
+     */
+    function injectCalendarsWithOwnerName(calendars) {
+      return $q.all(calendars.map(function(calendar) {
+        return getOwnerDisplayName(calendar)
+          .then(function(ownerDisplayName) {
+            return _.assign({}, calendar, { ownerDisplayName: ownerDisplayName });
+          })
+          .catch(function() {
+            return calendar;
+          });
+      }));
+    }
+
+    /**
+     * Get the owner display name of a calendar
+     * @param {CalendarCollectionShell} calendar the calendar whose owner name needs to be extracted
+     * @return {Promise<string>} a Promise that resolves to the owner name of the provided calendar
+     */
+    function getOwnerDisplayName(calendar) {
+      return calendar.getOwner().then(function(owner) {
+        if (calendar.isResource()) {
+          return owner.name;
+        }
+
+        return userUtils.displayNameOf(owner);
+      });
     }
   }
 })();
