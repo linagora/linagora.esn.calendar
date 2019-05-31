@@ -2,9 +2,9 @@
   .col-xs-12
     .form-group
       .input-group
-        span.input-group-addon
-          i.mdi.mdi-account-multiple-plus(ng-show='ctrl.showIcon && !ctrl.showResourceIcon')
-          i.mdi.mdi-monitor-multiple(ng-show='ctrl.showIcon && ctrl.showResourceIcon')
+        span.input-group-addon(ng-show='ctrl.showIcon')
+          i.mdi.mdi-account-multiple-plus(ng-show='!ctrl.showResourceIcon')
+          i.mdi.mdi-monitor-multiple(ng-show='ctrl.showResourceIcon')
         .fg-line
           tags-input.form-control(
             ng-model='ctrl.mutableEntities',

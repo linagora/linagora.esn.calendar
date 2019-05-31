@@ -388,7 +388,7 @@ describe('The calSearchEventProviderService service', function() {
       $rootScope.$digest();
     });
 
-    it('should keep only needed properties from user objects', function(done) {
+    it('should keep only needed properties from entity objects', function(done) {
       query.advanced.organizers = [mockUsers[0]];
       query.advanced.attendees = mockUsers;
 
@@ -401,19 +401,16 @@ describe('The calSearchEventProviderService service', function() {
               contains: 'king',
               organizers: [
                 {
-                  id: '1',
                   email: 'user1@mail.com',
                   displayName: 'User1'
                 }
               ],
               attendees: [
                 {
-                  id: '1',
                   email: 'user1@mail.com',
                   displayName: 'User1'
                 },
                 {
-                  id: '2',
                   email: 'user2@mail.com',
                   displayName: 'User2'
                 }

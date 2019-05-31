@@ -3,15 +3,11 @@
 
   angular.module('esn.calendar').controller('EventSearchFormController', EventSearchFormController);
 
-  function EventSearchFormController(_, session, calendarService, userAndExternalCalendars, CAL_ADVANCED_SEARCH_CALENDAR_TYPES) {
+  function EventSearchFormController(_, session, calendarService, userAndExternalCalendars, CAL_ADVANCED_SEARCH_CALENDAR_TYPES, CAL_ATTENDEE_OBJECT_TYPE) {
     var self = this;
 
     self.$onInit = $onInit;
-    self.onAddingUser = onAddingUser;
-
-    function onAddingUser($tag) {
-      return !!$tag._id;
-    }
+    self.availableAttendeeObjectTypes = [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.group, CAL_ATTENDEE_OBJECT_TYPE.contact];
 
     function $onInit() {
       var defaultAdvancedQuery = {

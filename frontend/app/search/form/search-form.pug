@@ -11,20 +11,16 @@ fieldset
 
   .form-group.flex-form-group.full-width
     .field-name.field-label #{__('Organizers')}
-    .fg-line
-      users-autocomplete-input(
-        mutable-users='$ctrl.query.advanced.organizers', 
-        on-adding-user='$ctrl.onAddingUser', 
-        should-include-self='true', 
-        placeholder='Enter one or more organizers'
-      )
+    cal-entities-autocomplete-input(
+      types='::$ctrl.availableAttendeeObjectTypes',
+      mutable-entities='$ctrl.query.advanced.organizers',
+      place-holder="Enter one or more organizers",
+    )
 
   .form-group.flex-form-group.full-width
     .field-name.field-label #{__('Attendees')}
-    .fg-line
-      users-autocomplete-input(
-        mutable-users='$ctrl.query.advanced.attendees', 
-        on-adding-user='$ctrl.onAddingUser', 
-        should-include-self='true', 
-        placeholder='Enter one or more attendees'
-      )
+    cal-entities-autocomplete-input(
+      types='::$ctrl.availableAttendeeObjectTypes',
+      mutable-entities='$ctrl.query.advanced.attendees',
+      place-holder="Enter one or more attendees",
+    )
