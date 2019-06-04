@@ -193,7 +193,7 @@
       }
 
       function canPerformCall() {
-        return !$scope.restActive;
+        return !(($scope.form && $scope.form.$invalid) || $scope.restActive);
       }
 
       function cacheAttendees() {

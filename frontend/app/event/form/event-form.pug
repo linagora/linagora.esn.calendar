@@ -1,7 +1,7 @@
 //- NOTE: When adding form controls that should change the event in this form,
 //-       be sure to add them to the CAL_EVENT_MODIFY_COMPARE_KEYS constant, to
 //-       make sure they are checked during modification.
-form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canModifyEvent}", ng-submit='submit()')
+form.event-form(role="form", name="form", aria-hidden="true", ng-class="{ 'readonly': !canModifyEvent}", ng-submit='submit()')
   .modal-dialog
     .modal-content
       .modal-header
@@ -52,6 +52,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
             exclude-current-user='excludeCurrentUserFromSuggestedAttendees',
             ng-hide='!canModifyEventAttendees',
             types='[CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.group, CAL_ATTENDEE_OBJECT_TYPE.contact]',
+            input-type="email"
             original-entities='attendees.users',
             mutable-entities='newAttendees',
             place-holder="Attendees",
@@ -62,6 +63,7 @@ form.event-form(role="form", aria-hidden="true", ng-class="{ 'readonly': !canMod
           cal-entities-autocomplete-input(
             ng-hide='!canModifyEventAttendees',
             types='[CAL_ATTENDEE_OBJECT_TYPE.resource]',
+            input-type="text"
             original-entities='attendees.resources',
             mutable-entities='newResources',
             place-holder="Resources",
