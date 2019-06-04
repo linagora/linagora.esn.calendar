@@ -569,7 +569,7 @@ describe('The calendarService service', function() {
       this.$httpBackend.flush();
     });
 
-    it('should call the calendarAPI.removeCalendar with right params', function() {
+    it('should call the calendarAPI.getCalendar with right params', function() {
       this.calendarAPI.getCalendar = sinon.spy(function() {
         return $q.when();
       });
@@ -577,6 +577,15 @@ describe('The calendarService service', function() {
       this.calendarService.getCalendar('homeId', 'id', true);
 
       expect(this.calendarAPI.getCalendar).to.be.calledWith('homeId', 'id', calendarApiOptions);
+    });
+
+    it('should call the calendarAPI.getCalendar when there is no cached calendar', function() {
+      this.calendarAPI.getCalendar = sinon.stub().returns($q.when());
+
+      this.calendarService.getCalendar('homeId', 'id', false);
+
+      expect(calendarsCacheMock.get).to.have.been.calledWith('homeId', 'id');
+      expect(this.calendarAPI.getCalendar).to.have.been.calledWith('homeId', 'id', calendarApiOptions);
     });
   });
 
