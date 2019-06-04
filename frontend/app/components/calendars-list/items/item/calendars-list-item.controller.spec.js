@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('The CalendarsListItemController controller', function() {
-  var $controller, $rootScope, $httpBackend, calendarService, CAL_RESOURCE;
+  var $controller, $rootScope, $httpBackend, calendarService, ESN_RESOURCE;
   var calendar, displayName, resource;
 
   beforeEach(function() {
@@ -32,11 +32,11 @@ describe('The CalendarsListItemController controller', function() {
       $provide.value('calendarService', calendarService);
     });
 
-    angular.mock.inject(function(_$controller_, _$rootScope_, _$httpBackend_, _CAL_RESOURCE_) {
+    angular.mock.inject(function(_$controller_, _$rootScope_, _$httpBackend_, _ESN_RESOURCE_) {
       $controller = _$controller_;
       $rootScope = _$rootScope_;
       $httpBackend = _$httpBackend_;
-      CAL_RESOURCE = _CAL_RESOURCE_;
+      ESN_RESOURCE = _ESN_RESOURCE_;
     });
   });
 
@@ -102,7 +102,7 @@ describe('The CalendarsListItemController controller', function() {
       $httpBackend.flush();
       $rootScope.$digest();
 
-      expect(controller.resourceIcon).to.be.equal(CAL_RESOURCE.ICONS[resource.icon]);
+      expect(controller.resourceIcon).to.be.equal(ESN_RESOURCE.ICONS[resource.icon]);
     });
 
     it('should set default calendar resource icon when calendar of a resource without icon', function() {
@@ -118,7 +118,7 @@ describe('The CalendarsListItemController controller', function() {
       $httpBackend.flush();
       $rootScope.$digest();
 
-      expect(controller.resourceIcon).to.be.equal(CAL_RESOURCE.DEFAULT_ICON);
+      expect(controller.resourceIcon).to.be.equal(ESN_RESOURCE.DEFAULT_ICON);
     });
   });
 });

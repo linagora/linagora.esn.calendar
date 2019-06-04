@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('The calResourceService service', function() {
-  var calResourceService, $httpBackend, CAL_RESOURCE, resourceId, eventId;
+  var calResourceService, $httpBackend, ESN_RESOURCE, resourceId, eventId;
 
   beforeEach(function() {
     resourceId = '1';
@@ -18,10 +18,10 @@ describe('The calResourceService service', function() {
   });
 
   beforeEach(function() {
-    angular.mock.inject(function(_$httpBackend_, _calResourceService_, _CAL_RESOURCE_) {
+    angular.mock.inject(function(_$httpBackend_, _calResourceService_, _ESN_RESOURCE_) {
       $httpBackend = _$httpBackend_;
       calResourceService = _calResourceService_;
-      CAL_RESOURCE = _CAL_RESOURCE_;
+      ESN_RESOURCE = _ESN_RESOURCE_;
     });
   });
 
@@ -63,7 +63,7 @@ describe('The calResourceService service', function() {
       $httpBackend.expectGET('/linagora.esn.resource/api/resources/' + resourceId).respond(resource);
 
       calResourceService.getResourceIcon(resourceId).then(function(icon) {
-        expect(icon).to.equal(CAL_RESOURCE.ICONS[resource.icon]);
+        expect(icon).to.equal(ESN_RESOURCE.ICONS[resource.icon]);
         done();
       });
 
@@ -78,7 +78,7 @@ describe('The calResourceService service', function() {
       $httpBackend.expectGET('/linagora.esn.resource/api/resources/' + resourceId).respond(resource);
 
       calResourceService.getResourceIcon(resourceId).then(function(icon) {
-        expect(icon).to.equal(CAL_RESOURCE.DEFAULT_ICON);
+        expect(icon).to.equal(ESN_RESOURCE.DEFAULT_ICON);
         done();
       });
 

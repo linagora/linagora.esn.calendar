@@ -7,7 +7,7 @@
   function calResourceService(
     calendarResourceRestangular,
     esnResourceAPIClient,
-    CAL_RESOURCE,
+    ESN_RESOURCE,
     Restangular
   ) {
     return {
@@ -33,7 +33,7 @@
 
     function getResourceIcon(id) {
       return getResource(id).then(function(resource) {
-        return resource.icon ? CAL_RESOURCE.ICONS[resource.icon] : CAL_RESOURCE.DEFAULT_ICON;
+        return resource.icon ? ESN_RESOURCE.ICONS[resource.icon] : ESN_RESOURCE.DEFAULT_ICON;
       });
     }
   }
