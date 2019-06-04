@@ -13,7 +13,7 @@
             placeholder='{{ctrl.placeHolder | esnI18n}}',
             on-tag-adding='ctrl.onAddingEntity($tag)',
             replace-spaces-with-dashes='false',
-            type='email',
+            type='{{::ctrl.inputType}}',
             on-tag-added='ctrl.onEntityAdded($tag)',
             on-tag-removed='ctrl.onEntityRemoved($tag)',
             template='{{ctrl.template || "/calendar/app/components/entities-autocomplete-input/entities-autocomplete-input-tag.html"}}',
