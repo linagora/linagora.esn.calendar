@@ -200,8 +200,11 @@ module.exports = function(grunt) {
   grunt.registerTask('linters-dev', 'Check changed files for lint', ['prepare-quick-lint', 'eslint:quick', 'lint_pattern:quick']);
   grunt.registerTask('test-midway-backend', ['splitfiles:midway']);
   grunt.registerTask('test-unit-backend', 'Test backend code', ['mochacli:backend']);
-  grunt.registerTask('test-unit-frontend', 'Test frontend code', ['karma:unit']);
-  grunt.registerTask('test', ['linters', 'test-unit-frontend', 'test-unit-backend', 'test-midway-backend']);
+  grunt.registerTask('test-frontend', 'Test frontend code', ['karma:unit']);
+
+  grunt.registerTask('swagger-generate', 'Grunt plugin for swagger generate', ['swagger_generate']);
+
+  grunt.registerTask('test', ['linters', 'test-frontend', 'test-unit-backend', 'test-midway-backend']);
   grunt.registerTask('default', ['test']);
   grunt.registerTask('swagger-generate', 'Grunt plugin for swagger generate', ['swagger_generate']);
 };

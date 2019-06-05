@@ -32,26 +32,6 @@ stages:
     refs:
       - tags@linagora/lgs/openpaas/linagora.esn.calendar
 
-.test-template-svc: &test-template-svc
-  <<: *test-template
-  services:
-    - name: elasticsearch:6.3.2
-      alias: elasticsearch
-    - name: mongo:3.2.0
-      alias: mongo
-    - name: redis:latest
-      alias: redis
-    - name: rabbitmq:3.6.5-management
-      alias: rabbitmq
-  variables:
-    MONGO_HOST: mongo
-    MONGO_PORT: 27017
-    AMQP_HOST: rabbitmq
-    AMQP_PORT: 5672
-    ELASTICSEARCH_HOST : elasticsearch
-    ELASTICSEARCH_PORT: 9200
-    REDIS_HOST: redis
-    REDIS_PORT: 6379
 
 prepare:
   image: node:10-stretch
@@ -113,7 +93,25 @@ test_unit_backtend:
 ####### tests with services requirements
 
 test_midway_backtend:
-  <<: *test-template-svc
+  <<: *test-template
+  services:
+    - name: elasticsearch:2.4 
+      alias: elasticsearch
+    - name: mongo:3.2.0
+      alias: mongo
+    - name: redis:latest
+      alias: redis
+    - name: rabbitmq:3.6.5-management
+      alias: rabbitmq
+  variables:
+    MONGO_HOST: mongo
+    MONGO_PORT: 27017
+    AMQP_HOST: rabbitmq
+    AMQP_PORT: 5672
+    ELASTICSEARCH_HOST : elasticsearch
+    ELASTICSEARCH_PORT: 9200
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
   script:
     - grunt -v --chunk=1 test-midway-backend
 
@@ -124,7 +122,7 @@ swagger:
     - grunt swagger-generate
   artifacts:
     paths:
-      - ./doc/REST_API/swagger/unifiedinbox-swagger.json
+      - ./doc/REST_API/swagger/calendar-swagger.json
 
 deploy-swagger:
   stage: deploy
@@ -138,8 +136,8 @@ deploy-swagger:
   only:
     - master@linagora/lgs/openpaas/linagora.esn.calendar
   script:
-    - perl -i -pe's/"host":"localhost:8080"/"schemes":["https"],"host":"demo.open-paas.org"/' ./doc/REST_API/swagger/unifiedinbox-swagger.json
-    - cp ./doc/REST_API/swagger/unifiedinbox-swagger.json /var/www/html
+    - perl -i -pe's/"host":"localhost:8080"/"schemes":["https"],"host":"demo.open-paas.org"/' ./doc/REST_API/swagger/calendar-swagger.json
+    - cp ./doc/REST_API/swagger/calendar-swagger.json /var/www/html
 
 deploy_dev:
   stage: deploy

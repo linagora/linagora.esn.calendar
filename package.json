@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "grunt test",
-    "test-unit-frontend": "grunt test-unit-frontend",
+    "test-frontend": "grunt test-frontend",
     "postinstall": "bower install --production --allow-root"
   },
   "author": "Linagora folks <dev@linagora.com>",
