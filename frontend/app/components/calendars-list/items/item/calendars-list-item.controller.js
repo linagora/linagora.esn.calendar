@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .controller('CalendarsListItemController', CalendarsListItemController);
 
-  function CalendarsListItemController($log, CAL_RESOURCE, calResourceService, calendarService) {
+  function CalendarsListItemController($log, ESN_RESOURCE, calResourceService, calendarService) {
     var self = this;
 
     self.$onInit = $onInit;
@@ -26,7 +26,7 @@
     }
 
     function initResourceIcon() {
-      self.resourceIcon = CAL_RESOURCE.DEFAULT_ICON;
+      self.resourceIcon = ESN_RESOURCE.DEFAULT_ICON;
 
       return calResourceService.getResourceIcon(self.calendar.source.calendarHomeId)
         .then(function(resourceIcon) {
