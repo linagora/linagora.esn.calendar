@@ -1,32 +1,148 @@
-image: node:10-stretch
-
 stages:
+  - prepare
+  - linters
   - test
-  - deploy_dev
+  - swagger
+  - deploy
   - release
 
-test:
+.cache-tpl: &cache-tpl
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - node_modules
+    - frontend/components
+  policy: pull
+
+.test-template: &test-template
+  image: node:10-stretch
   stage: test
-  except:
-    - triggers
-  variables:
-    TZ: America/New_York
   tags:
     - docker
+  cache:
+    <<: *cache-tpl
+  variables:
+      TZ: "America/New_York"
+  before_script:
+    - npm install -g grunt-cli
+    - 'echo "INFO: NB node packages : $(ls node_modules | wc -l)"'
+    - 'echo "INFO: NB bower packages : $(ls frontend/components | wc -l)"'
+  except:
+    variables:
+      - $SKIP_TESTS
+    refs:
+      - tags@linagora/lgs/openpaas/linagora.esn.calendar
+
+.test-template-svc: &test-template-svc
+  <<: *test-template
   services:
-    - mongo:3.4
-    - elasticsearch:2.4
-    - redis:3
-    - rabbitmq:3.6
-    - linagora/esn-sabre:latest
+    - name: elasticsearch:6.3.2
+      alias: elasticsearch
+    - name: mongo:3.2.0
+      alias: mongo
+    - name: redis:latest
+      alias: redis
+    - name: rabbitmq:3.6.5-management
+      alias: rabbitmq
+  variables:
+    MONGO_HOST: mongo
+    MONGO_PORT: 27017
+    AMQP_HOST: rabbitmq
+    AMQP_PORT: 5672
+    ELASTICSEARCH_HOST : elasticsearch
+    ELASTICSEARCH_PORT: 9200
+    REDIS_HOST: redis
+    REDIS_PORT: 6379
+
+prepare:
+  image: node:10-stretch
+  stage: prepare
+  tags:
+    - docker
+  cache:
+    <<: *cache-tpl
+    policy: pull-push
   script:
-    - npm i
-    - npm update
-    - ./node_modules/bower/bin/bower i --allow-root
-    - ./node_modules/grunt/bin/grunt
+    - npm install
+    # Weird behaviour: at the time, npm postinstall was not called.
+    - ./node_modules/.bin/bower install --allow-root
+    - 'echo "INFO: NB node packages : $(ls node_modules | wc -l)"'
+    - 'echo "INFO: NB bower packages : $(ls frontend/components | wc -l)"'
+  except:
+    variables:
+      - $SKIP_PREPARE
+
+linters:
+  <<: *test-template
+  stage: linters
+  script:
+    - grunt -v linters
+  except:
+    variables:
+      - $SKIP_LINTERS
+    refs:
+      - tags@linagora/lgs/openpaas/linagora.esn.calendar
+
+check_author:
+  image: docker-registry.linagora.com:5000/lgs-releases/gitlab-integrity-checks:latest
+  stage: linters
+  variables:
+    GIT_DEPTH: "1"
+  tags:
+    - docker-medium
+    - check-author
+  script:
+    - check_author.py check "$GITLAB_USER_EMAIL" "$GITLAB_USER_NAME" --no-accents
+  except:
+    refs:
+      - master@linagora/lgs/openpaas/linagora.esn.calendar
+      - tags@linagora/lgs/openpaas/linagora.esn.calendar
+      - /^release-.*/@linagora/lgs/openpaas/linagora.esn.calendar
+
+####### tests without services requirements
+test_frontend:
+  <<: *test-template 
+  image: docker-registry.linagora.com:5000/public-releases/openpaas-esn-test-helper:1.1.0
+  script:
+    - grunt -v test-frontend
+
+test_unit_backtend:
+  <<: *test-template
+  script:
+    - grunt -v --chunk=1 test-unit-backend
+
+####### tests with services requirements
+
+test_midway_backtend:
+  <<: *test-template-svc
+  script:
+    - grunt -v --chunk=1 test-midway-backend
+
+swagger:
+  <<: *test-template
+  stage: swagger
+  script:
+    - grunt swagger-generate
+  artifacts:
+    paths:
+      - ./doc/REST_API/swagger/unifiedinbox-swagger.json
+
+deploy-swagger:
+  stage: deploy
+  tags:
+    - deployment
+    - api.open-paas.org
+    - shell
+  environment:
+    name: api
+    url: https://api.open-paas.org
+  only:
+    - master@linagora/lgs/openpaas/linagora.esn.calendar
+  script:
+    - perl -i -pe's/"host":"localhost:8080"/"schemes":["https"],"host":"demo.open-paas.org"/' ./doc/REST_API/swagger/unifiedinbox-swagger.json
+    - cp ./doc/REST_API/swagger/unifiedinbox-swagger.json /var/www/html
 
 deploy_dev:
-  stage: deploy_dev
+  stage: deploy
   except:
     - triggers
   tags:
