@@ -20,6 +20,35 @@ event-search-form {
   md-select {
     margin: 2px 0;
   }
+
+  cal-entities-autocomplete-input {
+    width: 100%;
+
+    .form-group {
+      margin-bottom: 0;
+
+      .input-group {
+        width: 100%;
+
+        .fg-line {
+          padding: 0;
+
+          tags-input {
+            z-index: unset;
+          }
+
+          &:after {
+            left: 0;
+            right: 0;
+          }
+
+          &.fg-toggled:after {
+            width: 100%;
+          }
+        }
+      }
+    }
+  }
 }
 
 .calendar-dropdown-option-divider {

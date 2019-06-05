@@ -106,22 +106,21 @@
         },
         buildFetchContext: function(options) { return $q.resolve(options.query); },
         cleanQuery: function(query) {
-          function _getCleanedUserObjects(userObjects) {
-            return userObjects.map(function(userObject) {
+          function _getCleanedEntities(entities) {
+            return entities.map(function(entity) {
               return {
-                id: userObject.id,
-                email: userObject.email,
-                displayName: userObject.displayName
+                email: entity.email,
+                displayName: entity.displayName
               };
             });
           }
 
-          function _cleanUserFilter(userFilterKey) {
-            if (Array.isArray(query.advanced[userFilterKey]) && !query.advanced[userFilterKey].length) {
-              return delete query.advanced[userFilterKey];
+          function _cleanEntityFilter(entityFilterKey) {
+            if (Array.isArray(query.advanced[entityFilterKey]) && !query.advanced[entityFilterKey].length) {
+              return delete query.advanced[entityFilterKey];
             }
 
-            query.advanced[userFilterKey] = _getCleanedUserObjects(query.advanced[userFilterKey]);
+            query.advanced[entityFilterKey] = _getCleanedEntities(query.advanced[entityFilterKey]);
           }
 
           if (!query || !query.advanced) {
@@ -129,11 +128,11 @@
           }
 
           if (query.advanced.organizers) {
-            _cleanUserFilter('organizers');
+            _cleanEntityFilter('organizers');
           }
 
           if (query.advanced.attendees) {
-            _cleanUserFilter('attendees');
+            _cleanEntityFilter('attendees');
           }
 
           return query;
