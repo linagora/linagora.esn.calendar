@@ -27,7 +27,8 @@
     ////////////
 
     function canAccessEventDetails(calendar, event, userId) {
-      return !!calendar && !!event && (_isOrganizerAndOwner(calendar, event, userId) || (event.isPublic() && calendar.isReadable(userId)));
+      // If user is attendee or organizer of an event, event is on own user calendar
+      return !!calendar && !!event && (calendar.isOwner(userId) || (event.isPublic() && calendar.isReadable(userId)));
     }
 
     function canDeleteCalendar(calendar, userId) {
