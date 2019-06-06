@@ -37,7 +37,7 @@
       }
 
       return _.find(attendees, function(attendee) {
-        return _.contains(attendee.email, user.emails);
+        return _.contains(user.emails, attendee.email);
       });
     }
 
