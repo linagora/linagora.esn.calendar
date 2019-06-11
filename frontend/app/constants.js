@@ -387,7 +387,8 @@
           platform: true
         }
       },
-      disableable: true
+      disableable: true,
+      isDisplayedByDefault: true
     })
 
     .constant('CAL_WEBSOCKET', {
