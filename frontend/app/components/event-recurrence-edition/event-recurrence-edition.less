@@ -58,6 +58,7 @@
 
       label {
         margin-bottom: 12px;
+        min-height: 20px;
       }
 
       label:nth-child(2) {
@@ -73,6 +74,21 @@
       }
     }
 
+  }
+
+  .end-input-container {
+    top: -6px;
+
+    input {
+      .all-centered;
+
+      padding-top: 0;
+      min-height: 20px;
+
+      &.end-on-input {
+        opacity: 1;
+      }
+    }
   }
 }
 
