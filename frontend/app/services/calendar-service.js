@@ -39,6 +39,7 @@
     this.updateSubscription = updateSubscription;
     this.injectCalendarsWithOwnerName = injectCalendarsWithOwnerName;
     this.getOwnerDisplayName = getOwnerDisplayName;
+    this.getResourceDescription = getResourceDescription;
     ////////////
 
     /**
@@ -333,6 +334,17 @@
         }
 
         return userUtils.displayNameOf(owner);
+      });
+    }
+
+    /**
+     * Get the resource description of a calendar
+     * @param {CalendarCollectionShell} calendar the calendar whose resource description needs to be extracted
+     * @return {Promise<string>} a Promise that resolves to resource description of the provided calendar
+     */
+    function getResourceDescription(calendar) {
+      return calendar.getOwner().then(function(owner) {
+          return owner.description;
       });
     }
   }

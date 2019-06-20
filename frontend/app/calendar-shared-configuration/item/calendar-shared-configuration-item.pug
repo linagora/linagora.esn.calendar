@@ -6,8 +6,8 @@
       .name
         span {{::$ctrl.item.calendar.name}}
       .owner
-        span(ng-if="$ctrl.item.user.objectType !== 'resource'") {{::$ctrl.item.user.displayName}}
-        span(ng-if="$ctrl.item.user.objectType === 'resource'") {{::$ctrl.item.user.description}}
+        span.ellipsis(ng-if="$ctrl.item.user.objectType !== 'resource'") {{::$ctrl.item.user.displayName}}
+        span.ellipsis(ng-if="$ctrl.item.user.objectType === 'resource'") {{::$ctrl.item.user.description}}
   .rights
     cal-shared-rights-display(ng-if="$ctrl.item.type === 'public'", public="$ctrl.item.calendar.rights.getPublicRight()")
     cal-shared-rights-display(ng-if="$ctrl.item.type === 'delegation'", delegation="$ctrl.item.calendar.rights.getShareeRight($ctrl.user.id)")

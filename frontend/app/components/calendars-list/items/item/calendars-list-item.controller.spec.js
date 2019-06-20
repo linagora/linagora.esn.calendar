@@ -11,11 +11,13 @@ describe('The CalendarsListItemController controller', function() {
   beforeEach(function() {
     displayName = 'The user display name';
     calendarService = {
-      getOwnerDisplayName: sinon.stub()
+      getOwnerDisplayName: sinon.stub(),
+      getResourceDescription: sinon.stub()
     };
     resource = {
       name: 'home',
-      icon: 'the icon'
+      icon: 'the icon',
+      description: 'Description of the resource'
     };
     calendar = {
       source: {
@@ -78,7 +80,7 @@ describe('The CalendarsListItemController controller', function() {
         $httpBackend.expectGET('/linagora.esn.resource/api/resources/' + calendar.source.calendarHomeId).respond(resource);
 
         calendar.isResource.returns(true);
-        calendarService.getOwnerDisplayName.returns($q.resolve(resource.name));
+        calendarService.getResourceDescription.returns($q.resolve(resource.description));
         controller.showDetails = true;
         controller.calendar = calendar;
 
@@ -86,8 +88,8 @@ describe('The CalendarsListItemController controller', function() {
         $httpBackend.flush();
         $rootScope.$digest();
 
-        expect(calendarService.getOwnerDisplayName).to.have.been.called;
-        expect(controller.details).to.equal(resource.name);
+        expect(calendarService.getResourceDescription).to.have.been.called;
+        expect(controller.details).to.equal(resource.description);
       });
     });
 

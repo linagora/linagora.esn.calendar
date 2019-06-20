@@ -80,6 +80,12 @@
     function getPublicCalendarsForUser(user) {
       return calendarService.listPublicCalendars(user.id).then(function(calendars) {
           return calendars.map(function(calendar) {
+            if (calendar.type === 'resource') {
+              calendarService.getResourceDescription(calendar).then(function(resourceDescription) {
+                user.description = resourceDescription;
+              });
+            }
+
             return {
               user: user,
               calendar: calendar,
