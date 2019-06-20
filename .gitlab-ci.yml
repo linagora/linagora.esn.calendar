@@ -23,8 +23,6 @@ test:
     - npm i
     - npm update
     - ./node_modules/bower/bin/bower i --allow-root
-    - ln -s ${PWD}/node_modules/linagora.esn.resource node_modules/linagora-rse/node_modules/
-    - ln -s ${PWD}/node_modules/linagora.esn.dav.import node_modules/linagora-rse/node_modules/
     - ./node_modules/grunt/bin/grunt
 
 deploy_dev:
