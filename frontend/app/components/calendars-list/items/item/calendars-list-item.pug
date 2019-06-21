@@ -9,5 +9,5 @@
               span {{ $ctrl.calendar.name }}
             .details(ng-if="$ctrl.details")
               span.ellipsis {{ ::$ctrl.details }}
-      settings-overlay.hidden-xs.settings(ng-click="$event.stopImmediatePropagation(); hideAside();", ui-sref-active-eq="selected")
+      settings-overlay.settings(ng-click="$event.stopImmediatePropagation(); hideAside();", ui-sref-active-eq="selected")
         cal-calendars-list-item-configuration(calendar-id="$ctrl.calendar.uniqueId")
