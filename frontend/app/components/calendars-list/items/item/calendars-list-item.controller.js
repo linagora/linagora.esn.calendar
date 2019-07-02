@@ -20,6 +20,12 @@
         return;
       }
 
+      if (self.calendar.isResource()) {
+        return calendarService.getResourceDescription(self.calendar).then(function(resourceDescription) {
+          self.details = resourceDescription;
+        });
+      }
+
       return calendarService.getOwnerDisplayName(self.calendar).then(function(ownerDisplayName) {
         self.details = ownerDisplayName;
       });
