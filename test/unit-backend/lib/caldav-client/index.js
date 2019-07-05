@@ -4,8 +4,6 @@ const { expect } = require('chai'),
       moment = require('moment'),
       { parseString } = require('xml2js');
 
-const DEFAULT_CALENDAR_URI = 'events';
-
 describe('The caldav-client module', function() {
   let authMock, davServerMock, request, davEndpoint, userId, calendarId, eventId, token, jcal;
   let getModule;
@@ -404,7 +402,7 @@ describe('The caldav-client module', function() {
       mockery.registerMock('request', opts => {
         expect(opts).to.deep.equal({
           method: 'GET',
-          url: [davEndpoint, 'calendars', userId, DEFAULT_CALENDAR_URI, eventId + '.ics'].join('/'),
+          url: [davEndpoint, 'calendars', userId, userId, eventId + '.ics'].join('/'),
           headers: {
             ESNToken: token
           }
@@ -450,7 +448,7 @@ describe('The caldav-client module', function() {
       mockery.registerMock('request', opts => {
         expect(opts).to.deep.equal({
           method: 'PUT',
-          url: [davEndpoint, 'calendars', userId, DEFAULT_CALENDAR_URI, eventId + '.ics'].join('/'),
+          url: [davEndpoint, 'calendars', userId, userId, eventId + '.ics'].join('/'),
           json: true,
           headers: {
             ESNToken: token
@@ -492,7 +490,7 @@ describe('The caldav-client module', function() {
       mockery.registerMock('request', opts => {
         expect(opts).to.deep.equal({
           method: 'DELETE',
-          url: [davEndpoint, 'calendars', userId, DEFAULT_CALENDAR_URI, eventId + '.ics'].join('/'),
+          url: [davEndpoint, 'calendars', userId, userId, eventId + '.ics'].join('/'),
           headers: {
             ESNToken: token
           }
@@ -534,7 +532,7 @@ describe('The caldav-client module', function() {
       mockery.registerMock('request', opts => {
         expect(opts).to.shallowDeepEqual({
           method: 'PUT',
-          url: [davEndpoint, 'calendars', userId, DEFAULT_CALENDAR_URI, 'UUIDv4.ics'].join('/'),
+          url: [davEndpoint, 'calendars', userId, userId, 'UUIDv4.ics'].join('/'),
           json: true,
           headers: {
             ESNToken: token

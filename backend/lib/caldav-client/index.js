@@ -10,7 +10,6 @@ const { parseEventPath } = require('../helpers/event');
 
 const JSON_CONTENT_TYPE = 'application/json';
 const DEFAULT_CALENDAR_NAME = 'Events';
-const DEFAULT_CALENDAR_URI = 'events';
 
 module.exports = dependencies => {
   const logger = dependencies('logger');
@@ -193,7 +192,7 @@ module.exports = dependencies => {
   }
 
   function storeEventInDefaultCalendar(user, eventUid, event) {
-    return storeEvent(user, DEFAULT_CALENDAR_URI, eventUid, event);
+    return storeEvent(user, user.id, eventUid, event);
   }
 
   function storeEvent(user, calendarUri, eventUid, event) {
@@ -209,7 +208,7 @@ module.exports = dependencies => {
   }
 
   function deleteEventInDefaultCalendar(user, eventUid) {
-    return deleteEvent(user, DEFAULT_CALENDAR_URI, eventUid);
+    return deleteEvent(user, user.id, eventUid);
   }
 
   function deleteEvent(user, calendarUri, eventUid) {
@@ -251,7 +250,7 @@ module.exports = dependencies => {
   }
 
   function getEventInDefaultCalendar(user, eventUid) {
-    return getEvent(user.id, DEFAULT_CALENDAR_URI, eventUid).then(response => response.ical);
+    return getEvent(user.id, user.id, eventUid).then(response => response.ical);
   }
 
   function getEvent(userId, calendarUri, eventUid) {
