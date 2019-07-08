@@ -31,7 +31,7 @@ module.exports = dependencies => {
 
       return Q.allSettled(recipients.map(_send))
         .then(results => {
-          logger.debug('Email has been sent', results);
+          logger.debug('Email has been sent', JSON.stringify(results));
 
           return results;
         })
