@@ -8,15 +8,17 @@ module.exports = function(dependencies) {
   };
 
   function createWorker(handler) {
-    jobQueue.lib.workers.add({
+    jobQueue.lib.addWorker({
       name: getWorkerName(handler),
-      getWorkerFunction: () => alarm => handler.handle(alarm)
+      handler: {
+        handle: job => handler.handle(job.data.alarm),
+        getTitle: jobData => getUniqueJobName(jobData.alarm, handler)
+      }
     });
   }
 
   function enqueue(alarm, handler) {
-    // do not return the submitJob promise since it is only used to track completion of the job itself, not about the submission
-    jobQueue.lib.submitJob(getWorkerName(handler), getUniqueJobName(alarm, handler), alarm)
+    return jobQueue.lib.submitJob(getWorkerName(handler), { alarm })
       .then(() => logger.info(`calendar:alarm:job ${alarm._id}::${alarm.eventPath} - The alarm has been processed by handler ${handler.uniqueId}`))
       .catch(err => logger.error(`calendar:alarm:job ${alarm._id}::${alarm.eventPath} - The alarm processed by handler ${handler.uniqueId} failed`, err));
   }

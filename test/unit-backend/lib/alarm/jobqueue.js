@@ -1,7 +1,8 @@
-const {expect} = require('chai');
+const { expect } = require('chai');
 const sinon = require('sinon');
 
 describe('The alarm jobqueue', function() {
+  let getModule;
   let jobQueue, handler, uniqueId, action, alarm, id, eventPath;
 
   beforeEach(function() {
@@ -24,42 +25,59 @@ describe('The alarm jobqueue', function() {
 
     jobQueue = {
       lib: {
-        workers: {
-          add: sinon.spy()
-        },
+        addWorker: sinon.spy(),
         submitJob: sinon.stub().returns(Promise.resolve())
       }
     };
 
     this.moduleHelpers.addDep('jobqueue', jobQueue);
 
-    this.requireModule = () => require(this.calendarModulePath + '/backend/lib/alarm/jobqueue')(this.moduleHelpers.dependencies);
+    getModule = () => require(`${this.calendarModulePath}/backend/lib/alarm/jobqueue`)(this.moduleHelpers.dependencies);
   });
 
   describe('The createWorker function', function() {
     it('should add a new worker to the job queue', function() {
-      this.requireModule().createWorker(handler);
+      getModule().createWorker(handler);
 
-      expect(jobQueue.lib.workers.add).to.have.been.calledWith({
+      expect(jobQueue.lib.addWorker).to.have.been.calledWith({
         name: sinon.match.string,
-        getWorkerFunction: sinon.match.func
+        handler: {
+          handle: sinon.match.func,
+          getTitle: sinon.match.func
+        }
       });
 
-      jobQueue.lib.workers.add.firstCall.args[0].getWorkerFunction()(alarm);
+      jobQueue.lib.addWorker.firstCall.args[0].handler.handle({ data: { alarm } });
 
       expect(handler.handle).to.have.been.calledWith(alarm);
     });
   });
 
   describe('The enqueue function', function() {
-    it('submit a job in the jobqueue', function() {
-      this.requireModule().enqueue(alarm, handler);
+    it('should resolve if failed to submit a job in the jobqueue', function(done) {
+      jobQueue.lib.submitJob = sinon.stub().returns(Promise.reject());
 
-      expect(jobQueue.lib.submitJob).to.have.been.calledWith(
-        sinon.match(/linagora.esn.calendar::/),
-        sinon.match(/linagora.esn.calendar::/),
-        alarm
-      );
+      getModule().enqueue(alarm, handler)
+        .then(() => {
+          expect(jobQueue.lib.submitJob).to.have.been.calledWith(
+            sinon.match(/linagora.esn.calendar::/),
+            { alarm }
+          );
+          done();
+        })
+        .catch(err => done(err || 'should resolve'));
+    });
+
+    it('should resolve if success to submit a job in the jobqueue', function(done) {
+      getModule().enqueue(alarm, handler)
+        .then(() => {
+          expect(jobQueue.lib.submitJob).to.have.been.calledWith(
+            sinon.match(/linagora.esn.calendar::/),
+            { alarm }
+          );
+          done();
+        })
+        .catch(err => done(err || 'should resolve'));
     });
   });
 });
