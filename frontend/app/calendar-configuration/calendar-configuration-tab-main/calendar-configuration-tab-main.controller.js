@@ -13,6 +13,7 @@
     CalCalendarRightsUtilsService,
     CAL_CALENDAR_PUBLIC_RIGHT,
     CAL_CALENDAR_SHARED_RIGHT,
+    CAL_CALENDAR_TYPE,
     CAL_DAV_PATH,
     calPathBuilder,
     calUIAuthorizationService,
@@ -47,6 +48,7 @@
       self.canModifyPublicSelection = _canModifyPublicSelection();
       self.canExportIcs = canExportIcs();
       self.canDeleteCalendar = canDeleteCalendar();
+      self.isResource = self.calendar.type === CAL_CALENDAR_TYPE.RESOURCE;
 
       if (!self.newCalendar && self.calendar) {
         calCalDAVURLService.getCalendarURL(self.calendar).then(function(url) {

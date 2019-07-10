@@ -48,7 +48,8 @@ describe('The calendar configuration tab delegation controller', function() {
       isPublic: sinon.stub().returns(false),
       isSubscription: sinon.stub().returns(false),
       isReadable: sinon.stub().returns(true),
-      href: '/calendars/userid/id.json'
+      href: '/calendars/userid/id.json',
+      type: 'user'
     };
 
     calCalendarDeleteConfirmationModalService = sinon.spy();
@@ -255,6 +256,9 @@ describe('The calendar configuration tab delegation controller', function() {
     it('should return false for new calendars', function() {
       sinon.spy(calUIAuthorizationService, 'canExportCalendarIcs');
       CalendarConfigurationTabMainController.newCalendar = true;
+      CalendarConfigurationTabMainController.calendar = {
+        type: 'user'
+      };
 
       CalendarConfigurationTabMainController.$onInit();
 
@@ -291,6 +295,9 @@ describe('The calendar configuration tab delegation controller', function() {
     it('should return true for new calendars', function() {
       sinon.spy(calUIAuthorizationService, 'canModifyPublicSelection');
       CalendarConfigurationTabMainController.newCalendar = true;
+      CalendarConfigurationTabMainController.calendar = {
+        type: 'user'
+      };
 
       CalendarConfigurationTabMainController.$onInit();
 
@@ -440,6 +447,7 @@ describe('The calendar configuration tab delegation controller', function() {
 
     it('should call "getOwner" and set both of "sharedCalendarOwner" and "displayNameOfSharedCalendarOwner"', function() {
       var userUtilsResult = 'Firstname Lastname';
+
       sinon.stub(userUtils, 'displayNameOf', function() {
         return userUtilsResult;
       });

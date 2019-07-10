@@ -25,7 +25,7 @@
           select.form-control(ng-model='$ctrl.publicSelection', ng-disabled="!$ctrl.canModifyPublicSelection")
             option(ng-repeat="publicRight in ::$ctrl.publicRights" value="{{publicRight.value}}" ng-selected="publicRight.value === $ctrl.publicSelection") {{ publicRight.name | esnI18n}}
 
-  .calendar-shared-by(ng-if="$ctrl.sharedCalendarOwner")
+  .calendar-shared-by(ng-if="$ctrl.sharedCalendarOwner && !$ctrl.isResource")
     .public-access-line.public-access-visibility-line
       i.mdi.mdi-account-switch.big
       .public-access-line-visibility-key.col-xs-4
