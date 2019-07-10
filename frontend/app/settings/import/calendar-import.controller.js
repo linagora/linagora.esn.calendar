@@ -4,7 +4,15 @@
   angular.module('esn.calendar')
     .controller('CalCalendarImportController', CalCalendarImportController);
 
-  function CalCalendarImportController(asyncAction, davImportService, calendarService, calendarHomeService, calUIAuthorizationService, session) {
+  function CalCalendarImportController(
+    $window,
+    asyncAction,
+    davImportService,
+    calendarService,
+    calendarHomeService,
+    calUIAuthorizationService,
+    session
+  ) {
     var self = this;
 
     self.$onInit = $onInit;
@@ -40,6 +48,10 @@
       return calUIAuthorizationService.canImportCalendarIcs(calendar, session.user._id);
     }
 
+    function importFromFile() {
+      return davImportService.importFromFile(self.file, self.calendar.href);
+    }
+
     function submit() {
       var notificationMessages = {
         progressing: 'Submitting importing calendar request...',
@@ -47,10 +59,18 @@
         failure: 'Failed to submit request'
       };
 
-      asyncAction(notificationMessages, function() {
-        return davImportService.importFromFile(self.file, self.calendar.href);
-      });
+      var reloadOption = {
+        onSuccess: {
+          linkText: 'Reload',
+          action: function() { $window.location.reload(); }
+        }
+      };
 
+      asyncAction(
+        notificationMessages,
+        importFromFile,
+        reloadOption
+      );
     }
   }
 })(angular);
