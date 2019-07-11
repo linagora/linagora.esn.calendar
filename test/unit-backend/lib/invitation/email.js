@@ -50,9 +50,11 @@ describe('The invitation email module', function() {
 
     esnConfigMock = function(confName) {
       expect(confName).to.equal('language');
+
       return {
         inModule: function(mod) {
           expect(mod).to.equal('core');
+
           return {
             forUser: () => {}
           };
@@ -109,6 +111,8 @@ describe('The invitation email module', function() {
       'END:VEVENT',
       'END:VCALENDAR'
     ].join('\r\n');
+
+    const newEvent = true;
 
     describe('The inviteAttendees fn', function() {
       beforeEach(function() {
@@ -332,7 +336,7 @@ describe('The invitation email module', function() {
 
         this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
 
-        this.module.send(attendeeEditor, organizer.preferredEmail, method, ics, 'calendarURI').then(() => done(), done);
+        this.module.send(attendeeEditor, organizer.preferredEmail, method, ics, 'calendarURI', null, null, newEvent).then(() => done(), done);
       });
 
       it('should send HTML email with correct parameters', function(done) {
@@ -385,9 +389,8 @@ describe('The invitation email module', function() {
             }
           };
         };
-
         this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send(organizer, attendeeEmail, method, ics, 'calendarURI').then(() => done(), done);
+        this.module.send(organizer, attendeeEmail, method, ics, 'calendarURI', null, null, newEvent).then(() => done(), done);
       });
 
       it('should not include calendar link when attendee is external user', function(done) {
@@ -438,7 +441,7 @@ describe('The invitation email module', function() {
         };
 
         this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send(organizer, attendeeEmail, method, ics, 'calendarURI').then(() => done(), done);
+        this.module.send(organizer, attendeeEmail, method, ics, 'calendarURI', null, null, newEvent).then(() => done(), done);
       });
     });
 
@@ -450,7 +453,7 @@ describe('The invitation email module', function() {
         this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
       });
 
-      it('should send email with new event subject and template if sequence is 0', function(done) {
+      it('should send email with new event subject and template if it\'s a new event for the attendee', function(done) {
         const ics = fs.readFileSync(__dirname + '/../../fixtures/request-new-event.ics', 'utf-8');
 
         userMock.findByEmail = function(email, callback) {
@@ -469,11 +472,12 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module.send(organizer, attendeeEmail, method, ics, 'calendarURI').then(() => done(), done);
+        this.module.send(organizer, attendeeEmail, method, ics, 'calendarURI', null, null, newEvent).then(() => done(), done);
       });
 
-      it('should send HTML email with event update subject and template if sequence > 0', function(done) {
+      it('should send HTML email with event update subject and template if the guest existed in the updated event', function(done) {
         const ics = fs.readFileSync(__dirname + '/../../fixtures/request-event-update.ics', 'utf-8');
+        const newEvent = false;
 
         userMock.findByEmail = function(email, callback) {
           return callback(null, attendee1);
@@ -491,7 +495,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module.send(organizer, attendeeEmail, method, ics, 'calendarURI').then(() => done(), done);
+        this.module.send(organizer, attendeeEmail, method, ics, 'calendarURI', null, null, newEvent).then(() => done(), done);
       });
     });
 

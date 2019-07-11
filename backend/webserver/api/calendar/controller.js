@@ -52,7 +52,7 @@ module.exports = dependencies => {
   }
 
   function sendInvitation(req, res) {
-    const {email, notify, method, event, calendarURI, eventPath} = req.body;
+    const {email, notify, method, event, calendarURI, eventPath, newEvent} = req.body;
 
     if (!email) {
       return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'The "emails" array is required and must contain at least one element'}});
@@ -76,7 +76,7 @@ module.exports = dependencies => {
 
     const notificationPromise = notify ? invitation.email.send : () => Promise.resolve();
 
-    notificationPromise(req.user, email, method, event, calendarURI, eventPath, req.domain)
+    notificationPromise(req.user, email, method, event, calendarURI, eventPath, req.domain, newEvent)
       .then(() => res.status(200).end())
       .catch(err => {
         logger.error('Error when trying to send invitations to attendees', err);
