@@ -10,6 +10,7 @@
     calBusinessHoursService,
     esnDatetimeService,
     esnUserConfigurationService,
+    moment,
     _,
     CAL_UI_CONFIG,
     CAL_USER_CONFIGURATION,
@@ -25,6 +26,7 @@
     var service = {
       configureLocaleForCalendar: configureLocaleForCalendar,
       configureTimeFormatForCalendar: configureTimeFormatForCalendar,
+      configureTimeZoneForCalendar: configureTimeZoneForCalendar,
       get: get,
       isDeclinedEventsHidden: isDeclinedEventsHidden,
       setHiddenDeclinedEvents: setHiddenDeclinedEvents
@@ -56,7 +58,8 @@
           return uiConfig;
         })
         .then(configureLocaleForCalendar)
-        .then(configureTimeFormatForCalendar);
+        .then(configureTimeFormatForCalendar)
+        .then(configureTimeZoneForCalendar);
     }
 
     function _workingDays() {
@@ -102,6 +105,17 @@
 
       uiConfig.calendar.timeFormat = timeFormat;
       uiConfig.calendar.slotLabelFormat = timeFormat;
+
+      return uiConfig;
+    }
+
+    function configureTimeZoneForCalendar(config) {
+      var uiConfig = angular.extend({}, config);
+      var timeZone = esnDatetimeService.getTimeZone();
+
+      uiConfig.calendar.now = function() {
+        return moment().tz(timeZone);
+      };
 
       return uiConfig;
     }

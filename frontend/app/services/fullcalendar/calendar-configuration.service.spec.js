@@ -45,7 +45,8 @@ describe('The calFullUiConfiguration service', function() {
     format12 = 'h:mm A';
     format24 = 'H:mm';
     esnDatetimeServiceMock = {
-      getTimeFormat: sinon.stub().returns('')
+      getTimeFormat: sinon.stub().returns(''),
+      getTimeZone: sinon.stub().returns('UTC')
     };
 
     angular.mock.module(function($provide) {
@@ -370,6 +371,18 @@ describe('The calFullUiConfiguration service', function() {
 
       expect(config.calendar.locale).to.be.equal('fr');
       });
+    });
+  });
+
+  describe('The configureTimeZoneForCalendar function', function() {
+    it('should set nowIndicator with the user TZ', function() {
+      esnDatetimeServiceMock.getTimeZone = sinon.stub().returns('Europe/Berlin');
+
+      var config = calFullUiConfiguration.configureTimeZoneForCalendar(uiConfig);
+
+      var now = config.calendar.now();
+
+      expect(now.tz()).to.be.equal('Europe/Berlin');
     });
   });
 });
