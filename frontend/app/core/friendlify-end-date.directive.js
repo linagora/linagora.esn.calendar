@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .directive('calFriendlifyEndDate', calFriendlifyEndDate);
 
-  function calFriendlifyEndDate($parse, calMoment) {
+  function calFriendlifyEndDate($parse, calMoment, esnI18nDateFormatService) {
     var directive = {
       restrict: 'A',
       require: 'ngModel',
@@ -57,13 +57,14 @@
       }
 
       function render() {
-        var oldDataValue = ngModel.$dateValue;
+        var dateFormat = esnI18nDateFormatService.getLongDateFormat();
+        var oldDataValue = calMoment(ngModel.$dateValue);
 
-        ngModel.$dateValue = new Date(ngModel.$viewValue);
+        ngModel.$dateValue = calMoment(ngModel.$viewValue, dateFormat);
 
         if (oldDataValue) {
-          ngModel.$dateValue.setHours(oldDataValue.getHours());
-          ngModel.$dateValue.setMinutes(oldDataValue.getMinutes());
+          ngModel.$dateValue.set('hour', oldDataValue.get('hour'));
+          ngModel.$dateValue.set('minute', oldDataValue.get('minute'));
         }
 
         element.val(ngModel.$viewValue);

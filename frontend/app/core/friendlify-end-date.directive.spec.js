@@ -74,15 +74,14 @@ describe('The calFriendlifyEndDate directive', function() {
   });
 
   it('when the view value change we should keep hour and minute of previous date', function() {
-    this.$scope.event = {
-      end: this.calMoment([2015, 6, 3, 10, 59])
-    };
-
     var element = this.initDirective(this.$scope);
     var controller = element.controller('ngModel');
 
-    controller.$viewValue = new Date(2016, 6, 3);
+    controller.$dateValue = new Date(2019, 1, 20, 12, 30);
+    controller.$viewValue = this.calMoment('2019-01-20T20:00');
+
     controller.$render();
-    expect(this.calMoment(controller.$dateValue).format('YYYY/MM/DD HH:mm')).to.equals('2016/07/03 10:59');
+
+    expect(this.calMoment(controller.$dateValue).format('YYYY-MM-DD HH:mm')).to.equals('2019-01-20 12:30');
   });
 });
