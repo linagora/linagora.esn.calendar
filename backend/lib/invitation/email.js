@@ -19,7 +19,7 @@ module.exports = dependencies => {
     send
   };
 
-  function send(user, attendeeEmail, method, ics, calendarURI, eventPath, domain) {
+  function send(user, attendeeEmail, method, ics, calendarURI, eventPath, domain, newEvent) {
     if (!user || !user.domains || !user.domains.length) {
       return Promise.reject(new Error('User must be an User object'));
     }
@@ -67,14 +67,14 @@ module.exports = dependencies => {
 
         switch (method) {
           case 'REQUEST':
-            if (event.sequence > 0) {
-              subject = _i18nHelper('Event {{& summary}} from {{userDisplayName}} updated', true, true);
-              template.name = 'event.update';
-              inviteMessage = _i18nHelper('has updated a meeting');
-            } else {
+            if (newEvent) {
               subject = _i18nHelper('New event from {{userDisplayName}}: {{& summary}}', true, true);
               template.name = 'event.invitation';
               inviteMessage = _i18nHelper('has invited you to a meeting');
+            } else {
+              subject = _i18nHelper('Event {{& summary}} from {{userDisplayName}} updated', true, true);
+              template.name = 'event.update';
+              inviteMessage = _i18nHelper('has updated a meeting');
             }
             break;
           case 'REPLY':
