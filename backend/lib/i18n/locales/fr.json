@@ -136,6 +136,7 @@
   "Icon": "Icône",
   "Import": "Importer",
   "Import events from an ICS file to one of your calendars.": "Importer des événements depuis un fichier ICS dans un de vos calendriers.",
+  "Import feature allows only to restore calendar exported with the same user.": "L'import permet uniquement de restaurer le calendrier exporté avec le même utilisateur.",
   "Import to": "Importer dans",
   "Interval": "Intervalle",
   "Invitations": "Invitations",

@@ -136,6 +136,7 @@
   "Icon": "Biểu tượng",
   "Import": "Nhập",
   "Import events from an ICS file to one of your calendars.": "Nhập sự kiện từ tệp ICS vào lịch của bạn",
+  "Import feature allows only to restore calendar exported with the same user.": "Tính năng NHẬP  chỉ cho phép khôi phục lịch đã xuất với cùng một người dùng.",
   "Import to": "Nhập vào",
   "Interval": "Phạm vi",
   "Invitations": "Lời mời",
