@@ -138,7 +138,7 @@ module.exports = (dependencies, moduleName) => {
 
   /**
    * @swagger
-   * /events/search
+   * /events/search:
    *   post:
    *     tags:
    *       - Calendar

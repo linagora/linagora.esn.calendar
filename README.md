@@ -63,7 +63,7 @@ This will pull all required images, and run the whole tests suite in a Docker co
 If you only want to run linters and unit-frontend tests, you can run them on your machine directly using:
 
 ```
-$ grunt linters test-unit-frontend
+$ grunt linters test-frontend
 ```
 
 
