@@ -6,7 +6,8 @@ var expect = chai.expect;
 
 describe('The calSearchEventProviderService service', function() {
 
-  var $rootScope, calSearchEventProviderService, $httpBackend, calendarService, esnSearchProvider, calEventService, CAL_ADVANCED_SEARCH_CALENDAR_TYPES;
+  var $rootScope, calSearchEventProviderService, $httpBackend, calendarService, esnSearchProvider, calEventService;
+  var CAL_ADVANCED_SEARCH_CALENDAR_TYPES, ELEMENTS_PER_REQUEST;
   var calendarHomeId = 'calendarHomeId';
 
   var mockUsers = [
@@ -43,13 +44,14 @@ describe('The calSearchEventProviderService service', function() {
     });
   });
 
-  beforeEach(inject(function(_$rootScope_, _$httpBackend_, _calSearchEventProviderService_, _calendarService_, _calEventService_, _CAL_ADVANCED_SEARCH_CALENDAR_TYPES_) {
+  beforeEach(inject(function(_$rootScope_, _$httpBackend_, _calSearchEventProviderService_, _calendarService_, _calEventService_, _CAL_ADVANCED_SEARCH_CALENDAR_TYPES_, _ELEMENTS_PER_REQUEST_) {
     $rootScope = _$rootScope_;
     calSearchEventProviderService = _calSearchEventProviderService_;
     $httpBackend = _$httpBackend_;
     calendarService = _calendarService_;
     calEventService = _calEventService_;
     CAL_ADVANCED_SEARCH_CALENDAR_TYPES = _CAL_ADVANCED_SEARCH_CALENDAR_TYPES_;
+    ELEMENTS_PER_REQUEST = _ELEMENTS_PER_REQUEST_;
   }));
 
   it('should build a provider which is able to do a basic search for events from each calendar, return aggregated results having date prop', function(done) {
@@ -93,7 +95,7 @@ describe('The calSearchEventProviderService service', function() {
       }
 
       calendarIds.forEach(function(calendarId) {
-        $httpBackend.expectGET('/calendar/api/calendars/' + calendarHomeId + '/' + calendarId + '/events.json?limit=200&offset=0&query=abcd').respond(200, {
+        $httpBackend.expectGET('/calendar/api/calendars/' + calendarHomeId + '/' + calendarId + '/events.json?limit=' + ELEMENTS_PER_REQUEST + '&offset=0&query=abcd').respond(200, {
           _links: davReferences(calendarId),
           _embedded: {
             'dav:item': fakeDAVResults(calendarId)
