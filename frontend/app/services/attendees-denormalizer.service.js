@@ -4,13 +4,20 @@
   angular.module('esn.calendar')
     .factory('calAttendeesDenormalizerService', calAttendeesDenormalizerService);
 
-  function calAttendeesDenormalizerService(_, $q, calAttendeeService, esnMemberResolverRegistry) {
+  function calAttendeesDenormalizerService(
+    _,
+    $q,
+    userAPI,
+    calAttendeeService,
+    esnMemberResolverRegistry
+  ) {
     var identityResolver = _.identity;
 
     var resolvers = {
       group: groupMemberResolver,
       individual: identityResolver,
-      resource: identityResolver
+      resource: identityResolver,
+      ldap: ldapResolver
     };
 
     return denormalize;
@@ -50,6 +57,29 @@
           return memberTransformer(member.member);
         }));
       });
+    }
+
+    /**
+     * Ldap resolver
+     * This resolver will try to provision attendee who comes from LDAP
+     * If success to provision, the attendee will be added as an ESN user
+     * Otherwise, attendee will be added as an email
+     *
+     * @param {Object} attendee ldap attendee to provision
+     * @return {Promise} resolve with provisioned attendee
+     */
+    function ldapResolver(attendee) {
+      return userAPI.provisionUsers('ldap', [attendee.email])
+        .then(function(provisonedUsers) {
+          if (provisonedUsers && provisonedUsers[0]) {
+            return calAttendeeService.userAsAttendee(provisonedUsers[0]);
+          }
+
+          return calAttendeeService.emailAsAttendee(attendee.email);
+        })
+        .catch(function() {
+          return calAttendeeService.emailAsAttendee(attendee.email);
+        });
     }
   }
 })(angular);
