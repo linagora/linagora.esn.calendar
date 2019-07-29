@@ -35,7 +35,7 @@ describe('The calendar module apis', function() {
       $provide.value('notificationFactory', notificationFactoryMock);
     });
 
-    inject(function($httpBackend, calendarRestangular, calMoment, calendarAPI, calEventAPI, CALENDAR_CONTENT_TYPE_HEADER, CAL_ACCEPT_HEADER, CAL_GRACE_DELAY) {
+    inject(function($httpBackend, calendarRestangular, calMoment, calendarAPI, calEventAPI, CALENDAR_CONTENT_TYPE_HEADER, CAL_ACCEPT_HEADER, CAL_GRACE_DELAY, _ELEMENTS_PER_REQUEST_) {
       this.$httpBackend = $httpBackend;
       this.calendarRestangular = calendarRestangular;
       this.calMoment = calMoment;
@@ -44,6 +44,7 @@ describe('The calendar module apis', function() {
       this.CALENDAR_CONTENT_TYPE_HEADER = CALENDAR_CONTENT_TYPE_HEADER;
       this.CAL_ACCEPT_HEADER = CAL_ACCEPT_HEADER;
       this.CAL_GRACE_DELAY = CAL_GRACE_DELAY;
+      this.ELEMENTS_PER_REQUEST = _ELEMENTS_PER_REQUEST_;
     });
 
     var davDateFormat = 'YYYYMMDD[T]HHmmss';
@@ -498,7 +499,7 @@ describe('The calendar module apis', function() {
 
     describe('The searchEventsAdvanced request', function() {
       it('should have a correct request body and return an array of events', function(done) {
-        this.$httpBackend.expectPOST('/calendar/api/calendars/events/search?limit=30&offset=0').respond(davItemsResponse(davItems));
+        this.$httpBackend.expectPOST('/calendar/api/calendars/events/search?limit=' + this.ELEMENTS_PER_REQUEST + '&offset=0').respond(davItemsResponse(davItems));
 
         this.calendarRestangular.addRequestInterceptor(function(requestBody) {
           expect(requestBody).to.shallowDeepEqual({
@@ -533,7 +534,7 @@ describe('The calendar module apis', function() {
             }
           },
           offset: 0,
-          limit: 30
+          limit: this.ELEMENTS_PER_REQUEST
         }).then(function(result) {
           expect(result).to.deep.equal(davItems);
 
