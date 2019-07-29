@@ -125,7 +125,8 @@
         individual: 'INDIVIDUAL',
         room: 'ROOM',
         resource: 'RESOURCE',
-        group: 'GROUP'
+        group: 'GROUP',
+        ldap: 'LDAP'
       },
       status: {
         CANCELLED: 'CANCELLED'
@@ -148,7 +149,8 @@
       contact: 'contact',
       user: 'user',
       resource: 'resource',
-      group: 'group'
+      group: 'group',
+      ldap: 'ldap'
     })
 
     .constant('CAL_ATTENDEE_LIST_LIMIT', 5)

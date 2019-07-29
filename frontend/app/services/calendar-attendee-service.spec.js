@@ -37,7 +37,12 @@ describe('the calendarAttendeeService', function() {
 
   describe('the getAttendeeCandidates function', function() {
     beforeEach(function() {
-      attendeesAllTypes = [CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.resource, CAL_ATTENDEE_OBJECT_TYPE.group];
+      attendeesAllTypes = [
+        CAL_ATTENDEE_OBJECT_TYPE.user,
+        CAL_ATTENDEE_OBJECT_TYPE.resource,
+        CAL_ATTENDEE_OBJECT_TYPE.group,
+        CAL_ATTENDEE_OBJECT_TYPE.ldap
+      ];
     });
 
     it('should return a promise', function() {
@@ -95,6 +100,26 @@ describe('the calendarAttendeeService', function() {
         expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', partstat: CAL_ICAL.partstat.tentative}, {_id: 'attendee2', partstat: CAL_ICAL.partstat.tentative}]);
         done();
       }, done);
+
+      $rootScope.$apply();
+    });
+
+    it('should add an need-action partstat to all ldap attendee candidates', function(done) {
+      attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([
+        { _id: 'attendee1', objectType: CAL_ATTENDEE_OBJECT_TYPE.ldap },
+        { _id: 'attendee2', objectType: CAL_ATTENDEE_OBJECT_TYPE.ldap }
+      ]));
+
+      calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes)
+        .then(function(attendeeCandidates) {
+          expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
+          expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
+          expect(attendeeCandidates).to.shallowDeepEqual([
+            { _id: 'attendee1', partstat: CAL_ICAL.partstat.needsaction },
+            { _id: 'attendee2', partstat: CAL_ICAL.partstat.needsaction }
+          ]);
+          done();
+        }, done);
 
       $rootScope.$apply();
     });
@@ -176,6 +201,26 @@ describe('the calendarAttendeeService', function() {
         expect(attendeeCandidates).to.shallowDeepEqual([{_id: 'attendee1', cutype: CAL_ICAL.cutype.group}, {_id: 'attendee2', cutype: CAL_ICAL.cutype.group}]);
         done();
       }, done);
+
+      $rootScope.$apply();
+    });
+
+    it('should add a ldap cutype to all ldap attendee candidates', function(done) {
+      attendeeService.getAttendeeCandidates = sinon.stub().returns($q.when([
+        { _id: 'attendee1', objectType: CAL_ATTENDEE_OBJECT_TYPE.ldap },
+        { _id: 'attendee2', objectType: CAL_ATTENDEE_OBJECT_TYPE.ldap }
+      ]));
+
+      calendarAttendeeService.getAttendeeCandidates(query, limit, attendeesAllTypes)
+        .then(function(attendeeCandidates) {
+          expect(attendeeService.getAttendeeCandidates).to.have.been.calledOnce;
+          expect(attendeeService.getAttendeeCandidates).to.have.been.calledWith(query, limit, attendeesAllTypes);
+          expect(attendeeCandidates).to.shallowDeepEqual([
+            { _id: 'attendee1', cutype: CAL_ICAL.cutype.ldap },
+            { _id: 'attendee2', cutype: CAL_ICAL.cutype.ldap }
+          ]);
+          done();
+        }, done);
 
       $rootScope.$apply();
     });
