@@ -148,7 +148,7 @@ module.exports = function(grunt) {
     swagger_generate: {
       options: {
         baseDir: __dirname,
-        swaggerOutputFile: '/doc/swagger.json',
+        swaggerOutputFile: '/doc/calendar-swagger.json',
         info: {
           title: 'OpenPaaS Calendar Module',
           description: 'OpenPaaS Calendar Module API',
@@ -206,5 +206,4 @@ module.exports = function(grunt) {
 
   grunt.registerTask('test', ['linters', 'test-frontend', 'test-unit-backend', 'test-midway-backend']);
   grunt.registerTask('default', ['test']);
-  grunt.registerTask('swagger-generate', 'Grunt plugin for swagger generate', ['swagger_generate']);
 };
