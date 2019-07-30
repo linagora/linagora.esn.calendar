@@ -136,6 +136,7 @@
   "Icon": "图标",
   "Import": "导入",
   "Import events from an ICS file to one of your calendars.": "将ICS文件中的事件导入您的某个日历",
+  "Import feature allows only to restore calendar exported with the same user.": "导入仅使用同一用户还原导出的日历.",
   "Import to": "导入到",
   "Interval": "间隔",
   "Invitations": "邀请",
