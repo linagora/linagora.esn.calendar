@@ -122,7 +122,7 @@ swagger:
     - grunt swagger-generate
   artifacts:
     paths:
-      - ./doc/REST_API/swagger/calendar-swagger.json
+      - ./doc/swagger/calendar-swagger.json
 
 deploy-swagger:
   stage: deploy
@@ -136,8 +136,8 @@ deploy-swagger:
   only:
     - master@linagora/lgs/openpaas/linagora.esn.calendar
   script:
-    - perl -i -pe's/"host":"localhost:8080"/"schemes":["https"],"host":"demo.open-paas.org"/' ./doc/REST_API/swagger/calendar-swagger.json
-    - cp ./doc/REST_API/swagger/calendar-swagger.json /var/www/html
+    - perl -i -pe's/"host":"localhost:8080"/"schemes":["https"],"host":"demo.open-paas.org"/' ./doc/swagger/calendar-swagger.json
+    - cp ./doc/swagger/calendar-swagger.json /var/www/html
 
 deploy_dev:
   stage: deploy
