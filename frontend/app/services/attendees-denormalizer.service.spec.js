@@ -6,6 +6,7 @@ var expect = chai.expect;
 
 describe('The calAttendeesDenormalizerService service', function() {
   var $q, $rootScope, calAttendeesDenormalizerService, esnMemberResolverRegistry, group, individual, resource;
+  var userAPIMock;
 
   beforeEach(function() {
     group = {
@@ -26,6 +27,8 @@ describe('The calAttendeesDenormalizerService service', function() {
     esnMemberResolverRegistry = {
       getResolver: sinon.stub()
     };
+
+    userAPIMock = {};
   });
 
   beforeEach(function() {
@@ -33,6 +36,7 @@ describe('The calAttendeesDenormalizerService service', function() {
 
     angular.mock.module(function($provide) {
       $provide.value('esnMemberResolverRegistry', esnMemberResolverRegistry);
+      $provide.value('userAPI', userAPIMock);
     });
 
     angular.mock.inject(function(_$q_, _$rootScope_, _calAttendeesDenormalizerService_) {
@@ -238,6 +242,87 @@ describe('The calAttendeesDenormalizerService service', function() {
         ]);
         done();
       });
+
+      $rootScope.$digest();
+    });
+  });
+
+  describe('When cutype is ldap', function() {
+    var CUTYPE = 'LDAP';
+    var calAttendeeService;
+
+    beforeEach(function() {
+      inject(function(_calAttendeeService_) {
+        calAttendeeService = _calAttendeeService_;
+      });
+    });
+
+    it('should resolve attendee as an email if failed to provision user', function(done) {
+      var ldapAttendee = {
+        cutype: CUTYPE,
+        email: 'foo@ldap.org'
+      };
+      var expectResult = { foo: 'bar' };
+
+      userAPIMock.provisionUsers = sinon.stub().returns($q.reject());
+      calAttendeeService.emailAsAttendee = sinon.stub().returns(expectResult);
+
+      calAttendeesDenormalizerService([ldapAttendee])
+        .then(function(denormalizedAttendees) {
+          expect(denormalizedAttendees.length).to.equal(1);
+          expect(denormalizedAttendees).to.deep.equal([expectResult]);
+          expect(userAPIMock.provisionUsers).to.have.been.calledWith('ldap', [ldapAttendee.email]);
+          expect(calAttendeeService.emailAsAttendee).to.have.been.calledWith(ldapAttendee.email);
+
+          done();
+        });
+
+      $rootScope.$digest();
+    });
+
+    it('should resolve attendee as an email if there is no provisioned user', function(done) {
+      var ldapAttendee = {
+        cutype: CUTYPE,
+        email: 'foo@ldap.org'
+      };
+      var expectResult = { foo: 'bar' };
+
+      userAPIMock.provisionUsers = sinon.stub().returns($q.when([]));
+      calAttendeeService.emailAsAttendee = sinon.stub().returns(expectResult);
+
+      calAttendeesDenormalizerService([ldapAttendee])
+        .then(function(denormalizedAttendees) {
+          expect(denormalizedAttendees.length).to.equal(1);
+          expect(denormalizedAttendees).to.deep.equal([expectResult]);
+          expect(userAPIMock.provisionUsers).to.have.been.calledWith('ldap', [ldapAttendee.email]);
+          expect(calAttendeeService.emailAsAttendee).to.have.been.calledWith(ldapAttendee.email);
+
+          done();
+        });
+
+      $rootScope.$digest();
+    });
+
+    it('should resolve attendee as an ESN user if success to provision user', function(done) {
+      var ldapAttendee = {
+        cutype: CUTYPE,
+        email: 'foo@ldap.org'
+      };
+      var user = { _id: '123' };
+      var expectResult = { foo: 'bar' };
+
+      userAPIMock.provisionUsers = sinon.stub().returns($q.when([user]));
+      calAttendeeService.userAsAttendee = sinon.stub().returns(expectResult);
+
+      calAttendeesDenormalizerService([ldapAttendee])
+        .then(function(denormalizedAttendees) {
+          expect(denormalizedAttendees.length).to.equal(1);
+          expect(denormalizedAttendees).to.deep.equal([expectResult]);
+          expect(userAPIMock.provisionUsers).to.have.been.calledWith('ldap', [ldapAttendee.email]);
+          expect(calAttendeeService.userAsAttendee).to.have.been.calledWith(user);
+
+          done();
+        });
 
       $rootScope.$digest();
     });

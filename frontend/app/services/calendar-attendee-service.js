@@ -17,6 +17,7 @@
     attendeeTypeToCUType[CAL_ATTENDEE_OBJECT_TYPE.user] = CAL_ICAL.cutype.individual;
     attendeeTypeToCUType[CAL_ATTENDEE_OBJECT_TYPE.resource] = CAL_ICAL.cutype.resource;
     attendeeTypeToCUType[CAL_ATTENDEE_OBJECT_TYPE.group] = CAL_ICAL.cutype.group;
+    attendeeTypeToCUType[CAL_ATTENDEE_OBJECT_TYPE.ldap] = CAL_ICAL.cutype.ldap;
 
     return service;
 

@@ -51,7 +51,7 @@ form.event-form(role="form", name="form", aria-hidden="true", ng-class="{ 'reado
           cal-entities-autocomplete-input.cal-user-autocomplete-input(
             exclude-current-user='excludeCurrentUserFromSuggestedAttendees',
             ng-hide='!canModifyEventAttendees',
-            types='[CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.group, CAL_ATTENDEE_OBJECT_TYPE.contact]',
+            types='[CAL_ATTENDEE_OBJECT_TYPE.user, CAL_ATTENDEE_OBJECT_TYPE.group, CAL_ATTENDEE_OBJECT_TYPE.contact, CAL_ATTENDEE_OBJECT_TYPE.ldap]',
             input-type="email"
             original-entities='attendees.users',
             mutable-entities='newAttendees',
