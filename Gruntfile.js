@@ -148,7 +148,7 @@ module.exports = function(grunt) {
     swagger_generate: {
       options: {
         baseDir: __dirname,
-        swaggerOutputFile: '/doc/calendar-swagger.json',
+        swaggerOutputFile: '/doc/swagger/calendar-swagger.json',
         info: {
           title: 'OpenPaaS Calendar Module',
           description: 'OpenPaaS Calendar Module API',
