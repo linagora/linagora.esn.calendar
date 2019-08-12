@@ -12,7 +12,6 @@ describe.skip('The calendar core module', function() {
   beforeEach(function(done) {
     var self = this;
     this.testEnv.writeDBConfigFile();
-    this.mongoose = require('mongoose');
 
     TimelineEntry = self.helpers.requireBackend('core/db/mongo/models/timelineentry');
 

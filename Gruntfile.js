@@ -76,7 +76,8 @@ module.exports = function(grunt) {
         timeout: process.env.TEST_TIMEOUT || 20000,
         env: {
           ESN_CUSTOM_TEMPLATES_FOLDER: 'testscustom'
-        }
+        },
+        exit: true
       },
       backend: {
         options: {
