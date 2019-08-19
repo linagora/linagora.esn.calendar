@@ -27,6 +27,8 @@
     session,
     calPathBuilder,
     esnI18nService,
+    usSpinnerService,
+    calFreebusyService,
     calPartstatUpdateNotificationService,
     CAL_ATTENDEE_OBJECT_TYPE,
     CAL_RELATED_EVENT_TYPES,
@@ -34,10 +36,12 @@
     CAL_EVENT_FORM,
     CAL_ICAL,
     CAL_FREEBUSY,
-    calFreebusyService
+    CAL_EVENT_FORM_SPINNER_TIMEOUT_DURATION
   ) {
       var initialUserAttendeesRemoved = [];
       var initialResourceAttendeesRemoved = [];
+      var spinnerKey = 'event';
+      var spinnerTimeoutPromise;
 
       $scope.selectedTab = 'attendees';
       $scope.restActive = false;
@@ -62,6 +66,7 @@
       $scope.toggleSuggestedEvent = toggleSuggestedEvent;
       $scope.submitSuggestion = submitSuggestion;
       $scope.onDateChange = onDateChange;
+      $scope.hideEventForm = true;
 
       // Initialize the scope of the form. It creates a scope.editedEvent which allows us to
       // rollback to scope.event in case of a Cancel.
@@ -104,6 +109,9 @@
       }
 
       function initFormData() {
+        spinnerTimeoutPromise = $timeout(function() {
+          usSpinnerService.spin(spinnerKey);
+        }, CAL_EVENT_FORM_SPINNER_TIMEOUT_DURATION);
         $scope.use24hourFormat = esnDatetimeService.is24hourFormat();
         $scope.editedEvent = $scope.event.clone();
         $scope.initialAttendees = angular.copy($scope.editedEvent.attendees) || [];
@@ -145,6 +153,9 @@
             $scope.attendees = _.assign({}, $scope.attendees, attendeesWithResourceDetails);
           }).then(function() {
             calFreebusyService.setBulkFreeBusyStatus(getAttendees(), $scope.event.start, $scope.event.end, [$scope.event]);
+            $timeout.cancel(spinnerTimeoutPromise);
+            usSpinnerService.stop(spinnerKey);
+            $scope.hideEventForm = false;
           });
       }
 
