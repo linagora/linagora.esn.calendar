@@ -99,10 +99,10 @@ afterEach(function(done) {
   const esnConf = new EsConfig(testConfig.elasticsearch);
 
   Promise.all([
-    esnConf.deleteIndex('users.idx'),
-    esnConf.deleteIndex('events.idx'),
-    esnConf.deleteIndex('contacts.idx'),
-    esnConf.deleteIndex('resources.idx')
+    esnConf.deleteIndex('real.users.idx'),
+    esnConf.deleteIndex('real.events.idx'),
+    esnConf.deleteIndex('real.contacts.idx'),
+    esnConf.deleteIndex('real.resources.idx')
   ])
   .then(() => done())
   .catch(err => {

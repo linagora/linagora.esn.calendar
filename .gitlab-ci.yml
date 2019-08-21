@@ -80,7 +80,7 @@ check_author:
 
 ####### tests without services requirements
 test_frontend:
-  <<: *test-template 
+  <<: *test-template
   image: docker-registry.linagora.com:5000/public-releases/openpaas-esn-test-helper:1.1.0
   script:
     - grunt -v test-frontend
@@ -95,8 +95,9 @@ test_unit_backtend:
 test_midway_backtend:
   <<: *test-template
   services:
-    - name: elasticsearch:2.4 
+    - name: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
       alias: elasticsearch
+      command: [ "bin/elasticsearch", "-Ediscovery.type=single-node" ]
     - name: mongo:3.2.0
       alias: mongo
     - name: redis:latest
