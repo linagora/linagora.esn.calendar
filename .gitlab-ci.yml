@@ -23,7 +23,6 @@ stages:
   variables:
       TZ: "America/New_York"
   before_script:
-    - npm install -g grunt-cli
     - 'echo "INFO: NB node packages : $(ls node_modules | wc -l)"'
     - 'echo "INFO: NB bower packages : $(ls frontend/components | wc -l)"'
   except:
@@ -55,7 +54,7 @@ linters:
   <<: *test-template
   stage: linters
   script:
-    - grunt -v linters
+    - ./node_modules/.bin/grunt -v linters
   except:
     variables:
       - $SKIP_LINTERS
@@ -83,12 +82,12 @@ test_frontend:
   <<: *test-template
   image: docker-registry.linagora.com:5000/public-releases/openpaas-esn-test-helper:1.1.0
   script:
-    - grunt -v test-frontend
+    - ./node_modules/.bin/grunt -v test-frontend
 
 test_unit_backtend:
   <<: *test-template
   script:
-    - grunt -v --chunk=1 test-unit-backend
+    - ./node_modules/.bin/grunt -v --chunk=1 test-unit-backend
 
 ####### tests with services requirements
 
@@ -114,13 +113,13 @@ test_midway_backtend:
     REDIS_HOST: redis
     REDIS_PORT: 6379
   script:
-    - grunt -v --chunk=1 test-midway-backend
+    - TZ="Europe/Paris" ./node_modules/.bin/grunt -v --chunk=1 test-midway-backend
 
 swagger:
   <<: *test-template
   stage: swagger
   script:
-    - grunt swagger-generate
+    - ./node_modules/.bin/grunt swagger-generate
   artifacts:
     paths:
       - ./doc/swagger/calendar-swagger.json
@@ -170,4 +169,4 @@ release:
     - triggers
   script:
     - if [ -z "${VERSION}" ]; then exit 0; fi
-    - ./node_modules/grunt/bin/grunt release:${VERSION}
+    - ./node_modules/.bin/grunt release:${VERSION}
