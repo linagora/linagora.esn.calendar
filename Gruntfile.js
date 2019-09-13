@@ -33,7 +33,7 @@ module.exports = function(grunt) {
       css: {
         options: {
           rules: [
-            { pattern: /important;(\s*$|(?=\s+[^\/]))/, message: 'CSS important rules only allowed with explanatory comment' }
+            { pattern: /important;(\s*$|(?=\s+[^/]))/, message: 'CSS important rules only allowed with explanatory comment' }
           ]
         },
         src: [
@@ -76,7 +76,8 @@ module.exports = function(grunt) {
         timeout: process.env.TEST_TIMEOUT || 20000,
         env: {
           ESN_CUSTOM_TEMPLATES_FOLDER: 'testscustom'
-        }
+        },
+        exit: true
       },
       backend: {
         options: {

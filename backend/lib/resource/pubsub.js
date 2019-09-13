@@ -26,7 +26,7 @@ module.exports = dependencies => {
     const { subject, text } = mailOptions;
     const { body } = response || {};
 
-    logger.error(`Error while request calDav server, a mail will be sent at the resource\'s creator: ${resource.creator} with the message: ${body || response}`);
+    logger.error(`Error while request calDav server, a mail will be sent at the resource's creator: ${resource.creator} with the message: ${body || response}`);
 
     return simpleMailModule(resource.creator, { subject, text });
   }
@@ -44,6 +44,7 @@ module.exports = dependencies => {
       userId: resource._id,
       domainId: resource.domain
     };
+
     return _generateResourcePayload(resource)
       .then(payload => caldavClient.createCalendarAsTechnicalUser(options, payload))
       .then(response => {
