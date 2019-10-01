@@ -185,7 +185,7 @@ module.exports = dependencies => {
 
     return calendar.searchEventsBasic(query)
       .then(eventsData => {
-        const responseJSON = _handleSeachResults(eventsData, req.originalUrl);
+        const responseJSON = _handleSearchResults(eventsData, req.originalUrl);
 
         res.header('X-ESN-Items-Count', eventsData.total_count);
         res.status(200).json(responseJSON);
@@ -218,7 +218,7 @@ module.exports = dependencies => {
 
     return calendar.searchEventsAdvanced(query)
       .then(eventsData => {
-        const responseJSON = _handleSeachResults(eventsData, req.originalUrl);
+        const responseJSON = _handleSearchResults(eventsData, req.originalUrl);
 
         res.header('X-ESN-Items-Count', eventsData.total_count);
         res.status(200).json(responseJSON);
@@ -238,9 +238,18 @@ module.exports = dependencies => {
       });
   }
 
-  function _handleSeachResults(eventsData, originalUrl) {
-    const davItems = [];
-    const json = {
+  function _handleSearchResults(eventsData, originalUrl) {
+    const davItems = eventsData.results.map(eventData => ({
+      _links: {
+        self: {
+          href: eventData.path
+        }
+      },
+      data: eventData.event,
+      etag: eventData.etag
+    }));
+
+    return {
       _links: {
         self: {
           href: originalUrl
@@ -251,19 +260,5 @@ module.exports = dependencies => {
         'dav:item': davItems
       }
     };
-
-    eventsData.results.forEach(eventData => {
-      davItems.push({
-        _links: {
-          self: {
-            href: eventData.path
-          }
-        },
-        data: eventData.event,
-        etag: eventData.etag
-      });
-    });
-
-    return json;
   }
 };
