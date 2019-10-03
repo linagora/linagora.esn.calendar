@@ -163,15 +163,15 @@ module.exports = dependencies => {
 
   function searchEventsBasic(query) {
     return Q.ninvoke(searchModule, 'searchEventsBasic', query)
-      .then(esResult => _handleElasSeachResults(esResult, query));
+      .then(esResult => _handleElasSearchResults(esResult, query));
   }
 
   function searchEventsAdvanced(query) {
     return searchModule.searchEventsAdvanced(query)
-      .then(esResult => _handleElasSeachResults(esResult, query));
+      .then(esResult => _handleElasSearchResults(esResult, query));
   }
 
-  function _handleElasSeachResults(esResult, query) {
+  function _handleElasSearchResults(esResult, query) {
     const output = {
       total_count: esResult.total_count,
       results: []
@@ -185,13 +185,11 @@ module.exports = dependencies => {
 
     return caldavClient.getMultipleEventsFromPaths(query.userId, paths)
       .then(events => {
-        events.map(({ ical, etag, path }, index) => {
-          output.results[index] = {
-            path,
-            event: ical,
-            etag
-          };
-        });
+        output.results = events.map(({ ical, etag, path }) => ({
+          path,
+          event: ical,
+          etag
+        }));
 
         return output;
       });

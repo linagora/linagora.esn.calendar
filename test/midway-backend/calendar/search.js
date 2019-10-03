@@ -3,12 +3,33 @@ const request = require('supertest');
 const async = require('async');
 const fs = require('fs');
 const express = require('express');
-const { parseString } = require('xml2js');
 
 describe('The Calendar events search API', function() {
   let user;
   const password = 'secret';
   let dav, davServer, caldavConfiguration;
+
+  const davReportMockHandler = (req, res) => {
+    const reqBody = JSON.parse(req.body);
+
+    const davItems = [];
+
+    reqBody.eventPaths.forEach(eventPath => {
+        davItems.push({
+          _links: { self: { href: eventPath } },
+          etag: '',
+          data: '',
+          status: 200
+        });
+    });
+
+    res.status(207).send({
+      _links: { self: { href: '/calendars' } },
+      _embedded: {
+        'dav:item': davItems
+      }
+    });
+  };
 
   beforeEach(function(done) {
     const self = this;
@@ -76,6 +97,10 @@ describe('The Calendar events search API', function() {
     this.app = this.helpers.modules.getWebServer(expressApp);
   });
 
+  beforeEach(function() {
+    dav.report('/calendars', davReportMockHandler);
+  });
+
   afterEach(function(done) {
     const self = this;
 
@@ -136,37 +161,6 @@ describe('The Calendar events search API', function() {
         this.helpers.redis.publishConfiguration();
       }, 200);
       this.helpers.elasticsearch.saveTestConfiguration(this.helpers.callbacks.noError(done));
-    });
-
-    beforeEach(function() {
-      dav.report('/calendars', (req, res) => {
-        parseString(req.body, (err, result) => {
-          if (err) {
-            res.status(500).send(err);
-          }
-
-          let hrefs = '';
-
-          (result['C:calendar-multiget']['D:href'] || []).forEach(href => {
-            hrefs += `<d:href>${href}</d:href>`;
-          });
-
-          res.status(207).send(`<?xml version="1.0" encoding="utf-8" ?>
-          <d:multistatus xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:carddav">
-            <d:response>
-              ${hrefs}
-              <d:propstat>
-                <d:prop>
-                  <d:getetag></d:getetag>
-                  <cal:calendar-data></cal:calendar-data>
-                </d:prop>
-                <d:status>HTTP/1.1 200 OK</d:status>
-              </d:propstat>
-            </d:response>
-          </d:multistatus>`
-          );
-        });
-     });
     });
 
     it('should return nothing with non matching string', function(done) {
@@ -322,37 +316,6 @@ describe('The Calendar events search API', function() {
 
     beforeEach(function(done) {
       this.helpers.elasticsearch.saveTestConfiguration(this.helpers.callbacks.noError(done));
-    });
-
-    beforeEach(function() {
-      dav.report('/calendars', (req, res) => {
-        parseString(req.body, (err, result) => {
-          if (err) {
-            res.status(500).send(err);
-          }
-
-          let davResponses = '';
-
-          (result['C:calendar-multiget']['D:href'] || []).forEach(href => {
-            davResponses += `<d:response>
-                <d:href>${href}</d:href>
-                <d:propstat>
-                  <d:prop>
-                    <d:getetag></d:getetag>
-                    <cal:calendar-data></cal:calendar-data>
-                  </d:prop>
-                  <d:status>HTTP/1.1 200 OK</d:status>
-                </d:propstat>
-              </d:response>`;
-          });
-
-          res.status(207).send(`<?xml version="1.0" encoding="utf-8" ?>
-            <d:multistatus xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:carddav">
-              ${davResponses}
-            </d:multistatus>`
-          );
-        });
-     });
     });
 
     it('should send 400 if the query field in the request body is not a string', function(done) {

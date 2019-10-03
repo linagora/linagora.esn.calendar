@@ -5,7 +5,6 @@ const _ = require('lodash');
 const path = require('path');
 const uuidV4 = require('uuid/v4');
 const ICAL = require('@linagora/ical.js');
-const { parseString } = require('xml2js');
 const { parseEventPath } = require('../helpers/event');
 
 const JSON_CONTENT_TYPE = 'application/json';
@@ -288,48 +287,33 @@ module.exports = dependencies => {
       return Promise.resolve([]);
     }
 
-    let hrefs = '';
-
-    paths.forEach(path => {
-      hrefs += `<D:href>${path}</D:href>`;
-    });
-
     return _requestCaldav({ userId, isRootPath: true }, (url, token) => ({
       method: 'REPORT',
       url,
       headers: {
         ESNToken: token,
-        'Content-Type': 'application/xml',
-        Accept: 'application/xml'
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
       },
-      body: `<?xml version="1.0" encoding="utf-8" ?>
-            <C:calendar-multiget xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
-              <D:prop>
-                <D:getetag/>
-                <C:calendar-data/>
-              </D:prop>
-              ${hrefs}
-            </C:calendar-multiget>`
+      body: JSON.stringify({
+        eventPaths: paths
+      })
     }))
-    .then(data => Q.nfcall(parseString, data))
-    .then(parsedData => parsedData['d:multistatus']['d:response'].map(item => {
-      const propstat = item['d:propstat'][0];
-      const path = item['d:href'][0];
+      .then(response => JSON.parse(response)._embedded['dav:item'].map(item => {
+        if (item.status !== 200) {
+          return logger.error('Cannot fetch the event', item._links.self.href, item.status);
+        }
 
-      if (propstat['d:status'][0] !== 'HTTP/1.1 200 OK') {
-        return logger.error('Cannot fetch the event', path, propstat['d:status'][0]);
-      }
-
-      return {
-        etag: propstat['d:prop'][0]['d:getetag'][0],
-        ical: propstat['d:prop'][0]['cal:calendar-data'][0],
-        path
-      };
-    }).filter(Boolean));
+        return {
+          etag: item.etag,
+          ical: (new ICAL.Component(item.data)).toString(),
+          path: item._links.self.href
+        };
+      }).filter(Boolean));
   }
 
   function _requestCaldav(options, formatRequest, formatResult) {
-    const { userId, calendarUri, eventUid, getNewTokenFn, urlParams, isRootPath} = options;
+    const { userId, calendarUri, eventUid, getNewTokenFn, urlParams, isRootPath } = options;
     const getNewToken = getNewTokenFn || Q.nfcall(token.getNewToken, { user: userId });
 
     return Q.all([
@@ -339,6 +323,8 @@ module.exports = dependencies => {
       .spread((eventUrl, newToken) => Q.nfcall(request, formatRequest(eventUrl, newToken.token)))
       .spread(response => {
         if (response.statusCode < 200 || response.statusCode >= 300) {
+          logger.error('Error when requesting to DAV server', JSON.stringify(response.body));
+
           return Q.reject(new Error(`Invalid response status from DAV server ${response.statusCode}`));
         }
 

@@ -1,8 +1,7 @@
 const { expect } = require('chai'),
       sinon = require('sinon'),
       mockery = require('mockery'),
-      moment = require('moment'),
-      { parseString } = require('xml2js');
+      moment = require('moment');
 
 describe('The caldav-client module', function() {
   let authMock, davServerMock, request, davEndpoint, userId, calendarId, eventId, token, jcal;
@@ -549,22 +548,7 @@ describe('The caldav-client module', function() {
   });
 
   describe('The getMultipleEventsFromPaths function', function() {
-    const buildRequestBody = paths => {
-      let hrefs = '';
-
-      paths.forEach(path => {
-        hrefs += `<D:href>${path}</D:href>`;
-      });
-
-      return `<?xml version="1.0" encoding="utf-8" ?>
-              <C:calendar-multiget xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
-                <D:prop>
-                  <D:getetag/>
-                  <C:calendar-data/>
-                </D:prop>
-                ${hrefs}
-              </C:calendar-multiget>`;
-    };
+    const buildRequestBody = eventPaths => JSON.stringify({ eventPaths });
 
     beforeEach(function() {
       request = {
@@ -572,13 +556,13 @@ describe('The caldav-client module', function() {
         url: `${davEndpoint}/calendars`,
         headers: {
           ESNToken: token,
-          'Content-Type': 'application/xml',
-          Accept: 'application/xml'
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
         }
       };
     });
 
-    it('should return an empty array if there is no paths', function(done) {
+    it('should return an empty array if there are no event paths', function(done) {
       getModule()
         .getMultipleEventsFromPaths(userId, [])
         .then(events => {
@@ -595,16 +579,16 @@ describe('The caldav-client module', function() {
         .getMultipleEventsFromPaths(userId, [''])
         .catch(err => {
           expect(err).to.exist;
-            expect(authMock.token.getNewToken).to.have.been.calledWith({ user: userId });
-            expect(davServerMock.utils.getDavEndpoint).to.have.been.called;
-            done();
+          expect(authMock.token.getNewToken).to.have.been.calledWith({ user: userId });
+          expect(davServerMock.utils.getDavEndpoint).to.have.been.called;
+          done();
         });
     });
 
     it('should call request with the built parameters and reject if it fails', function(done) {
-      const path = 'eventPath';
+      const eventPaths = ['/calendars/user1/calendar1/event1.ics'];
 
-      request.body = buildRequestBody([path]);
+      request.body = buildRequestBody(eventPaths);
 
       const requestMock = (opts, callback) => {
         expect(opts).to.deep.equal(request);
@@ -615,7 +599,7 @@ describe('The caldav-client module', function() {
       mockery.registerMock('request', requestMock);
 
       getModule()
-        .getMultipleEventsFromPaths(userId, [path])
+        .getMultipleEventsFromPaths(userId, eventPaths)
         .catch(err => {
           expect(err).to.exist;
           expect(authMock.token.getNewToken).to.have.been.calledWith({ user: userId });
@@ -624,81 +608,75 @@ describe('The caldav-client module', function() {
         });
     });
 
-    it('should return a list of events which have status is "HTTP/1.1 200 OK"', function(done) {
-      const paths = [
-        'eventPath1',
-        'eventPath2',
-        'eventPath3'
+    it('should return a list of events whose status are 200 OK"', function(done) {
+      const eventPaths = [
+        '/calendars/user1/calendar1/event1.ics',
+        '/calendars/user1/calendar1/event2.ics',
+        '/calendars/user1/calendar2/event3.ics',
+        '/calendars/user1/calendar2/event4.ics'
       ];
 
-      const responseBody = `<?xml version="1.0" encoding="utf-8" ?>
-                            <d:multistatus xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
-                              <d:response>
-                                <d:href>eventPath1</d:href>
-                                <d:propstat>
-                                  <d:prop>
-                                    <d:getetag>"fffff-abcd1"</d:getetag>
-                                    <cal:calendar-data>calendar-data1</cal:calendar-data>
-                                  </d:prop>
-                                  <d:status>HTTP/1.1 200 OK</d:status>
-                                </d:propstat>
-                              </d:response>
-                              <d:response>
-                                <d:href>eventPath2</d:href>
-                                <d:propstat>
-                                  <d:prop></d:prop>
-                                  <d:status>HTTP/1.1 404 Not Found</d:status>
-                                </d:propstat>
-                              </d:response>
-                              <d:response>
-                                <d:href>eventPath3</d:href>
-                                <d:propstat>
-                                  <d:prop>
-                                    <d:getetag>"fffff-abcd3"</d:getetag>
-                                    <cal:calendar-data>calendar-data3</cal:calendar-data>
-                                  </d:prop>
-                                  <d:status>HTTP/1.1 200 OK</d:status>
-                                </d:propstat>
-                              </d:response>
-                            </d:multistatus>`;
-
-      request.body = buildRequestBody(paths);
-
-      const xmlToJsonObject = xmlString => new Promise((resolve, reject) => {
-        parseString(xmlString, (err, result) => {
-          if (err) reject(err);
-
-          resolve(result['C:calendar-multiget']);
-        });
+      const responseBody = JSON.stringify({
+        _links: { self: { href: '/calendars/user1.json' } },
+        _embedded: {
+          'dav:item': [
+            {
+              _links: { self: { href: eventPaths[0] } },
+              etag: 'fffff-abcd1',
+              data: 'calendar-data1',
+              status: 200
+            },
+            {
+              _links: { self: { href: eventPaths[1] } },
+              status: 404
+            },
+            {
+              _links: { self: { href: eventPaths[2] } },
+              etag: 'fffff-abcd3',
+              data: 'calendar-data3',
+              status: 200
+            },
+            {
+              _links: { self: { href: eventPaths[3] } },
+              etag: 'fffff-abcd4',
+              data: 'calendar-data4',
+              status: 200
+            }
+          ]
+        }
       });
 
-      const requestMock = (opts, callback) => {
-        Promise.all([
-          xmlToJsonObject(request.body),
-          xmlToJsonObject(opts.body)
-        ]).then(result => {
+      request.body = buildRequestBody(eventPaths);
+
+      const requestMock = (opts, callback) => Promise.all([request.body, opts.body])
+        .then(result => {
           request.body = result[0];
           opts.body = result[1];
 
           expect(opts).to.deep.equal(request);
 
           callback(null, { body: responseBody, statusCode: 200 }, responseBody);
-        }).catch(err => callback(err));
-      };
+        })
+        .catch(err => callback(err));
 
       mockery.registerMock('request', requestMock);
 
       getModule()
-        .getMultipleEventsFromPaths(userId, paths)
+        .getMultipleEventsFromPaths(userId, eventPaths)
         .then(events => {
           expect(events).to.deep.equal([{
-            etag: '"fffff-abcd1"',
-            ical: 'calendar-data1',
-            path: 'eventPath1'
+            etag: 'fffff-abcd1',
+            ical: 'BEGIN:CALENDAR-DATA1\r\nEND:CALENDAR-DATA1',
+            path: eventPaths[0]
           }, {
-            etag: '"fffff-abcd3"',
-            ical: 'calendar-data3',
-            path: 'eventPath3'
+            etag: 'fffff-abcd3',
+            ical: 'BEGIN:CALENDAR-DATA3\r\nEND:CALENDAR-DATA3',
+            path: eventPaths[2]
+          },
+          {
+            etag: 'fffff-abcd4',
+            ical: 'BEGIN:CALENDAR-DATA4\r\nEND:CALENDAR-DATA4',
+            path: eventPaths[3]
           }]);
           done();
         })
