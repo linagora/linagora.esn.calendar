@@ -13,6 +13,21 @@ describe('CalendarShell factory', function() {
     return new CalendarShell(ICAL.Component.fromString(__FIXTURES__[path]));
   }
 
+  function assertRecurEventSetter(property, value, fixturePath) {
+    fixturePath = fixturePath || 'frontend/app/fixtures/calendar/reventWithTz.ics';
+
+    var vcalendar = new ICAL.Component(ICAL.parse(__FIXTURES__[fixturePath]));
+    var calendarShell = new CalendarShell(vcalendar);
+
+    calendarShell[property] = value;
+
+    var expandedRecurrences = calendarShell.expand();
+
+    expandedRecurrences.forEach(function(recurrence) {
+      expect(recurrence[property]).to.deep.equal(calendarShell[property]);
+    });
+  }
+
   beforeEach(function() {
     this.uuid4 = {
       // This is a valid uuid4. Change this if you need other uuids generated.
@@ -199,6 +214,30 @@ describe('CalendarShell factory', function() {
       }];
 
       shell.vcalendar.toString();
+    });
+
+    it('should update attendees of all occurrences in a series of recurrent events', function() {
+      var vcalendar = new ICAL.Component(ICAL.parse(__FIXTURES__['frontend/app/fixtures/calendar/reventWithTz.ics']));
+      var shell = new CalendarShell(vcalendar);
+
+      shell.attendees = [
+        {
+          email: 'user0@open-paas.org',
+          displayName: 'John Doe 0',
+          partstat: 'NEEDS-ACTION'
+        },
+        {
+          email: 'user1@open-paas.org',
+          displayName: 'John Doe 1',
+          partstat: 'NEEDS-ACTION'
+        }
+      ];
+
+      var expandedRecurrences = shell.expand();
+
+      expandedRecurrences.forEach(function(recurrence) {
+        expect(recurrence.attendees.length).to.equal(2);
+      });
     });
   });
 
@@ -1610,6 +1649,26 @@ describe('CalendarShell factory', function() {
       event.class = updatedClass;
       expectAlarm(event, updatedSummary, updatedLocation, 'Thu Jan 01 2015 13:00:00', 'Fri Jan 02 2015 13:00:00', updatedClass);
     });
+
+    it('should update alarm for all occurrences in a series of recurrent events', function() {
+      var vcalendar = new ICAL.Component(ICAL.parse(__FIXTURES__['frontend/app/fixtures/calendar/reventWithTz.ics']));
+      var calendarShell = new CalendarShell(vcalendar);
+
+      calendarShell.alarm = {
+        trigger: '-PT30M',
+        attendee: 'user0@open-paas.org'
+      };
+
+      var expandedRecurrences = calendarShell.expand();
+
+      expandedRecurrences.forEach(function(recurrence) {
+        var valarmProperties = ['trigger', 'action', 'attendee', 'summary', 'description'];
+
+        valarmProperties.forEach(function(valarmProperty) {
+          expect(recurrence.alarm.valarm.getFirstPropertyValue(valarmProperty)).to.deep.equal(calendarShell.alarm.valarm.getFirstPropertyValue(valarmProperty));
+        });
+      });
+    });
   });
 
   describe('getOrganizerPartStat', function() {
@@ -2033,6 +2092,88 @@ describe('CalendarShell factory', function() {
 
       shell.comment = comment;
       expect(shell.vevent.getFirstPropertyValue('comment')).to.equal(comment);
+    });
+  });
+
+  describe('The title/summary setter', function() {
+    // Title and Summary are the same thing
+
+    function assertRecurEventTitle(calendarShell, title) {
+      var expandedRecurrences = calendarShell.expand();
+
+      expandedRecurrences.forEach(function(recurrence) {
+        expect(recurrence.title).to.equal(title);
+        expect(recurrence.summary).to.equal(title);
+      });
+    }
+
+    it('should update title/summary of all occurrences in a series of recurrent events', function() {
+      var vcalendar = new ICAL.Component(ICAL.parse(__FIXTURES__['frontend/app/fixtures/calendar/reventWithTz.ics']));
+      var calendarShell = new CalendarShell(vcalendar);
+
+      calendarShell.title = 'Daily event with title changed';
+
+      assertRecurEventTitle(calendarShell, calendarShell.title);
+
+      calendarShell.summary = 'Daily event with summary changed';
+
+      assertRecurEventTitle(calendarShell, calendarShell.summary);
+    });
+  });
+
+  describe('The location setter', function() {
+    it('should update location of all occurrences in a series of recurrent events', function() {
+      assertRecurEventSetter('location', 'In the middle of nowhere');
+    });
+  });
+
+  describe('The description setter', function() {
+    it('should update description of all occurrences in a series of recurrent events', function() {
+      assertRecurEventSetter('description', 'This Halloween Party is not for children');
+    });
+  });
+
+  describe('The status setter', function() {
+    it('should update status of all occurrences in a series of recurrent events', function() {
+      assertRecurEventSetter('status', 'TENTATIVE');
+    });
+  });
+
+  describe('The xOpenpaasVideoconference setter', function() {
+    it('should update the video conference ref of all occurrences in a series of recurrent events', function() {
+      assertRecurEventSetter('xOpenpaasVideoconference', 'https://dev.open-paas.org/videoconference/2x3o4v5d6c');
+    });
+  });
+
+  describe('The organizer setter', function() {
+    it('should update organizer of all occurrences in a series of recurrent events', function() {
+      assertRecurEventSetter('organizer', { email: 'user0@open-paas.org', displayName: 'John Doe 0' });
+    });
+  });
+
+  describe('The class setter', function() {
+    it('should update class of all occurrences in a series of recurrent events', function() {
+      assertRecurEventSetter('class', 'PUBLIC');
+    });
+  });
+
+  describe('The sequence setter', function() {
+    it('should set sequence of master event and increment sequence of all special occurrences', function() {
+      var vcalendar = new ICAL.Component(ICAL.parse(__FIXTURES__['frontend/app/fixtures/calendar/reventWithTz.ics']));
+      var calendarShell = new CalendarShell(vcalendar);
+
+      calendarShell.sequence = 5;
+      var expandedRecurrences = calendarShell.expand();
+
+      expandedRecurrences.forEach(function(recurrence) {
+        if (recurrence.vevent.getFirstPropertyValue('recurrence-id').toString() === recurrence.vevent.getFirstPropertyValue('dtstart').toString()) {
+          expect(recurrence.sequence).to.equal(calendarShell.sequence);
+
+          return;
+        }
+
+        expect(recurrence.sequence).to.equal(1);
+      });
     });
   });
 });

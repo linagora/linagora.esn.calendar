@@ -143,7 +143,9 @@
 
       get summary() { return this.vevent.getFirstPropertyValue('summary'); },
       set summary(value) {
-        this.vevent.updatePropertyWithValue('summary', value);
+        this.vcalendar.getAllSubcomponents('vevent').forEach(function(vevent) {
+          vevent.updatePropertyWithValue('summary', value);
+        });
         this.ensureAlarmCoherence();
       },
 
@@ -157,21 +159,48 @@
 
       get location() { return this.vevent.getFirstPropertyValue('location'); },
       set location(value) {
-        this.vevent.updatePropertyWithValue('location', value);
+        this.vcalendar.getAllSubcomponents('vevent').forEach(function(vevent) {
+          vevent.updatePropertyWithValue('location', value);
+        });
         this.ensureAlarmCoherence();
       },
 
       get description() { return this.vevent.getFirstPropertyValue('description'); },
-      set description(value) { this.vevent.updatePropertyWithValue('description', value); },
+      set description(value) {
+        this.vcalendar.getAllSubcomponents('vevent').forEach(function(vevent) {
+          vevent.updatePropertyWithValue('description', value);
+        });
+      },
 
       get status() { return this.vevent.getFirstPropertyValue('status'); },
-      set status(value) { this.vevent.updatePropertyWithValue('status', value); },
+      set status(value) {
+        this.vcalendar.getAllSubcomponents('vevent').forEach(function(vevent) {
+          vevent.updatePropertyWithValue('status', value);
+        });
+      },
 
       get sequence() { return this.vevent.getFirstPropertyValue('sequence') || 0; },
-      set sequence(value) { this.vevent.updatePropertyWithValue('sequence', value); },
+      set sequence(value) {
+        var isFirstVEVENT = true;
+
+        this.vcalendar.getAllSubcomponents('vevent').forEach(function(vevent) {
+          if (isFirstVEVENT) {
+            vevent.updatePropertyWithValue('sequence', value);
+            isFirstVEVENT = false;
+
+            return;
+          }
+
+          vevent.updatePropertyWithValue('sequence', (vevent.getFirstPropertyValue('sequence') || 0) + 1);
+        });
+      },
 
       get xOpenpaasVideoconference() { return this.vevent.getFirstPropertyValue('x-openpaas-videoconference') || undefined; },
-      set xOpenpaasVideoconference(value) { this.vevent.updatePropertyWithValue('x-openpaas-videoconference', value); },
+      set xOpenpaasVideoconference(value) {
+        this.vcalendar.getAllSubcomponents('vevent').forEach(function(vevent) {
+          vevent.updatePropertyWithValue('x-openpaas-videoconference', value);
+        });
+      },
 
       get start() {
         if (!this.__start) {
@@ -229,7 +258,7 @@
         }
 
         return isAllDay;
-       },
+      },
 
       get full24HoursDay() { return this.vevent.getFirstProperty('dtstart') ? this.vevent.getFirstProperty('dtstart').type === 'date' : false; },
 
@@ -311,9 +340,12 @@
         this.__organizer = undefined;
         var organizerValue = calendarUtils.prependMailto(value.email || value.emails[0]);
         var organizerCN = value.displayName || userUtils.displayNameOf(value);
-        var organizer = this.vevent.updatePropertyWithValue('organizer', organizerValue);
 
-        organizer.setParameter('cn', organizerCN);
+        this.vcalendar.getAllSubcomponents('vevent').forEach(function(vevent) {
+          var organizer = vevent.updatePropertyWithValue('organizer', organizerValue);
+
+          organizer.setParameter('cn', organizerCN);
+        });
       },
 
       get attendees() {
@@ -391,7 +423,9 @@
       get class() { return this.vevent.getFirstPropertyValue('class'); },
 
       set class(value) {
-        this.vevent.updatePropertyWithValue('class', value);
+        this.vcalendar.getAllSubcomponents('vevent').forEach(function(vevent) {
+          vevent.updatePropertyWithValue('class', value);
+        });
         this.ensureAlarmCoherence();
       }
     };
@@ -861,39 +895,43 @@
 
     function ensureAlarmCoherence() {
       this.__alarmCache = undefined;
-      this.vevent.removeSubcomponent('valarm');
+      this.vcalendar.getAllSubcomponents('vevent').forEach(function(vevent) {
 
-      if (!this.__alarmValue) {
-        return;
-      }
+        vevent.removeSubcomponent('valarm');
 
-      var SUMMARY_TEMPLATE = '<%= summary %>';
-      var DESCRIPTION_TEMPLATE =
-        'This is an automatic alarm sent by OpenPaas\\n' +
-        'The event <%= summary %> will start <%- diffStart %>\\n' +
-        'start: <%- start %> \\n' +
-        'end: <%- end %> \\n' +
-        'location: <%= location %> \\n' +
-        'class: <%= classProperty %> \\n';
+        if (!this.__alarmValue) {
+          return;
+        }
 
-      var valarm = new ICAL.Component('valarm');
-      var mailto = calendarUtils.prependMailto(this.__alarmValue.attendee);
+        var SUMMARY_TEMPLATE = '<%= summary %>';
+        var DESCRIPTION_TEMPLATE =
+          'This is an automatic alarm sent by OpenPaas\\n' +
+          'The event <%= summary %> will start <%- diffStart %>\\n' +
+          'start: <%- start %> \\n' +
+          'end: <%- end %> \\n' +
+          'location: <%= location %> \\n' +
+          'class: <%= classProperty %> \\n';
 
-      valarm.addPropertyWithValue('trigger', this.__alarmValue.trigger);
-      valarm.addPropertyWithValue('action', 'EMAIL');
-      valarm.addPropertyWithValue('attendee', mailto);
-      valarm.addPropertyWithValue('summary', _.template(SUMMARY_TEMPLATE)({summary: this.summary}));
-      valarm.addPropertyWithValue('description', _.template(DESCRIPTION_TEMPLATE)({
-        summary: this.summary,
-        start: this.start,
-        end: this.end,
-        diffStart: calMoment(new Date()).to(this.start),
-        location: this.location,
-        classProperty: this.class,
-        calendarId: this.calendarId,
-        eventId: this.id
-      }));
-      this.vevent.addSubcomponent(valarm);
+        var valarm = new ICAL.Component('valarm');
+        var mailto = calendarUtils.prependMailto(this.__alarmValue.attendee);
+
+        valarm.addPropertyWithValue('trigger', this.__alarmValue.trigger);
+        valarm.addPropertyWithValue('action', 'EMAIL');
+        valarm.addPropertyWithValue('attendee', mailto);
+        valarm.addPropertyWithValue('summary', _.template(SUMMARY_TEMPLATE)({ summary: this.summary }));
+        valarm.addPropertyWithValue('description', _.template(DESCRIPTION_TEMPLATE)({
+          summary: this.summary,
+          start: this.start,
+          end: this.end,
+          diffStart: calMoment(new Date()).to(this.start),
+          location: this.location,
+          classProperty: this.class,
+          calendarId: this.calendarId,
+          eventId: this.id
+        }));
+
+        vevent.addSubcomponent(valarm);
+      }, this);
     }
   }
 })();
