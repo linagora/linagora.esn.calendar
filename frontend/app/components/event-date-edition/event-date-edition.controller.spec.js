@@ -5,20 +5,20 @@
 var expect = chai.expect;
 
 describe('The calEventDateEditionController', function() {
-
   var $controller, calMoment, esnI18nDateFormatService;
   var startTestMoment, endTestMoment;
+  var longDateFormatMock = 'YYYY-MM-DD';
 
   beforeEach(function() {
     esnI18nDateFormatService = {
-      getLongDateFormat: sinon.spy()
+      getLongDateFormat: sinon.stub().returns(longDateFormatMock)
     };
 
-    angular.mock.module('esn.calendar', function($provide) {
+    module('esn.calendar', function($provide) {
       $provide.value('esnI18nDateFormatService', esnI18nDateFormatService);
     });
 
-    angular.mock.inject(function(_$controller_, _calMoment_) {
+    inject(function(_$controller_, _calMoment_) {
       $controller = _$controller_;
       calMoment = _calMoment_;
     });
@@ -35,300 +35,311 @@ describe('The calEventDateEditionController', function() {
     return controller;
   }
 
-  describe('The dateOnBlurFn function', function() {
-    it('should compute diff of start date and end date onload', function() {
+  function checkEventDateTimeSync(ctrl) {
+    if (ctrl.full24HoursDay) {
+      expect(ctrl.start.isSame(ctrl.event.start)).to.be.true;
+      expect(ctrl.end.clone().add(1, 'days').isSame(ctrl.event.end)).to.be.true;
+
+      return;
+    }
+
+    expect(ctrl.start.isSame(ctrl.event.start)).to.be.true;
+    expect(ctrl.end.isSame(ctrl.event.end)).to.be.true;
+  }
+
+  describe('The $onInit function', function() {
+    it('should get long date format from esnI18nDateFormatService', function() {
       var bindings = {
         event: {
-          start: startTestMoment,
-          end: endTestMoment
+          start: startTestMoment.clone(),
+          end: endTestMoment.clone()
         }
       };
       var ctrl = initController(bindings);
 
-      expect(ctrl.diff).to.deep.equal(1800000);
+      expect(esnI18nDateFormatService.getLongDateFormat).to.have.been.calledOnce;
+      expect(ctrl.dateFormat).to.equal(longDateFormatMock);
     });
 
+    it('should set correct default values for optional bindings', function() {
+      var bindings = {
+        event: {
+          start: startTestMoment.clone(),
+          end: endTestMoment.clone()
+        }
+      };
+      var ctrl = initController(bindings);
+
+      expect(ctrl.disabled).to.be.false;
+    });
+
+    it('should set full24HoursDay value of controller to that of the passed-in event', function() {
+      var bindings = {
+        event: {
+          start: startTestMoment.clone(),
+          end: endTestMoment.clone(),
+          full24HoursDay: true
+        }
+      };
+      var ctrl = initController(bindings);
+
+      expect(ctrl.full24HoursDay).to.equal(bindings.event.full24HoursDay);
+    });
+
+    it('should not modify start and end input values for non-all-day events', function() {
+      var bindings = {
+        event: {
+          start: startTestMoment.clone(),
+          end: endTestMoment.clone()
+        }
+      };
+      var ctrl = initController(bindings);
+
+      expect(ctrl.start.isSame(bindings.event.start)).to.be.true;
+      expect(ctrl.end.isSame(bindings.event.end)).to.be.true;
+    });
+
+    it('should subtract end input value by one day for all-day events', function() {
+      var bindings = {
+        event: {
+          start: startTestMoment.clone().stripTime(),
+          end: endTestMoment.clone().stripTime(),
+          full24HoursDay: true
+        }
+      };
+      var ctrl = initController(bindings);
+
+      expect(ctrl.start.isSame(bindings.event.start)).to.be.true;
+      expect(ctrl.end.clone().add(1, 'days').stripTime().isSame(bindings.event.end)).to.be.true;
+    });
+  });
+
+  describe('The dateOnBlurFn function', function() {
     it('should clone event start and end on input blur', function() {
       var bindings = {
         event: {
-          start: calMoment('2016-02-16 17:30'),
-          end: calMoment('2016-02-16 18:30')
+          start: startTestMoment.clone(),
+          end: endTestMoment.clone()
         }
       };
       var ctrl = initController(bindings);
-      var startBeforeBlur = ctrl.event.start;
-      var endBeforeBlur = ctrl.event.end;
+      var startBeforeBlur = ctrl.start;
+      var endBeforeBlur = ctrl.end;
 
       ctrl.dateOnBlurFn();
-      expect(ctrl.event.start).to.not.equal(startBeforeBlur);
-      expect(ctrl.event.end).to.not.equal(endBeforeBlur);
-      expect(ctrl.event.start.isSame(startBeforeBlur)).to.be.true;
-      expect(ctrl.event.end.isSame(endBeforeBlur)).to.be.true;
+      expect(ctrl.start).to.not.equal(startBeforeBlur);
+      expect(ctrl.end).to.not.equal(endBeforeBlur);
+      expect(ctrl.start.isSame(startBeforeBlur)).to.be.true;
+      expect(ctrl.end.isSame(endBeforeBlur)).to.be.true;
+    });
+  });
+
+  describe('The allDayOnChange function', function() {
+    it('should strip time from start and end date when "All day" option is selected', function() {
+      var bindings = {
+        event: {
+          start: startTestMoment.clone(),
+          end: endTestMoment.clone(),
+          full24HoursDay: false
+        }
+      };
+      var ctrl = initController(bindings);
+
+      ctrl.full24HoursDay = true;
+      ctrl.allDayOnChange();
+      checkEventDateTimeSync(ctrl);
+
+      expect(ctrl.start.isSame(startTestMoment.clone().stripTime())).to.be.true;
+      expect(ctrl.end.isSame(endTestMoment.clone().stripTime())).to.be.true;
     });
 
-    describe('The allDayOnChange function', function() {
-      it('should stripTime scope.event.allDay is true and add a day', function() {
-        var bindings = {
-          event: {
-            start: startTestMoment,
-            end: endTestMoment,
-            full24HoursDay: true
-          }
-        };
-        var ctrl = initController(bindings);
+    it('should set the time of start and end to next hour when unchecking the "All day" option after just opening an all-day event', function() {
+      var bindings = {
+        event: {
+          start: startTestMoment.clone().stripTime(),
+          end: endTestMoment.clone().stripTime(),
+          full24HoursDay: true
+        }
+      };
+      var ctrl = initController(bindings);
 
-        ctrl.allDayOnChange();
+      ctrl.full24HoursDay = false;
 
-        expect(ctrl.event.start.format('YYYY-MM-DD')).to.equal('2013-02-08');
-        expect(ctrl.event.start.hasTime()).to.be.false;
+      ctrl.allDayOnChange();
+      checkEventDateTimeSync(ctrl);
 
-        expect(ctrl.event.end.format('YYYY-MM-DD')).to.equal('2013-02-09');
-        expect(ctrl.event.end.hasTime()).to.be.false;
-      });
+      expect(ctrl.start.hasTime()).to.be.true;
+      expect(ctrl.end.hasTime()).to.be.true;
 
-      it('should set the time of start and end to next hour', function() {
-        var bindings = {
-          event: {
-            start: startTestMoment.stripTime(),
-            end: calMoment('2013-02-09 10:30').stripTime(),
-            allDay: false
-          }
-        };
-        var ctrl = initController(bindings);
+      var nextHour = calMoment().startOf('hour').add(1, 'hour');
+      var nextHourEnd = nextHour.clone().add(30, 'minute');
+      var fmt = 'HH:mm:ss.SSS';
 
-        ctrl.allDayOnChange();
-
-        expect(ctrl.event.start.hasTime()).to.be.true;
-        expect(ctrl.event.end.hasTime()).to.be.true;
-        expect(ctrl.event.start._isUTC).to.be.true;
-        expect(ctrl.event.end._isUTC).to.be.true;
-
-        var nextHour = calMoment().utc().startOf('hour').add(1, 'hour');
-        var nextHourEnd = nextHour.clone().add(30, 'minute');
-        var fmt = 'HH:mm:ss.SSS';
-
-        expect(ctrl.event.start.format(fmt)).to.equal(nextHour.format(fmt));
-        expect(ctrl.event.end.format(fmt)).to.equal(nextHourEnd.format(fmt));
-      });
-
-      it('should set the time of start to next hour and end to next hour+30min if same day', function() {
-        var bindings = {
-          event: {
-            start: startTestMoment,
-            end: endTestMoment,
-            full24HoursDay: false
-          }
-        };
-
-        var ctrl = initController(bindings);
-        var nextHour = calMoment().endOf('hour').add(1, 'seconds');
-
-        ctrl.allDayOnChange();
-
-        expect(ctrl.event.start.time().seconds())
-          .to.deep.equal(nextHour.time().seconds());
-        expect(ctrl.event.end.time().seconds())
-          .to.deep.equal(nextHour.add(30, 'minute').time().seconds());
-      });
-
-      it('should remember the time when switching to and from allday', function() {
-        var MINUTE = 60 * 1000;
-        var HOUR = 60 * MINUTE;
-        var origStart = startTestMoment;
-        var origEnd = endTestMoment;
-        var bindings = {
-          event: {
-            start: origStart.clone(),
-            end: origEnd.clone(),
-            full24HoursDay: false
-          }
-        };
-        var ctrl = initController(bindings);
-
-        expect(ctrl.event.start.format('YYYY-MM-DD HH:mm:ss')).to.equal('2013-02-08 09:30:00');
-        expect(ctrl.event.start.hasTime()).to.be.true;
-        expect(ctrl.event.end.format('YYYY-MM-DD HH:mm:ss')).to.equal('2013-02-08 10:00:00');
-        expect(ctrl.event.end.hasTime()).to.be.true;
-        expect(ctrl.diff).to.equal(30 * MINUTE);
-
-        ctrl.full24HoursDay = true;
-        ctrl.allDayOnChange();
-
-        expect(ctrl.event.start.format('YYYY-MM-DD')).to.equal('2013-02-08');
-        expect(ctrl.event.start.hasTime()).to.be.false;
-        expect(ctrl.event.end.format('YYYY-MM-DD')).to.equal('2013-02-09');
-        expect(ctrl.event.end.hasTime()).to.be.false;
-        expect(ctrl.diff).to.equal(24 * HOUR);
-
-        ctrl.full24HoursDay = false;
-        ctrl.allDayOnChange();
-
-        expect(ctrl.event.start.format('YYYY-MM-DD HH:mm:ss')).to.equal('2013-02-08 09:30:00');
-        expect(ctrl.event.start.hasTime()).to.be.true;
-        expect(ctrl.event.end.format('YYYY-MM-DD HH:mm:ss')).to.equal('2013-02-08 10:00:00');
-        expect(ctrl.event.end.hasTime()).to.be.true;
-        expect(ctrl.diff).to.equal(30 * MINUTE);
-      });
+      expect(ctrl.start.format(fmt)).to.equal(nextHour.format(fmt));
+      expect(ctrl.end.format(fmt)).to.equal(nextHourEnd.format(fmt));
     });
 
-    describe('The getMinDate function', function() {
-      it('should return start minus 1 day', function() {
-        var bindings = {
-          event: {
-            start: startTestMoment,
-            end: endTestMoment,
-            full24HoursDay: true
-          }
-        };
-        var ctrl = initController(bindings);
+    it('should remember the time when "All day" option is toggled checked/unchecked', function() {
+      var bindings = {
+        event: {
+          start: startTestMoment.clone(),
+          end: endTestMoment.clone(),
+          full24HoursDay: false
+        }
+      };
+      var ctrl = initController(bindings);
 
-        expect(ctrl.getMinDate()).to.equal('2013-02-07');
-      });
+      expect(ctrl.start.isSame(startTestMoment)).to.be.true;
+      expect(ctrl.end.isSame(endTestMoment)).to.be.true;
+
+      ctrl.full24HoursDay = true;
+      ctrl.allDayOnChange();
+      checkEventDateTimeSync(ctrl);
+
+      expect(ctrl.start.isSame(startTestMoment.clone().stripTime())).to.be.true;
+      expect(ctrl.end.isSame(endTestMoment.clone().stripTime())).to.be.true;
+
+      ctrl.full24HoursDay = false;
+      ctrl.allDayOnChange();
+      checkEventDateTimeSync(ctrl);
+
+      expect(ctrl.start.isSame(startTestMoment)).to.be.true;
+      expect(ctrl.end.isSame(endTestMoment)).to.be.true;
+    });
+  });
+
+  describe('The getMinEndDate function', function() {
+    it('should return start date minus 1 day', function() {
+      var bindings = {
+        event: {
+          start: startTestMoment.clone(),
+          end: endTestMoment.clone(),
+          full24HoursDay: false
+        }
+      };
+      var ctrl = initController(bindings);
+
+      expect(ctrl.getMinEndDate()).to.equal(ctrl.start.clone().subtract(1, 'days').format('YYYY-MM-DD'));
+    });
+  });
+
+  describe('The onStartDateChange function', function() {
+    it('should set end to start plus the previously stored diff', function() {
+      var bindings = {
+        event: {
+          start: startTestMoment.clone(),
+          end: endTestMoment.clone()
+        }
+      };
+      var ctrl = initController(bindings);
+
+      ctrl.onStartDateChange();
+      checkEventDateTimeSync(ctrl);
+
+      expect(ctrl.start.clone().add(ctrl.end.diff(ctrl.start)).isSame(ctrl.end)).to.be.true;
     });
 
-    describe('The onStartDateChange function', function() {
-      it('should set end to start plus the previous stored diff', function() {
-        var bindings = {
-          event: {
-            start: startTestMoment,
-            end: endTestMoment
-          }
-        };
-        var ctrl = initController(bindings);
+    it('should call onDateChange', function() {
+      var bindings = {
+        event: {
+          start: startTestMoment.clone(),
+          end: endTestMoment.clone()
+        },
+        onDateChange: sinon.spy()
+      };
+      var ctrl = initController(bindings);
 
-        ctrl.diff = 3600 * 1000 * 2; // 2 hours
+      ctrl.onStartDateChange();
+      checkEventDateTimeSync(ctrl);
+
+      expect(bindings.onDateChange).to.have.been.calledOnce;
+    });
+
+    it('should ignore null date and invalid date', function() {
+      var bindings = {
+        event: {
+          start: startTestMoment.clone(),
+          end: endTestMoment.clone()
+        }
+      };
+      var ctrl = initController(bindings);
+
+      [null, calMoment('invalid date')].forEach(function(date) {
+        ctrl.start = date;
         ctrl.onStartDateChange();
 
-        var isSame = calMoment('2013-02-08 11:30:00Z').isSame(ctrl.event.end);
+        expect(bindings.event.end.isSame(ctrl.end)).to.be.true;
+      }, this);
+    });
+  });
 
-        expect(isSame).to.be.true;
-      });
+  describe('The onEndDateChange function', function() {
+    it('should compute diff between start and end', function() {
+      var bindings = {
+        event: {
+          start: startTestMoment.clone(),
+          end: endTestMoment.clone()
+        }
+      };
+      var ctrl = initController(bindings);
 
-      it('should call onDateChange', function() {
-        var bindings = {
-          event: {
-            start: startTestMoment,
-            end: endTestMoment
-          },
-          onDateChange: sinon.spy()
-        };
-        var ctrl = initController(bindings);
+      ctrl.onEndDateChange();
+      checkEventDateTimeSync(ctrl);
+      var diff = ctrl.end.diff(ctrl.start);
 
-        ctrl.diff = 3600 * 1000 * 2; // 2 hours
-        ctrl.onStartDateChange();
+      ctrl.start = startTestMoment.clone().add(2, 'days');
+      ctrl.onStartDateChange();
 
-        expect(bindings.onDateChange).to.have.been.calledOnce;
-      });
-
-      describe('comportment for null date and invalid date', function() {
-        /* global moment: false */
-
-        beforeEach(function() {
-          moment.suppressDeprecationWarnings = true;
-        });
-
-        it('should ignore null date and invalid date', function() {
-          var end = calMoment('2013-02-08 13:30');
-          var bindings = {
-            event: {
-              start: startTestMoment,
-              end: end.clone()
-            }
-          };
-          var ctrl = initController(bindings);
-
-          [null, calMoment('invalid date')].forEach(function(date) {
-            ctrl.event.start = date;
-            ctrl.onStartDateChange();
-            var isSame = end.isSame(ctrl.event.end);
-
-            expect(isSame).to.be.true;
-          }, this);
-        });
-
-        afterEach(function() {
-          moment.suppressDeprecationWarnings = false;
-        });
-      });
+      expect(ctrl.end.isSame(ctrl.start.clone().add(diff))).to.be.true;
     });
 
-    describe('The onEndDateChange function', function() {
-      it('should compute diff between start and end', function() {
-        var bindings = {
-          event: {
-            start: startTestMoment,
-            end: calMoment('2013-02-08 13:30:00Z')
-          }
-        };
-        var ctrl = initController(bindings);
+    it('should set end to start plus 30 min if end is before start', function() {
+      var bindings = {
+        event: {
+          start: startTestMoment.clone(),
+          end: endTestMoment.clone()
+        }
+      };
+      var ctrl = initController(bindings);
 
-        ctrl.onEndDateChange();
-        expect(ctrl.diff).to.equal(3600 * 1000 * 4);
-      });
+      ctrl.end = ctrl.start.clone().subtract(1, 'days');
+      ctrl.onEndDateChange();
+      checkEventDateTimeSync(ctrl);
 
-      it('should set end to start plus 30 min if end is before start', function() {
-        var bindings = {
-          event: {
-            start: startTestMoment,
-            end: calMoment('2013-02-07 13:30')
-          }
-        };
-        var ctrl = initController(bindings);
-        ctrl.onEndDateChange();
-        var isSame = endTestMoment.isSame(ctrl.event.end);
+      expect(ctrl.end.isSame(ctrl.start.clone().add(30, 'minutes'))).to.be.true;
+    });
 
-        expect(isSame).to.be.true;
-      });
+    it('should ignore null date and invalid date', function() {
+      var bindings = {
+        event: {
+          start: startTestMoment.clone(),
+          end: endTestMoment.clone()
+        }
+      };
+      var ctrl = initController(bindings);
 
-      it('should ignore null date and invalid date', function() {
-        var start = calMoment('2013-02-07 13:30');
+      [null, calMoment('invalid date')].forEach(function(date) {
+        ctrl.end = date;
+        ctrl.onStartDateChange();
 
-        var bindings = {
-          event: {
-            end: startTestMoment,
-            start: start.clone()
-          }
-        };
-        var ctrl = initController(bindings);
+        expect(bindings.event.start.isSame(ctrl.start)).to.be.true;
+      }, this);
+    });
 
-        [null, calMoment('invalid date')].forEach(function(date) {
-          ctrl.event.end = date;
-          ctrl.onEndDateChange();
-          var isSame = start.isSame(ctrl.event.start);
+    it('should call onDateChange', function() {
+      var bindings = {
+        event: {
+          start: startTestMoment.clone(),
+          end: endTestMoment.clone()
+        },
+        onDateChange: sinon.spy()
+      };
+      var ctrl = initController(bindings);
 
-          expect(isSame).to.be.true;
-        }, this);
-      });
+      ctrl.onStartDateChange();
+      checkEventDateTimeSync(ctrl);
 
-      it('should call onDateChange when called with falsy parameter', function() {
-        var bindings = {
-          event: {
-            start: startTestMoment,
-            end: calMoment('2013-02-07 13:30')
-          },
-          onDateChange: sinon.spy()
-        };
-        var ctrl = initController(bindings);
-
-        ctrl.onEndDateChange();
-
-        expect(bindings.onDateChange).to.have.been.calledOne;
-      });
-
-      it('should not call onDateChange when called with truthy parameter', function() {
-        var bindings = {
-          event: {
-            start: startTestMoment,
-            end: calMoment('2013-02-07 13:30')
-          },
-          onDateChange: sinon.spy()
-        };
-        var ctrl = initController(bindings);
-
-        ctrl.onEndDateChange(true);
-
-        expect(bindings.onDateChange).to.not.have.been.called;
-      });
+      expect(bindings.onDateChange).to.have.been.calledOnce;
     });
   });
 });
