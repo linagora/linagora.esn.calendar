@@ -2,46 +2,36 @@
   'use strict';
 
   angular.module('esn.calendar')
-         .controller('calEventDateConsultationController', calEventDateConsultationController);
+    .controller('calEventDateConsultationController', calEventDateConsultationController);
 
-  function calEventDateConsultationController() {
-    var self = this,
-        isFull24HoursDay = self.event.full24HoursDay,
-        isOverOneDayOnly = self.event.isOverOneDayOnly(),
-        eventStart = self.event.start,
-        eventEnd = self.event.end;
+  function calEventDateConsultationController(calMoment) {
+    var self = this;
+    var isFull24HoursDay = self.event.full24HoursDay;
+    var isOverOneDayOnly = self.event.isOverOneDayOnly();
+    var eventStart = calMoment(self.event.start);
+    var eventEnd = calMoment(self.event.end);
 
-    activate();
-
-    ////////////
-
-    function activate() {
-      formatStartDate();
-      formatEndDate();
-    }
+    formatStartDate();
+    formatEndDate();
 
     function formatStartDate() {
-      if (!isFull24HoursDay && isOverOneDayOnly) {
-        self.start = eventStart.format('MMM D HH:mm');
-        self.startVerbose = eventStart.format('MMM D HH:mm');
-      } else if (isOverOneDayOnly) {
-        self.start = self.startVerbose = eventStart.format('MMM D');
-      } else {
+      if (isFull24HoursDay) {
         self.start = eventStart.format('MMM D');
-        self.startVerbose = eventStart.format('MMM D');
+
+        return;
       }
+
+      self.start = eventStart.format('MMM D HH:mm');
     }
 
     function formatEndDate() {
-      if (!isFull24HoursDay && isOverOneDayOnly) {
-        self.end = self.endVerbose = eventEnd.format('HH:mm');
-      } else if (!isFull24HoursDay && !isOverOneDayOnly) {
-        self.end = eventEnd.format('MMM D');
-        self.endVerbose = eventEnd.format('MMM D');
-      } else if (!isOverOneDayOnly) {
-        self.end = eventEnd.clone().subtract(1, 'day').format('MMM D');
-        self.endVerbose = eventEnd.clone().subtract(1, 'day').format('MMM D');
+      if (isFull24HoursDay) {
+        self.end = isOverOneDayOnly ? undefined : eventEnd.clone().subtract(1, 'day').format('MMM D');
+
+        return;
       }
+
+      self.end = isOverOneDayOnly ? eventEnd.format('HH:mm') : self.end = eventEnd.format('MMM D HH:mm');
     }
   }
 })();
