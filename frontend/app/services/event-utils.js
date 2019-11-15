@@ -6,8 +6,8 @@
 
   function calEventUtils(
     _,
-    escapeHtmlUtils,
     session,
+    moment,
     esnI18nService,
     CAL_DEFAULT_EVENT_COLOR,
     CAL_SIGNIFICANT_CHANGE_KEYS,
@@ -35,7 +35,8 @@
       resetStoredEvents: resetStoredEvents,
       getUserAttendee: getUserAttendee,
       getEventTitle: getEventTitle,
-      canSuggestChanges: canSuggestChanges
+      canSuggestChanges: canSuggestChanges,
+      stripTimeWithTz: stripTimeWithTz
     };
 
     return service;
@@ -132,6 +133,30 @@
 
     function canSuggestChanges(event, user) {
       return !!(!event.isRecurring() && !isOrganizer(event, user) && getUserAttendee(event, user));
+    }
+
+    function stripTimeWithTz(calMomentDate, shouldNotSubtractUTCOffset) {
+      var timeStrippedMoment = calMomentDate.clone();
+      // Due to FullCalendar v3 timezone bugs (https://github.com/fullcalendar/fullcalendar/issues/2981),
+      // we're only using browser timezone here. After we've successfully migrated to FullCalendar v4,
+      // it has to be the user's chosen timezone: `var currentUTCOffset = moment().tz(esnDatetimeService.getTimezone()).utcOffset()`.
+      var currentUTCOffset = moment().utcOffset();
+
+      // If the user is in a timezone with negative UTC offset, we need to subtract the UTC offset from
+      // the moment to ensure that it is still the same day when converting to and from UTC-00.
+      if (currentUTCOffset < 0 && !shouldNotSubtractUTCOffset) {
+        var subtractedMoment = timeStrippedMoment.clone().subtract(currentUTCOffset, 'minutes');
+
+        if (subtractedMoment.isSame(timeStrippedMoment, 'day')) {
+          timeStrippedMoment = subtractedMoment.clone();
+        }
+      }
+
+      // This is to make m.hasTime() return false, which is a workaround due to FullCalendar v3 timezone bugs.
+      // See https://github.com/fullcalendar/fullcalendar/blob/v3/src/moment-ext.ts#L231 for details.
+      timeStrippedMoment._ambigTime = true;
+
+      return timeStrippedMoment;
     }
   }
 

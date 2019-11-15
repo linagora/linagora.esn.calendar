@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('The calEventDateEditionController', function() {
-  var $controller, calMoment, esnI18nDateFormatService;
+  var $controller, calMoment, calEventUtils, esnI18nDateFormatService;
   var startTestMoment, endTestMoment;
   var longDateFormatMock = 'YYYY-MM-DD';
 
@@ -18,9 +18,10 @@ describe('The calEventDateEditionController', function() {
       $provide.value('esnI18nDateFormatService', esnI18nDateFormatService);
     });
 
-    inject(function(_$controller_, _calMoment_) {
+    inject(function(_$controller_, _calMoment_, _calEventUtils_) {
       $controller = _$controller_;
       calMoment = _calMoment_;
+      calEventUtils = _calEventUtils_;
     });
 
     startTestMoment = calMoment('2013-02-08 09:30:00Z').utc();
@@ -37,8 +38,8 @@ describe('The calEventDateEditionController', function() {
 
   function checkEventDateTimeSync(ctrl) {
     if (ctrl.full24HoursDay) {
-      expect(ctrl.start.isSame(ctrl.event.start)).to.be.true;
-      expect(ctrl.end.clone().add(1, 'days').isSame(ctrl.event.end)).to.be.true;
+      expect(ctrl.start.isSame(ctrl.event.start, 'day')).to.be.true;
+      expect(ctrl.end.clone().add(1, 'days').isSame(ctrl.event.end, 'day')).to.be.true;
 
       return;
     }
@@ -102,15 +103,15 @@ describe('The calEventDateEditionController', function() {
     it('should subtract end input value by one day for all-day events', function() {
       var bindings = {
         event: {
-          start: startTestMoment.clone().stripTime(),
-          end: endTestMoment.clone().stripTime(),
+          start: calEventUtils.stripTimeWithTz(startTestMoment),
+          end: calEventUtils.stripTimeWithTz(endTestMoment),
           full24HoursDay: true
         }
       };
       var ctrl = initController(bindings);
 
-      expect(ctrl.start.isSame(bindings.event.start)).to.be.true;
-      expect(ctrl.end.clone().add(1, 'days').stripTime().isSame(bindings.event.end)).to.be.true;
+      expect(ctrl.start.isSame(bindings.event.start, 'day')).to.be.true;
+      expect(calEventUtils.stripTimeWithTz(ctrl.end.clone().add(1, 'days')).isSame(bindings.event.end, 'day')).to.be.true;
     });
   });
 
@@ -149,15 +150,15 @@ describe('The calEventDateEditionController', function() {
       ctrl.allDayOnChange();
       checkEventDateTimeSync(ctrl);
 
-      expect(ctrl.start.isSame(startTestMoment.clone().stripTime())).to.be.true;
-      expect(ctrl.end.isSame(endTestMoment.clone().stripTime())).to.be.true;
+      expect(ctrl.start.isSame(calEventUtils.stripTimeWithTz(startTestMoment))).to.be.true;
+      expect(ctrl.end.isSame(calEventUtils.stripTimeWithTz(endTestMoment))).to.be.true;
     });
 
     it('should set the time of start and end to next hour when unchecking the "All day" option after just opening an all-day event', function() {
       var bindings = {
         event: {
-          start: startTestMoment.clone().stripTime(),
-          end: endTestMoment.clone().stripTime(),
+          start: calEventUtils.stripTimeWithTz(startTestMoment),
+          end: calEventUtils.stripTimeWithTz(endTestMoment),
           full24HoursDay: true
         }
       };
@@ -196,8 +197,8 @@ describe('The calEventDateEditionController', function() {
       ctrl.allDayOnChange();
       checkEventDateTimeSync(ctrl);
 
-      expect(ctrl.start.isSame(startTestMoment.clone().stripTime())).to.be.true;
-      expect(ctrl.end.isSame(endTestMoment.clone().stripTime())).to.be.true;
+      expect(ctrl.start.isSame(calEventUtils.stripTimeWithTz(startTestMoment))).to.be.true;
+      expect(ctrl.end.isSame(calEventUtils.stripTimeWithTz(endTestMoment))).to.be.true;
 
       ctrl.full24HoursDay = false;
       ctrl.allDayOnChange();

@@ -1,6 +1,6 @@
 'use strict';
 
-/* global chai, sinon: false */
+/* global chai, sinon, _: false */
 
 var expect = chai.expect;
 
@@ -10,6 +10,13 @@ describe('The calendarViewController', function() {
   var createCalendarSpy;
   var self;
 
+  function getDateOnlyMoment(date) {
+    var dateOnlyMoment = self.calMoment(date);
+    dateOnlyMoment.hasTime = function() { return false; };
+
+    return dateOnlyMoment;
+  }
+
   beforeEach(function() {
     self = this;
     event = {};
@@ -18,7 +25,7 @@ describe('The calendarViewController', function() {
 
     this.calOpenEventFormMock = sinon.spy();
 
-    var calendarUtilsMock = {
+    this.calendarUtilsMock = {
       getNewStartDate: function() {
         return self.calMoment('2013-02-08 09:30');
       },
@@ -69,7 +76,7 @@ describe('The calendarViewController', function() {
       return angular.extend({}, event, extendedProp);
     });
 
-    this.CalendarShellMock.fromIncompleteShell = sinon.spy();
+    this.CalendarShellMock.fromIncompleteShell = sinon.stub.returnsArg(0);
 
     this.renderSpy = sinon.spy();
     this.calFullCalendarRenderEventService = sinon.spy(function() {
@@ -148,10 +155,10 @@ describe('The calendarViewController', function() {
       stop: sinon.spy()
     };
 
-    angular.mock.module('esn.calendar');
-    angular.mock.module(function($provide) {
+    module('esn.calendar');
+    module(function($provide) {
       $provide.decorator('calendarUtils', function($delegate) {
-        return angular.extend($delegate, calendarUtilsMock);
+        return angular.extend($delegate, self.calendarUtilsMock);
       });
       $provide.value('elementScrollService', self.elementScrollServiceMock);
       $provide.value('calOpenEventForm', self.calOpenEventFormMock);
@@ -187,7 +194,7 @@ describe('The calendarViewController', function() {
     });
   });
 
-  beforeEach(angular.mock.inject(function(
+  beforeEach(inject(function(
     $controller,
     $rootScope,
     $timeout,
@@ -199,7 +206,6 @@ describe('The calendarViewController', function() {
     CAL_EVENTS,
     calDefaultValue,
     calEventUtils,
-    calOpenEventForm,
     elementScrollService,
     $q,
     CAL_SPINNER_TIMEOUT_DURATION) {
@@ -287,6 +293,58 @@ describe('The calendarViewController', function() {
       this.scope.uiConfig.calendar.eventRender(event, element, view);
 
       expect(this.calFullCalendarRenderEventService).to.have.been.calledWith(this.calendars[0]);
+    });
+  });
+
+  describe('The uiConfig.calendar.select function', function() {
+    it('should open a new event form with start and end dates from the selected time box', function() {
+      var start = this.calMoment('2016-01-01 09:00');
+      var end = this.calMoment('2016-01-01 10:00');
+
+      this.calendarUtilsMock.getDateOnCalendarSelect = function() {
+        return { start: start, end: end };
+      };
+
+      this.scope.calendarHomeId = 'calendarHomeId';
+      this.controller('calendarViewController', {$scope: this.scope});
+      this.scope.$digest();
+      this.scope.uiConfig.calendar.select(start, end);
+
+      var event = {
+        start: start,
+        end: end
+      };
+
+      expect(this.calOpenEventFormMock).to.have.been.calledWith(this.scope.calendarHomeId, sinon.match(event));
+    });
+
+    it('should strip time for "All day" events and open a new event form with start and end dates from the selected time box', function() {
+      var start = getDateOnlyMoment('2016-01-01');
+      var end = getDateOnlyMoment('2016-01-02');
+
+      var firstTimeStrip = true;
+      this.calEventUtils.stripTimeWithTz = function(calMomentDate) {
+        expect(calMomentDate.isSame(firstTimeStrip ? start : end)).to.be.true;
+        firstTimeStrip = false;
+
+        return calMomentDate;
+      };
+
+      this.calendarUtilsMock.getDateOnCalendarSelect = function() {
+        return { start: start, end: end };
+      };
+
+      this.scope.calendarHomeId = 'calendarHomeId';
+      this.controller('calendarViewController', {$scope: this.scope});
+      this.scope.$digest();
+      this.scope.uiConfig.calendar.select(start, end);
+
+      var event = {
+        start: start,
+        end: end
+      };
+
+      expect(this.calOpenEventFormMock).to.have.been.calledWith(this.scope.calendarHomeId, sinon.match(event));
     });
   });
 
@@ -720,6 +778,11 @@ describe('The calendarViewController', function() {
   });
 
   describe('the eventDropAndResize listener', function() {
+    function assertEqualEvents(actualEvent, expectedEvent) {
+      return actualEvent.start.isSame(expectedEvent.start) &&
+        actualEvent.end.isSame(expectedEvent.end);
+    }
+
     it('should call calendarService.checkAndUpdateEvent with the correct argument if resize', function() {
       var oldEvent = {
         path: 'aPath',
@@ -799,6 +862,136 @@ describe('The calendarViewController', function() {
       expect(newEvent.start.isSame(this.calMoment('2016-01-01 09:10'))).to.be.true;
       expect(newEvent.end.isSame(this.calMoment('2016-01-01 10:10'))).to.be.true;
       expect(this.calEventServiceMock.checkAndUpdateEvent).to.have.been.calledWith(newEvent, sinon.match.func, sinon.match.func, sinon.match.func);
+    });
+
+    it('should call calendarService.checkAndUpdateEvent with correct arguments when dragging and dropping from normal display to all-day display', function() {
+      this.calEventUtilsMock.stripTimeWithTz = sinon.stub().returnsArg(0);
+
+      var oldEvent = {
+        path: 'aPath',
+        etag: 'anEtag',
+        start: this.calMoment('2016-01-01 09:00'),
+        end: this.calMoment('2016-01-01 10:00'),
+        clone: function() {
+          return _.assign({}, this);
+        }
+      };
+
+      var event = {
+        path: 'aPath',
+        etag: 'anEtag',
+        allDay: true,
+        start: this.calMoment('2016-01-01 09:00'),
+        end: this.calMoment('2016-01-01 10:00'),
+        clone: function() {
+          return _.assign({}, oldEvent);
+        }
+      };
+
+      var delta = this.calMoment.duration(10, 'minutes');
+
+      var newEvent = {
+        path: 'aPath',
+        etag: 'anEtag',
+        start: event.start.clone().add(delta),
+        end: event.end.clone().add(delta).add(1, 'day')
+      };
+
+      this.controller('calendarViewController', {$scope: this.scope});
+      this.scope.eventDropAndResize(true, event, delta);
+
+      expect(this.calEventUtilsMock.stripTimeWithTz).to.have.been.calledTwice;
+      expect(this.calEventServiceMock.checkAndUpdateEvent).to.have.been.calledWith(sinon.match(function(actualNewEvent) {
+        return assertEqualEvents(actualNewEvent, newEvent);
+      }), sinon.match.func, sinon.match.func, sinon.match.func);
+    });
+
+    it('should call calendarService.checkAndUpdateEvent with correct arguments when dragging and dropping from all-day display to normal display', function() {
+      this.calEventUtilsMock.stripTimeWithTz = sinon.stub().returnsArg(0);
+
+      var oldEvent = {
+        path: 'aPath',
+        etag: 'anEtag',
+        start: getDateOnlyMoment('2016-01-01'),
+        end: getDateOnlyMoment('2016-01-02'),
+        clone: function() {
+          return _.assign({}, this);
+        }
+      };
+
+      var event = {
+        path: 'aPath',
+        etag: 'anEtag',
+        start: this.calMoment('2016-01-01 09:00'),
+        end: this.calMoment('2016-01-01 10:00'),
+        clone: function() {
+          return _.assign({}, oldEvent);
+        }
+      };
+
+      var delta = this.calMoment.duration(10, 'minutes');
+
+      var newEvent = {
+        path: 'aPath',
+        etag: 'anEtag',
+        start: event.start.clone(),
+        end: event.end.clone().endOf('day')
+      };
+
+      this.controller('calendarViewController', {$scope: this.scope});
+      this.scope.eventDropAndResize(true, event, delta);
+
+      expect(this.calEventUtilsMock.stripTimeWithTz).to.have.not.been.called;
+      expect(this.calEventServiceMock.checkAndUpdateEvent).to.have.been.calledWith(sinon.match(function(actualNewEvent) {
+        return assertEqualEvents(actualNewEvent, newEvent);
+      }), sinon.match.func, sinon.match.func, sinon.match.func);
+    });
+
+    it('should call calendarService.checkAndUpdateEvent with correct arguments when dragging and dropping within all-day display', function() {
+      this.calEventUtilsMock.stripTimeWithTz = sinon.stub().returnsArg(0);
+
+      var oldEvent = {
+        path: 'aPath',
+        etag: 'anEtag',
+        allDay: true,
+        full24HoursDay: true,
+        start: getDateOnlyMoment('2016-01-01'),
+        end: getDateOnlyMoment('2016-01-02'),
+        clone: function() {
+          return _.assign({}, this);
+        }
+      };
+
+      var delta = this.calMoment.duration(2, 'days');
+
+      var event = {
+        path: 'aPath',
+        etag: 'anEtag',
+        allDay: true,
+        full24HoursDay: true,
+        start: getDateOnlyMoment(oldEvent.start.clone().add(delta)),
+        end: getDateOnlyMoment(oldEvent.end.clone().add(delta)),
+        clone: function() {
+          return _.assign({}, oldEvent);
+        }
+      };
+
+      var newEvent = {
+        path: 'aPath',
+        etag: 'anEtag',
+        allDay: true,
+        full24HoursDay: true,
+        start: event.start.clone(),
+        end: event.end.clone()
+      };
+
+      this.controller('calendarViewController', {$scope: this.scope});
+      this.scope.eventDropAndResize(true, event, delta);
+
+      expect(this.calEventUtilsMock.stripTimeWithTz).to.have.been.calledTwice;
+      expect(this.calEventServiceMock.checkAndUpdateEvent).to.have.been.calledWith(sinon.match(function(actualNewEvent) {
+        return assertEqualEvents(actualNewEvent, newEvent);
+      }), sinon.match.func, sinon.match.func, sinon.match.func);
     });
 
     it('should send a CAL_EVENTS.REVERT_MODIFICATION with the event after calling fullcalendar revert when the drap and drop if reverted', function(done) {
