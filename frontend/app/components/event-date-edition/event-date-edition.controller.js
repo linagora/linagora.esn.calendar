@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .controller('calEventDateEditionController', calEventDateEditionController);
 
-  function calEventDateEditionController(calMoment, esnI18nDateFormatService) {
+  function calEventDateEditionController(calMoment, calEventUtils, esnI18nDateFormatService) {
     var self = this;
     var previousStart;
     var previousEnd;
@@ -23,11 +23,11 @@
       self.dateFormat = esnI18nDateFormatService.getLongDateFormat();
       self.disabled = self.disabled || false;
       self.full24HoursDay = self.event.full24HoursDay;
-      self.start = calMoment(self.event.start);
 
+      self.start = calMoment(self.event.start);
       // In CalDAV backend, the end date of an all-day event is stored +1 day compared to the end date when a user saves the event.
       // Therefore, if this is an all-day event, we need to display -1 day for the end date input.
-      self.end = self.full24HoursDay ? calMoment(self.event.end).subtract(1, 'days') : calMoment(self.event.end);
+      self.end = !self.full24HoursDay ? calMoment(self.event.end) : calMoment(self.event.end).subtract(1, 'days');
 
       // On load, ensure the duration between start and end is calculated
       _calcDateDiff();
@@ -49,8 +49,8 @@
     function allDayOnChange() {
       if (self.full24HoursDay) {
         _saveEventDateTime(self.start, self.end);
-        self.start = self.start.stripTime();
-        self.end = self.end.stripTime();
+        self.start = calEventUtils.stripTimeWithTz(self.start);
+        self.end = calEventUtils.stripTimeWithTz(self.end);
       // The user unchecks the 'All day' option after previously checking it.
       } else if (previousStart && previousEnd) {
         self.start = _copyTime(self.start, previousStart);
@@ -77,7 +77,7 @@
 
       // When 'All day' is selected, strip time
       if (self.full24HoursDay) {
-        self.start.stripTime();
+        self.start = calEventUtils.stripTimeWithTz(self.start);
       }
 
       // Move the end range from the start range plus the offset
@@ -98,7 +98,7 @@
 
       // When 'All day' is selected, strip time
       if (self.full24HoursDay) {
-        self.end.stripTime();
+        self.end = calEventUtils.stripTimeWithTz(self.end);
       }
 
       _checkAndForceEndAfterStart();
@@ -121,8 +121,8 @@
 
     function _syncEventDateTime() {
       if (self.full24HoursDay) {
-        self.event.start = self.start.clone().stripTime();
-        self.event.end = self.end.clone().add(1, 'days').stripTime();
+        self.event.start = calEventUtils.stripTimeWithTz(self.start.clone());
+        self.event.end = calEventUtils.stripTimeWithTz(self.end.clone().add(1, 'days'));
 
         return;
       }

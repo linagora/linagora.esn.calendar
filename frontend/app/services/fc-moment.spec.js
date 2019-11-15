@@ -7,6 +7,10 @@ var expect = chai.expect;
 describe('calMoment factory', function() {
 
   beforeEach(function() {
+    this.calEventUtilsMock = {
+      stripTimeWithTz: sinon.spy()
+    };
+
     this.window = {
       $: {
         fullCalendar: {}
@@ -31,17 +35,18 @@ describe('calMoment factory', function() {
 
     var self = this;
 
-    angular.mock.module('esn.calendar');
-    angular.mock.module(function($provide) {
+    module('esn.calendar');
+    module(function($provide) {
       $provide.value('$window', self.window);
       $provide.value('_', function() {});
       $provide.value('jstz', self.jstz);
+      $provide.value('calEventUtils', self.calEventUtilsMock);
       $provide.constant('moment', self.moment);
     });
   });
 
   beforeEach(function() {
-    angular.mock.inject(function(calMoment, ICAL) {
+    inject(function(calMoment, ICAL) {
       this.calMoment = calMoment;
       this.ICAL = ICAL;
     });
@@ -70,17 +75,17 @@ describe('calMoment factory', function() {
 
     icalTime.isDate = true;
 
-    var stripTimeFunc = sinon.spy();
+    var emptyMomentObject = {};
 
     this.window.$.fullCalendar.moment = function(dt) {
       expect(dt).to.deep.equal(icalTime.toJSDate());
 
-      return {
-        stripTime: stripTimeFunc
-      };
+      return emptyMomentObject;
     };
+
     this.calMoment(icalTime);
-    expect(stripTimeFunc).to.have.been.called;
+
+    expect(this.calEventUtilsMock.stripTimeWithTz).to.have.been.calledWith(emptyMomentObject, true);
   });
 
   it('has a duration method which is like moment.duration', function() {

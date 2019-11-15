@@ -22,6 +22,7 @@
     calendarVisibilityService,
     calEventService,
     calendarUtils,
+    calEventUtils,
     calFullCalendarRenderEventService,
     gracePeriodService,
     calOpenEventForm,
@@ -162,12 +163,13 @@
       function eventDropAndResize(drop, event, delta, revert) {
         var oldEvent = event.clone();
 
-        // Draging event on day display to allDay display
+        // Dragging event from normal display to all-day display
         if (event.allDay && !event.multiDay && !event.full24HoursDay) {
-          oldEvent.start.stripTime();
-          oldEvent.end.stripTime().add(1, 'day');
+          oldEvent.start = calEventUtils.stripTimeWithTz(oldEvent.start);
+          oldEvent.end = calEventUtils.stripTimeWithTz(oldEvent.end.clone().add(1, 'day'));
         }
-        // Draging event on allDay display to day display
+
+        // Dragging event from all-day display to normal display
         if (event.start.hasTime() && (!oldEvent.start.hasTime() || oldEvent.multiDay)) {
           oldEvent.start = event.start;
           oldEvent.end = event.start.clone().endOf('day');
@@ -182,6 +184,12 @@
           newEvent.start = oldEvent.start.clone().add(delta);
         }
         newEvent.end = oldEvent.end.clone().add(delta);
+
+        // Dragging "All day" event from the current time window to a different time window within all-day display
+        if (oldEvent.full24HoursDay) {
+          newEvent.start = calEventUtils.stripTimeWithTz(newEvent.start);
+          newEvent.end = calEventUtils.stripTimeWithTz(newEvent.end);
+        }
 
         calEventService.checkAndUpdateEvent(newEvent, _updateEvent, _editEvent, _cancel);
 
@@ -222,6 +230,13 @@
 
       function select(start, end) {
         var date = calendarUtils.getDateOnCalendarSelect(start, end);
+        if (!date.start.hasTime()) {
+          date = {
+            start: calEventUtils.stripTimeWithTz(date.start),
+            end: calEventUtils.stripTimeWithTz(date.end)
+          };
+        }
+
         var event = CalendarShell.fromIncompleteShell({
           start: date.start,
           end: date.end
