@@ -7,40 +7,13 @@ module.exports = dependencies => {
   const elasticsearch = dependencies('elasticsearch');
   const listener = require('./searchHandler')(dependencies);
   const pubsub = require('./pubsub')(dependencies);
-  let searchHandler;
 
   return {
-    indexEvent,
     listen,
-    removeEventFromIndex,
     searchEventsBasic,
     searchEventsAdvanced,
     searchNextEvent
   };
-
-  function indexEvent(event, callback) {
-    if (!searchHandler) {
-      return callback(new Error('Event search is not initialized'));
-    }
-
-    if (!event) {
-      return callback(new Error('Event is required'));
-    }
-
-    searchHandler.indexData(event, callback);
-  }
-
-  function removeEventFromIndex(event, callback) {
-    if (!searchHandler) {
-      return callback(new Error('Event search is not initialized'));
-    }
-
-    if (!event) {
-      return callback(new Error('Event is required'));
-    }
-
-    searchHandler.removeFromIndex(event, callback);
-  }
 
   function searchNextEvent(user, callback) {
     const mustOccur = {
@@ -205,7 +178,7 @@ module.exports = dependencies => {
   function listen() {
     logger.info('Subscribing to event updates for indexing');
     pubsub.listen();
-    searchHandler = listener.register();
+    listener.register();
 
     logger.info('Register reindexing for calendar events');
     require('./reindex')(dependencies).register();
