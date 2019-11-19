@@ -12,8 +12,8 @@ describe('The calendar core module', function() {
   let pubsubMock;
   let configMock;
   let authMock;
-  let searchLibMock;
-  let searchLibModule;
+  let elasticsearchActionsMock;
+  let elasticsearchActions;
   let caldavClientMock;
   let caldavClientLib;
   let emailMock;
@@ -86,9 +86,9 @@ describe('The calendar core module', function() {
         }
       }
     };
-    searchLibMock = {};
-    searchLibModule = function() {
-      return searchLibMock;
+    elasticsearchActionsMock = {};
+    elasticsearchActions = function() {
+      return elasticsearchActionsMock;
     };
     caldavClientMock = {};
     caldavClientLib = function() {
@@ -113,7 +113,7 @@ describe('The calendar core module', function() {
   beforeEach(function() {
     initMock();
     mockery.registerMock('./../../../lib/message/eventmessage.core', eventMessageMock);
-    mockery.registerMock('../../../lib/search', searchLibModule);
+    mockery.registerMock('../../../lib/search/actions', elasticsearchActions);
     mockery.registerMock('../../../lib/caldav-client', caldavClientLib);
     this.moduleHelpers.addDep('user', userMock);
     this.moduleHelpers.addDep('collaboration', collaborationMock);
@@ -329,7 +329,7 @@ describe('The calendar core module', function() {
         sortOrder: 'desc'
       };
 
-      searchLibMock.searchEventsBasic = function(q, callback) {
+      elasticsearchActionsMock.searchEventsBasic = function(q, callback) {
         expect(q).to.deep.equal(query);
 
         return callback(new Error());
@@ -356,7 +356,7 @@ describe('The calendar core module', function() {
         ]
       };
 
-      searchLibMock.searchEventsBasic = function(q, callback) {
+      elasticsearchActionsMock.searchEventsBasic = function(q, callback) {
         expect(q).to.deep.equal(query);
 
         return callback(null, esResult);
@@ -404,7 +404,7 @@ describe('The calendar core module', function() {
     });
 
     it('should call the search core module with good params and fail if it fails', function(done) {
-      searchLibMock.searchEventsAdvanced = function(query) {
+      elasticsearchActionsMock.searchEventsAdvanced = function(query) {
         expect(query).to.deep.equal(advancedQuery);
 
         return Promise.reject(new Error());
@@ -427,7 +427,7 @@ describe('The calendar core module', function() {
         ]
       };
 
-      searchLibMock.searchEventsAdvanced = function(query) {
+      elasticsearchActionsMock.searchEventsAdvanced = function(query) {
         expect(query).to.deep.equal(advancedQuery);
 
         return Promise.resolve(esResult);

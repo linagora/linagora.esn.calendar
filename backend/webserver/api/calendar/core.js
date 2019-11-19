@@ -13,7 +13,7 @@ module.exports = dependencies => {
   const localpubsub = dependencies('pubsub').local;
   const globalpubsub = dependencies('pubsub').global;
   const collaborationPermission = dependencies('collaboration').permission;
-  const searchModule = require('../../../lib/search')(dependencies);
+  const elasticsearchActions = require('../../../lib/search/actions')(dependencies);
   const caldavClient = require('../../../lib/caldav-client')(dependencies);
 
   return {
@@ -162,12 +162,12 @@ module.exports = dependencies => {
   }
 
   function searchEventsBasic(query) {
-    return Q.ninvoke(searchModule, 'searchEventsBasic', query)
+    return Q.ninvoke(elasticsearchActions, 'searchEventsBasic', query)
       .then(esResult => _handleElasSearchResults(esResult, query));
   }
 
   function searchEventsAdvanced(query) {
-    return searchModule.searchEventsAdvanced(query)
+    return elasticsearchActions.searchEventsAdvanced(query)
       .then(esResult => _handleElasSearchResults(esResult, query));
   }
 

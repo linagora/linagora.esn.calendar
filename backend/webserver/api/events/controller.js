@@ -4,7 +4,7 @@ const moment = require('moment');
 
 module.exports = function(dependencies) {
   const i18n = dependencies('i18n'),
-        search = require('../../../lib/search')(dependencies),
+        elasticsearchActions = require('../../../lib/search/actions')(dependencies),
         calDavClient = require('../../../lib/caldav-client')(dependencies);
 
   return {
@@ -16,7 +16,7 @@ module.exports = function(dependencies) {
   /////
 
   function getNextEvent(req, res) {
-    search.searchNextEvent(req.user, _ensureNoSearchErrorAndOneResult(res, event => {
+    elasticsearchActions.searchNextEvent(req.user, _ensureNoSearchErrorAndOneResult(res, event => {
       if (req.accepts('json')) {
         return res.status(200).json(event);
       }
@@ -26,7 +26,7 @@ module.exports = function(dependencies) {
   }
 
   function cancelNextEvent(req, res) {
-    search.searchNextEvent(req.user, _ensureNoSearchErrorAndOneResult(res, event => _calAction(calDavClient.deleteEventInDefaultCalendar(req.user, event.uid), res)));
+    elasticsearchActions.searchNextEvent(req.user, _ensureNoSearchErrorAndOneResult(res, event => _calAction(calDavClient.deleteEventInDefaultCalendar(req.user, event.uid), res)));
   }
 
   function newEventInDefaultCalendar(req, res) {
