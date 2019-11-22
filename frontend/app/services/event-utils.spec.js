@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('The calEventUtils service', function() {
-  var event, userEmail, esnI18nServiceMock;
+  var event, userEmail, esnI18nServiceMock, momentUTCOffsetStub;
 
   beforeEach(function() {
     var emailMap = {};
@@ -28,13 +28,21 @@ describe('The calEventUtils service', function() {
       }
     };
 
-    angular.mock.module('esn.calendar');
-    angular.mock.module('esn.ical');
-    angular.mock.module(function($provide) {
+    momentUTCOffsetStub = sinon.stub();
+
+    module('esn.calendar');
+    module('esn.ical');
+    module(function($provide) {
       $provide.factory('session', function($q) {
         session.ready = $q.when(session);
 
         return session;
+      });
+
+      $provide.constant('moment', function() {
+        return {
+          utcOffset: momentUTCOffsetStub
+        };
       });
 
       $provide.constant('esnI18nService', esnI18nServiceMock);
@@ -54,7 +62,7 @@ describe('The calEventUtils service', function() {
     };
   });
 
-  beforeEach(angular.mock.inject(function(calEventUtils, $rootScope, calMoment, CalendarShell, session, CAL_MAX_DURATION_OF_SMALL_EVENT, CAL_EVENT_FORM, CAL_ICAL) {
+  beforeEach(inject(function(calEventUtils, $rootScope, calMoment, CalendarShell, session, CAL_MAX_DURATION_OF_SMALL_EVENT, CAL_EVENT_FORM, CAL_ICAL) {
     this.calEventUtils = calEventUtils;
     this.$rootScope = $rootScope;
     this.calMoment = calMoment;
@@ -461,6 +469,65 @@ describe('The calEventUtils service', function() {
       });
 
       expect(this.calEventUtils.canSuggestChanges(event, this.session.user)).to.be.false;
+    });
+  });
+
+  describe('The stripTimeWithTz function', function() {
+    it('should not mutate its calMomentDate parameter', function() {
+      var calMomentDate = this.calMoment('2019-11-05 09:00');
+      var calMomentDateClone = calMomentDate.clone();
+
+      this.calEventUtils.stripTimeWithTz(calMomentDate);
+
+      expect(calMomentDate).to.deep.equal(calMomentDateClone);
+    });
+
+    it('should strip time and subtract negative UTC offset', function() {
+      var calMomentDate = this.calMoment('2019-11-05 09:00');
+      var utcOffset = -420;
+
+      momentUTCOffsetStub.returns(utcOffset);
+
+      var timeStrippedCalMoment = this.calEventUtils.stripTimeWithTz(calMomentDate);
+
+      expect(timeStrippedCalMoment.isSame(calMomentDate.clone().subtract(utcOffset, 'minutes'))).to.be.true;
+      expect(timeStrippedCalMoment.hasTime()).to.be.false;
+    });
+
+    it('should strip time and not subtract non-negative UTC offset', function() {
+      var calMomentDate = this.calMoment('2019-11-05 09:00');
+      var utcOffset = 420;
+
+      momentUTCOffsetStub.returns(utcOffset);
+
+      var timeStrippedCalMoment = this.calEventUtils.stripTimeWithTz(calMomentDate);
+
+      expect(timeStrippedCalMoment.isSame(calMomentDate)).to.be.true;
+      expect(timeStrippedCalMoment.hasTime()).to.be.false;
+    });
+
+    it('should strip time and not subtract negative UTC offset if the subtraction pushes the date to another day', function() {
+      var calMomentDate = this.calMoment('2019-11-05 18:00');
+      var utcOffset = -420;
+
+      momentUTCOffsetStub.returns(utcOffset);
+
+      var timeStrippedCalMoment = this.calEventUtils.stripTimeWithTz(calMomentDate);
+
+      expect(timeStrippedCalMoment.isSame(calMomentDate)).to.be.true;
+      expect(timeStrippedCalMoment.hasTime()).to.be.false;
+    });
+
+    it('should strip time and not subtract negative UTC offset if the caller does not want to do so', function() {
+      var calMomentDate = this.calMoment('2019-11-05 09:00');
+      var utcOffset = -420;
+
+      momentUTCOffsetStub.returns(utcOffset);
+
+      var timeStrippedCalMoment = this.calEventUtils.stripTimeWithTz(calMomentDate, true);
+
+      expect(timeStrippedCalMoment.isSame(calMomentDate)).to.be.true;
+      expect(timeStrippedCalMoment.hasTime()).to.be.false;
     });
   });
 });
