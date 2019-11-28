@@ -27,17 +27,7 @@ describe('The calDateToMoment directive', function() {
     }]);
   });
 
-  it('should return a calMoment Date if event is allday', function() {
-    this.$scope.event = {
-      allDay: true
-    };
-    var element = this.initDirective(this.$scope);
-    var parser = element.controller('ngModel').$parsers[0];
-
-    expect(parser('2015-07-03 10:30').hasTime()).to.be.false;
-  });
-
-  it('should return a calMoment DateTime if event is not allday', function() {
+  it('should return a calMoment', function() {
     this.$scope.event = {
       allDay: false
     };

@@ -248,6 +248,8 @@
         this.ensureAlarmCoherence();
       },
 
+      // 'allDay' events are events which last at least one day. This 'allDay' is not the same as the 'All day' option when creating or editing an event.
+      // In fact, this 'allDay' property is meant for the top row in the Calendar view where long events (>= 1 day) are displayed.
       get allDay() {
         var isAllDay = false;
         var startDay = parseInt(this.start.format('D'), 10);
@@ -260,8 +262,12 @@
         return isAllDay;
       },
 
+      // 'full24HoursDay' events are events that last at least one day, but their start and end properties do not include specific time ('date' type).
+      // This is the usual 'allDay' definition you would see in popular calendar apps such as Google Calendar, Outlook Calendar, etc.
+      // Since the terminology we're currently using here in the Calendar module is so confusing, I suggest we think of a better terminology usage.
       get full24HoursDay() { return this.vevent.getFirstProperty('dtstart') ? this.vevent.getFirstProperty('dtstart').type === 'date' : false; },
 
+      // 'multiDay' events are events that last at least one day, and their start and end properties include specific time ('date-time' type).
       get multiDay() { return this.allDay && !this.full24HoursDay; },
 
       get multiDayEventRedrawed() { return this.__multiDayEventRedrawed; },
