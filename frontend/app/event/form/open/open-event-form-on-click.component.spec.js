@@ -7,14 +7,17 @@ var expect = chai.expect;
 
 describe('The cal-open-event-form-on-click component', function() {
 
-  var $compile, $rootScope, $scope, element, calOpenEventFormSpy;
+  var $compile, $rootScope, $scope, element, calOpenEventFormSpy, calOpenEventFromSearchFormSpy;
 
   beforeEach(function() {
-    angular.mock.module('esn.calendar');
+    module('esn.calendar');
+
+    calOpenEventFormSpy = sinon.stub();
+    calOpenEventFromSearchFormSpy = sinon.stub();
 
     module(function($provide) {
-      calOpenEventFormSpy = sinon.spy();
       $provide.value('calOpenEventForm', calOpenEventFormSpy);
+      $provide.value('calOpenEventFromSearchForm', calOpenEventFromSearchFormSpy);
     });
   });
 
@@ -30,7 +33,7 @@ describe('The cal-open-event-form-on-click component', function() {
     $scope.$digest();
   }
 
-  it('should call "calOpenEventForm" with the given "event" when clicked', function() {
+  it('should call open event form with the given event when clicked', function() {
     $scope.myEvent = { id: 'an event id' };
     $scope.calendarHomeId = 'a calendarHomeId';
     compileDirective('<cal-open-event-form-on-click event="myEvent" calendar-home-id="calendarHomeId"/>');
@@ -38,6 +41,17 @@ describe('The cal-open-event-form-on-click component', function() {
     element.click();
 
     expect(calOpenEventFormSpy).to.have.been.calledWith($scope.calendarHomeId, $scope.myEvent);
+    expect(calOpenEventFromSearchFormSpy).to.have.not.been.called;
   });
 
+  it('should call open event form with event from search when clicked', function() {
+    $scope.myEvent = { id: 'an event id' };
+    $scope.calendarHomeId = 'a calendarHomeId';
+    compileDirective('<cal-open-event-form-on-click event="myEvent" calendar-home-id="calendarHomeId" is-event-from-search="true"/>');
+
+    element.click();
+
+    expect(calOpenEventFormSpy).to.have.not.been.called;
+    expect(calOpenEventFromSearchFormSpy).to.have.been.calledWith($scope.myEvent);
+  });
 });
