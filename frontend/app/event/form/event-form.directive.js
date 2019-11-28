@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .directive('calEventForm', calEventForm);
 
-  function calEventForm($timeout) {
+  function calEventForm() {
     var directive = {
       restrict: 'E',
       templateUrl: '/calendar/app/event/form/event-form.html',
@@ -17,15 +17,8 @@
 
     ////////////
 
-    function link(scope, element) {
-      $timeout(focusTitle, 0);
+    function link(scope) {
       scope.$on('$locationChangeStart', hideModal);
-
-      ////////////
-
-      function focusTitle() {
-        element.find('.title')[0].focus();
-      }
 
       function hideModal(event) {
         if (scope.$isShown) {
