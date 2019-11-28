@@ -184,10 +184,10 @@ module.exports = dependencies => {
     };
 
     return calendar.searchEventsBasic(query)
-      .then(eventsData => {
-        const responseJSON = _handleSearchResults(eventsData, req.originalUrl);
+      .then(searchResult => {
+        const responseJSON = _handleSearchResult(searchResult, req.originalUrl);
 
-        res.header('X-ESN-Items-Count', eventsData.total_count);
+        res.header('X-ESN-Items-Count', searchResult.totalCount);
         res.status(200).json(responseJSON);
       })
       .catch(err => {
@@ -217,10 +217,10 @@ module.exports = dependencies => {
     };
 
     return calendar.searchEventsAdvanced(query)
-      .then(eventsData => {
-        const responseJSON = _handleSearchResults(eventsData, req.originalUrl);
+      .then(searchResult => {
+        const responseJSON = _handleSearchResult(searchResult, req.originalUrl);
 
-        res.header('X-ESN-Items-Count', eventsData.total_count);
+        res.header('X-ESN-Items-Count', searchResult.totalCount);
         res.status(200).json(responseJSON);
       })
       .catch(err => {
@@ -238,15 +238,14 @@ module.exports = dependencies => {
       });
   }
 
-  function _handleSearchResults(eventsData, originalUrl) {
-    const davItems = eventsData.results.map(eventData => ({
+  function _handleSearchResult(searchResult, originalUrl) {
+    const events = searchResult.events.map(event => ({
       _links: {
         self: {
-          href: eventData.path
+          href: event.path
         }
       },
-      data: eventData.event,
-      etag: eventData.etag
+      data: event.data
     }));
 
     return {
@@ -255,9 +254,9 @@ module.exports = dependencies => {
           href: originalUrl
         }
       },
-      _total_hits: eventsData.total_count,
+      _total_hits: searchResult.totalCount,
       _embedded: {
-        'dav:item': davItems
+        events
       }
     };
   }

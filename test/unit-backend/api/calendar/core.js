@@ -1,6 +1,5 @@
 const {expect} = require('chai');
 const mockery = require('mockery');
-const q = require('q');
 const sinon = require('sinon');
 
 describe('The calendar core module', function() {
@@ -343,7 +342,7 @@ describe('The calendar core module', function() {
         });
     });
 
-    it('should call the search module with good params and return the events retrieved through the caldav-client', function(done) {
+    it('should call the search module with good params and return the search result', function(done) {
       const query = {
         search: 'search',
         userId: 'userId'
@@ -362,23 +361,21 @@ describe('The calendar core module', function() {
         return callback(null, esResult);
       };
 
-      caldavClientMock.getMultipleEventsFromPaths = sinon.stub();
-      caldavClientMock.getMultipleEventsFromPaths.returns(q.when([
-        { ical: 'event1', etag: 'etag1', path: 'event1path' },
-        { ical: 'event2', etag: 'etag2', path: 'event2path' }
-      ]));
-
       caldavClientMock.getEventPath = sinon.stub();
       caldavClientMock.getEventPath.onFirstCall().returns('event1path').onSecondCall().returns('event2path');
 
-      this.module.searchEventsBasic(query).then(results => {
-        expect(caldavClientMock.getMultipleEventsFromPaths).to.have.been.calledWith(query.userId, ['event1path', 'event2path']);
-        [0, 1].forEach(function(i) {expect(caldavClientMock.getEventPath).to.have.been.calledWith(esResult.list[i]._source.userId, esResult.list[i]._source.calendarId, esResult.list[i]._id.split('--')[1]);});
-        expect(results).to.deep.equal({
-          total_count: esResult.total_count,
-          results: [
-            { event: 'event1', path: 'event1path', etag: 'etag1'},
-            { event: 'event2', path: 'event2path', etag: 'etag2'}
+      this.module.searchEventsBasic(query).then(searchResult => {
+        expect(searchResult).to.deep.equal({
+          totalCount: esResult.total_count,
+          events: [
+            {
+              path: 'event1path',
+              data: esResult.list[0]._source
+            },
+            {
+              path: 'event2path',
+              data: esResult.list[1]._source
+            }
           ]
         });
         done();
@@ -418,7 +415,7 @@ describe('The calendar core module', function() {
         });
     });
 
-    it('should call the search core module with good params and return the events retrieved through the caldav-client if it succeeds', function(done) {
+    it('should call the search module with good params and return the search result', function(done) {
       const esResult = {
         total_count: 2,
         list: [
@@ -433,29 +430,21 @@ describe('The calendar core module', function() {
         return Promise.resolve(esResult);
       };
 
-      caldavClientMock.getMultipleEventsFromPaths = sinon.stub();
-      caldavClientMock.getMultipleEventsFromPaths.returns(q.when([
-        { ical: 'event1', etag: 'etag1', path: 'event1path' },
-        { ical: 'event2', etag: 'etag2', path: 'event2path' }
-      ]));
-
       caldavClientMock.getEventPath = sinon.stub();
       caldavClientMock.getEventPath.onFirstCall().returns('event1path').onSecondCall().returns('event2path');
 
-      this.module.searchEventsAdvanced(advancedQuery).then(results => {
-        expect(caldavClientMock.getMultipleEventsFromPaths).to.have.been.calledWith(advancedQuery.userId, ['event1path', 'event2path']);
-        [0, 1].forEach(i => {
-          expect(caldavClientMock.getEventPath).to.have.been.calledWith(
-            esResult.list[i]._source.userId,
-            esResult.list[i]._source.calendarId,
-            esResult.list[i]._id.split('--')[1]
-          );
-        });
-        expect(results).to.deep.equal({
-          total_count: esResult.total_count,
-          results: [
-            { event: 'event1', path: 'event1path', etag: 'etag1'},
-            { event: 'event2', path: 'event2path', etag: 'etag2'}
+      this.module.searchEventsAdvanced(advancedQuery).then(searchResult => {
+        expect(searchResult).to.deep.equal({
+          totalCount: esResult.total_count,
+          events: [
+            {
+              path: 'event1path',
+              data: esResult.list[0]._source
+            },
+            {
+              path: 'event2path',
+              data: esResult.list[1]._source
+            }
           ]
         });
         done();
