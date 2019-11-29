@@ -117,6 +117,7 @@ return this.jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstProperty('dtstar
           time: '1:30 PM',
           timezone: 'UTC'
         },
+        class: 'PUBLIC',
         allDay: false,
         durationInDays: 0,
         location: 'https://hubl.in/openpaas',
@@ -158,6 +159,7 @@ return this.jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstProperty('dtstar
           time: '1:30 PM',
           timezone: 'UTC'
         },
+        class: 'PUBLIC',
         allDay: false,
         durationInDays: 0,
         location: 'https://hubl.in/openpaas',
@@ -254,6 +256,7 @@ return this.jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstProperty('dtstar
           time: '2:00 PM',
           timezone: 'UTC'
         },
+        class: 'PUBLIC',
         allDay: false,
         durationInDays: 0,
         location: 'https://hubl.in/openpaas',
