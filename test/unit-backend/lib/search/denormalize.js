@@ -45,6 +45,7 @@ describe('search helpers', function() {
           email: 'janedoe@open-paas.org',
           cn: 'Jane Doe'
         }],
+        class: 'PUBLIC',
         resources: [],
         hasResources: false
       });
@@ -123,6 +124,7 @@ describe('search helpers', function() {
           email: 'janedoe@open-paas.org',
           cn: 'Jane Doe'
         }],
+        class: 'PUBLIC',
         resources: [],
         hasResources: false
       });

@@ -208,6 +208,7 @@ function jcal2content(icalendar, baseUrl = '') {
     summary: vevent.getFirstPropertyValue('summary'),
     location: vevent.getFirstPropertyValue('location'),
     description: vevent.getFirstPropertyValue('description'),
+    class: vevent.getFirstPropertyValue('class'),
     start: {
       date: startDate.format('L'),
       time: allDay ? undefined : startDate.format('LT'),
