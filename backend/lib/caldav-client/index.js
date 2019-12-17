@@ -151,7 +151,7 @@ module.exports = dependencies => {
           const recurrenceId = vevent.getFirstPropertyValue('recurrence-id');
 
           if (recurrenceId) {
-            eventData.recurrenceId = recurrenceId;
+            eventData.recurrenceId = recurrenceId.toString();
           }
 
           return eventData;
