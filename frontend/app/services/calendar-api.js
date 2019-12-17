@@ -39,7 +39,7 @@
 
     ////////////
 
-    function davResponseHandler(key) {
+    function responseHandler(key) {
       return calHttpResponseHandler([200], function(response) {
         return (response.data && response.data._embedded && response.data._embedded[key]) || [];
       });
@@ -61,7 +61,7 @@
       };
 
       return calDavRequest('report', calendarHref, JSON_CONTENT_TYPE_HEADER, body)
-      .then(davResponseHandler('dav:item'));
+      .then(responseHandler('dav:item'));
     }
 
     /**
@@ -81,7 +81,8 @@
         sortOrder: options.sortOrder
       };
 
-      return calendarRestangular.one(userId).one(calendarId).one('events.json').get(query).then(davResponseHandler('dav:item'));
+      return calendarRestangular.one(userId).one(calendarId).one('events.json').get(query)
+        .then(responseHandler('events'));
     }
 
     /**
@@ -135,7 +136,7 @@
       return calendarRestangular.one('events').one('search').customPOST(requestBody, undefined, {
         offset: options.offset,
         limit: options.limit
-      }).then(davResponseHandler('dav:item'));
+      }).then(responseHandler('events'));
     }
 
     /**
@@ -147,7 +148,7 @@
      * @return {Array} The array of dav:items
      */
     function getEventByUID(calendarHomeId, uid) {
-      return calDavRequest('report', calPathBuilder.forCalendarHomeId(calendarHomeId), JSON_CONTENT_TYPE_HEADER, { uid: uid }).then(davResponseHandler('dav:item'));
+      return calDavRequest('report', calPathBuilder.forCalendarHomeId(calendarHomeId), JSON_CONTENT_TYPE_HEADER, { uid: uid }).then(responseHandler('dav:item'));
     }
 
     /**
@@ -168,7 +169,7 @@
       var path = calPathBuilder.forCalendarId(calendarHomeId, calendarId);
 
       return calDavRequest('report', path, JSON_CONTENT_TYPE_HEADER, body)
-      .then(davResponseHandler('dav:item'));
+      .then(responseHandler('dav:item'));
     }
 
     /**
@@ -181,7 +182,7 @@
       var path = calPathBuilder.forCalendarHomeId(calendarId);
 
       return calDavRequest('get', path, {Accept: CAL_ACCEPT_HEADER}, {}, options)
-      .then(davResponseHandler('dav:calendar'));
+      .then(responseHandler('dav:calendar'));
     }
 
     /**

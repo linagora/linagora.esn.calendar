@@ -15,7 +15,9 @@ module.exports = {
   getVAlarmAsObject,
   getVeventAttendeeByMail,
   updateParticipation,
-  icsAsVcalendar
+  icsAsVcalendar,
+  getRecurrenceIdsFromVEvents,
+  analyzeJCalsDiff
 };
 
 function _getEmail(attendee) {
@@ -206,6 +208,7 @@ function jcal2content(icalendar, baseUrl = '') {
     summary: vevent.getFirstPropertyValue('summary'),
     location: vevent.getFirstPropertyValue('location'),
     description: vevent.getFirstPropertyValue('description'),
+    class: vevent.getFirstPropertyValue('class'),
     start: {
       date: startDate.format('L'),
       time: allDay ? undefined : startDate.format('LT'),
@@ -279,4 +282,52 @@ function updateParticipation(vcalendar, attendeeEmail, partstat) {
 
 function icsAsVcalendar(ics) {
   return ICAL.Component.fromString(ics);
+}
+
+/**
+ * Get all the recurrence ids of recurrence exceptions in an array of VEVENTs.
+ *
+ * @param {ICAL.Component[]} vevents - An array of VEVENTs as ICAL.Components
+ * @return {String[]} Recurrence ids of recurrence exceptions in the provided array of VEVENTs
+ */
+function getRecurrenceIdsFromVEvents(vevents) {
+  return vevents.map(vevent => (vevent.getFirstPropertyValue('recurrence-id') || '').toString()).filter(Boolean);
+}
+
+/**
+ * Analyze the differences between an old jCal and a new jCal and return the action that needs to be done
+ * to ensure the new changes are correctly reflected in Elasticsearch.
+ *
+ * @param {Object} oldJCal - The old event in the form of a jCal-formatted object
+ * @param {Object} newJCal - The new event in the form of a jCal-formatted object
+ * @return {Object} action An action object with two properties
+ * @return {string} action.actionType The action type
+ * @return {Object|undefined} action.actionDetails The action details (will be undefined if there's no need for action details)
+ */
+function analyzeJCalsDiff(oldJCal, newJCal) {
+  const oldVEvents = (new ICAL.Component(oldJCal)).getAllSubcomponents('vevent');
+  const newVEvents = (new ICAL.Component(newJCal)).getAllSubcomponents('vevent');
+
+  const newRecurrenceIds = getRecurrenceIdsFromVEvents(newVEvents);
+  const oldRecurrenceIds = getRecurrenceIdsFromVEvents(oldVEvents);
+
+  if (!oldRecurrenceIds.length && !newRecurrenceIds.length) {
+    return { actionType: constants.RECUR_EVENT_MODIFICATION_TYPE.MASTER_EVENT_UPDATE };
+  }
+
+  const isMasterEventUpdated = oldVEvents[0].toString() !== newVEvents[0].toString();
+
+  if (newRecurrenceIds.length && !oldRecurrenceIds.length && !isMasterEventUpdated) {
+    return {
+      actionType: constants.RECUR_EVENT_MODIFICATION_TYPE.FIRST_SPECIAL_OCCURS_ADDED,
+      actionDetails: { newRecurrenceIds }
+    };
+  }
+
+  const recurrenceIdsToBeDeleted = oldRecurrenceIds.filter(oldRecurrenceId => !newRecurrenceIds.includes(oldRecurrenceId));
+
+  return {
+    actionType: constants.RECUR_EVENT_MODIFICATION_TYPE.FULL_REINDEX,
+    actionDetails: { recurrenceIdsToBeDeleted, newRecurrenceIds }
+  };
 }
