@@ -3,6 +3,7 @@ const sinon = require('sinon');
 const mockery = require('mockery');
 const moment = require('moment');
 const fs = require('fs');
+const ICAL = require('@linagora/ical.js');
 
 describe('The caldav-client module', function() {
   let authMock, davServerMock, request, davEndpoint, userId, calendarId, eventId, token, jcal;
@@ -797,34 +798,34 @@ describe('The caldav-client module', function() {
       const calendarHomeId = 'bar';
       const normalEventICS = fs.readFileSync(__dirname + '/../../fixtures/meeting.ics', 'utf-8');
       const recurEventWithExceptionICS = fs.readFileSync(__dirname + '/../../fixtures/meeting-recurring-with-exception.ics', 'utf-8');
-      const expectedEvents = [
+
+      let expectedEvents = [
         {
           ics: normalEventICS,
           userId: calendarHomeId,
           calendarId,
           eventUid: 'event1'
-        },
-        {
+        }
+      ];
+
+      const recurEventWithExceptionVEvents = ICAL.Component.fromString(recurEventWithExceptionICS).getAllSubcomponents('vevent');
+
+      expectedEvents = expectedEvents.concat(recurEventWithExceptionVEvents.map(vevent => {
+        const eventData = {
           ics: recurEventWithExceptionICS,
           userId: calendarHomeId,
           calendarId,
           eventUid: 'event2'
-        },
-        {
-          ics: recurEventWithExceptionICS,
-          userId: calendarHomeId,
-          calendarId,
-          eventUid: 'event2',
-          recurrenceId: '2016-05-26T17:00:00Z'
-        },
-        {
-          ics: recurEventWithExceptionICS,
-          userId: calendarHomeId,
-          calendarId,
-          eventUid: 'event2',
-          recurrenceId: '2016-05-27T17:00:00Z'
+        };
+
+        const recurrenceId = vevent.getFirstPropertyValue('recurrence-id');
+
+        if (recurrenceId) {
+          eventData.recurrenceId = recurrenceId;
         }
-      ];
+
+        return eventData;
+      }));
 
       mockery.registerMock('../helpers/technical-user', () => ({
         getTechnicalUserToken: _domainId => {
