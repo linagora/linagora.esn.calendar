@@ -70,23 +70,29 @@ describe('The calendar search pubsub module', function() {
     }
 
     const onEventAddedTests = globalEvent => () => {
-      var recurrenceIds = [];
-
       beforeEach(function() {
         elasticsearchActionMock.addEventToIndexThroughPubsub = sinon.stub();
-        elasticsearchActionMock.addSpecialOccursToIndexIfAnyThroughPubsub = sinon.stub();
-        jcalHelperMock.getRecurrenceIdsFromVEvents = vevents => {
-          expect(vevents).to.deep.equal((new ICAL.Component(jcal)).getAllSubcomponents('vevent'));
-
-          return recurrenceIds;
-        };
       });
 
-      it('should add master event and its special occurs (if any) to index', function() {
+      it('should add a normal event to index', function() {
         publishGlobalEvent(globalEvent);
 
+        expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.been.calledOnce;
         expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.been.calledWith(sinon.match(parsedMessage));
-        expect(elasticsearchActionMock.addSpecialOccursToIndexIfAnyThroughPubsub).to.have.been.calledWith(recurrenceIds, sinon.match(parsedMessage));
+      });
+
+      it('should add the master event and its recurrence exceptions to index if it is a recurrent event with recurrence exceptions', function() {
+        ics = fs.readFileSync(__dirname + '/../../fixtures/meeting-recurring-with-exception.ics', 'utf-8');
+        const vcalendar = ICAL.Component.fromString(ics);
+        message.event = vcalendar.jCal;
+        parsedMessage.ics = vcalendar.toString();
+
+        publishGlobalEvent(globalEvent);
+
+        expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.been.calledThrice;
+        expect(elasticsearchActionMock.addEventToIndexThroughPubsub.getCall(0).calledWith(sinon.match(parsedMessage))).to.be.true;
+        expect(elasticsearchActionMock.addEventToIndexThroughPubsub.getCall(1).calledWith(sinon.match({ ...parsedMessage, recurrenceId: '2016-05-26T17:00:00Z' }))).to.be.true;
+        expect(elasticsearchActionMock.addEventToIndexThroughPubsub.getCall(2).calledWith(sinon.match({ ...parsedMessage, recurrenceId: '2016-05-27T17:00:00Z' }))).to.be.true;
       });
 
       it('should do nothing when event has eventSourcePath', function() {
@@ -95,7 +101,6 @@ describe('The calendar search pubsub module', function() {
         publishGlobalEvent(globalEvent);
 
         expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.not.been.called;
-        expect(elasticsearchActionMock.addSpecialOccursToIndexIfAnyThroughPubsub).to.have.not.been.called;
       });
 
       it('should do nothing when event.eventPath is undefined', function() {
@@ -104,7 +109,6 @@ describe('The calendar search pubsub module', function() {
         publishGlobalEvent(globalEvent);
 
         expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.not.been.called;
-        expect(elasticsearchActionMock.addSpecialOccursToIndexIfAnyThroughPubsub).to.have.not.been.called;
       });
 
       it('should do nothing when event.eventPath === /', function() {
@@ -113,7 +117,6 @@ describe('The calendar search pubsub module', function() {
         publishGlobalEvent(globalEvent);
 
         expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.not.been.called;
-        expect(elasticsearchActionMock.addSpecialOccursToIndexIfAnyThroughPubsub).to.have.not.been.called;
       });
     };
 

@@ -38,12 +38,17 @@ module.exports = dependencies => {
       if (!canPublishMessage(msg)) return;
 
       const parsedMessage = parse(msg);
+      const vevents = ICAL.Component.fromString(parsedMessage.ics).getAllSubcomponents('vevent');
 
-      elasticsearchActions.addEventToIndexThroughPubsub(parsedMessage);
-      elasticsearchActions.addSpecialOccursToIndexIfAnyThroughPubsub(
-        jcalHelper.getRecurrenceIdsFromVEvents((new ICAL.Component(msg.event)).getAllSubcomponents('vevent')),
-        parsedMessage
-      );
+      vevents.forEach(vevent => {
+        const recurrenceId = vevent.getFirstPropertyValue('recurrence-id');
+
+        if (recurrenceId) {
+          return elasticsearchActions.addEventToIndexThroughPubsub({ ...parsedMessage, recurrenceId: recurrenceId.toString() });
+        }
+
+        elasticsearchActions.addEventToIndexThroughPubsub(parsedMessage);
+      });
     }
 
     function updated(msg) {
