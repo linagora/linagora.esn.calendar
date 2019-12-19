@@ -1,14 +1,12 @@
 'use strict';
 
-const { EVENTS, RECUR_EVENT_MODIFICATION_TYPE } = require('../constants');
+const {EVENTS, NOTIFICATIONS} = require('../constants');
 const eventHelper = require('../helpers/event');
-const jcalHelper = require('../helpers/jcal');
 const ICAL = require('@linagora/ical.js');
 
 module.exports = dependencies => {
   const pubsub = dependencies('pubsub');
   const logger = dependencies('logger');
-  const elasticsearchActions = require('./actions')(dependencies);
 
   return {
     listen
@@ -23,71 +21,27 @@ module.exports = dependencies => {
     pubsub.global.topic(EVENTS.EVENT.CANCEL).subscribe(deleted);
 
     function parse(msg) {
-      const parsedMessage = eventHelper.parseEventPath(msg.eventPath);
+      const data = eventHelper.parseEventPath(msg.eventPath);
 
       try {
-        parsedMessage.ics = (new ICAL.Component(msg.event)).toString();
+        data.ics = (new ICAL.Component(msg.event)).toString();
       } catch (error) {
         logger.error(`Problem stringifying component  ${error}`);
       }
 
-      return parsedMessage;
+      return data;
     }
 
     function added(msg) {
-      if (!canPublishMessage(msg)) return;
-
-      const parsedMessage = parse(msg);
-
-      elasticsearchActions.addEventToIndexThroughPubsub(parsedMessage);
-      elasticsearchActions.addSpecialOccursToIndexIfAnyThroughPubsub(
-        jcalHelper.getRecurrenceIdsFromVEvents((new ICAL.Component(msg.event)).getAllSubcomponents('vevent')),
-        parsedMessage
-      );
+      canPublishMessage(msg) && pubsub.local.topic(NOTIFICATIONS.EVENT_ADDED).publish(parse(msg));
     }
 
     function updated(msg) {
-      if (!canPublishMessage(msg)) return;
-
-      const parsedMessage = parse(msg);
-
-      if (!msg.old_event) {
-        return elasticsearchActions.updateEventInIndexThroughPubsub(parsedMessage);
-      }
-
-      const { actionType, actionDetails } = jcalHelper.analyzeJCalsDiff(msg.old_event, msg.event);
-
-      if (actionType === RECUR_EVENT_MODIFICATION_TYPE.MASTER_EVENT_UPDATE) {
-        return elasticsearchActions.updateEventInIndexThroughPubsub(parsedMessage);
-      }
-
-      if (actionType === RECUR_EVENT_MODIFICATION_TYPE.FIRST_SPECIAL_OCCURS_ADDED) {
-        return elasticsearchActions.addSpecialOccursToIndexIfAnyThroughPubsub(actionDetails.newRecurrenceIds, parsedMessage);
-      }
-
-      actionDetails.recurrenceIdsToBeDeleted.forEach(recurrenceId => {
-        elasticsearchActions.removeEventFromIndexThroughPubsub({ ...parsedMessage, recurrenceId });
-      });
-      elasticsearchActions.updateEventInIndexThroughPubsub(parsedMessage);
-      elasticsearchActions.addSpecialOccursToIndexIfAnyThroughPubsub(actionDetails.newRecurrenceIds, parsedMessage);
+      canPublishMessage(msg) && pubsub.local.topic(NOTIFICATIONS.EVENT_UPDATED).publish(parse(msg));
     }
 
     function deleted(msg) {
-      if (!canPublishMessage(msg)) return;
-
-      const parsedMessage = parse(msg);
-
-      const vevents = (new ICAL.Component(msg.event)).getAllSubcomponents('vevent');
-
-      if (vevents.length > 1) {
-        const recurrenceIdsToBeDeleted = jcalHelper.getRecurrenceIdsFromVEvents(vevents);
-
-        recurrenceIdsToBeDeleted.forEach(recurrenceId => {
-          elasticsearchActions.removeEventFromIndexThroughPubsub({ ...parsedMessage, recurrenceId });
-        });
-      }
-
-      elasticsearchActions.removeEventFromIndexThroughPubsub(parsedMessage);
+      canPublishMessage(msg) && pubsub.local.topic(NOTIFICATIONS.EVENT_DELETED).publish(parse(msg));
     }
 
     function canPublishMessage(message) {

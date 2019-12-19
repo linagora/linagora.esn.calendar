@@ -2,10 +2,34 @@ const expect = require('chai').expect;
 const request = require('supertest');
 const async = require('async');
 const fs = require('fs');
+const express = require('express');
 
 describe('The Calendar events search API', function() {
   let user;
   const password = 'secret';
+  let dav, davServer, caldavConfiguration;
+
+  const davReportMockHandler = (req, res) => {
+    const reqBody = JSON.parse(req.body);
+
+    const davItems = [];
+
+    reqBody.eventPaths.forEach(eventPath => {
+        davItems.push({
+          _links: { self: { href: eventPath } },
+          etag: '',
+          data: '',
+          status: 200
+        });
+    });
+
+    res.status(207).send({
+      _links: { self: { href: '/calendars' } },
+      _embedded: {
+        'dav:item': davItems
+      }
+    });
+  };
 
   beforeEach(function(done) {
     const self = this;
@@ -16,6 +40,51 @@ describe('The Calendar events search API', function() {
       }
       user = models.users[0];
       self.models = models;
+
+      dav = express();
+      dav.use((req, res, next) => {
+        let body = '';
+
+        req
+        .on('data', chunk => {
+          body += chunk;
+        })
+        .on('end', () => {
+          req.body = body;
+          next();
+        });
+      });
+
+      self.createDavServer = function(done) {
+        const port = self.testEnv.serversConfig.express.port;
+
+        caldavConfiguration = {
+          backend: {
+            url: 'http://localhost:' + port
+          },
+          frontend: {
+            url: 'http://localhost:' + port
+          }
+        };
+
+        davServer = dav.listen(port, function() {
+          self.helpers.requireBackend('core/esn-config')('davserver').store(caldavConfiguration, done);
+        });
+      };
+
+      self.shutdownDav = function(done) {
+        if (!davServer) {
+          return done();
+        }
+
+        try {
+          davServer.close(function() {
+            done();
+          });
+        } catch (err) {
+          done(err);
+        }
+      };
 
       done();
     });
@@ -28,17 +97,23 @@ describe('The Calendar events search API', function() {
     this.app = this.helpers.modules.getWebServer(expressApp);
   });
 
+  beforeEach(function() {
+    dav.report('/calendars', davReportMockHandler);
+  });
+
   afterEach(function(done) {
     const self = this;
 
-    self.helpers.api.cleanDomainDeployment(self.models, () => done());
+    self.helpers.api.cleanDomainDeployment(self.models, function() {
+      self.shutdownDav(done);
+    });
   });
 
   describe('/api/calendars/:userId/:calendarId/events.json', function() {
     let localpubsub, message, counter = 1;
     let expectedResult = [];
 
-    const testBasicSearch = function(term, done) {
+    const search = function(term, done) {
       const self = this;
 
       localpubsub.topic('events:event:add').publish(message);
@@ -59,7 +134,7 @@ describe('The Calendar events search API', function() {
             expect(err).to.not.exist;
             expect(res.body).to.exist;
 
-            const result = res.body._embedded.events.map(item => item._links.self.href);
+            const result = res.body._embedded['dav:item'].map(item => item._links.self.href);
 
             expect(result).to.shallowDeepEqual(expectedResult);
             expect(result.length).to.equal(expectedResult.length);
@@ -91,45 +166,47 @@ describe('The Calendar events search API', function() {
     it('should return nothing with non matching string', function(done) {
       expectedResult = [];
 
-      testBasicSearch.apply(this, ['anonmatchingstring', done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => search.bind(this)('anonmatchingstring', done)));
     });
 
     it('should return nothing with empty string', function(done) {
       expectedResult = [];
 
-      testBasicSearch.apply(this, ['', done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => search.bind(this)('', done)));
     });
 
     it('should return event with matching summary', function(done) {
       expectedResult = [`/calendars/${message.userId}/${message.calendarId}/${message.eventUid}.ics`];
 
-      testBasicSearch.apply(this, ['withuser012edi', done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => search.bind(this)('withuser012edi', done)));
     });
 
     it('should return event with matching description', function(done) {
       expectedResult = [`/calendars/${message.userId}/${message.calendarId}/${message.eventUid}.ics`];
 
-      testBasicSearch.apply(this, ['Lunch', done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => search.bind(this)('Lunch', done)));
     });
 
     it('should return event with matching organizer', function(done) {
       expectedResult = [`/calendars/${message.userId}/${message.calendarId}/${message.eventUid}.ics`];
 
-      testBasicSearch.apply(this, ['robert', done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => search.bind(this)('robert', done)));
     });
 
     it('should return event with matching attendees', function(done) {
       const self = this;
 
-      const searchFunctions = ['first0', 'last1', 'user2', 'Edinson'].map(function(attendee) {
-        return function(callback) {
-          expectedResult = [`/calendars/${message.userId}/${message.calendarId}/${message.eventUid}.ics`];
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => {
+        const searchFunctions = ['first0', 'last1', 'user2', 'Edinson'].map(function(attendee) {
+          return function(callback) {
+            expectedResult = [`/calendars/${message.userId}/${message.calendarId}/${message.eventUid}.ics`];
 
-          testBasicSearch.apply(self, [attendee, callback]);
-        };
-      });
+            search.bind(self)(attendee, callback);
+          };
+        });
 
-      async.parallel(searchFunctions, done);
+        async.parallel(searchFunctions, done);
+      }));
     });
   });
 
@@ -138,7 +215,7 @@ describe('The Calendar events search API', function() {
     let localpubsub, message, counter,
         expectedResults = [], mockRequestBody, mockRequestQuery, mockEvents;
 
-    function testAdvancedSearch({ requestBody, requestQuery }, eventElasIds, done) {
+    function searchAdvanced({ requestBody, requestQuery }, eventElasIds, done) {
       this.helpers.api.loginAsUser(this.app, user.emails[0], password, (err, requestAsMember) => {
         if (err) {
           return done(err);
@@ -155,7 +232,7 @@ describe('The Calendar events search API', function() {
             expect(err).to.not.exist;
             expect(res.body).to.exist;
 
-            const results = res.body._embedded.events.map(item => item._links.self.href);
+            const results = res.body._embedded['dav:item'].map(item => item._links.self.href);
 
             expect(results).to.deep.equal(expectedResults);
             expect(results.length).to.equal(expectedResults.length);
@@ -246,7 +323,7 @@ describe('The Calendar events search API', function() {
 
       mockRequestBody.query = {};
 
-      testError400.apply(this, [mockRequestBody, done]);
+      testError400.bind(this)(mockRequestBody, done);
     });
 
     it('should return an empty array if the request body has an empty query', function(done) {
@@ -254,7 +331,7 @@ describe('The Calendar events search API', function() {
 
       mockRequestBody.query = '';
 
-      testAdvancedSearch.apply(this, [{ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, [], done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, [], done)));
     });
 
     it('should return an empty array with a non-matching query string', function(done) {
@@ -266,7 +343,7 @@ describe('The Calendar events search API', function() {
 
       const { eventElasId } = createMockEvent(mockEvents[0].userId, mockEvents[0].calendarId, mockEvents[0].fixturePath);
 
-      testAdvancedSearch.apply(this, [{ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, [eventElasId], done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, [eventElasId], done)));
     });
 
     it('should send 400 when the calendars field in the request body is not an array', function(done) {
@@ -274,7 +351,7 @@ describe('The Calendar events search API', function() {
 
       mockRequestBody.calendars = 'thisisnotanarray';
 
-      testError400.apply(this, [mockRequestBody, done]);
+      testError400.bind(this)(mockRequestBody, done);
     });
 
     it('should return an empty array when an empty calendar array is provided in the request body', function(done) {
@@ -282,7 +359,7 @@ describe('The Calendar events search API', function() {
 
       mockRequestBody.calendars = [];
 
-      testAdvancedSearch.apply(this, [{ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, [], done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, [], done)));
     });
 
     it('should return events with multiple matching fields', function(done) {
@@ -299,7 +376,7 @@ describe('The Calendar events search API', function() {
         eventElasIds.push(eventElasId);
       });
 
-      testAdvancedSearch.apply(this, [{ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done)));
     });
 
     it('should return only one event when limit is set to 1', function(done) {
@@ -318,7 +395,7 @@ describe('The Calendar events search API', function() {
 
       mockRequestQuery.limit = 1;
 
-      testAdvancedSearch.apply(this, [{ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done)));
     });
 
     it('should return only one event when offset is set to the last one', function(done) {
@@ -338,7 +415,7 @@ describe('The Calendar events search API', function() {
       mockRequestQuery.offset = 1;
       mockRequestQuery.limit = 30;
 
-      testAdvancedSearch.apply(this, [{ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done)));
     });
 
     it('should return events when searching across multiple calendars', function(done) {
@@ -369,7 +446,7 @@ describe('The Calendar events search API', function() {
         }
       ];
 
-      testAdvancedSearch.apply(this, [{ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done)));
     });
 
     it('should return an empty array with a non-matching organizer', function(done) {
@@ -381,7 +458,7 @@ describe('The Calendar events search API', function() {
 
       const { eventElasId } = createMockEvent(mockEvents[0].userId, mockEvents[0].calendarId, mockEvents[0].fixturePath);
 
-      testAdvancedSearch.apply(this, [{ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, [eventElasId], done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, [eventElasId], done)));
     });
 
     it('should return events with one matching organizer when searching across multiple calendars', function(done) {
@@ -413,7 +490,7 @@ describe('The Calendar events search API', function() {
       ];
       mockRequestBody.organizers = ['user0@open-paas.org'];
 
-      testAdvancedSearch.apply(this, [{ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done)));
     });
 
     it('should return events with multiple matching organizers when searching across multiple calendars', function(done) {
@@ -445,7 +522,7 @@ describe('The Calendar events search API', function() {
       ];
       mockRequestBody.organizers = ['user1997@open-paas.org', 'user0@open-paas.org'];
 
-      testAdvancedSearch.apply(this, [{ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done)));
     });
 
     it('should return an empty array with a non-matching attendee', function(done) {
@@ -457,7 +534,7 @@ describe('The Calendar events search API', function() {
 
       const { eventElasId } = createMockEvent(mockEvents[0].userId, mockEvents[0].calendarId, mockEvents[0].fixturePath);
 
-      testAdvancedSearch.apply(this, [{ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, [eventElasId], done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, [eventElasId], done)));
     });
 
     it('should return events with one matching attendee when searching across multiple calendars', function(done) {
@@ -489,7 +566,7 @@ describe('The Calendar events search API', function() {
       ];
       mockRequestBody.attendees = ['user1997@open-paas.org'];
 
-      testAdvancedSearch.apply(this, [{ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done)));
     });
 
     it('should return events with multiple matching attendees when searching across multiple calendars', function(done) {
@@ -521,7 +598,7 @@ describe('The Calendar events search API', function() {
       ];
       mockRequestBody.attendees = ['user3@open-paas.org', 'user0@open-paas.org'];
 
-      testAdvancedSearch.apply(this, [{ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done)));
     });
 
     it('should return an empty array with a non-matching pair of organizer and attendee when searching across multiple calendars', function(done) {
@@ -554,7 +631,7 @@ describe('The Calendar events search API', function() {
       mockRequestBody.organizers = ['user1997@open-paas.org'];
       mockRequestBody.attendees = ['user3@open-paas.org'];
 
-      testAdvancedSearch.apply(this, [{ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done)));
     });
 
     it('should returns events with matching organizers and attendees when searching across multiple calendars', function(done) {
@@ -587,7 +664,7 @@ describe('The Calendar events search API', function() {
       mockRequestBody.organizers = ['user1997@open-paas.org'];
       mockRequestBody.attendees = ['user2@open-paas.org'];
 
-      testAdvancedSearch.apply(this, [{ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done]);
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done)));
     });
   });
 });

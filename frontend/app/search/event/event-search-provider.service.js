@@ -11,7 +11,6 @@
     calendarService,
     calEventService,
     esnSearchProvider,
-    calMoment,
     userAndExternalCalendars,
     ELEMENTS_PER_REQUEST,
     CAL_ADVANCED_SEARCH_CALENDAR_TYPES
@@ -81,7 +80,7 @@
                 return events.map(function(event) {
                   event.calendar = calendar;
                   event.type = name;
-                  _injectEventPropertiesForDisplay(event);
+                  event.date = event.start;
 
                   return event;
                 });
@@ -98,22 +97,11 @@
                     return calendar.source ? calendar.source.id === event.calendarId : calendar.id === event.calendarId;
                   });
                   event.type = name;
-                  _injectEventPropertiesForDisplay(event);
+                  event.date = event.start;
 
                   return event;
                 });
               });
-          }
-
-          function _injectEventPropertiesForDisplay(event) {
-            event.start = calMoment(event.start);
-            event.end = calMoment(event.end);
-            event.date = event.start;
-            event.full24HoursDay = event.allDay;
-
-            event.isOverOneDayOnly = function() {
-              return event.end.diff(event.start) <= 86400000;
-            };
           }
         },
         buildFetchContext: function(options) { return $q.resolve(options.query); },

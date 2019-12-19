@@ -99,9 +99,10 @@
        * @return {[CalendarShell]}       an array of CalendarShell or an empty array if no events have been found
        */
       function searchEventsBasic(userId, calendarId, options) {
-        return calendarAPI.searchEventsBasic(userId, calendarId, options).then(function(events) {
-          return events.map(function(event) { return event.data; });
-        });
+        return calendarAPI.searchEventsBasic(userId, calendarId, options)
+          .then(function(events) {
+            return _getCalendarShells(events);
+          });
       }
 
       /**
@@ -123,9 +124,26 @@
           return $q.resolve([]);
         }
 
-        return calendarAPI.searchEventsAdvanced(options).then(function(events) {
-          return events.map(function(event) { return event.data; });
-        });
+        return calendarAPI.searchEventsAdvanced(options)
+          .then(function(events) {
+            return _getCalendarShells(events);
+          })
+          .catch($q.reject);
+      }
+
+      function _getCalendarShells(events) {
+        return events.reduce(function(shells, icaldata) {
+          var vcalendar = ICAL.Component.fromString(icaldata.data);
+          var vevents = vcalendar.getAllSubcomponents('vevent');
+
+          vevents.forEach(function(vevent) {
+            var shell = new CalendarShell(vevent, {path: icaldata._links.self.href, etag: icaldata.etag});
+
+            shells.push(shell);
+          });
+
+          return shells;
+        }, []);
       }
 
       /**

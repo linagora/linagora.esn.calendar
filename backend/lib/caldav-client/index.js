@@ -140,24 +140,16 @@ module.exports = dependencies => {
         ESNToken: token,
         Accept: JSON_CONTENT_TYPE
       }
-    }))
-      .then(responseBody => responseBody._embedded['dav:item'].map(item => {
-        const { userId, calendarId, eventUid } = parseEventPath(item._links.self.href);
-        const vcalendar = ICAL.Component.fromString(item.data);
-        const vevents = vcalendar.getAllSubcomponents('vevent');
+    })).then(data => data._embedded['dav:item'].map(item => {
+      const { userId, calendarId, eventUid } = parseEventPath(item._links.self.href);
 
-        return vevents.map(vevent => {
-          const eventData = { ics: item.data, userId, calendarId, eventUid };
-          const recurrenceId = vevent.getFirstPropertyValue('recurrence-id');
-
-          if (recurrenceId) {
-            eventData.recurrenceId = recurrenceId;
-          }
-
-          return eventData;
-        });
-      }))
-      .then(events => _.flatten(events));
+      return {
+        ics: item.data,
+        userId,
+        calendarId,
+        eventUid
+      };
+    }));
   }
 
   function getAllCalendarsInDomainAsTechnicalUser(domainId) {

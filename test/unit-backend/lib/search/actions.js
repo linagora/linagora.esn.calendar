@@ -1,40 +1,20 @@
 const { expect } = require('chai');
 const sinon = require('sinon');
 const { ObjectId } = require('bson');
-const { NOTIFICATIONS } = require('../../../../backend/lib/constants');
 
 describe('The calendar Elasticsearch actions', function() {
-  let deps, dependencies, pubsubDep, elasticsearchDep, loggerDep;
-  let topicMock, publishStubs;
+  let deps, dependencies;
   let elasticsearchActions;
 
   beforeEach(function() {
-    elasticsearchDep = {};
-
-    loggerDep = {
-      error: () => {},
-      debug: () => {},
-      info: () => {},
-      warning: () => {}
-    };
-
-    publishStubs = {
-      [NOTIFICATIONS.EVENT_ADDED]: sinon.stub().returnsArg(0),
-      [NOTIFICATIONS.EVENT_UPDATED]: sinon.stub().returnsArg(0),
-      [NOTIFICATIONS.EVENT_DELETED]: sinon.stub().returnsArg(0)
-    };
-
-    topicMock = topic => ({ publish: publishStubs[topic] });
-    pubsubDep = {
-      local: {
-        topic: topicMock
-      }
-    };
-
     deps = {
-      elasticsearch: elasticsearchDep,
-      logger: loggerDep,
-      pubsub: pubsubDep
+      elasticsearch: {},
+      logger: {
+        error: () => {},
+        debug: () => {},
+        info: () => {},
+        warning: () => {}
+      }
     };
 
     dependencies = name => deps[name];
@@ -345,72 +325,6 @@ describe('The calendar Elasticsearch actions', function() {
           expect(err).to.exist;
           done();
         });
-    });
-  });
-
-  describe('The Pubsub functions', function() {
-    const message = { test: 'whatever message' };
-
-    function testLocalPublishOnEvent(localTopic, message, shouldNotBeCalled) {
-      if (shouldNotBeCalled) {
-        expect(publishStubs[localTopic]).to.have.not.been.called;
-
-        return;
-      }
-
-      expect(publishStubs[localTopic]).to.have.been.calledWith(sinon.match(message));
-    }
-
-    describe('The addEventToIndexThroughPubsub function', function() {
-      it('should publish EVENT_ADDED within local pubsub', function() {
-        elasticsearchActions.addEventToIndexThroughPubsub(message);
-
-        testLocalPublishOnEvent(NOTIFICATIONS.EVENT_ADDED, message);
-      });
-    });
-
-    describe('The addSpecialOccursToIndexIfAnyThroughPubsub function', function() {
-      it('should not publish EVENT_ADDED when receiving invalid recurrenceIds', function() {
-        const recurrenceIds = {};
-
-        elasticsearchActions.addSpecialOccursToIndexIfAnyThroughPubsub(recurrenceIds, message);
-
-        testLocalPublishOnEvent(NOTIFICATIONS.EVENT_ADDED, message, true);
-      });
-
-      it('should not publish EVENT_ADDED when receiving empty recurrenceIds', function() {
-        const recurrenceIds = [];
-
-        elasticsearchActions.addSpecialOccursToIndexIfAnyThroughPubsub(recurrenceIds, message);
-
-        testLocalPublishOnEvent(NOTIFICATIONS.EVENT_ADDED, message, true);
-      });
-
-      it('should publish EVENT_ADDED within local pubsub for each special occur', function() {
-        const recurrenceIds = ['recurId1', 'recurId2'];
-
-        elasticsearchActions.addSpecialOccursToIndexIfAnyThroughPubsub(recurrenceIds, message);
-
-        recurrenceIds.forEach((recurrenceId, index) => {
-          expect(publishStubs[NOTIFICATIONS.EVENT_ADDED].getCall(index).calledWith(sinon.match({ ...message, recurrenceId }))).to.be.true;
-        });
-      });
-    });
-
-    describe('The updateEventInIndexThroughPubsub function', function() {
-      it('should publish EVENT_UPDATED within local pubsub', function() {
-        elasticsearchActions.updateEventInIndexThroughPubsub(message);
-
-        testLocalPublishOnEvent(NOTIFICATIONS.EVENT_UPDATED, message);
-      });
-    });
-
-    describe('The removeEventFromIndexThroughPubsub function', function() {
-      it('should publish EVENT_DELETED within local pubsub', function() {
-        elasticsearchActions.removeEventFromIndexThroughPubsub(message);
-
-        testLocalPublishOnEvent(NOTIFICATIONS.EVENT_DELETED, message);
-      });
     });
   });
 });

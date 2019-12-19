@@ -1,43 +1,14 @@
-const { SEARCH, NOTIFICATIONS } = require('../constants');
+const { SEARCH } = require('../constants');
 
 module.exports = dependencies => {
-  const pubsub = dependencies('pubsub');
   const elasticsearch = dependencies('elasticsearch');
   const logger = dependencies('logger');
 
-  const eventAddedTopic = pubsub.local.topic(NOTIFICATIONS.EVENT_ADDED);
-  const eventUpdatedTopic = pubsub.local.topic(NOTIFICATIONS.EVENT_UPDATED);
-  const eventDeletedTopic = pubsub.local.topic(NOTIFICATIONS.EVENT_DELETED);
-
   return {
-    addEventToIndexThroughPubsub,
-    addSpecialOccursToIndexIfAnyThroughPubsub,
-    updateEventInIndexThroughPubsub,
-    removeEventFromIndexThroughPubsub,
-    searchNextEvent,
     searchEventsBasic,
-    searchEventsAdvanced
+    searchEventsAdvanced,
+    searchNextEvent
   };
-
-  function addEventToIndexThroughPubsub(message) {
-    eventAddedTopic.publish(message);
-  }
-
-  function addSpecialOccursToIndexIfAnyThroughPubsub(recurrenceIds, message) {
-    if (!Array.isArray(recurrenceIds) || !recurrenceIds.length) return;
-
-    recurrenceIds.forEach(recurrenceId =>
-      addEventToIndexThroughPubsub({ ...message, recurrenceId })
-    );
-  }
-
-  function updateEventInIndexThroughPubsub(message) {
-    eventUpdatedTopic.publish(message);
-  }
-
-  function removeEventFromIndexThroughPubsub(message) {
-    eventDeletedTopic.publish(message);
-  }
 
   function searchNextEvent(user, callback) {
     const mustOccur = {

@@ -201,7 +201,7 @@ describe('The CalEventFormController controller', function() {
     });
   });
 
-  beforeEach(inject(function(
+  beforeEach(angular.mock.inject(function(
     $controller,
     _$rootScope_,
     moment,
@@ -606,26 +606,6 @@ describe('The CalEventFormController controller', function() {
         this.scope.$digest();
 
         expect(calFreebusyService.setBulkFreeBusyStatus).to.have.been.calledOnce;
-      });
-
-      it('should fetch full event when the provided event is from search', function() {
-        var self = this;
-        var fetchFullEvent = sinon.stub().returns(
-          $q.when(self.CalendarShell.fromIncompleteShell({
-            start: start,
-            end: end
-          }))
-        );
-
-        self.scope.event = {
-          fetchFullEvent: fetchFullEvent
-        };
-        self.initController();
-        self.scope.$digest();
-
-        expect(fetchFullEvent).to.have.been.calledOnce;
-        expect(self.scope.editedEvent.start.isSame(start)).to.be.true;
-        expect(self.scope.editedEvent.end.isSame(end)).to.be.true;
       });
     });
 

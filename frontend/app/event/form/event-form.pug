@@ -16,7 +16,7 @@ form.event-form(role="form", name="form", aria-hidden="true", ng-class="{ 'reado
           spinner-size='0.5',
           spinner-key='event'
         )
-        .active-modal-body(ng-if="!hideEventForm")
+        .active-modal-body(ng-hide="hideEventForm")
           .row
             .col-xs-12(ng-if="inputSuggestions")
               .suggestion(ng-repeat="suggestion in inputSuggestions")
