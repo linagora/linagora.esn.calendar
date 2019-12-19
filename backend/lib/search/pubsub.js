@@ -81,16 +81,12 @@ module.exports = dependencies => {
       if (!canPublishMessage(msg)) return;
 
       const parsedMessage = parse(msg);
-
       const vevents = (new ICAL.Component(msg.event)).getAllSubcomponents('vevent');
+      const recurrenceIdsToBeDeleted = jcalHelper.getRecurrenceIdsFromVEvents(vevents);
 
-      if (vevents.length > 1) {
-        const recurrenceIdsToBeDeleted = jcalHelper.getRecurrenceIdsFromVEvents(vevents);
-
-        recurrenceIdsToBeDeleted.forEach(recurrenceId => {
-          elasticsearchActions.removeEventFromIndexThroughPubsub({ ...parsedMessage, recurrenceId });
-        });
-      }
+      recurrenceIdsToBeDeleted.forEach(recurrenceId => {
+        elasticsearchActions.removeEventFromIndexThroughPubsub({ ...parsedMessage, recurrenceId });
+      });
 
       elasticsearchActions.removeEventFromIndexThroughPubsub(parsedMessage);
     }

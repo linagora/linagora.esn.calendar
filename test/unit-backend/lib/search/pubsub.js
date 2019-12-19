@@ -257,6 +257,8 @@ describe('The calendar search pubsub module', function() {
       });
 
       it('should just remove the master event if it has no exceptions', function() {
+        jcalHelperMock.getRecurrenceIdsFromVEvents = sinon.stub().returns([]);
+
         publishGlobalEvent(globalEvent);
 
         expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.been.calledOnce;
