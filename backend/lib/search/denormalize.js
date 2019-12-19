@@ -14,14 +14,14 @@ module.exports = {
 function denormalize(data) {
   const timeInfo = jcal.getIcalEvent(data.ics);
 
-  if (data.recurrenceId) return _denormalizeRecurrentEvent(data, timeInfo);
+  if (data.recurrenceId) return _denormalizeRecurrentEvent(data);
 
   return _denormalizeNormalEvent(data, timeInfo);
 }
 
-function _denormalizeRecurrentEvent(data, timeInfo) {
-  const specialOccurVEvent = timeInfo.exceptions[data.recurrenceId].component;
+function _denormalizeRecurrentEvent(data) {
   const specialOccurVCal = ICAL.Component.fromString(data.ics);
+  const specialOccurVEvent = jcal.getRecurrenceExceptionFromVEvents(specialOccurVCal.getAllSubcomponents('vevent'), data.recurrenceId);
 
   specialOccurVCal.removeAllSubcomponents('vevent');
   specialOccurVCal.addSubcomponent(specialOccurVEvent);
