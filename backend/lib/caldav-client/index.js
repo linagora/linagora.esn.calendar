@@ -124,8 +124,18 @@ module.exports = dependencies => {
       });
   }
 
+  /**
+   * Request to Sabre to get all events in a calendar as a technical user.
+   *
+   * @param {Object} options The request options
+   * @param {String} options.calendarUri The uri of the calendar in which the events are fetched
+   * @param {String} options.domainId The id of the domain to get the technical user from
+   * @param {String} options.calendarHomeId The id of the calendar home (the user that owns the calendar)
+   * @param {Boolean} options.shouldStripCancelledEvents Whether to strip out CANCELLED events or not (default: true)
+   * @return {Promise<[Object]>} An array of event objects with iCal formatted info
+   */
   function getAllEventsInCalendarAsTechnicalUser(options) {
-    const { calendarUri, domainId, calendarHomeId } = options;
+    const { calendarUri, domainId, calendarHomeId, shouldStripCancelledEvents } = { shouldStripCancelledEvents: true, ...options };
     const requestOptions = {
       userId: calendarHomeId,
       calendarUri,
@@ -141,6 +151,12 @@ module.exports = dependencies => {
         Accept: JSON_CONTENT_TYPE
       }
     })).then(data => data._embedded['dav:item'].map(item => {
+      if (shouldStripCancelledEvents) {
+        const vevent = ICAL.Component.fromString(item.data).getFirstSubcomponent('vevent');
+
+        if (vevent.getFirstPropertyValue('status') === 'CANCELLED') return;
+      }
+
       const { userId, calendarId, eventUid } = parseEventPath(item._links.self.href);
 
       return {
@@ -149,7 +165,7 @@ module.exports = dependencies => {
         calendarId,
         eventUid
       };
-    }));
+    }).filter(Boolean));
   }
 
   function getAllCalendarsInDomainAsTechnicalUser(domainId) {
