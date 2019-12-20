@@ -45,6 +45,7 @@ describe('search helpers', function() {
           email: 'janedoe@open-paas.org',
           cn: 'Jane Doe'
         }],
+        class: 'PUBLIC',
         resources: [],
         hasResources: false
       });
@@ -123,6 +124,7 @@ describe('search helpers', function() {
           email: 'janedoe@open-paas.org',
           cn: 'Jane Doe'
         }],
+        class: 'PUBLIC',
         resources: [],
         hasResources: false
       });
@@ -211,5 +213,56 @@ describe('search helpers', function() {
         }]
       });
     });
+
+    it('should correctly parse a recurrent master event', function() {
+      ics = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/meeting-recurring-with-exception.ics').toString();
+      data = {
+        ics,
+        userId: 'userId',
+        uid: 'uid',
+        calendarId: 'calendarId'
+      };
+
+      const denormalizedEvent = this.denormalize.denormalize(data);
+
+      expect(denormalizedEvent.isRecurrentMaster).to.be.true;
+      expect(denormalizedEvent.uid).to.equal('20e85629-f78f-4c4a-92ff-bd952b98b2fb');
+      expect(denormalizedEvent.recurrenceId).to.not.exist;
+      expect(denormalizedEvent.start).to.equal('2016-05-26T17:00:00.000Z');
+      expect(denormalizedEvent.end).to.equal('2016-05-26T18:00:00.000Z');
+      expect(denormalizedEvent.organizer.email).to.equal('admin@open-paas.org');
+      expect(denormalizedEvent.attendees[0].email).to.equal('admin@open-paas.org');
+      expect(denormalizedEvent.attendees[1].email).to.equal('user1@open-paas.org');
+    });
+
+    it('should correctly parse a recurrent exception', function() {
+      ics = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/meeting-recurring-with-exception.ics').toString();
+      data = {
+        ics,
+        userId: 'userId',
+        uid: 'uid',
+        calendarId: 'calendarId',
+        recurrenceId: '2016-05-27T17:00:00Z'
+      };
+
+      const denormalizedEvent = this.denormalize.denormalize(data);
+
+      expect(denormalizedEvent.isRecurrentMaster).to.be.undefined;
+      expect(denormalizedEvent.uid).to.equal('20e85629-f78f-4c4a-92ff-bd952b98b2fb');
+      expect(denormalizedEvent.recurrenceId).to.equal(data.recurrenceId);
+      expect(denormalizedEvent.start).to.equal('2016-05-27T16:00:00.000Z');
+      expect(denormalizedEvent.end).to.equal('2016-05-27T17:00:00.000Z');
+      expect(denormalizedEvent.organizer.email).to.equal('admin@open-paas.org');
+      expect(denormalizedEvent.attendees[0].email).to.equal('user1@open-paas.org');
+      expect(denormalizedEvent.attendees[1].email).to.equal('lduzan@linagora.com');
+      expect(denormalizedEvent.attendees[2].email).to.equal('admin@open-paas.org');
+      expect(denormalizedEvent.attendees[3].email).to.equal('user2@open-paas.org');
+    });
+  });
+
+  describe('The getId function', function() {
+  });
+
+  describe('The getEventUidFromElasticsearchId function', function() {
   });
 });

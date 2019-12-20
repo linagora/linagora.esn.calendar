@@ -1,7 +1,8 @@
-const { expect } = require('chai'),
-      sinon = require('sinon'),
-      mockery = require('mockery'),
-      moment = require('moment');
+const { expect } = require('chai');
+const sinon = require('sinon');
+const mockery = require('mockery');
+const moment = require('moment');
+const fs = require('fs');
 
 describe('The caldav-client module', function() {
   let authMock, davServerMock, request, davEndpoint, userId, calendarId, eventId, token, jcal;
@@ -787,6 +788,92 @@ describe('The caldav-client module', function() {
       });
 
       getModule().getAllEventsInCalendarAsTechnicalUser({ calendarUri, domainId, calendarHomeId });
+    });
+
+    it('should send request with correct params to get all the events in a calendar as a technical user and return special occurs as separate events', function(done) {
+      const domainId = 'aff2018';
+      const technicalUserToken = 'technicalToken';
+      const calendarId = 'foo';
+      const calendarHomeId = 'bar';
+      const normalEventICS = fs.readFileSync(__dirname + '/../../fixtures/meeting.ics', 'utf-8');
+      const recurEventWithExceptionICS = fs.readFileSync(__dirname + '/../../fixtures/meeting-recurring-with-exception.ics', 'utf-8');
+      const expectedEvents = [
+        {
+          ics: normalEventICS,
+          userId: calendarHomeId,
+          calendarId,
+          eventUid: 'event1'
+        },
+        {
+          ics: recurEventWithExceptionICS,
+          userId: calendarHomeId,
+          calendarId,
+          eventUid: 'event2'
+        },
+        {
+          ics: recurEventWithExceptionICS,
+          userId: calendarHomeId,
+          calendarId,
+          eventUid: 'event2',
+          recurrenceId: '2016-05-26T17:00:00Z'
+        },
+        {
+          ics: recurEventWithExceptionICS,
+          userId: calendarHomeId,
+          calendarId,
+          eventUid: 'event2',
+          recurrenceId: '2016-05-27T17:00:00Z'
+        }
+      ];
+
+      mockery.registerMock('../helpers/technical-user', () => ({
+        getTechnicalUserToken: _domainId => {
+          expect(_domainId).to.equal(domainId);
+
+          return Promise.resolve({
+            token: technicalUserToken
+          });
+        }
+      }));
+
+      const response = {
+        statusCode: 200,
+        body: {
+          _embedded: {
+            'dav:item': [
+              {
+                _links: { self: { href: `/calendars/${calendarHomeId}/${calendarId}/${expectedEvents[0].eventUid}.ics` }},
+                data: normalEventICS
+              },
+              {
+                _links: { self: { href: `/calendars/${calendarHomeId}/${calendarId}/event2.ics` }},
+                data: recurEventWithExceptionICS
+              }
+            ]
+          }
+        }
+      };
+
+      mockery.registerMock('request', (options, callback) => {
+        expect(options).to.shallowDeepEqual({
+          method: 'GET',
+          url: `${davEndpoint}/calendars/${calendarHomeId}/${calendarId}.json?allEvents=true`,
+          json: true,
+          headers: {
+            ESNToken: technicalUserToken,
+            Accept: 'application/json'
+          }
+        });
+
+        return callback(null, response, response.body);
+      });
+
+      getModule().getAllEventsInCalendarAsTechnicalUser({ calendarUri: calendarId, domainId, calendarHomeId })
+        .then(events => {
+          expect(events).to.deep.equal(expectedEvents);
+          done();
+        })
+        .catch(err => done(err || new Error('should not happen')));
     });
   });
 });

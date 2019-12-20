@@ -1748,38 +1748,27 @@ describe('The calEventService service', function() {
     });
 
     it('should call #calendarAPI.searchEventsAdvanced with good parameters and return an array of events when it succeeds', function(done) {
+      var mockEvents = [{
+        _links: {
+          self: {
+            href: '/prepath/path/to/calendar/event1.ics'
+          }
+        },
+        data: {
+          some: 'thing'
+        }
+      }];
+
       sinon.stub(self.calendarAPI, 'searchEventsAdvanced', function(options) {
         expect(options).to.deep.equal(searchOptions);
 
-        return $q.resolve([{
-          _links: {
-            self: {
-              href: '/prepath/path/to/calendar/myuid.ics'
-            }
-          },
-          data: 'BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//Sabre//Sabre VObject 4.1.3//EN\nBEGIN:VTIMEZONE\nTZID:Asia/Jakarta\nBEGIN:STANDARD\nTZOFFSETFROM:+0700\nTZOFFSETTO:+0700\nTZNAME:WIB\nDTSTART:19700101T000000\nEND:STANDARD\nEND:VTIMEZONE\nBEGIN:VEVENT\n' +
-            'UID:uid\nTRANSP:OPAQUE\n' +
-            'DTSTART:20190411T060000Z\nDTEND:20190411T070000Z\n' +
-            'CLASS:PUBLIC\nSUMMARY:title\n' +
-            'ORGANIZER;CN=User:mailto:user1@mail.com\n' +
-            'DTSTAMP:20190411T054758Z\n' +
-            'ATTENDEE;PARTSTAT=ACCEPTED;RSVP=FALSE;ROLE=CHAIR;CUTYPE=INDIVIDUAL;CN=User:mailto:user1@mail.com\nEND:VEVENT\nEND:VCALENDAR\n',
-          etag: '"etag"'
-        }]);
+        return $q.resolve(mockEvents);
       });
 
       self.calEventService.searchEventsAdvanced(searchOptions).then(function(events) {
-        expect(events[0].uid).to.equal('uid');
-        expect(events[0].title).to.equal('title');
-        expect(events[0].start.toDate()).to.equalDate(self.calMoment('2019-04-11 06:00:00').toDate());
-        expect(events[0].end.toDate()).to.equalDate(self.calMoment('2019-04-11 06:00:00').toDate());
-        expect(events[0].vcalendar).to.be.an('object');
-        expect(events[0].organizer.name).to.equal('User');
-        expect(events[0].organizer.email).to.equal('user1@mail.com');
-        expect(events[0].attendees[0].name).to.equal('User');
-        expect(events[0].attendees[0].email).to.equal('user1@mail.com');
-        expect(events[0].etag).to.equal('"etag"');
-        expect(events[0].path).to.equal('/prepath/path/to/calendar/myuid.ics');
+        events.forEach(function(event, index) {
+          expect(event).to.shallowDeepEqual(mockEvents[index].data);
+        });
 
         done();
       }).catch(function(err) {
