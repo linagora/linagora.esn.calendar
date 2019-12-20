@@ -3,7 +3,6 @@
 var expect = require('chai').expect;
 var fs = require('fs-extra');
 var icaljs = require('@linagora/ical.js');
-const { RECUR_EVENT_MODIFICATION_TYPE } = require('../../../../backend/lib/constants');
 
 describe('The jcal helper module', function() {
 
@@ -67,8 +66,7 @@ describe('The jcal helper module', function() {
         const vcalendar = icaljs.Component.fromString(ics);
         const vevent = vcalendar.getFirstSubcomponent('vevent');
         const valarm = vevent.getFirstSubcomponent('valarm');
-
-return this.jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstProperty('dtstart'));
+        return this.jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstProperty('dtstart'));
       };
     });
 
@@ -117,7 +115,6 @@ return this.jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstProperty('dtstar
           time: '1:30 PM',
           timezone: 'UTC'
         },
-        class: 'PUBLIC',
         allDay: false,
         durationInDays: 0,
         location: 'https://hubl.in/openpaas',
@@ -159,7 +156,6 @@ return this.jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstProperty('dtstar
           time: '1:30 PM',
           timezone: 'UTC'
         },
-        class: 'PUBLIC',
         allDay: false,
         durationInDays: 0,
         location: 'https://hubl.in/openpaas',
@@ -256,7 +252,6 @@ return this.jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstProperty('dtstar
           time: '2:00 PM',
           timezone: 'UTC'
         },
-        class: 'PUBLIC',
         allDay: false,
         durationInDays: 0,
         location: 'https://hubl.in/openpaas',
@@ -369,112 +364,6 @@ return this.jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstProperty('dtstar
       const result = this.jcalHelper.updateParticipation(vcalendar, attendeeEmail, partstat);
 
       expect(result.toString()).to.match(/CN=John Doe;PARTSTAT=ABC/);
-    });
-  });
-
-  describe('The getRecurrenceIdsFromVEvents function', function() {
-    let recurVEvents;
-
-    beforeEach(function() {
-      recurVEvents = icaljs.Component.fromString(fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/meeting-recurring-with-exception.ics').toString()).getAllSubcomponents('vevent');
-    });
-
-    it('should get all recurrence ids from a list of vevents', function() {
-      const recurrenceIds = this.jcalHelper.getRecurrenceIdsFromVEvents(recurVEvents);
-
-      expect(recurrenceIds).to.deep.equal(['2016-05-26T17:00:00Z', '2016-05-27T17:00:00Z']);
-    });
-  });
-
-  describe('The analyzeJCalsDiff function', function() {
-    let recurICal;
-
-    beforeEach(function() {
-      recurICal = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/meeting-recurring-with-exception.ics').toString();
-    });
-
-    function removeAllSpecialOccurs(vCal) {
-      const masterVEvent = vCal.getFirstSubcomponent('vevent');
-
-      vCal.removeAllSubcomponents('vevent');
-      vCal.addSubcomponent(masterVEvent);
-
-      return vCal;
-    }
-
-    function generateJCals(actionType) {
-      let oldVCal, newVCal;
-
-      if (actionType === RECUR_EVENT_MODIFICATION_TYPE.MASTER_EVENT_UPDATE) {
-        oldVCal = removeAllSpecialOccurs(icaljs.Component.fromString(recurICal));
-        newVCal = removeAllSpecialOccurs(icaljs.Component.fromString(recurICal));
-
-        newVCal.getFirstSubcomponent('vevent').getFirstProperty('summary').setValue('Updated summary');
-      } else if (actionType === RECUR_EVENT_MODIFICATION_TYPE.FIRST_SPECIAL_OCCURS_ADDED) {
-        oldVCal = removeAllSpecialOccurs(icaljs.Component.fromString(recurICal));
-        newVCal = icaljs.Component.fromString(recurICal);
-      } else {
-        oldVCal = icaljs.Component.fromString(recurICal);
-        newVCal = icaljs.Component.fromString(recurICal);
-      }
-
-      return { oldVCal, newVCal };
-    }
-
-    it('should return "MASTER_EVENT_UPDATE" action type when both old jCal and new jCal have no special occurs', function() {
-      const { oldVCal, newVCal } = generateJCals(RECUR_EVENT_MODIFICATION_TYPE.MASTER_EVENT_UPDATE);
-
-      const { actionType, actionDetails } = this.jcalHelper.analyzeJCalsDiff(oldVCal.toJSON(), newVCal.toJSON());
-
-      expect(actionType).to.equal(RECUR_EVENT_MODIFICATION_TYPE.MASTER_EVENT_UPDATE);
-      expect(actionDetails).to.be.undefined;
-    });
-
-    it('should return "FIRST_SPECIAL_OCCURS_ADDED" action type when new jCal has special occurs and old jCal has none', function() {
-      const { oldVCal, newVCal } = generateJCals(RECUR_EVENT_MODIFICATION_TYPE.FIRST_SPECIAL_OCCURS_ADDED);
-
-      const { actionType, actionDetails } = this.jcalHelper.analyzeJCalsDiff(oldVCal.toJSON(), newVCal.toJSON());
-
-      expect(actionType).to.equal(RECUR_EVENT_MODIFICATION_TYPE.FIRST_SPECIAL_OCCURS_ADDED);
-      expect(actionDetails.newRecurrenceIds).to.deep.equal(['2016-05-26T17:00:00Z', '2016-05-27T17:00:00Z']);
-    });
-
-    it('should return "FULL_REINDEX" action type when new jCal has special occurs and old jCal has none and new jCal has updated master event', function() {
-      const { oldVCal, newVCal } = generateJCals(RECUR_EVENT_MODIFICATION_TYPE.FIRST_SPECIAL_OCCURS_ADDED);
-
-      newVCal.getFirstSubcomponent('vevent').getFirstProperty('summary').setValue('Updated summary');
-
-      const { actionType, actionDetails } = this.jcalHelper.analyzeJCalsDiff(oldVCal.toJSON(), newVCal.toJSON());
-
-      expect(actionType).to.equal(RECUR_EVENT_MODIFICATION_TYPE.FULL_REINDEX);
-      expect(actionDetails.recurrenceIdsToBeDeleted.length).to.equal(0);
-      expect(actionDetails.newRecurrenceIds).to.deep.equal(['2016-05-26T17:00:00Z', '2016-05-27T17:00:00Z']);
-    });
-
-    it('should return "FULL_REINDEX" action type and no recurrence ids to be deleted when both old jCal and new jCal have the same special occurs', function() {
-      const { oldVCal, newVCal } = generateJCals(RECUR_EVENT_MODIFICATION_TYPE.FULL_REINDEX);
-
-      const { actionType, actionDetails } = this.jcalHelper.analyzeJCalsDiff(oldVCal.toJSON(), newVCal.toJSON());
-
-      expect(actionType).to.equal(RECUR_EVENT_MODIFICATION_TYPE.FULL_REINDEX);
-      expect(actionDetails.recurrenceIdsToBeDeleted.length).to.equal(0);
-      expect(actionDetails.newRecurrenceIds).to.deep.equal(['2016-05-26T17:00:00Z', '2016-05-27T17:00:00Z']);
-    });
-
-    it('should return "FULL_REINDEX" action type and recurrence ids to be deleted when new jCal have some special occurs that old jCal does not', function() {
-      const { oldVCal, newVCal } = generateJCals(RECUR_EVENT_MODIFICATION_TYPE.FULL_REINDEX);
-
-      const newVEvents = newVCal.getAllSubcomponents('vevent');
-
-      newVCal.removeAllSubcomponents('vevent');
-      newVCal.addSubcomponent(newVEvents[0]);
-      newVCal.addSubcomponent(newVEvents[1]);
-
-      const { actionType, actionDetails } = this.jcalHelper.analyzeJCalsDiff(oldVCal.toJSON(), newVCal.toJSON());
-
-      expect(actionType).to.equal(RECUR_EVENT_MODIFICATION_TYPE.FULL_REINDEX);
-      expect(actionDetails.recurrenceIdsToBeDeleted).to.deep.equal(['2016-05-27T17:00:00Z']);
-      expect(actionDetails.newRecurrenceIds).to.deep.equal(['2016-05-26T17:00:00Z']);
     });
   });
 });

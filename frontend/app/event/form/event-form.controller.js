@@ -6,6 +6,7 @@
 
   function CalEventFormController(
     $timeout,
+    $alert,
     $scope,
     $state,
     $log,
@@ -51,7 +52,7 @@
       $scope.modifyEvent = modifyEvent;
       $scope.deleteEvent = deleteEvent;
       $scope.createEvent = createEvent;
-      $scope.isNew = $scope.event.fetchFullEvent ? function() { return false; } : calEventUtils.isNew;
+      $scope.isNew = calEventUtils.isNew;
       $scope.isInvolvedInATask = calEventUtils.isInvolvedInATask;
       $scope.updateAlarm = updateAlarm;
       $scope.submit = submit;
@@ -111,64 +112,51 @@
         spinnerTimeoutPromise = $timeout(function() {
           usSpinnerService.spin(spinnerKey);
         }, CAL_EVENT_FORM_SPINNER_TIMEOUT_DURATION);
+        $scope.use24hourFormat = esnDatetimeService.is24hourFormat();
+        $scope.editedEvent = $scope.event.clone();
+        $scope.initialAttendees = angular.copy($scope.editedEvent.attendees) || [];
+        $scope.newAttendees = calEventUtils.getNewAttendees();
+        $scope.newResources = calEventUtils.getNewResources();
+        $scope.isOrganizer = calEventUtils.isOrganizer($scope.editedEvent);
+        $scope.canSuggestTime = calEventUtils.canSuggestChanges($scope.editedEvent, session.user);
+        $scope.inputSuggestions = _.filter($scope.relatedEvents, {type: CAL_RELATED_EVENT_TYPES.COUNTER});
 
-        if (!$scope.event.fetchFullEvent) {
-          return _initEventForm();
-        }
+        calendarService.listPersonalAndAcceptedDelegationCalendars($scope.calendarHomeId)
+          .then(function(calendars) {
+            $scope.calendars = calendars;
+            $scope.calendar = calEventUtils.isNew($scope.editedEvent) ? _.find(calendars, 'selected') : _.find(calendars, function(calendar) {
 
-        $scope.event.fetchFullEvent().then(function(fullEvent) {
-          $scope.event = fullEvent;
-
-          return _initEventForm();
-        });
-
-        function _initEventForm() {
-          $scope.use24hourFormat = esnDatetimeService.is24hourFormat();
-          $scope.editedEvent = $scope.event.clone();
-          $scope.initialAttendees = angular.copy($scope.editedEvent.attendees) || [];
-          $scope.newAttendees = calEventUtils.getNewAttendees();
-          $scope.newResources = calEventUtils.getNewResources();
-          $scope.isOrganizer = calEventUtils.isOrganizer($scope.editedEvent);
-          $scope.canSuggestTime = calEventUtils.canSuggestChanges($scope.editedEvent, session.user);
-          $scope.inputSuggestions = _.filter($scope.relatedEvents, {type: CAL_RELATED_EVENT_TYPES.COUNTER});
-
-          calendarService.listPersonalAndAcceptedDelegationCalendars($scope.calendarHomeId)
-            .then(function(calendars) {
-              $scope.calendars = calendars;
-              $scope.calendar = calEventUtils.isNew($scope.editedEvent) ? _.find(calendars, 'selected') : _.find(calendars, function(calendar) {
-
-                return $scope.editedEvent.calendarUniqueId === calendar.getUniqueId();
-              });
-            })
-            .then(function() {
-              return $scope.calendar.getOwner();
-            })
-            .then(function(owner) {
-              $scope.attendees = calAttendeeService.splitAttendeesFromType($scope.editedEvent.attendees);
-              $scope.calendarOwnerAsAttendee = calAttendeeService.getAttendeeForUser($scope.editedEvent.attendees, owner);
-
-              if (!$scope.editedEvent.class) {
-                $scope.editedEvent.class = CAL_EVENT_FORM.class.default;
-              }
-
-              $scope.canModifyEvent = _canModifyEvent();
-              $scope.displayParticipationButton = displayParticipationButton();
-              $scope.displayCalMailToAttendeesButton = displayCalMailToAttendeesButton;
-              $scope.canModifyEventAttendees = calUIAuthorizationService.canModifyEventAttendees($scope.calendar, $scope.editedEvent, session.user._id);
-              $scope.canModifyEventRecurrence = calUIAuthorizationService.canModifyEventRecurrence($scope.calendar, $scope.editedEvent, session.user._id);
-              $scope.excludeCurrentUserFromSuggestedAttendees = excludeCurrentUser();
-              $scope.$watch('calendar', onCalendarUpdated);
-
-              return calAttendeeService.splitAttendeesFromTypeWithResourceDetails($scope.editedEvent.attendees);
-            }).then(function(attendeesWithResourceDetails) {
-              $scope.attendees = _.assign({}, $scope.attendees, attendeesWithResourceDetails);
-            }).then(function() {
-              calFreebusyService.setBulkFreeBusyStatus(getAttendees(), $scope.event.start, $scope.event.end, [$scope.event]);
-              $timeout.cancel(spinnerTimeoutPromise);
-              usSpinnerService.stop(spinnerKey);
-              $scope.hideEventForm = false;
+              return $scope.editedEvent.calendarUniqueId === calendar.getUniqueId();
             });
-          }
+          })
+          .then(function() {
+            return $scope.calendar.getOwner();
+          })
+          .then(function(owner) {
+            $scope.attendees = calAttendeeService.splitAttendeesFromType($scope.editedEvent.attendees);
+            $scope.calendarOwnerAsAttendee = calAttendeeService.getAttendeeForUser($scope.editedEvent.attendees, owner);
+
+            if (!$scope.editedEvent.class) {
+              $scope.editedEvent.class = CAL_EVENT_FORM.class.default;
+            }
+
+            $scope.canModifyEvent = _canModifyEvent();
+            $scope.displayParticipationButton = displayParticipationButton();
+            $scope.displayCalMailToAttendeesButton = displayCalMailToAttendeesButton;
+            $scope.canModifyEventAttendees = calUIAuthorizationService.canModifyEventAttendees($scope.calendar, $scope.editedEvent, session.user._id);
+            $scope.canModifyEventRecurrence = calUIAuthorizationService.canModifyEventRecurrence($scope.calendar, $scope.editedEvent, session.user._id);
+            $scope.excludeCurrentUserFromSuggestedAttendees = excludeCurrentUser();
+            $scope.$watch('calendar', onCalendarUpdated);
+
+            return calAttendeeService.splitAttendeesFromTypeWithResourceDetails($scope.editedEvent.attendees);
+          }).then(function(attendeesWithResourceDetails) {
+            $scope.attendees = _.assign({}, $scope.attendees, attendeesWithResourceDetails);
+          }).then(function() {
+            calFreebusyService.setBulkFreeBusyStatus(getAttendees(), $scope.event.start, $scope.event.end, [$scope.event]);
+            $timeout.cancel(spinnerTimeoutPromise);
+            usSpinnerService.stop(spinnerKey);
+            $scope.hideEventForm = false;
+          });
       }
 
       function onCalendarUpdated() {

@@ -171,13 +171,27 @@ module.exports = dependencies => {
       .then(esResult => _handleElasSearchResults(esResult, query));
   }
 
-  function _handleElasSearchResults(esResult) {
-    return {
-      totalCount: esResult.total_count,
-      events: esResult.list.map(event => ({
-        path: caldavClient.getEventPath(event._source.userId, event._source.calendarId, getEventUidFromElasticsearchId(event._id)),
-        data: event._source
-      }))
+  function _handleElasSearchResults(esResult, query) {
+    const output = {
+      total_count: esResult.total_count,
+      results: []
     };
+
+    if (!esResult.list || esResult.list.length === 0) {
+      return output;
+    }
+
+    const paths = esResult.list.map(event => caldavClient.getEventPath(event._source.userId, event._source.calendarId, getEventUidFromElasticsearchId(event._id)));
+
+    return caldavClient.getMultipleEventsFromPaths(query.userId, paths)
+      .then(events => {
+        output.results = events.map(({ ical, etag, path }) => ({
+          path,
+          event: ical,
+          etag
+        }));
+
+        return output;
+      });
   }
 };

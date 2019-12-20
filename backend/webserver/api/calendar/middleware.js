@@ -96,7 +96,7 @@ module.exports = dependencies => {
         },
         _total_hits: 0,
         _embedded: {
-          events: []
+          'dav:item': []
         }
       });
     }
