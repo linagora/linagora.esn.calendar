@@ -207,13 +207,13 @@ describe('The resource controller', function() {
       });
     });
 
-    it('should 200 when updated', function(done) {
+    it('should 204 when updated', function(done) {
       this.loadModule().changeParticipation(req, {
         status: status => {
-          expect(status).to.equal(200);
+          expect(status).to.equal(204);
 
           return {
-            send: () => {
+            end: () => {
               done();
             }
           };
