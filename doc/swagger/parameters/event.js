@@ -13,15 +13,13 @@
   *     in: body
   *     description: summany of new event.
   *     required: true
-  *     schema:
-  *       $ref: "#/definitions/cm_id"
+  *     type: string
   *   calendar_event_location:
   *     name: location
   *     in: body
   *     description: location of new event.
   *     required: true
-  *     schema:
-  *       $ref: "#/definitions/cm_id"
+  *     type: string
   *   calendar_event_id:
   *     name: eventId
   *     description: Identity of an event
