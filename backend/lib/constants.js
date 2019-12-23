@@ -30,6 +30,10 @@ module.exports = {
     DISPLAY: 'DISPLAY',
     EMAIL: 'EMAIL'
   },
+  TRANSP_VALUES: {
+    TRANSPARENT: 'TRANSPARENT',
+    OPAQUE: 'OPAQUE'
+  },
   EVENTS: {
     CALENDAR: {
       CREATED: 'calendar:calendar:created',
