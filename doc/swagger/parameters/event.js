@@ -22,4 +22,10 @@
   *     required: true
   *     schema:
   *       $ref: "#/definitions/cm_id"
+  *   calendar_event_id:
+  *     name: eventId
+  *     description: Identity of an event
+  *     in: path
+  *     required: true
+  *     type: string
   */

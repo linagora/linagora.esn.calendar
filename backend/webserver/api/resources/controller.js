@@ -31,7 +31,7 @@ module.exports = dependencies => {
         if (req.query.referrer === EMAIL_REFERRER) {
           return res.redirect('/#/calendar');
         }
-        res.status(200).send();
+        res.status(204).end();
       }))
       .catch(err => {
         const details = 'Error while updating event participation';
