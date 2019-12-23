@@ -366,4 +366,32 @@ describe('The jcal helper module', function() {
       expect(result.toString()).to.match(/CN=John Doe;PARTSTAT=ABC/);
     });
   });
+
+  describe('The updateTranspProperty method', function() {
+    it('should update transp property of the given event', function() {
+      const ics = fs.readFileSync(`${this.calendarModulePath}/test/unit-backend/fixtures/meeting.ics`).toString('utf8');
+      const transp = 'transp-value';
+      const vcalendar = icaljs.Component.fromString(ics);
+      const result = this.jcalHelper.updateTranspProperty(vcalendar, transp);
+      const vevent = result.getFirstSubcomponent('vevent');
+
+      expect(vevent.getFirstPropertyValue('transp')).to.equal(transp);
+    });
+
+    it('should update transp property if the given event is a recurrence event', function() {
+      const ics = fs.readFileSync(`${this.calendarModulePath}/test/unit-backend/fixtures/meeting-recurring-with-exception.ics`).toString('utf8');
+      const vcalendar = icaljs.Component.fromString(ics);
+      const transp = 'transp-value';
+      const result = this.jcalHelper.updateTranspProperty(vcalendar, transp);
+
+      const vevent = result.getFirstSubcomponent('vevent');
+      const recurrenceEvents = result
+        .getAllSubcomponents('vevent')
+        .filter(vevent => vevent.getFirstPropertyValue('recurrence-id'));
+
+        [vevent, ...recurrenceEvents].forEach(event => {
+          expect(event.getFirstPropertyValue('transp')).to.equal(transp);
+        });
+    });
+  });
 });

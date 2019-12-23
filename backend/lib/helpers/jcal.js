@@ -15,7 +15,8 @@ module.exports = {
   getVAlarmAsObject,
   getVeventAttendeeByMail,
   updateParticipation,
-  icsAsVcalendar
+  icsAsVcalendar,
+  updateTranspProperty
 };
 
 function _getEmail(attendee) {
@@ -273,6 +274,25 @@ function updateParticipation(vcalendar, attendeeEmail, partstat) {
   if (attendees.length) {
     attendees.forEach(attendee => attendee.setParameter('partstat', partstat));
   }
+
+  return vcalendar;
+}
+
+/**
+ * Update trasp property of the given event
+ * @param {Object} vcalendar event
+ * @param {String} transp transp value
+ * @returns {Object} updated event
+ */
+function updateTranspProperty(vcalendar, transp) {
+  const vevent = vcalendar.getFirstSubcomponent('vevent');
+  const recurrenceEvents = vcalendar
+    .getAllSubcomponents('vevent')
+    .filter(vevent => vevent.getFirstPropertyValue('recurrence-id'));
+
+  [vevent, ...recurrenceEvents].forEach(event => {
+    event.updatePropertyWithValue('transp', transp);
+  });
 
   return vcalendar;
 }
