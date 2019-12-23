@@ -3,7 +3,9 @@ const sinon = require('sinon');
 const mockery = require('mockery');
 
 describe('The resource controller', function() {
-  let resourceId, eventId, attendeeStatus, vcalAsJSON, req, caldavClient, jsonEvent, etag, jcalHelper, ESNToken, loggerSpy, resource, user, getEventUrl, eventUrl, getResourceEmail, resourceEmail;
+  let resourceId, eventId, attendeeStatus, vcalAsJSON, req, caldavClient;
+  let jsonEvent, etag, jcalHelper, ESNToken, loggerSpy, resource, user;
+  let getEventUrl, eventUrl, getResourceEmail, resourceEmail;
 
   beforeEach(function() {
     ESNToken = '123456789';
@@ -36,7 +38,8 @@ describe('The resource controller', function() {
     jsonEvent = { id: 'jsonEvent', toJSON: () => vcalAsJSON };
     jcalHelper = {
       updateParticipation: sinon.stub().returns(jsonEvent),
-      icsAsVcalendar: sinon.stub().returns(jsonEvent)
+      icsAsVcalendar: sinon.stub().returns(jsonEvent),
+      updateTranspProperty: sinon.stub().returns(jsonEvent)
     };
     getEventUrl = sinon.stub().returns(Promise.resolve(eventUrl));
     getResourceEmail = sinon.stub().returns(resourceEmail);
@@ -109,6 +112,72 @@ describe('The resource controller', function() {
             json: json => {
               expect(loggerSpy.firstCall.args[1].message).to.equal(errorMsg);
               expect(jcalHelper.updateParticipation).to.have.been.calledWith(jsonEvent, resourceEmail, attendeeStatus);
+              expect(json.error.details).to.match(/Error while updating event participation/);
+              done();
+            }
+          };
+        }
+      });
+    });
+
+    it('should respond 500 when failed to update transp property when status is ACCEPTED', function(done) {
+      req.query.status = 'ACCEPTED';
+      const errorMsg = 'Failed to update transp';
+
+      jcalHelper.updateTranspProperty.throws(new Error(errorMsg));
+
+      this.loadModule().changeParticipation(req, {
+        status: status => {
+          expect(status).to.equal(500);
+
+          return {
+            json: json => {
+              expect(loggerSpy.firstCall.args[1].message).to.equal(errorMsg);
+              expect(jcalHelper.updateTranspProperty).to.have.been.calledWith(jsonEvent, 'OPAQUE');
+              expect(json.error.details).to.match(/Error while updating event participation/);
+              done();
+            }
+          };
+        }
+      });
+    });
+
+    it('should respond 500 when failed to update transp property when status is DECLINED', function(done) {
+      req.query.status = 'DECLINED';
+      const errorMsg = 'Failed to update transp';
+
+      jcalHelper.updateTranspProperty.throws(new Error(errorMsg));
+
+      this.loadModule().changeParticipation(req, {
+        status: status => {
+          expect(status).to.equal(500);
+
+          return {
+            json: json => {
+              expect(loggerSpy.firstCall.args[1].message).to.equal(errorMsg);
+              expect(jcalHelper.updateTranspProperty).to.have.been.calledWith(jsonEvent, 'TRANSPARENT');
+              expect(json.error.details).to.match(/Error while updating event participation/);
+              done();
+            }
+          };
+        }
+      });
+    });
+
+    it('should respond 500 when failed to update transp property when status is TENTATIVE', function(done) {
+      req.query.status = 'TENTATIVE';
+      const errorMsg = 'Failed to update transp';
+
+      jcalHelper.updateTranspProperty.throws(new Error(errorMsg));
+
+      this.loadModule().changeParticipation(req, {
+        status: status => {
+          expect(status).to.equal(500);
+
+          return {
+            json: json => {
+              expect(loggerSpy.firstCall.args[1].message).to.equal(errorMsg);
+              expect(jcalHelper.updateTranspProperty).to.have.been.calledWith(jsonEvent, 'TRANSPARENT');
               expect(json.error.details).to.match(/Error while updating event participation/);
               done();
             }
