@@ -13,7 +13,32 @@ module.exports = (dependencies, moduleName) => {
     moduleMW.requiresModuleIsEnabledInCurrentDomain(moduleName)
   );
 
-  router.get('/:resourceId/:eventId/participation',
+  /**
+   * @swagger
+   * /:resourceId/:eventId/participation:
+   *   put:
+   *     tags:
+   *       - Resource
+   *     description: Update participation status of a specific resource
+   *     parameters:
+   *       - $ref: "#/parameters/calendar_event_id"
+   *       - $ref: "#/parameters/calendar_resource_id"
+   *       - $ref: "#/parameters/calendar_participation_status"
+   *     responses:
+   *       204:
+   *         $ref: "#/responses/cm_204"
+   *       400:
+   *         $ref: "#/responses/cm_400"
+   *       401:
+   *         $ref: "#/responses/cm_401"
+   *       403:
+   *         $ref: "#/responses/cm_403"
+   *       404:
+   *         $ref: "#/responses/cm_404"
+   *       500:
+   *         $ref: "#/responses/cm_500"
+   */
+  router.put('/:resourceId/:eventId/participation',
     resourceMW.requiresStatusQueryParameter,
     resourceMW.load,
     resourceMW.requiresCurrentUserAsAdministrator,
