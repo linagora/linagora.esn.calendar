@@ -634,7 +634,7 @@ describe('The Calendar events search API', function() {
       this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done)));
     });
 
-    it('should returns events with matching organizers and attendees when searching across multiple calendars', function(done) {
+    it('should return events with matching organizers and attendees when searching across multiple calendars', function(done) {
       localpubsub = this.helpers.requireBackend('core/pubsub').local;
 
       const eventElasIds = [];
@@ -663,6 +663,42 @@ describe('The Calendar events search API', function() {
       ];
       mockRequestBody.organizers = ['user1997@open-paas.org'];
       mockRequestBody.attendees = ['user2@open-paas.org'];
+
+      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done)));
+    });
+
+    it('should be able to search for events in calendars with the same calendarId but different userId', function(done) {
+      localpubsub = this.helpers.requireBackend('core/pubsub').local;
+
+      mockEvents = [
+        {
+          userId: user._id.toString(),
+          calendarId: 'events',
+          fixturePath: '/../fixtures/eventWithKingInSummary.ics'
+        },
+        {
+          userId: 'user0Id',
+          calendarId: 'events',
+          fixturePath: '/../fixtures/eventHostedByUser0.ics'
+        }
+      ];
+
+      const eventElasIds = [];
+
+      expectedResults = [];
+      mockEvents.forEach((mockEvent, index) => {
+        const { eventUid, eventElasId } = createMockEvent(mockEvent.userId, mockEvent.calendarId, mockEvent.fixturePath);
+
+        (index === 0) && expectedResults.push(`/calendars/${mockEvent.userId}/${mockEvent.calendarId}/${eventUid}.ics`);
+        eventElasIds.push(eventElasId);
+      });
+
+      mockRequestBody.calendars = [
+        {
+          userId: user._id.toString(),
+          calendarId: 'events'
+        }
+      ];
 
       this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done)));
     });
