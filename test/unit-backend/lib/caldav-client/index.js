@@ -875,5 +875,144 @@ describe('The caldav-client module', function() {
         })
         .catch(err => done(err || new Error('should not happen')));
     });
+
+    it('should send request with correct params to get all the events in a calendar as a technical user and strip cancelled events by default', function(done) {
+      const domainId = 'aff2018';
+      const technicalUserToken = 'technicalToken';
+      const calendarId = 'foo';
+      const calendarHomeId = 'bar';
+      const cancelledEventICS = fs.readFileSync(__dirname + '/../../fixtures/cancelledEvent.ics', 'utf-8');
+      const normalEventICS = fs.readFileSync(__dirname + '/../../fixtures/meeting.ics', 'utf-8');
+      const expectedEvents = [
+        {
+          ics: normalEventICS,
+          userId: calendarHomeId,
+          calendarId,
+          eventUid: 'event2'
+        }
+      ];
+
+      mockery.registerMock('../helpers/technical-user', () => ({
+        getTechnicalUserToken: _domainId => {
+          expect(_domainId).to.equal(domainId);
+
+          return Promise.resolve({
+            token: technicalUserToken
+          });
+        }
+      }));
+
+      const response = {
+        statusCode: 200,
+        body: {
+          _embedded: {
+            'dav:item': [
+              {
+                _links: { self: { href: `/calendars/${calendarHomeId}/${calendarId}/event1.ics` }},
+                data: cancelledEventICS
+              },
+              {
+                _links: { self: { href: `/calendars/${calendarHomeId}/${calendarId}/event2.ics` }},
+                data: normalEventICS
+              }
+            ]
+          }
+        }
+      };
+
+      mockery.registerMock('request', (options, callback) => {
+        expect(options).to.shallowDeepEqual({
+          method: 'GET',
+          url: `${davEndpoint}/calendars/${calendarHomeId}/${calendarId}.json?allEvents=true`,
+          json: true,
+          headers: {
+            ESNToken: technicalUserToken,
+            Accept: 'application/json'
+          }
+        });
+
+        return callback(null, response, response.body);
+      });
+
+      getModule().getAllEventsInCalendarAsTechnicalUser({ calendarUri: calendarId, domainId, calendarHomeId })
+        .then(events => {
+          expect(events).to.deep.equal(expectedEvents);
+          done();
+        })
+        .catch(err => done(err || new Error('should not happen')));
+    });
+
+    it('should send request with correct params to get all the events in a calendar as a technical user but cancelled events are not stripped when options.shouldStripCancelledEvents = false', function(done) {
+      const domainId = 'aff2018';
+      const technicalUserToken = 'technicalToken';
+      const calendarId = 'foo';
+      const calendarHomeId = 'bar';
+      const cancelledEventICS = fs.readFileSync(__dirname + '/../../fixtures/cancelledEvent.ics', 'utf-8');
+      const normalEventICS = fs.readFileSync(__dirname + '/../../fixtures/meeting.ics', 'utf-8');
+      const expectedEvents = [
+        {
+          ics: cancelledEventICS,
+          userId: calendarHomeId,
+          calendarId,
+          recurrenceId: '2019-12-18T09:30:00Z',
+          eventUid: 'event1'
+        },
+        {
+          ics: normalEventICS,
+          userId: calendarHomeId,
+          calendarId,
+          eventUid: 'event2'
+        }
+      ];
+
+      mockery.registerMock('../helpers/technical-user', () => ({
+        getTechnicalUserToken: _domainId => {
+          expect(_domainId).to.equal(domainId);
+
+          return Promise.resolve({
+            token: technicalUserToken
+          });
+        }
+      }));
+
+      const response = {
+        statusCode: 200,
+        body: {
+          _embedded: {
+            'dav:item': [
+              {
+                _links: { self: { href: `/calendars/${calendarHomeId}/${calendarId}/event1.ics` }},
+                data: cancelledEventICS
+              },
+              {
+                _links: { self: { href: `/calendars/${calendarHomeId}/${calendarId}/event2.ics` }},
+                data: normalEventICS
+              }
+            ]
+          }
+        }
+      };
+
+      mockery.registerMock('request', (options, callback) => {
+        expect(options).to.shallowDeepEqual({
+          method: 'GET',
+          url: `${davEndpoint}/calendars/${calendarHomeId}/${calendarId}.json?allEvents=true`,
+          json: true,
+          headers: {
+            ESNToken: technicalUserToken,
+            Accept: 'application/json'
+          }
+        });
+
+        return callback(null, response, response.body);
+      });
+
+      getModule().getAllEventsInCalendarAsTechnicalUser({ calendarUri: calendarId, domainId, calendarHomeId, shouldStripCancelledEvents: false })
+        .then(events => {
+          expect(events).to.deep.equal(expectedEvents);
+          done();
+        })
+        .catch(err => done(err || new Error('should not happen')));
+    });
   });
 });
