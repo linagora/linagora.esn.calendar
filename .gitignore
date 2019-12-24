@@ -9,3 +9,4 @@ config/db.json
 application.log
 package-lock.json
 .DS_Store
+doc/swagger/calendar-swagger.json

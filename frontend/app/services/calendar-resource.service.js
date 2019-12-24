@@ -18,11 +18,11 @@
     };
 
     function acceptResourceReservation(resourceId, eventId) {
-      return calendarResourceRestangular.one(resourceId).one(eventId).one('participation').get({ status: 'ACCEPTED' });
+      return calendarResourceRestangular.one(resourceId).one(eventId).one('participation').put({ status: 'ACCEPTED' });
     }
 
     function declineResourceReservation(resourceId, eventId) {
-      return calendarResourceRestangular.one(resourceId).one(eventId).one('participation').get({ status: 'DECLINED' });
+      return calendarResourceRestangular.one(resourceId).one(eventId).one('participation').put({ status: 'DECLINED' });
     }
 
     function getResource(id) {
