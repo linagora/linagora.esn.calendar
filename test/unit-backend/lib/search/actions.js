@@ -249,8 +249,12 @@ describe('The calendar Elasticsearch actions', function() {
 
       expect(deps.elasticsearch.searchDocuments).to.have.been.calledWith(sinon.match(parameters => {
         expect(parameters.body.query.bool.filter).to.contain({
-          terms: {
-            calendarId: advancedQuery.calendars.map(calendar => calendar.calendarId)
+          bool: {
+            should: [
+              { bool: { filter: [{ term: { calendarId: 'userId1' } }, { term: { userId: 'userId1' } }] } },
+              { bool: { filter: [{ term: { calendarId: 'calId1' } }, { term: { userId: 'userId1' } }] } },
+              { bool: { filter: [{ term: { calendarId: 'calId2' } }, { term: { userId: 'userId2' } }] } }
+            ]
           }
         });
 

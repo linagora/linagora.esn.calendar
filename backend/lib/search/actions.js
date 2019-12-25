@@ -147,17 +147,28 @@ module.exports = dependencies => {
   function _getAdvancedSearchFilters(query) {
     const filters = [];
 
-    let calendarIds = [];
-
     if (Array.isArray(query.calendars) && query.calendars.length) {
-      calendarIds = query.calendars.map(calendar => calendar.calendarId);
+      filters.push({
+        bool: {
+          should: query.calendars.map(queryCalendar => ({
+            bool: {
+              filter: [
+                {
+                  term: {
+                    calendarId: queryCalendar.calendarId
+                  }
+                },
+                {
+                  term: {
+                    userId: queryCalendar.userId
+                  }
+                }
+              ]
+            }
+          }))
+        }
+      });
     }
-
-    filters.push({
-      terms: {
-        calendarId: calendarIds
-      }
-    });
 
     if (Array.isArray(query.organizers) && query.organizers.length) {
       filters.push({
