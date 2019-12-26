@@ -18,7 +18,8 @@ module.exports = {
   icsAsVcalendar,
   getRecurrenceIdsFromVEvents,
   analyzeJCalsDiff,
-  updateTranspProperty
+  updateTranspProperty,
+  getRecurrenceExceptionFromVEvents
 };
 
 function _getEmail(attendee) {
@@ -350,4 +351,19 @@ function analyzeJCalsDiff(oldJCal, newJCal) {
     actionType: constants.RECUR_EVENT_MODIFICATION_TYPE.FULL_REINDEX,
     actionDetails: { recurrenceIdsToBeDeleted, newRecurrenceIds }
   };
+}
+
+/**
+ * Get the recurrence exception in an array of VEVENTs based on the provided recurrence id.
+ *
+ * @param {ICAL.Component[]} vevents - An array of VEVENTs as ICAL.Components
+ * @param {String} recurrenceId - The recurrence id of the recurrence exception needed to be found
+ * @return {ICAL.Component} The recurrence exception represented as an ICAL.Component (VEVENT)
+ */
+function getRecurrenceExceptionFromVEvents(vevents, recurrenceId) {
+  return vevents.find(vevent => {
+    const currentRecurrenceId = vevent.getFirstPropertyValue('recurrence-id');
+
+    return String(currentRecurrenceId) === recurrenceId;
+  });
 }

@@ -2,6 +2,7 @@
 
 var expect = require('chai').expect;
 var fs = require('fs-extra');
+var moment = require('moment');
 var icaljs = require('@linagora/ical.js');
 const { RECUR_EVENT_MODIFICATION_TYPE } = require('../../../../backend/lib/constants');
 
@@ -503,6 +504,41 @@ return this.jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstProperty('dtstar
         [vevent, ...recurrenceEvents].forEach(event => {
           expect(event.getFirstPropertyValue('transp')).to.equal(transp);
         });
+    });
+  });
+
+  describe('The getRecurrenceExceptionFromVEvents function', function() {
+    let recurICal;
+
+    beforeEach(function() {
+      recurICal = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/meeting-recurring-with-exception.ics').toString();
+    });
+
+    it('should find the correct recurrence exception in a list of vevents', function() {
+      const vevents = icaljs.Component.fromString(recurICal).getAllSubcomponents('vevent');
+      const recurrenceId = '2016-05-26T17:00:00Z';
+      const recurrenceExceptionVEvent = this.jcalHelper.getRecurrenceExceptionFromVEvents(vevents, recurrenceId);
+
+      expect(recurrenceExceptionVEvent).to.exist;
+      expect(moment(recurrenceExceptionVEvent.getFirstPropertyValue('dtstart').toJSDate()).isSame(moment('2016-05-26T17:00:00Z'))).to.be.true;
+      expect(recurrenceExceptionVEvent.getFirstPropertyValue('recurrence-id').toString()).to.equal(recurrenceId);
+    });
+
+    it('should return undefined if no matching recurrence exception was found in the provided list of vevents', function() {
+      const vevents = icaljs.Component.fromString(recurICal).getAllSubcomponents('vevent');
+      const recurrenceId = '2019-05-26T17:00:00Z';
+      const recurrenceExceptionVEvent = this.jcalHelper.getRecurrenceExceptionFromVEvents(vevents, recurrenceId);
+
+      expect(recurrenceExceptionVEvent).to.be.undefined;
+    });
+
+    it('should return undefined if the provided list of vevents contains no recurrence exceptions', function() {
+      const normalICal = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/meeting.ics').toString();
+      const vevents = icaljs.Component.fromString(normalICal).getAllSubcomponents('vevent');
+      const recurrenceId = '2016-05-26T17:00:00Z';
+      const recurrenceExceptionVEvent = this.jcalHelper.getRecurrenceExceptionFromVEvents(vevents, recurrenceId);
+
+      expect(recurrenceExceptionVEvent).to.be.undefined;
     });
   });
 });
