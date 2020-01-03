@@ -1,4 +1,5 @@
 const { SEARCH, NOTIFICATIONS } = require('../constants');
+const { getEventUidFromElasticsearchId } = require('./denormalize');
 
 module.exports = dependencies => {
   const pubsub = dependencies('pubsub');
@@ -14,6 +15,7 @@ module.exports = dependencies => {
     addSpecialOccursToIndexIfAnyThroughPubsub,
     updateEventInIndexThroughPubsub,
     removeEventFromIndexThroughPubsub,
+    removeEventsFromIndexThroughPubsub,
     searchNextEvent,
     searchEventsBasic,
     searchEventsAdvanced
@@ -37,6 +39,46 @@ module.exports = dependencies => {
 
   function removeEventFromIndexThroughPubsub(message) {
     eventDeletedTopic.publish(message);
+  }
+
+  function removeEventsFromIndexThroughPubsub({ eventUid, userId, calendarId }) {
+    const esQuery = {
+      query: {
+        bool: {
+          filter: [
+            { term: { uid: eventUid } },
+            { term: { userId } },
+            { term: { calendarId } }
+          ]
+        }
+      }
+    };
+
+    return new Promise((resolve, reject) => {
+      elasticsearch.searchDocuments({
+        index: SEARCH.INDEX_NAME,
+        type: SEARCH.TYPE_NAME,
+        body: esQuery
+      }, (err, result) => {
+        if (err) {
+          return reject(err);
+        }
+
+        result.hits.hits.forEach(event => {
+          const message = {
+            userId: event._source.userId,
+            calendarId: event._source.calendarId,
+            eventUid: getEventUidFromElasticsearchId(event._id)
+          };
+
+          if (event._source.recurrenceId) message.recurrenceId = event._source.recurrenceId;
+
+          eventDeletedTopic.publish(message);
+        });
+
+        resolve();
+      });
+    });
   }
 
   function searchNextEvent(user, callback) {
