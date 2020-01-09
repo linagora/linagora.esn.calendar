@@ -260,12 +260,12 @@ describe('The calEventUtils service', function() {
   });
 
   describe('isNew function', function() {
-    it('should return true if event.id is undefined', function() {
+    it('should return true if event.dtstamp is falsy (undefined, null, etc)', function() {
       expect(this.calEventUtils.isNew({})).to.be.true;
     });
 
-    it('should return false if event.etag is defined', function() {
-      expect(this.calEventUtils.isNew({etag: '123'})).to.be.false;
+    it('should return false if event.dtstamp is truthy', function() {
+      expect(this.calEventUtils.isNew({ dtstamp: '2020-01-07T07:00:00.000Z' })).to.be.false;
     });
   });
 

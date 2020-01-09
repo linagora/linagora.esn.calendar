@@ -312,14 +312,14 @@ describe('The CalEventFormController controller', function() {
         expect(calEventFreeBusyConfirmationModalService).to.not.have.been.called;
       });
 
-      it('should be modifyEvent if event has a etag property', function(done) {
+      it('should be modifyEvent if it is an existing event', function(done) {
+        this.calEventUtils.isNew = function() { return false; };
         this.scope.event = this.CalendarShell.fromIncompleteShell({
           path: '/calendars/' + owner._id + '/' + this.calendars[1].id + '/eventID',
           title: 'title',
           start: this.moment('2013-02-08 12:30'),
           end: this.moment('2013-02-08 13:30'),
-          location: 'aLocation',
-          etag: '123456'
+          location: 'aLocation'
         });
 
         calEventServiceMock.modifyEvent = function() {
@@ -393,8 +393,8 @@ describe('The CalEventFormController controller', function() {
       });
 
       it('should select the calendar of the event from calendarService.listPersonalAndAcceptedDelegationCalendars if not new event', function() {
+        this.calEventUtils.isNew = function() { return false; };
         this.scope.event = this.CalendarShell.fromIncompleteShell({
-          etag: 'i am not a new event',
           start: start,
           end: end
         });
@@ -405,8 +405,8 @@ describe('The CalEventFormController controller', function() {
       });
 
       it('should select the calendar of the event from source if calendar is a subscription', function() {
+        this.calEventUtils.isNew = function() { return false; };
         this.scope.event = this.CalendarShell.fromIncompleteShell({
-          etag: 'i am not a new event',
           path: '/calendars/calId/calendarId/eventId.ics',
           start: start,
           end: end
@@ -1752,6 +1752,7 @@ describe('The CalEventFormController controller', function() {
       });
 
       it('should return true if the event has attendees and it is not in the grace periode and it is an old event', function() {
+        this.calEventUtils.isNew = function() { return false; };
         this.scope.event = this.CalendarShell.fromIncompleteShell({
           start: start,
           end: end,
@@ -1773,8 +1774,7 @@ describe('The CalEventFormController controller', function() {
               email: 'attendee1@openpaas.org',
               partstart: 'ACCEPTED',
               cutype: CAL_ICAL.cutype.individual
-            }],
-          etag: '0000'
+            }]
         });
 
         this.initController();
