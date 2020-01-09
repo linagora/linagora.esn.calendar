@@ -389,7 +389,7 @@ describe('The CalEventFormController controller', function() {
         });
         this.initController();
 
-        expect(this.scope.calendar).to.equal(calendarTest);
+        expect(this.scope.selectedCalendar.uniqueId).to.equal(calendarTest.getUniqueId());
       });
 
       it('should select the calendar of the event from calendarService.listPersonalAndAcceptedDelegationCalendars if not new event', function() {
@@ -401,7 +401,7 @@ describe('The CalEventFormController controller', function() {
         this.scope.event.path = '/' + owner._id + '/' + this.calendars[1].id + '/eventID';
         this.initController();
 
-        expect(this.scope.calendar).to.equal(this.calendars[1]);
+        expect(this.scope.selectedCalendar.uniqueId).to.equal(this.calendars[1].getUniqueId());
       });
 
       it('should select the calendar of the event from source if calendar is a subscription', function() {
@@ -414,7 +414,7 @@ describe('The CalEventFormController controller', function() {
         this.scope.event.path = '/' + owner._id + '/' + this.calendars[2].source.id + '/eventID';
         this.initController();
 
-        expect(this.scope.calendar).to.equal(this.calendars[2]);
+        expect(this.scope.selectedCalendar.uniqueId).to.equal(this.calendars[2].getUniqueId());
       });
 
       it('should call calendarService.listPersonalAndAcceptedDelegationCalendars with options object', function() {
@@ -474,7 +474,13 @@ describe('The CalEventFormController controller', function() {
 
         this.rootScope.$digest();
 
-        expect(this.calUIAuthorizationService.canModifyEventAttendees).to.have.been.calledWith(this.scope.calendar, this.scope.editedEvent, this.session.user._id);
+        var self = this;
+
+        expect(this.calUIAuthorizationService.canModifyEventAttendees).to.have.been.calledWith(
+          sinon.match(function(calendar) { return calendar.getUniqueId() === self.scope.selectedCalendar.uniqueId; }),
+          this.scope.editedEvent,
+          this.session.user._id
+        );
       });
 
       it('should leverage calUIAuthorizationService.canModifyEvent to set canModifyEvent', function() {
@@ -490,7 +496,13 @@ describe('The CalEventFormController controller', function() {
 
         this.initController();
 
-        expect(this.calUIAuthorizationService.canModifyEvent).to.have.been.calledWith(this.scope.calendar, this.scope.editedEvent, this.session.user._id);
+        var self = this;
+
+        expect(this.calUIAuthorizationService.canModifyEventAttendees).to.have.been.calledWith(
+          sinon.match(function(calendar) { return calendar.getUniqueId() === self.scope.selectedCalendar.uniqueId; }),
+          this.scope.editedEvent,
+          this.session.user._id
+        );
       });
 
       it('should detect if organizer', function() {
@@ -647,6 +659,9 @@ describe('The CalEventFormController controller', function() {
             isOwner: sinon.stub().returns(true),
             getOwner: function() {
               return $q.when(owner);
+            },
+            getUniqueId: function() {
+              return calendarTest.getUniqueId();
             }
           }]);
         });
@@ -666,6 +681,9 @@ describe('The CalEventFormController controller', function() {
               isOwner: sinon.stub().returns(true),
               getOwner: function() {
                 return $q.when(user);
+              },
+              getUniqueId: function() {
+                return calendarTest.getUniqueId();
               }
             }]);
           });
@@ -1207,10 +1225,12 @@ describe('The CalEventFormController controller', function() {
 
     describe('changeParticipation function', function() {
       beforeEach(function() {
+        this.calEventUtils.isNew = function() {
+          return false;
+        };
         this.scope.event = this.CalendarShell.fromIncompleteShell({
           _id: '123456',
           path: '/calendars/' + owner._id + '/' + calendarTest.id + '/eventID',
-          etag: 'etag',
           start: this.moment('2013-02-08 12:30'),
           end: this.moment('2013-02-08 13:30'),
           organizer: user,
@@ -1340,8 +1360,8 @@ describe('The CalEventFormController controller', function() {
         expect(resourcesCacheSpy).to.have.been.calledWith(newResources);
       });
 
-      it('should return error notification when calendar is undefined', function() {
-        this.scope.calendar = null;
+      it('should return error notification when there is no selected calendar', function() {
+        this.scope.selectedCalendar = {};
 
         this.scope.createEvent();
 

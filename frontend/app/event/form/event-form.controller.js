@@ -83,11 +83,13 @@
           });
         }
 
-        if ($scope.calendar && $scope.calendar.readOnly) {
+        var selectedCalendar = _getCalendarByUniqueId($scope.selectedCalendar.uniqueId);
+
+        if (selectedCalendar && selectedCalendar.readOnly) {
           return calEventUtils.hasAttendees($scope.editedEvent) &&
           !calEventUtils.isInvolvedInATask($scope.editedEvent) &&
           !calEventUtils.isNew($scope.editedEvent) &&
-          !$scope.calendar.readOnly &&
+          !selectedCalendar.readOnly &&
           organizerIsNotTheOnlyAttendeeInEvent();
         }
 
@@ -135,15 +137,17 @@
           calendarService.listPersonalAndAcceptedDelegationCalendars($scope.calendarHomeId)
             .then(function(calendars) {
               $scope.calendars = calendars;
-              $scope.calendar = calEventUtils.isNew($scope.editedEvent) ? _.find(calendars, 'selected') : _.find(calendars, function(calendar) {
 
-                return $scope.editedEvent.calendarUniqueId === calendar.getUniqueId();
-              });
+              return calEventUtils.isNew($scope.editedEvent) ? _.find(calendars, 'selected') : _getCalendarByUniqueId($scope.editedEvent.calendarUniqueId);
             })
-            .then(function() {
-              return $scope.calendar.getOwner();
+            .then(function(selectedCalendar) {
+              $scope.selectedCalendar = { uniqueId: selectedCalendar.getUniqueId() };
+
+              return selectedCalendar.getOwner();
             })
             .then(function(owner) {
+              var selectedCalendar = _getCalendarByUniqueId($scope.selectedCalendar.uniqueId);
+
               $scope.attendees = calAttendeeService.splitAttendeesFromType($scope.editedEvent.attendees);
               $scope.calendarOwnerAsAttendee = calAttendeeService.getAttendeeForUser($scope.editedEvent.attendees, owner);
 
@@ -154,10 +158,10 @@
               $scope.canModifyEvent = _canModifyEvent();
               $scope.displayParticipationButton = displayParticipationButton();
               $scope.displayCalMailToAttendeesButton = displayCalMailToAttendeesButton;
-              $scope.canModifyEventAttendees = calUIAuthorizationService.canModifyEventAttendees($scope.calendar, $scope.editedEvent, session.user._id);
-              $scope.canModifyEventRecurrence = calUIAuthorizationService.canModifyEventRecurrence($scope.calendar, $scope.editedEvent, session.user._id);
+              $scope.canModifyEventAttendees = calUIAuthorizationService.canModifyEventAttendees(selectedCalendar, $scope.editedEvent, session.user._id);
+              $scope.canModifyEventRecurrence = calUIAuthorizationService.canModifyEventRecurrence(selectedCalendar, $scope.editedEvent, session.user._id);
               $scope.excludeCurrentUserFromSuggestedAttendees = excludeCurrentUser();
-              $scope.$watch('calendar', onCalendarUpdated);
+              $scope.$watch('selectedCalendar.uniqueId', onCalendarUpdated);
 
               return calAttendeeService.splitAttendeesFromTypeWithResourceDetails($scope.editedEvent.attendees);
             }).then(function(attendeesWithResourceDetails) {
@@ -176,11 +180,11 @@
       }
 
       function excludeCurrentUser() {
-        return $scope.calendar.isOwner(session.user._id) ? true : !_canModifyEvent();
+        return _getCalendarByUniqueId($scope.selectedCalendar.uniqueId).isOwner(session.user._id) ? true : !_canModifyEvent();
       }
 
       function setOrganizer() {
-        return $scope.calendar.getOwner()
+        return _getCalendarByUniqueId($scope.selectedCalendar.uniqueId).getOwner()
           .then(function(owner) {
             if (owner) {
               // Calendar can have no owner in case of resource. Need to defined a behaviors for resources
@@ -208,11 +212,11 @@
       }
 
       function _canModifyEvent() {
-        return calUIAuthorizationService.canModifyEvent($scope.calendar, $scope.editedEvent, session.user._id);
+        return calUIAuthorizationService.canModifyEvent(_getCalendarByUniqueId($scope.selectedCalendar.uniqueId), $scope.editedEvent, session.user._id);
       }
 
       function displayParticipationButton() {
-        return !!$scope.calendarOwnerAsAttendee && !$scope.calendar.readOnly;
+        return !!$scope.calendarOwnerAsAttendee && !_getCalendarByUniqueId($scope.selectedCalendar.uniqueId).readOnly;
       }
 
       function canPerformCall() {
@@ -233,7 +237,9 @@
           $scope.editedEvent.class = CAL_EVENT_FORM.class.default;
         }
 
-        if ($scope.calendar) {
+        var selectedCalendar = _getCalendarByUniqueId($scope.selectedCalendar.uniqueId);
+
+        if (selectedCalendar) {
           $scope.restActive = true;
           _hideModal();
           $scope.editedEvent.attendees = getAttendees();
@@ -241,7 +247,7 @@
             .then(cacheAttendees)
             .then(denormalizeAttendees)
             .then(function() {
-              return calEventService.createEvent($scope.calendar, $scope.editedEvent, {
+              return calEventService.createEvent(selectedCalendar, $scope.editedEvent, {
                 graceperiod: true,
                 notifyFullcalendar: $state.is('calendar.main')
               });
@@ -311,7 +317,7 @@
           .then(denormalizeAttendees)
           .then(function() {
             return calEventService.modifyEvent(
-              $scope.event.path || calPathBuilder.forCalendarPath($scope.calendarHomeId, $scope.calendar.id),
+              $scope.event.path || calPathBuilder.forCalendarPath($scope.calendarHomeId, _getCalendarByUniqueId($scope.selectedCalendar.uniqueId).id),
               $scope.editedEvent,
               $scope.event,
               $scope.event.etag,
@@ -341,7 +347,7 @@
         };
 
         calEventService.modifyEvent(
-          $scope.editedEvent.path || calPathBuilder.forCalendarPath($scope.calendarHomeId, $scope.calendar.id),
+          $scope.editedEvent.path || calPathBuilder.forCalendarPath($scope.calendarHomeId, _getCalendarByUniqueId($scope.selectedCalendar.uniqueId).id),
           $scope.editedEvent,
           $scope.event,
           $scope.event.etag,
@@ -438,7 +444,7 @@
         if (success) {
           calEventUtils.resetStoredEvents();
 
-          return calEventService.onEventCreatedOrUpdated($scope.calendarHomeId, $scope.calendar.id, $scope.editedEvent.uid)
+          return calEventService.onEventCreatedOrUpdated($scope.calendarHomeId, _getCalendarByUniqueId($scope.selectedCalendar.uniqueId).id, $scope.editedEvent.uid)
             .catch(function(err) {
               $log.warn('Failed to apply post create/update operations on event', err);
             });
@@ -526,5 +532,11 @@
           _displayNotification(notificationFactory.weakError, 'Calendar -', 'An error occurred, please try again');
         });
       }
+
+    function _getCalendarByUniqueId(uniqueId) {
+      return _.find($scope.calendars, function(calendar) {
+        return calendar.getUniqueId() === uniqueId;
+      });
+    }
   }
 })();
