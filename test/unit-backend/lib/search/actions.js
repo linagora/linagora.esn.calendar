@@ -412,5 +412,105 @@ describe('The calendar Elasticsearch actions', function() {
         testLocalPublishOnEvent(NOTIFICATIONS.EVENT_DELETED, message);
       });
     });
+
+    describe('The removeEventsFromIndexThroughPubsub function', function() {
+      it('should search for events and then publish EVENT_DELETED messages within local pubsub', function(done) {
+        const eventUid = 'eventUid1';
+        const userId = 'userId1';
+        const calendarId = 'calendarId1';
+        const recurrenceId = 'recurrenceId1';
+        const events = [
+          {
+            _id: `${userId}--sabredav-${eventUid}`,
+            _source: {
+              uid: eventUid,
+              userId,
+              calendarId
+            }
+          },
+          {
+            _id: `${userId}--sabredav-${eventUid}--${recurrenceId}`,
+            _source: {
+              uid: eventUid,
+              userId,
+              calendarId,
+              recurrenceId
+            }
+          }
+        ];
+
+        deps.elasticsearch.searchDocuments = sinon.spy(function(query, callback) {
+          expect(query).to.deep.equal({
+            index: 'events.idx',
+            type: 'events',
+            body: {
+              query: {
+                bool: {
+                  filter: [
+                    { term: { uid: eventUid } },
+                    { term: { userId } },
+                    { term: { calendarId } }
+                  ]
+                }
+              }
+            }
+          });
+
+          callback(null, {
+            hits: {
+              hits: events
+            }
+          });
+        });
+
+        elasticsearchActions.removeEventsFromIndexThroughPubsub({ eventUid, userId, calendarId })
+          .then(() => {
+            const message = {
+              userId,
+              calendarId,
+              eventUid: `sabredav-${eventUid}`
+            };
+
+            expect(publishStubs[NOTIFICATIONS.EVENT_DELETED].getCall(0).calledWith(sinon.match(message))).to.be.true;
+            expect(publishStubs[NOTIFICATIONS.EVENT_DELETED].getCall(1).calledWith(sinon.match({ ...message, recurrenceId }))).to.be.true;
+            done();
+          })
+          .catch(err => done(err || new Error('should not happen')));
+      });
+
+      it('should reject when there is an error while searching and not publish EVENT_DELETED within local pubsub', function(done) {
+        const eventUid = 'eventUid1';
+        const userId = 'userId1';
+        const calendarId = 'calendarId1';
+
+        deps.elasticsearch.searchDocuments = sinon.spy(function(query, callback) {
+          expect(query).to.deep.equal({
+            index: 'events.idx',
+            type: 'events',
+            body: {
+              query: {
+                bool: {
+                  filter: [
+                    { term: { uid: eventUid } },
+                    { term: { userId } },
+                    { term: { calendarId } }
+                  ]
+                }
+              }
+            }
+          });
+
+          callback(new Error('Error while searching'));
+        });
+
+        elasticsearchActions.removeEventsFromIndexThroughPubsub({ eventUid, userId, calendarId })
+          .then(() => done(new Error('should not happen')))
+          .catch(err => {
+            expect(err).to.exist;
+            expect(publishStubs[NOTIFICATIONS.EVENT_DELETED]).to.have.not.been.called;
+            done();
+          });
+      });
+    });
   });
 });

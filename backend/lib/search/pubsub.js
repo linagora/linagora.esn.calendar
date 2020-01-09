@@ -15,12 +15,12 @@ module.exports = dependencies => {
   };
 
   function listen() {
-    pubsub.global.topic(EVENTS.EVENT.CREATED).subscribe(added);
-    pubsub.global.topic(EVENTS.EVENT.REQUEST).subscribe(added);
-    pubsub.global.topic(EVENTS.EVENT.UPDATED).subscribe(updated);
-    pubsub.global.topic(EVENTS.EVENT.REPLY).subscribe(updated);
-    pubsub.global.topic(EVENTS.EVENT.DELETED).subscribe(deleted);
-    pubsub.global.topic(EVENTS.EVENT.CANCEL).subscribe(deleted);
+    pubsub.global.topic(EVENTS.EVENT.CREATED).subscribe(onCreated);
+    pubsub.global.topic(EVENTS.EVENT.REQUEST).subscribe(onRequest);
+    pubsub.global.topic(EVENTS.EVENT.UPDATED).subscribe(onUpdated);
+    pubsub.global.topic(EVENTS.EVENT.REPLY).subscribe(onReply);
+    pubsub.global.topic(EVENTS.EVENT.DELETED).subscribe(onDeleted);
+    pubsub.global.topic(EVENTS.EVENT.CANCEL).subscribe(onCancel);
 
     function parse(msg) {
       const parsedMessage = eventHelper.parseEventPath(msg.eventPath);
@@ -34,13 +34,12 @@ module.exports = dependencies => {
       return parsedMessage;
     }
 
-    function added(msg) {
-      if (!canPublishMessage(msg)) return;
-
-      const parsedMessage = parse(msg);
+    function _addEventsToIndex(parsedMessage) {
       const vevents = ICAL.Component.fromString(parsedMessage.ics).getAllSubcomponents('vevent');
 
       vevents.forEach(vevent => {
+        if (vevent.getFirstPropertyValue('status') === 'CANCELLED') return;
+
         const recurrenceId = vevent.getFirstPropertyValue('recurrence-id');
 
         if (recurrenceId) {
@@ -51,7 +50,33 @@ module.exports = dependencies => {
       });
     }
 
-    function updated(msg) {
+    function onCreated(msg) {
+      if (!canPublishMessage(msg)) return;
+
+      const parsedMessage = parse(msg);
+
+      _addEventsToIndex(parsedMessage);
+    }
+
+    function onRequest(msg) {
+      if (!canPublishMessage(msg)) return;
+
+      // "REQUEST" messages are sent when the organizer either invites someone to a new event
+      // or he updates an already invited event. We can't differentiate these cases, so we are
+      // going to remove all the old events and index the new ones here.
+      const parsedMessage = parse(msg);
+      const vevent = ICAL.Component.fromString(parsedMessage.ics).getFirstSubcomponent('vevent');
+
+      elasticsearchActions.removeEventsFromIndexThroughPubsub({
+        eventUid: vevent.getFirstPropertyValue('uid'),
+        userId: parsedMessage.userId,
+        calendarId: parsedMessage.calendarId
+      })
+        .then(() => _addEventsToIndex(parsedMessage))
+        .catch(err => logger.error('Failed to process REQUEST message', err));
+    }
+
+    function onUpdated(msg) {
       if (!canPublishMessage(msg)) return;
 
       const parsedMessage = parse(msg);
@@ -73,11 +98,46 @@ module.exports = dependencies => {
       actionDetails.recurrenceIdsToBeDeleted.forEach(recurrenceId => {
         elasticsearchActions.removeEventFromIndexThroughPubsub({ ...parsedMessage, recurrenceId });
       });
-      elasticsearchActions.updateEventInIndexThroughPubsub(parsedMessage);
-      elasticsearchActions.addSpecialOccursToIndexIfAnyThroughPubsub(actionDetails.newRecurrenceIds, parsedMessage);
+
+      const vevents = ICAL.Component.fromString(parsedMessage.ics).getAllSubcomponents('vevent');
+      vevents.forEach(vevent => {
+        const recurrenceId = vevent.getFirstPropertyValue('recurrence-id');
+
+        if (recurrenceId) {
+          return elasticsearchActions.updateEventInIndexThroughPubsub({ ...parsedMessage, recurrenceId: recurrenceId.toString() });
+        }
+
+        elasticsearchActions.updateEventInIndexThroughPubsub(parsedMessage);
+      });
     }
 
-    function deleted(msg) {
+    function onReply(msg) {
+      onUpdated(msg);
+    }
+
+    function onCancel(msg) {
+      if (!canPublishMessage(msg)) return;
+
+      const parsedMessage = parse(msg);
+      const vevents = (new ICAL.Component(msg.event)).getAllSubcomponents('vevent');
+
+      vevents.forEach(vevent => {
+        // A "CANCEL" message includes the whole calendar object (vcalendar), which might
+        // contain vevents that are not actually cancelled, so we need to check this to avoid
+        // accidentally deleting those vevents.
+        if (vevent.getFirstPropertyValue('status') !== 'CANCELLED') return;
+
+        const recurrenceId = vevent.getFirstPropertyValue('recurrence-id');
+
+        if (recurrenceId) {
+          return elasticsearchActions.removeEventFromIndexThroughPubsub({ ...parsedMessage, recurrenceId: recurrenceId.toString() });
+        }
+
+        elasticsearchActions.removeEventFromIndexThroughPubsub(parsedMessage);
+      });
+    }
+
+    function onDeleted(msg) {
       if (!canPublishMessage(msg)) return;
 
       const parsedMessage = parse(msg);

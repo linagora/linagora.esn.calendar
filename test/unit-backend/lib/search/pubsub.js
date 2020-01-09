@@ -34,8 +34,8 @@ describe('The calendar search pubsub module', function() {
     this.moduleHelpers.addDep('pubsub', this.helpers.mock.pubsub('', localpubsub, globalpubsub));
 
     ics = fs.readFileSync(__dirname + '/../../fixtures/meeting.ics', 'utf-8');
-    jcal = new ICAL.Component.fromString(ics).jCal;
-    ics = new ICAL.Component.fromString(ics).toString();
+    jcal = ICAL.Component.fromString(ics).jCal;
+    ics = ICAL.Component.fromString(ics).toString();
   });
 
   describe('On global pubsub events', function() {
@@ -69,12 +69,14 @@ describe('The calendar search pubsub module', function() {
       handler(message);
     }
 
-    const onEventAddedTests = globalEvent => () => {
+    describe('On calendar:event:created', function() {
+      const globalEvent = CONSTANTS.EVENTS.EVENT.CREATED;
+
       beforeEach(function() {
         elasticsearchActionMock.addEventToIndexThroughPubsub = sinon.stub();
       });
 
-      it('should add a normal event to index', function() {
+      it('should be able to add a normal event to index', function() {
         publishGlobalEvent(globalEvent);
 
         expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.been.calledOnce;
@@ -118,15 +120,135 @@ describe('The calendar search pubsub module', function() {
 
         expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.not.been.called;
       });
-    };
+    });
 
-    describe('On NOTIFICATIONS.EVENT_ADDED', onEventAddedTests(CONSTANTS.EVENTS.EVENT.CREATED));
+    describe('On calendar:event:request', function() {
+      const globalEvent = CONSTANTS.EVENTS.EVENT.REQUEST;
 
-    describe('On NOTIFICATIONS.EVENT_REQUEST', onEventAddedTests(CONSTANTS.EVENTS.EVENT.REQUEST));
+      beforeEach(function() {
+        elasticsearchActionMock.addEventToIndexThroughPubsub = sinon.stub();
+      });
+
+      it('should remove previous event(s) and add a new event to index', function(done) {
+        elasticsearchActionMock.removeEventsFromIndexThroughPubsub = sinon.stub().returns(Promise.resolve());
+
+        publishGlobalEvent(globalEvent);
+
+        expect(elasticsearchActionMock.removeEventsFromIndexThroughPubsub).to.have.been.calledOnce;
+        expect(elasticsearchActionMock.removeEventsFromIndexThroughPubsub).to.have.been.calledWith({
+          eventUid: (ICAL.Component.fromString(ics).getFirstSubcomponent('vevent').getFirstPropertyValue('uid')),
+          userId: parsedMessage.userId,
+          calendarId: parsedMessage.calendarId
+        });
+
+        setTimeout(() => {
+          expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.been.calledOnce;
+          expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.been.calledWith(sinon.match(parsedMessage));
+          done();
+        });
+      });
+
+      it('should remove old events and then add the master event and its recurrence exceptions to index if it is a recurrent event with recurrence exceptions', function(done) {
+        elasticsearchActionMock.removeEventsFromIndexThroughPubsub = sinon.stub().returns(Promise.resolve());
+
+        ics = fs.readFileSync(__dirname + '/../../fixtures/meeting-recurring-with-exception.ics', 'utf-8');
+        const vcalendar = ICAL.Component.fromString(ics);
+        message.event = vcalendar.jCal;
+        parsedMessage.ics = vcalendar.toString();
+
+        publishGlobalEvent(globalEvent);
+
+        expect(elasticsearchActionMock.removeEventsFromIndexThroughPubsub).to.have.been.calledOnce;
+        expect(elasticsearchActionMock.removeEventsFromIndexThroughPubsub).to.have.been.calledWith({
+          eventUid: (ICAL.Component.fromString(ics).getFirstSubcomponent('vevent').getFirstPropertyValue('uid')),
+          userId: parsedMessage.userId,
+          calendarId: parsedMessage.calendarId
+        });
+
+        setTimeout(() => {
+          expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.been.calledThrice;
+          expect(elasticsearchActionMock.addEventToIndexThroughPubsub.getCall(0).calledWith(sinon.match(parsedMessage))).to.be.true;
+          expect(elasticsearchActionMock.addEventToIndexThroughPubsub.getCall(1).calledWith(sinon.match({ ...parsedMessage, recurrenceId: '2016-05-26T17:00:00Z' }))).to.be.true;
+          expect(elasticsearchActionMock.addEventToIndexThroughPubsub.getCall(2).calledWith(sinon.match({ ...parsedMessage, recurrenceId: '2016-05-27T17:00:00Z' }))).to.be.true;
+          done();
+        });
+      });
+
+      it('should remove old events and only add events which are not cancelled to index', function(done) {
+        elasticsearchActionMock.removeEventsFromIndexThroughPubsub = sinon.stub().returns(Promise.resolve());
+
+        ics = fs.readFileSync(__dirname + '/../../fixtures/cancelledRecurExceptions.ics', 'utf-8');
+        const vcalendar = ICAL.Component.fromString(ics);
+        message.event = vcalendar.jCal;
+        parsedMessage.ics = vcalendar.toString();
+
+        publishGlobalEvent(globalEvent);
+
+        expect(elasticsearchActionMock.removeEventsFromIndexThroughPubsub).to.have.been.calledOnce;
+        expect(elasticsearchActionMock.removeEventsFromIndexThroughPubsub).to.have.been.calledWith({
+          eventUid: (ICAL.Component.fromString(ics).getFirstSubcomponent('vevent').getFirstPropertyValue('uid')),
+          userId: parsedMessage.userId,
+          calendarId: parsedMessage.calendarId
+        });
+
+        setTimeout(() => {
+          expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.been.once;
+          expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.been.calledWith(sinon.match({ ...parsedMessage, recurrenceId: '2020-01-01T04:00:00Z' }));
+          done();
+        });
+      });
+
+      it('should log the error when it failed', function(done) {
+        const err = new Error('failed');
+
+        logger.error = sinon.stub();
+        elasticsearchActionMock.removeEventsFromIndexThroughPubsub = sinon.stub().returns(Promise.reject(err));
+
+        publishGlobalEvent(globalEvent);
+
+        expect(elasticsearchActionMock.removeEventsFromIndexThroughPubsub).to.have.been.calledOnce;
+        expect(elasticsearchActionMock.removeEventsFromIndexThroughPubsub).to.have.been.calledWith({
+          eventUid: (ICAL.Component.fromString(ics).getFirstSubcomponent('vevent').getFirstPropertyValue('uid')),
+          userId: parsedMessage.userId,
+          calendarId: parsedMessage.calendarId
+        });
+
+        setTimeout(() => {
+          expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.not.been.called;
+          expect(logger.error).to.have.been.calledOnce;
+          expect(logger.error).to.have.been.calledWith('Failed to process REQUEST message', err);
+          done();
+        });
+      });
+
+      it('should do nothing when event has eventSourcePath', function() {
+        message.eventSourcePath = eventSourcePath;
+
+        publishGlobalEvent(globalEvent);
+
+        expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.not.been.called;
+      });
+
+      it('should do nothing when event.eventPath is undefined', function() {
+        delete message.eventPath;
+
+        publishGlobalEvent(globalEvent);
+
+        expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.not.been.called;
+      });
+
+      it('should do nothing when event.eventPath === /', function() {
+        message.eventPath = '/';
+
+        publishGlobalEvent(globalEvent);
+
+        expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.not.been.called;
+      });
+    });
 
     const onEventUpdatedTests = globalEvent => () => {
-      const recurrenceIds = ['recurId1', 'recurId2'];
-      const recurrenceIdsToBeDeleted = ['recurId2'];
+      const recurrenceIds = ['2016-05-26T17:00:00Z', '2016-05-27T17:00:00Z'];
+      const recurrenceIdsToBeDeleted = ['2016-05-28T17:00:00Z'];
 
       beforeEach(function() {
         message = {
@@ -175,6 +297,11 @@ describe('The calendar search pubsub module', function() {
         const actionType = CONSTANTS.RECUR_EVENT_MODIFICATION_TYPE.FULL_REINDEX;
         const actionDetails = { newRecurrenceIds: recurrenceIds, recurrenceIdsToBeDeleted };
 
+        ics = fs.readFileSync(__dirname + '/../../fixtures/meeting-recurring-with-exception.ics', 'utf-8');
+        const vcalendar = ICAL.Component.fromString(ics);
+        message.event = vcalendar.jCal;
+        parsedMessage.ics = vcalendar.toString();
+
         jcalHelperMock.analyzeJCalsDiff = sinon.stub().returns({ actionType, actionDetails });
 
         publishGlobalEvent(globalEvent);
@@ -184,8 +311,9 @@ describe('The calendar search pubsub module', function() {
         actionDetails.recurrenceIdsToBeDeleted.forEach((recurrenceId, index) => {
           expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub.getCall(index).calledWith(sinon.match({ ...parsedMessage, recurrenceId }))).to.be.true;
         });
-        expect(elasticsearchActionMock.updateEventInIndexThroughPubsub).to.have.been.calledWith(sinon.match(parsedMessage));
-        expect(elasticsearchActionMock.addSpecialOccursToIndexIfAnyThroughPubsub).to.have.been.calledWith(actionDetails.newRecurrenceIds, sinon.match(parsedMessage));
+        expect(elasticsearchActionMock.updateEventInIndexThroughPubsub.getCall(0).calledWith(sinon.match(parsedMessage))).to.be.true;
+        expect(elasticsearchActionMock.updateEventInIndexThroughPubsub.getCall(1).calledWith(sinon.match({ ...parsedMessage, recurrenceId: '2016-05-26T17:00:00Z' }))).to.be.true;
+        expect(elasticsearchActionMock.updateEventInIndexThroughPubsub.getCall(2).calledWith(sinon.match({ ...parsedMessage, recurrenceId: '2016-05-27T17:00:00Z' }))).to.be.true;
       });
 
       it('should do nothing when event has eventSourcePath', function() {
@@ -219,11 +347,13 @@ describe('The calendar search pubsub module', function() {
       });
     };
 
-    describe('On NOTIFICATIONS.EVENT_UPDATED', onEventUpdatedTests(CONSTANTS.EVENTS.EVENT.UPDATED));
+    describe('On calendar:event:updated', onEventUpdatedTests(CONSTANTS.EVENTS.EVENT.UPDATED));
 
-    describe('On NOTIFICATIONS.EVENT_REPLY', onEventUpdatedTests(CONSTANTS.EVENTS.EVENT.REPLY));
+    describe('On calendar:event:reply', onEventUpdatedTests(CONSTANTS.EVENTS.EVENT.REPLY));
 
-    const onEventDeletedTests = globalEvent => () => {
+    describe('On calendar:event:deleted', function() {
+      const globalEvent = CONSTANTS.EVENTS.EVENT.DELETED;
+
       beforeEach(function() {
         elasticsearchActionMock.removeEventFromIndexThroughPubsub = sinon.stub();
       });
@@ -288,10 +418,103 @@ describe('The calendar search pubsub module', function() {
 
         expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.not.been.called;
       });
-    };
+    });
 
-    describe('On NOTIFICATIONS.EVENT_DELETED', onEventDeletedTests(CONSTANTS.EVENTS.EVENT.DELETED));
+    describe('On calendar:event:cancel', function() {
+      const globalEvent = CONSTANTS.EVENTS.EVENT.CANCEL;
 
-    describe('On NOTIFICATIONS.EVENT_CANCEL', onEventDeletedTests(CONSTANTS.EVENTS.EVENT.CANCEL));
+      beforeEach(function() {
+        elasticsearchActionMock.removeEventFromIndexThroughPubsub = sinon.stub();
+      });
+
+      it('should not remove the master event and its special occurs if they are not cancelled', function() {
+        ics = fs.readFileSync(__dirname + '/../../fixtures/meeting-recurring-with-exception.ics', 'utf-8');
+        jcal = new ICAL.Component.fromString(ics).jCal;
+        ics = new ICAL.Component.fromString(ics).toString();
+        message = {
+          event: jcal,
+          eventPath: path
+        };
+        parsedMessage = {
+          ics,
+          path,
+          userId,
+          calendarId,
+          eventUid: eventId
+        };
+
+        publishGlobalEvent(globalEvent);
+
+        expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.not.been.called;
+      });
+
+      it('should remove the master event if it is cancelled', function() {
+        ics = fs.readFileSync(__dirname + '/../../fixtures/cancelledDailyEvent.ics', 'utf-8');
+        jcal = new ICAL.Component.fromString(ics).jCal;
+        ics = new ICAL.Component.fromString(ics).toString();
+        message = {
+          event: jcal,
+          eventPath: path
+        };
+        parsedMessage = {
+          ics,
+          path,
+          userId,
+          calendarId,
+          eventUid: eventId
+        };
+
+        publishGlobalEvent(globalEvent);
+
+        expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.been.calledOnce;
+        expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.been.calledWith(sinon.match(parsedMessage));
+      });
+
+      it('should remove only the recurrence exception(s) that are cancelled', function() {
+        ics = fs.readFileSync(__dirname + '/../../fixtures/cancelledRecurExceptions.ics', 'utf-8');
+        jcal = new ICAL.Component.fromString(ics).jCal;
+        ics = new ICAL.Component.fromString(ics).toString();
+        message = {
+          event: jcal,
+          eventPath: path
+        };
+        parsedMessage = {
+          ics,
+          path,
+          userId,
+          calendarId,
+          eventUid: eventId
+        };
+
+        publishGlobalEvent(globalEvent);
+
+        expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.been.calledOnce;
+        expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.been.calledWith(sinon.match({ ...parsedMessage, recurrenceId: '2020-01-03T04:00:00Z' }));
+      });
+
+      it('should do nothing when event has eventSourcePath', function() {
+        message.eventSourcePath = eventSourcePath;
+
+        publishGlobalEvent(globalEvent);
+
+        expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.not.been.called;
+      });
+
+      it('should do nothing when event.eventPath is undefined', function() {
+        delete message.eventPath;
+
+        publishGlobalEvent(globalEvent);
+
+        expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.not.been.called;
+      });
+
+      it('should do nothing when event.eventPath === /', function() {
+        message.eventPath = '/';
+
+        publishGlobalEvent(globalEvent);
+
+        expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.not.been.called;
+      });
+    });
   });
 });
