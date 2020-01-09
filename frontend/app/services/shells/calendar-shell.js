@@ -202,6 +202,10 @@
         });
       },
 
+      get dtstamp() {
+        return this.vevent.getFirstPropertyValue('dtstamp');
+      },
+
       get start() {
         if (!this.__start) {
           this.__start = calMoment(this.icalEvent.startDate);
