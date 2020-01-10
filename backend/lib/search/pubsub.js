@@ -67,7 +67,7 @@ module.exports = dependencies => {
       const parsedMessage = parse(msg);
       const vevent = ICAL.Component.fromString(parsedMessage.ics).getFirstSubcomponent('vevent');
 
-      elasticsearchActions.removeEventsFromIndexThroughPubsub({
+      elasticsearchActions.removeEventsFromIndex({
         eventUid: vevent.getFirstPropertyValue('uid'),
         userId: parsedMessage.userId,
         calendarId: parsedMessage.calendarId

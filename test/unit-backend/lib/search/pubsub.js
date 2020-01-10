@@ -130,12 +130,12 @@ describe('The calendar search pubsub module', function() {
       });
 
       it('should remove previous event(s) and add a new event to index', function(done) {
-        elasticsearchActionMock.removeEventsFromIndexThroughPubsub = sinon.stub().returns(Promise.resolve());
+        elasticsearchActionMock.removeEventsFromIndex = sinon.stub().returns(Promise.resolve());
 
         publishGlobalEvent(globalEvent);
 
-        expect(elasticsearchActionMock.removeEventsFromIndexThroughPubsub).to.have.been.calledOnce;
-        expect(elasticsearchActionMock.removeEventsFromIndexThroughPubsub).to.have.been.calledWith({
+        expect(elasticsearchActionMock.removeEventsFromIndex).to.have.been.calledOnce;
+        expect(elasticsearchActionMock.removeEventsFromIndex).to.have.been.calledWith({
           eventUid: (ICAL.Component.fromString(ics).getFirstSubcomponent('vevent').getFirstPropertyValue('uid')),
           userId: parsedMessage.userId,
           calendarId: parsedMessage.calendarId
@@ -149,7 +149,7 @@ describe('The calendar search pubsub module', function() {
       });
 
       it('should remove old events and then add the master event and its recurrence exceptions to index if it is a recurrent event with recurrence exceptions', function(done) {
-        elasticsearchActionMock.removeEventsFromIndexThroughPubsub = sinon.stub().returns(Promise.resolve());
+        elasticsearchActionMock.removeEventsFromIndex = sinon.stub().returns(Promise.resolve());
 
         ics = fs.readFileSync(__dirname + '/../../fixtures/meeting-recurring-with-exception.ics', 'utf-8');
         const vcalendar = ICAL.Component.fromString(ics);
@@ -158,8 +158,8 @@ describe('The calendar search pubsub module', function() {
 
         publishGlobalEvent(globalEvent);
 
-        expect(elasticsearchActionMock.removeEventsFromIndexThroughPubsub).to.have.been.calledOnce;
-        expect(elasticsearchActionMock.removeEventsFromIndexThroughPubsub).to.have.been.calledWith({
+        expect(elasticsearchActionMock.removeEventsFromIndex).to.have.been.calledOnce;
+        expect(elasticsearchActionMock.removeEventsFromIndex).to.have.been.calledWith({
           eventUid: (ICAL.Component.fromString(ics).getFirstSubcomponent('vevent').getFirstPropertyValue('uid')),
           userId: parsedMessage.userId,
           calendarId: parsedMessage.calendarId
@@ -175,7 +175,7 @@ describe('The calendar search pubsub module', function() {
       });
 
       it('should remove old events and only add events which are not cancelled to index', function(done) {
-        elasticsearchActionMock.removeEventsFromIndexThroughPubsub = sinon.stub().returns(Promise.resolve());
+        elasticsearchActionMock.removeEventsFromIndex = sinon.stub().returns(Promise.resolve());
 
         ics = fs.readFileSync(__dirname + '/../../fixtures/cancelledRecurExceptions.ics', 'utf-8');
         const vcalendar = ICAL.Component.fromString(ics);
@@ -184,8 +184,8 @@ describe('The calendar search pubsub module', function() {
 
         publishGlobalEvent(globalEvent);
 
-        expect(elasticsearchActionMock.removeEventsFromIndexThroughPubsub).to.have.been.calledOnce;
-        expect(elasticsearchActionMock.removeEventsFromIndexThroughPubsub).to.have.been.calledWith({
+        expect(elasticsearchActionMock.removeEventsFromIndex).to.have.been.calledOnce;
+        expect(elasticsearchActionMock.removeEventsFromIndex).to.have.been.calledWith({
           eventUid: (ICAL.Component.fromString(ics).getFirstSubcomponent('vevent').getFirstPropertyValue('uid')),
           userId: parsedMessage.userId,
           calendarId: parsedMessage.calendarId
@@ -202,12 +202,12 @@ describe('The calendar search pubsub module', function() {
         const err = new Error('failed');
 
         logger.error = sinon.stub();
-        elasticsearchActionMock.removeEventsFromIndexThroughPubsub = sinon.stub().returns(Promise.reject(err));
+        elasticsearchActionMock.removeEventsFromIndex = sinon.stub().returns(Promise.reject(err));
 
         publishGlobalEvent(globalEvent);
 
-        expect(elasticsearchActionMock.removeEventsFromIndexThroughPubsub).to.have.been.calledOnce;
-        expect(elasticsearchActionMock.removeEventsFromIndexThroughPubsub).to.have.been.calledWith({
+        expect(elasticsearchActionMock.removeEventsFromIndex).to.have.been.calledOnce;
+        expect(elasticsearchActionMock.removeEventsFromIndex).to.have.been.calledWith({
           eventUid: (ICAL.Component.fromString(ics).getFirstSubcomponent('vevent').getFirstPropertyValue('uid')),
           userId: parsedMessage.userId,
           calendarId: parsedMessage.calendarId
