@@ -81,24 +81,22 @@ describe('The calSearchEventProviderService service', function() {
         .then(assertOnAggregatedResults)
         .then(done);
 
-      function davReferences(calendarId) {
+      function fakeEventRef(calendarId) {
         return {
           self: { href: '/prepath/path/to/' + calendarId + '/myuid.ics' }
         };
       }
-      function fakeDAVResults(calendarId) {
+      function fakeSearchResults(calendarId) {
         return [{
-          _links: davReferences(calendarId),
-          etag: '"123123"',
-          data: 'BEGIN:VCALENDAR\r\nBEGIN:VEVENT\r\nEND:VEVENT\r\nEND:VCALENDAR'
+          _links: fakeEventRef(calendarId),
+          data: {}
         }];
       }
 
       calendarIds.forEach(function(calendarId) {
         $httpBackend.expectGET('/calendar/api/calendars/' + calendarHomeId + '/' + calendarId + '/events.json?limit=' + ELEMENTS_PER_REQUEST + '&offset=0&query=abcd').respond(200, {
-          _links: davReferences(calendarId),
           _embedded: {
-            'dav:item': fakeDAVResults(calendarId)
+            events: fakeSearchResults(calendarId)
           }
         });
       });
@@ -258,7 +256,7 @@ describe('The calSearchEventProviderService service', function() {
               expect(events.length).to.equal(mockEvents.length);
               events.forEach(function(event) {
                 expect(event.calendar).to.equal(event.supposedUserCalendar);
-                expect(event.date).to.equal(event.start);
+                expect(event.date.isSame(event.start)).to.be.true;
               });
               done();
             })
@@ -289,7 +287,7 @@ describe('The calSearchEventProviderService service', function() {
               expect(events.length).to.equal(myCalendarEvents.length);
               events.forEach(function(event) {
                 expect(event.calendar).to.equal(event.supposedUserCalendar);
-                expect(event.date).to.equal(event.start);
+                expect(event.date.isSame(event.start)).to.be.true;
               });
               done();
             })
@@ -320,7 +318,7 @@ describe('The calSearchEventProviderService service', function() {
               expect(events.length).to.equal(sharedCalendarEvents.length);
               events.forEach(function(event) {
                 expect(event.calendar).to.equal(event.supposedUserCalendar);
-                expect(event.date).to.equal(event.start);
+                expect(event.date.isSame(event.start)).to.be.true;
               });
               done();
             })
@@ -351,7 +349,7 @@ describe('The calSearchEventProviderService service', function() {
               expect(events.length).to.equal(myCalendarEvents.length);
               events.forEach(function(event) {
                 expect(event.calendar).to.equal(event.supposedUserCalendar);
-                expect(event.date).to.equal(event.start);
+                expect(event.date.isSame(event.start)).to.be.true;
               });
               done();
             })

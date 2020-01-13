@@ -74,13 +74,4 @@ describe('The cal-event-form Angular module directives', function() {
 
     expect(event.defaultPrevented).to.be.false;
   });
-
-  it('should focus title on load', function(done) {
-    var element = this.initDirective(this.$scope);
-
-    element.find('.title')[0].focus = function() {
-      done();
-    };
-    this.$timeout.flush();
-  });
 });

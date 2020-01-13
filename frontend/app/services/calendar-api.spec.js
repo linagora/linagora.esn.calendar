@@ -499,7 +499,23 @@ describe('The calendar module apis', function() {
 
     describe('The searchEventsAdvanced request', function() {
       it('should have a correct request body and return an array of events', function(done) {
-        this.$httpBackend.expectPOST('/calendar/api/calendars/events/search?limit=' + this.ELEMENTS_PER_REQUEST + '&offset=0').respond(davItemsResponse(davItems));
+        var eventSearchItems = [{
+          _links: {
+            self: {href: '/prepath/path/to/calendar/myuid.ics'}
+          },
+          data: {}
+        }];
+
+        var searchResponse = {
+          _links: {
+            self: { href: '/prepath/path/to/calendar.json' }
+          },
+          _embedded: {
+            events: eventSearchItems
+          }
+        };
+
+        this.$httpBackend.expectPOST('/calendar/api/calendars/events/search?limit=' + this.ELEMENTS_PER_REQUEST + '&offset=0').respond(searchResponse);
 
         this.calendarRestangular.addRequestInterceptor(function(requestBody) {
           expect(requestBody).to.shallowDeepEqual({
@@ -536,7 +552,7 @@ describe('The calendar module apis', function() {
           offset: 0,
           limit: this.ELEMENTS_PER_REQUEST
         }).then(function(result) {
-          expect(result).to.deep.equal(davItems);
+          expect(result).to.deep.equal(eventSearchItems);
 
           done();
         }).catch(done);

@@ -2176,4 +2176,17 @@ describe('CalendarShell factory', function() {
       });
     });
   });
+
+  describe('The dtstamp getter', function() {
+    it('should return the ICS dtstamp if defined', function() {
+      expect(loadICSFixtureAsCalendarShell('event.ics').dtstamp.toString()).to.equal('2012-07-24T21:24:11');
+    });
+
+    it('should return null when ICS dtstamp is not defined', function() {
+      var newVCalendar = ICAL.Component.fromString(__FIXTURES__['frontend/app/fixtures/calendar/event.ics']);
+
+      newVCalendar.getFirstSubcomponent('vevent').removeAllProperties('dtstamp');
+      expect((new CalendarShell(newVCalendar)).dtstamp).to.be.null;
+    });
+  });
 });

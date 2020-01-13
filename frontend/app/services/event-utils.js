@@ -45,12 +45,12 @@
 
     /**
      * Return true or false either the event is new (not in caldav yet) or not.
-     * We are using etag which is filled by the caldav server on creation
-     * @param  {CalendarShell}  event the event to checkbox
+     * We are using dtstamp which only events that already exist in caldav have.
+     * @param  {CalendarShell|Object}  event the event to check (can be either a CalendarShell or an event object from Elasticsearch)
      * @return {Boolean}        true if event is not yet on the server, false otherwise
      */
     function isNew(event) {
-      return angular.isUndefined(event.etag);
+      return !event.dtstamp;
     }
 
     /**
@@ -64,6 +64,7 @@
 
     function isOrganizer(event, user) {
       var organizerMail = event && event.organizer && (event.organizer.email || event.organizer.emails[0]);
+
       user = user || session.user;
 
       return !organizerMail || _.contains(user.emails, organizerMail);

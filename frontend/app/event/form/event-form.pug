@@ -16,7 +16,7 @@ form.event-form(role="form", name="form", aria-hidden="true", ng-class="{ 'reado
           spinner-size='0.5',
           spinner-key='event'
         )
-        .active-modal-body(ng-hide="hideEventForm")
+        .active-modal-body(ng-if="!hideEventForm")
           .row
             .col-xs-12(ng-if="inputSuggestions")
               .suggestion(ng-repeat="suggestion in inputSuggestions")
@@ -39,8 +39,8 @@ form.event-form(role="form", name="form", aria-hidden="true", ng-class="{ 'reado
                     i.mdi.mdi-calendar-multiple
                   .fg-line.select
                     md-input-container
-                      md-select(ng-disabled="!isNew(editedEvent) || !canModifyEvent", ng-model="calendar", md-container-class="cal-event-edition-select-dropdown")
-                        md-option(ng-value="calendar" ng-repeat="calendar in calendars | filter: (isNew(editedEvent) || canModifyEvent) ? { readOnly: false } : {}")
+                      md-select(ng-disabled="!isNew(editedEvent) || !canModifyEvent", ng-model="selectedCalendar.uniqueId", md-container-class="cal-event-edition-select-dropdown")
+                        md-option(ng-value="calendar.getUniqueId()" ng-repeat="calendar in calendars | filter: (isNew(editedEvent) || canModifyEvent) ? { readOnly: false } : {}")
                           cal-select-calendar-item(calendar="calendar")
             cal-event-date-edition(event="editedEvent", disabled='!canModifyEvent', use-24hour-format='use24hourFormat', on-date-change='onDateChange')
             .col-xs-12

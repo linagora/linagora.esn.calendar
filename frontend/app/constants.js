@@ -343,7 +343,7 @@
 
     .constant('CAL_SPINNER_TIMEOUT_DURATION', 2000)
 
-    .constant('CAL_EVENT_FORM_SPINNER_TIMEOUT_DURATION', 1000)
+    .constant('CAL_EVENT_FORM_SPINNER_TIMEOUT_DURATION', 500)
 
     .constant('CAL_EVENTS', {
       CALENDAR_HEIGHT: 'calendar:height',
