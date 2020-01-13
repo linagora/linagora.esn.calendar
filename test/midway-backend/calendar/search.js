@@ -623,7 +623,7 @@ describe('The Calendar events search API', function() {
         }
       ];
 
-      this.createDavServer(this.helpers.callbacks.noErrorAnd(() => searchAdvanced.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done)));
+      testAdvancedSearch.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done);
     });
   });
 });
