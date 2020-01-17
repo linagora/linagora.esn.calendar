@@ -11,6 +11,8 @@ describe('The calendar resource module', function() {
   let module, requestMock, logger, pubsub, auth, technicalUser, davserver, localpubsub,
       globalpubsub, email, requestError, requestStatus, requestBody, helpers, baseUrl;
 
+  let simpleMailResultMock;
+
   beforeEach(function() {
     logger = {
       error: sinon.spy(),
@@ -39,9 +41,10 @@ describe('The calendar resource module', function() {
     localpubsub = {};
     globalpubsub = {};
 
+    simpleMailResultMock = Promise.resolve();
     email = {
       system: {
-        simpleMail: sinon.spy(() => q.when())
+        simpleMail: sinon.spy(() => simpleMailResultMock)
       }
     };
 
@@ -109,6 +112,31 @@ describe('The calendar resource module', function() {
           expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.CREATED.SUBJECT, text: RESOURCE.ERROR.MAIL.CREATED.MESSAGE });
           done();
         }).catch(done);
+      });
+
+      it('should log the error if failed to send email to the creator', function(done) {
+        const fakeResource = {
+          _id: new ObjectId(),
+          creator: new ObjectId(),
+          name: 'test',
+          description: '',
+          type: 'calendar'
+        };
+
+        requestError = new Error('Error');
+        requestBody = new Error('Error');
+        requestStatus = null;
+
+        const sendingEmailError = new Error('something wrong');
+
+        simpleMailResultMock = Promise.reject(sendingEmailError);
+
+        localpubsub.topics['resource:created'].handler(fakeResource).then(() => {
+          expect(logger.error.firstCall).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource's creator: ${fakeResource.creator} with the message: ${requestError}`);
+          expect(logger.error.secondCall).to.have.been.calledWith(`Error while sending email to resource's creator ${fakeResource.creator}`, sendingEmailError);
+          expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.CREATED.SUBJECT, text: RESOURCE.ERROR.MAIL.CREATED.MESSAGE });
+          done();
+        }).catch(err => done(err || new Error('Should resolve')));
       });
 
       it('should send a email if the request return a status != 201', function(done) {
@@ -246,6 +274,31 @@ describe('The calendar resource module', function() {
         }).catch(done);
       });
 
+      it('should log the error if failed to send email to the creator', function(done) {
+        const fakeResource = {
+          _id: new ObjectId(),
+          creator: new ObjectId(),
+          name: 'test',
+          description: '',
+          type: 'calendar'
+        };
+
+        requestError = new Error('Error');
+        requestBody = new Error('Error');
+        requestStatus = null;
+
+        const sendingEmailError = new Error('something wrong');
+
+        simpleMailResultMock = Promise.reject(sendingEmailError);
+
+        localpubsub.topics['resource:deleted'].handler(fakeResource).then(() => {
+          expect(logger.error.firstCall).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource's creator: ${fakeResource.creator} with the message: ${requestError}`);
+          expect(logger.error.secondCall).to.have.been.calledWith(`Error while sending email to resource's creator ${fakeResource.creator}`, sendingEmailError);
+          expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.REMOVED.SUBJECT, text: RESOURCE.ERROR.MAIL.REMOVED.MESSAGE });
+          done();
+        }).catch(err => done(err || new Error('Should resolve')));
+      });
+
       it('should send a email if the request return a status != 204', function(done) {
         const fakeResource = {
           _id: new ObjectId(),
@@ -317,6 +370,31 @@ describe('The calendar resource module', function() {
           expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.UPDATED.SUBJECT, text: RESOURCE.ERROR.MAIL.UPDATED.MESSAGE });
           done();
         }).catch(done);
+      });
+
+      it('should log the error if failed to send email to the creator', function(done) {
+        const fakeResource = {
+          _id: new ObjectId(),
+          creator: new ObjectId(),
+          name: 'test',
+          description: '',
+          type: 'calendar'
+        };
+
+        requestError = new Error('Error');
+        requestBody = new Error('Error');
+        requestStatus = null;
+
+        const sendingEmailError = new Error('something wrong');
+
+        simpleMailResultMock = Promise.reject(sendingEmailError);
+
+        localpubsub.topics['resource:updated'].handler(fakeResource).then(() => {
+          expect(logger.error.firstCall).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource's creator: ${fakeResource.creator} with the message: ${requestError}`);
+          expect(logger.error.secondCall).to.have.been.calledWith(`Error while sending email to resource's creator ${fakeResource.creator}`, sendingEmailError);
+          expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.UPDATED.SUBJECT, text: RESOURCE.ERROR.MAIL.UPDATED.MESSAGE });
+          done();
+        }).catch(err => done(err || new Error('Should resolve')));
       });
 
       it('should send a email if the request return a status != 204', function(done) {
