@@ -452,7 +452,7 @@
         component.addProperty(property);
       }
 
-      property.setValue(icalTime.convertToZone(ICAL.Timezone.utcTimezone));
+      property.setValue(icalTime);
       if (icalTime.zone.tzid === ICAL.Timezone.utcTimezone.tzid) {
         property.removeParameter('tzid');
       } else {
@@ -543,11 +543,20 @@
       temporaryShell.vevent.removeProperty('rrule');
 
       var instance = temporaryShell.clone();
+      var startDate = instanceDetails.startDate;
+      var endDate = instanceDetails.endDate;
+      var recurrenceId = instanceDetails.recurrenceId;
+
+      if (!this.full24HoursDay) {
+        startDate = startDate.convertToZone(ICAL.Timezone.utcTimezone);
+        endDate = endDate.convertToZone(ICAL.Timezone.utcTimezone);
+        recurrenceId = recurrenceId.convertToZone(ICAL.Timezone.utcTimezone);
+      }
 
       instance.deleteAllException();
-      _setDatetimePropertyFromIcalTime(instance.vevent, 'dtstart', instanceDetails.startDate);
-      _setDatetimePropertyFromIcalTime(instance.vevent, 'dtend', instanceDetails.endDate);
-      _setDatetimePropertyFromIcalTime(instance.vevent, 'recurrence-id', instanceDetails.recurrenceId.convertToZone(ICAL.Timezone.utcTimezone));
+      _setDatetimePropertyFromIcalTime(instance.vevent, 'dtstart', startDate);
+      _setDatetimePropertyFromIcalTime(instance.vevent, 'dtend', endDate);
+      _setDatetimePropertyFromIcalTime(instance.vevent, 'recurrence-id', recurrenceId);
 
       return instance;
     }

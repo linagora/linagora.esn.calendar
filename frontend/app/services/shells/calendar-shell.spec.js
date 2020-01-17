@@ -961,6 +961,21 @@ describe('CalendarShell factory', function() {
         length: 2
       });
     });
+
+    it('should expand correctly all day recurrent event', function() {
+      var vcalendar = ICAL.parse(__FIXTURES__['frontend/app/fixtures/calendar/recurringAllDayEvent.ics']);
+      var shell = new CalendarShell(new ICAL.Component(vcalendar));
+
+      var instances = shell.expand();
+
+      expect(instances.length).to.equal(2);
+      expect(instances[0].start.format('YYYY-M-D HH:mm:ss')).to.equal('2020-1-28 00:00:00');
+      expect(instances[1].start.format('YYYY-M-D HH:mm:ss')).to.equal('2020-1-29 00:00:00');
+      expect(instances[0].end.format('YYYY-M-D HH:mm:ss')).to.equal('2020-1-29 00:00:00');
+      expect(instances[1].end.format('YYYY-M-D HH:mm:ss')).to.equal('2020-1-30 00:00:00');
+      expect(instances[0].recurrenceId.format('YYYY-M-D HH:mm:ss')).to.equal('2020-1-28 00:00:00');
+      expect(instances[1].recurrenceId.format('YYYY-M-D HH:mm:ss')).to.equal('2020-1-29 00:00:00');
+    });
   });
 
   describe('deleteInstance', function() {
