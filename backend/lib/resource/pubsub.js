@@ -28,7 +28,8 @@ module.exports = dependencies => {
 
     logger.error(`Error while request calDav server, a mail will be sent at the resource's creator: ${resource.creator} with the message: ${body || response}`);
 
-    return simpleMailModule(resource.creator, { subject, text });
+    return simpleMailModule(resource.creator, { subject, text })
+      .catch(err => logger.error(`Error while sending email to resource's creator ${resource.creator}`, err));
   }
 
   function _create(resource) {
