@@ -1,6 +1,3 @@
-'use strict';
-
-const q = require('q');
 const { EVENTS, RESOURCE } = require('../constants');
 const RESOURCE_COLOR = '#F44336';
 
@@ -8,7 +5,6 @@ module.exports = dependencies => {
   const simpleMailModule = dependencies('email').system.simpleMail;
   const pubsub = dependencies('pubsub');
   const logger = dependencies('logger');
-  const { getBaseUrl } = dependencies('helpers').config;
 
   const caldavClient = require('../caldav-client')(dependencies);
 
@@ -135,25 +131,11 @@ module.exports = dependencies => {
   }
 
   function _generateResourcePayload(resource) {
-    return _generateIcalImage(resource)
-      .then(image => ({
-        id: resource._id,
-        'dav:name': resource.name,
-        'apple:color': RESOURCE_COLOR,
-        'caldav:description': resource.description,
-        image
-      }));
-  }
-
-  function _generateIcalImage(resource) {
-    return q.nfcall(getBaseUrl, null)
-      .then(baseUrl => {
-        const image = resource.icon ? resource.icon : RESOURCE.DEFAULT_ICON;
-        const icalImage = `IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/png:${baseUrl}${RESOURCE.ICONS_PATH}${image}.png`;
-
-        logger.debug(`Calendar of resource ${resource._id} with image ${icalImage}`);
-
-        return icalImage;
-    });
+    return {
+      id: resource._id,
+      'dav:name': resource.name,
+      'apple:color': RESOURCE_COLOR,
+      'caldav:description': resource.description
+    };
   }
 };
