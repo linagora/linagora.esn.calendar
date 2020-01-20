@@ -41,19 +41,22 @@ module.exports = dependencies => {
         subject: RESOURCE.ERROR.MAIL.CREATED.SUBJECT,
         text: RESOURCE.ERROR.MAIL.CREATED.MESSAGE
     };
+
     const options = {
       userId: resource._id,
+      calendarUri: resource._id,
       domainId: resource.domain
     };
 
-    return _generateResourcePayload(resource)
-      .then(payload => caldavClient.createCalendarAsTechnicalUser(options, payload))
+    return caldavClient.getCalendarAsTechnicalUser(options)
+      .then(() => _generateResourcePayload(resource))
+      .then(payload => caldavClient.updateCalendarAsTechnicalUser(options, payload))
       .then(response => {
-        if (response.statusCode !== 201) {
+        if (response.statusCode !== 204) {
           _handleError(resource, response, mailOptions);
         }
 
-        logger.info(`Calendar created for the resource: ${resource._id} with the status: ${response.statusCode}`);
+        logger.info(`Calendar created for the resource: ${resource._id}`);
       })
       .catch(error => _handleError(resource, error, mailOptions));
   }
