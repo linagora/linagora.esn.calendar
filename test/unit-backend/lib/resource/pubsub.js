@@ -83,98 +83,185 @@ describe('The calendar resource module', function() {
     });
 
     describe('The create function', function() {
+      let caldavClient;
+
+      beforeEach(function() {
+        caldavClient = {
+          getCalendarAsTechnicalUser: () => Promise.resolve(),
+          updateCalendarAsTechnicalUser: () => Promise.resolve()
+        };
+
+        mockery.registerMock('../caldav-client', () => caldavClient);
+
+        module = require(this.moduleHelpers.backendPath + '/lib/resource/pubsub')(this.moduleHelpers.dependencies);
+        module.listen();
+      });
+
       it('should not call sabre if the resource\'s type is not calendar', function() {
         const fakeResource = {
           _id: new ObjectId(),
           creator: new ObjectId(),
+          domain: new ObjectId(),
           name: 'test'
         };
 
+        caldavClient.getCalendarAsTechnicalUser = sinon.spy();
+
         localpubsub.topics['resource:created'].handler(fakeResource);
-        expect(requestMock).to.not.have.been.called;
+
+        expect(caldavClient.getCalendarAsTechnicalUser).to.not.have.been.called;
       });
 
-      it('should send a email if the request return a error', function(done) {
+      it('should send an email to the resource creator if failed to get calendar for the resource', function(done) {
         const fakeResource = {
           _id: new ObjectId(),
           creator: new ObjectId(),
+          domain: new ObjectId(),
           name: 'test',
           description: '',
           type: 'calendar'
         };
+        const err = new Error('something wrong');
 
-        requestError = new Error('Error');
-        requestBody = new Error('Error');
-        requestStatus = null;
+        caldavClient.getCalendarAsTechnicalUser = sinon.stub().returns(Promise.reject(err));
 
-        localpubsub.topics['resource:created'].handler(fakeResource).then(() => {
-          expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource's creator: ${fakeResource.creator} with the message: ${requestError}`);
-          expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.CREATED.SUBJECT, text: RESOURCE.ERROR.MAIL.CREATED.MESSAGE });
-          done();
-        }).catch(done);
+        localpubsub.topics['resource:created'].handler(fakeResource)
+          .then(() => {
+            expect(caldavClient.getCalendarAsTechnicalUser).to.have.been.calledWith({
+              userId: fakeResource._id,
+              calendarUri: fakeResource._id,
+              domainId: fakeResource.domain
+            });
+            expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource's creator: ${fakeResource.creator} with the message: ${err}`);
+            expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.CREATED.SUBJECT, text: RESOURCE.ERROR.MAIL.CREATED.MESSAGE });
+            done();
+          })
+          .catch(err => done(err || new Error('should resolve')));
+      });
+
+      it('should send an email to the resource creator if failed to update calendar for the resource', function(done) {
+        const fakeResource = {
+          _id: new ObjectId(),
+          creator: new ObjectId(),
+          domain: new ObjectId(),
+          name: 'test',
+          description: '',
+          type: 'calendar'
+        };
+        const err = new Error('something wrong');
+
+        caldavClient.updateCalendarAsTechnicalUser = sinon.stub().returns(Promise.reject(err));
+
+        localpubsub.topics['resource:created'].handler(fakeResource)
+          .then(() => {
+            expect(caldavClient.updateCalendarAsTechnicalUser).to.have.been.calledWith({
+              userId: fakeResource._id,
+              calendarUri: fakeResource._id,
+              domainId: fakeResource.domain
+            }, {
+              'apple:color': '#F44336',
+              'caldav:description': fakeResource.description,
+              'dav:name': fakeResource.name,
+              id: fakeResource._id,
+              image: 'IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/png:http://127.0.0.1/linagora.esn.resource/images/icon/desktop-mac.png'
+            });
+            expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource's creator: ${fakeResource.creator} with the message: ${err}`);
+            expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.CREATED.SUBJECT, text: RESOURCE.ERROR.MAIL.CREATED.MESSAGE });
+            done();
+          })
+          .catch(err => done(err || new Error('should resolve')));
+      });
+
+      it('should send an email to the resource creator if the response status is not 204 when updating calendar for the resource', function(done) {
+        const fakeResource = {
+          _id: new ObjectId(),
+          creator: new ObjectId(),
+          domain: new ObjectId(),
+          name: 'test',
+          description: '',
+          type: 'calendar'
+        };
+        const updatingResponse = {
+          statusCode: 300,
+          body: { foo: 'bar' }
+        };
+
+        caldavClient.updateCalendarAsTechnicalUser = sinon.stub().returns(Promise.resolve(updatingResponse));
+
+        localpubsub.topics['resource:created'].handler(fakeResource)
+          .then(() => {
+            expect(caldavClient.updateCalendarAsTechnicalUser).to.have.been.calledWith({
+              userId: fakeResource._id,
+              calendarUri: fakeResource._id,
+              domainId: fakeResource.domain
+            }, {
+              'apple:color': '#F44336',
+              'caldav:description': fakeResource.description,
+              'dav:name': fakeResource.name,
+              id: fakeResource._id,
+              image: 'IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/png:http://127.0.0.1/linagora.esn.resource/images/icon/desktop-mac.png'
+            });
+            expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource's creator: ${fakeResource.creator} with the message: ${updatingResponse.body}`);
+            expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.CREATED.SUBJECT, text: RESOURCE.ERROR.MAIL.CREATED.MESSAGE });
+            done();
+          })
+          .catch(err => done(err || new Error('should resolve')));
       });
 
       it('should log the error if failed to send email to the creator', function(done) {
         const fakeResource = {
           _id: new ObjectId(),
           creator: new ObjectId(),
+          domain: new ObjectId(),
           name: 'test',
           description: '',
           type: 'calendar'
         };
 
-        requestError = new Error('Error');
-        requestBody = new Error('Error');
-        requestStatus = null;
-
-        const sendingEmailError = new Error('something wrong');
+        const sendingEmailError = new Error('Sending email error');
+        const getCalendarError = new Error('Get calendar error');
 
         simpleMailResultMock = Promise.reject(sendingEmailError);
+        caldavClient.getCalendarAsTechnicalUser = () => Promise.reject(getCalendarError);
 
         localpubsub.topics['resource:created'].handler(fakeResource).then(() => {
-          expect(logger.error.firstCall).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource's creator: ${fakeResource.creator} with the message: ${requestError}`);
+          expect(logger.error.firstCall).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource's creator: ${fakeResource.creator} with the message: ${getCalendarError}`);
           expect(logger.error.secondCall).to.have.been.calledWith(`Error while sending email to resource's creator ${fakeResource.creator}`, sendingEmailError);
           expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.CREATED.SUBJECT, text: RESOURCE.ERROR.MAIL.CREATED.MESSAGE });
           done();
         }).catch(err => done(err || new Error('Should resolve')));
       });
 
-      it('should send a email if the request return a status != 201', function(done) {
-        const fakeResource = {
-          _id: new ObjectId(),
-          creator: new ObjectId(),
-          name: 'test',
-          description: '',
-          type: 'calendar'
-        };
-
-        requestError = null;
-        requestBody = new Error('Error');
-        requestStatus = 501;
-
-        localpubsub.topics['resource:created'].handler(fakeResource).then(() => {
-          expect(logger.error).to.have.been.calledWith(`Error while request calDav server, a mail will be sent at the resource's creator: ${fakeResource.creator} with the message: Error: Invalid response status from DAV server ${requestStatus}`);
-          expect(email.system.simpleMail).to.have.been.calledWith(fakeResource.creator, { subject: RESOURCE.ERROR.MAIL.CREATED.SUBJECT, text: RESOURCE.ERROR.MAIL.CREATED.MESSAGE });
-          done();
-        }).catch(done);
-      });
-
       it('should call sabre if the resource\'s type is calendar', function(done) {
         const fakeResource = {
           _id: new ObjectId(),
           creator: new ObjectId(),
+          domain: new ObjectId(),
           name: 'test',
           description: '',
           type: 'calendar'
         };
 
-        requestError = null;
-        requestBody = null;
-        requestStatus = 201;
+        const updatingResponse = {
+          statusCode: 204,
+          body: { foo: 'bar' }
+        };
+
+        caldavClient.updateCalendarAsTechnicalUser = sinon.stub().returns(Promise.resolve(updatingResponse));
 
         localpubsub.topics['resource:created'].handler(fakeResource).then(() => {
-          expect(requestMock).to.have.been.called;
-          expect(logger.info).to.have.been.calledWith(`Calendar created for the resource: ${fakeResource._id} with the status: ${requestStatus}`);
+          expect(caldavClient.updateCalendarAsTechnicalUser).to.have.been.calledWith({
+            userId: fakeResource._id,
+            calendarUri: fakeResource._id,
+            domainId: fakeResource.domain
+          }, {
+            'apple:color': '#F44336',
+            'caldav:description': fakeResource.description,
+            'dav:name': fakeResource.name,
+            id: fakeResource._id,
+            image: 'IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/png:http://127.0.0.1/linagora.esn.resource/images/icon/desktop-mac.png'
+          });
+          expect(logger.info).to.have.been.calledWith(`Calendar created for the resource: ${fakeResource._id}`);
           done();
         }).catch(done);
       });
