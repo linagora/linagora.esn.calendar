@@ -1,6 +1,3 @@
-'use strict';
-
-const q = require('q');
 const { EVENTS, RESOURCE } = require('../constants');
 const RESOURCE_COLOR = '#F44336';
 
@@ -8,7 +5,6 @@ module.exports = dependencies => {
   const simpleMailModule = dependencies('email').system.simpleMail;
   const pubsub = dependencies('pubsub');
   const logger = dependencies('logger');
-  const { getBaseUrl } = dependencies('helpers').config;
 
   const caldavClient = require('../caldav-client')(dependencies);
 
@@ -28,7 +24,8 @@ module.exports = dependencies => {
 
     logger.error(`Error while request calDav server, a mail will be sent at the resource's creator: ${resource.creator} with the message: ${body || response}`);
 
-    return simpleMailModule(resource.creator, { subject, text });
+    return simpleMailModule(resource.creator, { subject, text })
+      .catch(err => logger.error(`Error while sending email to resource's creator ${resource.creator}`, err));
   }
 
   function _create(resource) {
@@ -40,19 +37,22 @@ module.exports = dependencies => {
         subject: RESOURCE.ERROR.MAIL.CREATED.SUBJECT,
         text: RESOURCE.ERROR.MAIL.CREATED.MESSAGE
     };
+
     const options = {
       userId: resource._id,
+      calendarUri: resource._id,
       domainId: resource.domain
     };
 
-    return _generateResourcePayload(resource)
-      .then(payload => caldavClient.createCalendarAsTechnicalUser(options, payload))
+    return caldavClient.getCalendarAsTechnicalUser(options)
+      .then(() => _generateResourcePayload(resource))
+      .then(payload => caldavClient.updateCalendarAsTechnicalUser(options, payload))
       .then(response => {
-        if (response.statusCode !== 201) {
+        if (response.statusCode !== 204) {
           _handleError(resource, response, mailOptions);
         }
 
-        logger.info(`Calendar created for the resource: ${resource._id} with the status: ${response.statusCode}`);
+        logger.info(`Calendar created for the resource: ${resource._id}`);
       })
       .catch(error => _handleError(resource, error, mailOptions));
   }
@@ -131,25 +131,11 @@ module.exports = dependencies => {
   }
 
   function _generateResourcePayload(resource) {
-    return _generateIcalImage(resource)
-      .then(image => ({
-        id: resource._id,
-        'dav:name': resource.name,
-        'apple:color': RESOURCE_COLOR,
-        'caldav:description': resource.description,
-        image
-      }));
-  }
-
-  function _generateIcalImage(resource) {
-    return q.nfcall(getBaseUrl, null)
-      .then(baseUrl => {
-        const image = resource.icon ? resource.icon : RESOURCE.DEFAULT_ICON;
-        const icalImage = `IMAGE;VALUE=URI;DISPLAY=BADGE;FMTTYPE=image/png:${baseUrl}${RESOURCE.ICONS_PATH}${image}.png`;
-
-        logger.debug(`Calendar of resource ${resource._id} with image ${icalImage}`);
-
-        return icalImage;
-    });
+    return {
+      id: resource._id,
+      'dav:name': resource.name,
+      'apple:color': RESOURCE_COLOR,
+      'caldav:description': resource.description
+    };
   }
 };
