@@ -81,7 +81,7 @@
         sortOrder: options.sortOrder
       };
 
-      return calendarRestangular.one(userId).one(calendarId).one('events.json').get(query)
+      return calendarRestangular.all('calendars').one(userId).one(calendarId).one('events.json').get(query)
         .then(responseHandler('events'));
     }
 
@@ -133,7 +133,7 @@
         });
       }
 
-      return calendarRestangular.one('events').one('search').customPOST(requestBody, undefined, {
+      return calendarRestangular.all('calendars').one('events').one('search').customPOST(requestBody, undefined, {
         offset: options.offset,
         limit: options.limit
       }).then(responseHandler('events'));

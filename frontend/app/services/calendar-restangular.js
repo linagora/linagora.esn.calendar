@@ -10,7 +10,7 @@
       RestangularConfigurer.setFullResponse(true);
     });
 
-    httpConfigurer.manageRestangular(restangularInstance, '/calendar/api/calendars');
+    httpConfigurer.manageRestangular(restangularInstance, '/calendar/api');
 
     return restangularInstance;
   }
