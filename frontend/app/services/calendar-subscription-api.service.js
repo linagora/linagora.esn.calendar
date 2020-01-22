@@ -7,7 +7,6 @@
   function calCalendarSubscriptionApiService(
     _,
     uuid4,
-    calendarRestangular,
     calDavRequest,
     calHttpResponseHandler,
     calPathBuilder
