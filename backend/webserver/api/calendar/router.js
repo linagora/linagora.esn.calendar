@@ -136,31 +136,5 @@ module.exports = (dependencies, moduleName) => {
     calendarMW.checkUserParameter,
     controller.searchEventsBasic);
 
-  /**
-   * @swagger
-   * /events/search:
-   *   post:
-   *     tags:
-   *       - Calendar
-   *     description: Search for events in Elasticsearch with advanced options
-   *     parameters:
-   *       - $ref: "#/parameters/calendar_advanced_event_search"
-   *       - $ref: "#/parameters/cm_limit"
-   *       - $ref: "#/parameters/cm_offset"
-   *     responses:
-   *       200:
-   *         $ref: "#/responses/calendar_events"
-   *       400:
-   *         $ref: "#/responses/cm_400"
-   *       401:
-   *         $ref: "#/responses/cm_401"
-   *       500:
-   *         $ref: "#/responses/cm_500"
-   */
-  router.post('/events/search',
-    authorizationMW.requiresAPILogin,
-    calendarMW.validateAdvancedSearchQuery,
-    controller.searchEventsAdvanced);
-
   return router;
 };

@@ -17,8 +17,7 @@ module.exports = dependencies => {
     dispatchEvent,
     sendInvitation,
     changeParticipation,
-    searchEventsBasic,
-    searchEventsAdvanced
+    searchEventsBasic
   };
 
   function dispatchEvent(req, res) {
@@ -184,39 +183,6 @@ module.exports = dependencies => {
     };
 
     return calendar.searchEventsBasic(query)
-      .then(searchResult => {
-        const responseJSON = _handleSearchResult(searchResult, req.originalUrl);
-
-        res.header('X-ESN-Items-Count', searchResult.totalCount);
-        res.status(200).json(responseJSON);
-      })
-      .catch(err => {
-        const details = 'Error while searching for events';
-
-        logger.error(details, err);
-
-        res.status(500).json({
-          error: {
-            code: 500,
-            message: 'Server Error',
-            details
-          }
-        });
-      });
-  }
-
-  function searchEventsAdvanced(req, res) {
-    const query = {
-      calendars: req.body.calendars,
-      search: req.body.query,
-      attendees: req.body.attendees,
-      organizers: req.body.organizers,
-      offset: req.query.offset,
-      limit: req.query.limit,
-      userId: req.user.id
-    };
-
-    return calendar.searchEventsAdvanced(query)
       .then(searchResult => {
         const responseJSON = _handleSearchResult(searchResult, req.originalUrl);
 

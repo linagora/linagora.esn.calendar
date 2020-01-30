@@ -515,7 +515,7 @@ describe('The calendar module apis', function() {
           }
         };
 
-        this.$httpBackend.expectPOST('/calendar/api/calendars/events/search?limit=' + this.ELEMENTS_PER_REQUEST + '&offset=0').respond(searchResponse);
+        this.$httpBackend.expectPOST('/calendar/api/events/search?limit=' + this.ELEMENTS_PER_REQUEST + '&offset=0').respond(searchResponse);
 
         this.calendarRestangular.addRequestInterceptor(function(requestBody) {
           expect(requestBody).to.shallowDeepEqual({

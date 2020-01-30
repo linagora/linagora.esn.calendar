@@ -133,7 +133,7 @@
         });
       }
 
-      return calendarRestangular.all('calendars').one('events').one('search').customPOST(requestBody, undefined, {
+      return calendarRestangular.all('events').one('search').customPOST(requestBody, undefined, {
         offset: options.offset,
         limit: options.limit
       }).then(responseHandler('events'));

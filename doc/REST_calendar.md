@@ -180,7 +180,7 @@ Search for events in Elasticsearch
       }
     }
 
-## POST /api/calendars/search
+## POST /api/events/search
 
 Search for events in Elasticsearch with advanced options
 
@@ -210,7 +210,7 @@ Search for events in Elasticsearch with advanced options
 
 **Request:**
 
-    POST /api/calendars/events/search?offset=0&limit=30
+    POST /api/events/search?offset=0&limit=30
     Host: localhost:8080
 
 **Response:**
@@ -219,7 +219,7 @@ Search for events in Elasticsearch with advanced options
     {
       "_links": {
         "self": {
-          "href": "/api/calendars/events/search?offset=0&limit=30"
+          "href": "/api/events/search?offset=0&limit=30"
         }
       },
       "_total_hits": 1,

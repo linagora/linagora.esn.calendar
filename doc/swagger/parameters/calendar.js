@@ -90,11 +90,4 @@
   *     description: a token of calendar.
   *     required: true
   *     type: string
-  *   calendar_advanced_event_search:
-  *     name: advancedEventSearch
-  *     in: body
-  *     description: request body of advanced event search
-  *     required: true
-  *     schema:
-  *       $ref: "#/definitions/calendar_advanced_event_search"
   */

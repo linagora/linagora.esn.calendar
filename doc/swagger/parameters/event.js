@@ -26,4 +26,26 @@
   *     in: path
   *     required: true
   *     type: string
+  *   calendar_event_search:
+  *     name: search
+  *     in: body
+  *     description: request body of event search
+  *     required: false
+  *     schema:
+  *       type: object
+  *       properties:
+  *         calendars:
+  *           type: array
+  *           items:
+  *             $ref: "#/definitions/calendar_calendar_search_object"
+  *         query:
+  *           type: string
+  *         organizers:
+  *           type: array
+  *           items:
+  *             $ref: "#/definitions/us_email"
+  *         attendees:
+  *           type: array
+  *           items:
+  *             $ref: "#/definitions/us_email"
   */

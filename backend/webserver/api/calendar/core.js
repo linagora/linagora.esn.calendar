@@ -18,8 +18,7 @@ module.exports = dependencies => {
 
   return {
     dispatch,
-    searchEventsBasic,
-    searchEventsAdvanced
+    searchEventsBasic
   };
 
   /**
@@ -163,21 +162,12 @@ module.exports = dependencies => {
 
   function searchEventsBasic(query) {
     return Q.ninvoke(elasticsearchActions, 'searchEventsBasic', query)
-      .then(esResult => _handleElasSearchResults(esResult, query));
-  }
-
-  function searchEventsAdvanced(query) {
-    return elasticsearchActions.searchEventsAdvanced(query)
-      .then(esResult => _handleElasSearchResults(esResult, query));
-  }
-
-  function _handleElasSearchResults(esResult) {
-    return {
-      totalCount: esResult.total_count,
-      events: esResult.list.map(event => ({
-        path: caldavClient.getEventPath(event._source.userId, event._source.calendarId, getEventUidFromElasticsearchId(event._id)),
-        data: event._source
-      }))
-    };
+      .then(esResult => ({
+        totalCount: esResult.total_count,
+        events: esResult.list.map(event => ({
+          path: caldavClient.getEventPath(event._source.userId, event._source.calendarId, getEventUidFromElasticsearchId(event._id)),
+          data: event._source
+        }))
+      }));
   }
 };

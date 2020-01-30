@@ -41,22 +41,4 @@
   *         type: string
   *       calendarId:
   *         type: string
-  *   calendar_advanced_event_search:
-  *     description: Describes the options of an advanced event search
-  *     type: object
-  *     properties:
-  *       calendars:
-  *         type: array
-  *         items:
-  *           $ref: "#/definitions/calendar_calendar_search_object"
-  *       query:
-  *         type: string
-  *       organizers:
-  *         type: array
-  *         items:
-  *           $ref: "#/definitions/us_email"
-  *       attendees:
-  *         type: array
-  *         items:
-  *           $ref: "#/definitions/us_email"
   */
