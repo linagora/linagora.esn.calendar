@@ -518,7 +518,7 @@ describe('The calendar module apis', function() {
         this.$httpBackend.expectPOST('/calendar/api/events/search?limit=' + this.ELEMENTS_PER_REQUEST + '&offset=0').respond(searchResponse);
 
         this.calendarRestangular.addRequestInterceptor(function(requestBody) {
-          expect(requestBody).to.shallowDeepEqual({
+          expect(requestBody).to.deep({
             calendars: [
               { userId: 'userId0', calendarId: 'userId0' },
               { userId: 'userId0', calendarId: 'calendarId1' },

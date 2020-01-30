@@ -116,9 +116,7 @@
 
       var requestBody = {
         calendars: calendars,
-        query: options.query.advanced.contains || '',
-        offset: options.offset,
-        limit: options.limit
+        query: options.query.advanced.contains || ''
       };
 
       if (options.query.advanced.organizers) {
