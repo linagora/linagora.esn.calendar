@@ -138,6 +138,56 @@ describe('POST /api/events/search', function() {
       helpers.elasticsearch.saveTestConfiguration(helpers.callbacks.noError(done));
     });
 
+    it('should send 400 if the query sort key is invalid', function(done) {
+      helpers.api.loginAsUser(this.app, user.emails[0], password, (err, requestAsMember) => {
+        if (err) {
+          return done(err);
+        }
+
+        const req = requestAsMember(request(this.app).post('/api/events/search?sortKey=invalid'));
+
+        req
+          .send(mockRequestBody)
+          .expect(400)
+          .end((err, res) => {
+            expect(err).to.not.exist;
+            expect(res.body).to.deep.equal({
+              error: {
+                code: 400,
+                message: 'Bad Request',
+                details: 'Sort key is invalid. Valid values are: start, end.'
+              }
+            });
+            done();
+          });
+      });
+    });
+
+    it('should send 400 if the query sort key is invalid', function(done) {
+      helpers.api.loginAsUser(this.app, user.emails[0], password, (err, requestAsMember) => {
+        if (err) {
+          return done(err);
+        }
+
+        const req = requestAsMember(request(this.app).post('/api/events/search?sortKey=start&sortOrder=invalid'));
+
+        req
+          .send(mockRequestBody)
+          .expect(400)
+          .end((err, res) => {
+            expect(err).to.not.exist;
+            expect(res.body).to.deep.equal({
+              error: {
+                code: 400,
+                message: 'Bad Request',
+                details: 'Sort order is invalid. Valid values are: asc, desc.'
+              }
+            });
+            done();
+          });
+      });
+    });
+
     it('should send 400 if the query field in the request body is not a string', function(done) {
       expectedResults = [];
 

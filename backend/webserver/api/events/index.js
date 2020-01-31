@@ -84,6 +84,8 @@ module.exports = (dependencies, moduleName) => {
    *       - $ref: "#/parameters/calendar_event_search"
    *       - $ref: "#/parameters/cm_limit"
    *       - $ref: "#/parameters/cm_offset"
+   *       - $ref: "#/parameters/calendar_event_sort_key"
+   *       - $ref: "#/parameters/calendar_event_sort_order"
    *     responses:
    *       200:
    *         $ref: "#/responses/calendar_events"
@@ -97,6 +99,7 @@ module.exports = (dependencies, moduleName) => {
   router.post('/search',
     authorizationMW.requiresAPILogin,
     eventsMW.validateSearchQuery,
+    eventsMW.validateSearchPayload,
     controller.search);
 
   return router;

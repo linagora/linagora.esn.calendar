@@ -46,6 +46,8 @@ module.exports = function(dependencies) {
       organizers: req.body.organizers,
       offset: req.query.offset,
       limit: req.query.limit,
+      sortKey: req.query.sortKey,
+      sortOrder: req.query.sortOrder,
       userId: req.user.id
     };
 

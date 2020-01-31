@@ -30,7 +30,6 @@
   *     name: search
   *     in: body
   *     description: request body of event search
-  *     required: false
   *     schema:
   *       type: object
   *       properties:
@@ -48,4 +47,20 @@
   *           type: array
   *           items:
   *             $ref: "#/definitions/us_email"
+  *   calendar_event_sort_key:
+  *     name: sortKey
+  *     in: query
+  *     description: a way to arrange data based by key
+  *     type: string
+  *     enum:
+  *       - start
+  *       - end
+  *   calendar_event_sort_order:
+  *     name: sortOrder
+  *     in: query
+  *     description: A way to arrange data based on value or data type.
+  *     type: string
+  *     enum:
+  *       - asc
+  *       - desc
   */
