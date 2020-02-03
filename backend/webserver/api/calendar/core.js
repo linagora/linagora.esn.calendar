@@ -1,8 +1,4 @@
-'use strict';
-
 const async = require('async');
-const Q = require('q');
-const getEventUidFromElasticsearchId = require('../../../lib/search/denormalize').getEventUidFromElasticsearchId;
 
 module.exports = dependencies => {
   const eventMessage = require('./../../../lib/message/eventmessage.core')(dependencies);
@@ -13,12 +9,9 @@ module.exports = dependencies => {
   const localpubsub = dependencies('pubsub').local;
   const globalpubsub = dependencies('pubsub').global;
   const collaborationPermission = dependencies('collaboration').permission;
-  const elasticsearchActions = require('../../../lib/search/actions')(dependencies);
-  const caldavClient = require('../../../lib/caldav-client')(dependencies);
 
   return {
-    dispatch,
-    searchEventsBasic
+    dispatch
   };
 
   /**
@@ -158,16 +151,5 @@ module.exports = dependencies => {
           return callback(new Error('Invalid type specified'));
       }
     });
-  }
-
-  function searchEventsBasic(query) {
-    return Q.ninvoke(elasticsearchActions, 'searchEventsBasic', query)
-      .then(esResult => ({
-        totalCount: esResult.total_count,
-        events: esResult.list.map(event => ({
-          path: caldavClient.getEventPath(event._source.userId, event._source.calendarId, getEventUidFromElasticsearchId(event._id)),
-          data: event._source
-        }))
-      }));
   }
 };

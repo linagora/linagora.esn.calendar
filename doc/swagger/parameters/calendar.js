@@ -42,18 +42,6 @@
   *     required: true
   *     schema:
   *       $ref: "#/definitions/calendar_invite"
-  *   calendar_sort_key:
-  *     name: sortKey
-  *     in: query
-  *     description: a way to arrange data based by key
-  *     required: true
-  *     type: string
-  *   calendar_sort_order:
-  *     name: sortOrder
-  *     in: query
-  *     description: A way to arrange data based on value or data type.
-  *     required: true
-  *     type: string
   *   calendar_user_uid:
   *     name: uid
   *     in: query

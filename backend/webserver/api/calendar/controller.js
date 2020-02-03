@@ -1,5 +1,3 @@
-'use strict';
-
 const request = require('request');
 const urljoin = require('url-join');
 const ICAL = require('@linagora/ical.js');
@@ -16,8 +14,7 @@ module.exports = dependencies => {
   return {
     dispatchEvent,
     sendInvitation,
-    changeParticipation,
-    searchEventsBasic
+    changeParticipation
   };
 
   function dispatchEvent(req, res) {
@@ -169,61 +166,5 @@ module.exports = dependencies => {
     const url = urljoin(req.davserver, 'calendars', req.user._id, req.eventPayload.calendarURI, req.eventPayload.uid + '.ics');
 
     tryUpdateParticipation(url, ESNToken, res, req);
-  }
-
-  function searchEventsBasic(req, res) {
-    const query = {
-      search: req.query.query,
-      limit: req.query.limit,
-      offset: req.query.offset,
-      sortKey: req.query.sortKey,
-      sortOrder: req.query.sortOrder,
-      userId: req.params.userId,
-      calendarId: req.params.calendarId
-    };
-
-    return calendar.searchEventsBasic(query)
-      .then(searchResult => {
-        const responseJSON = _handleSearchResult(searchResult, req.originalUrl);
-
-        res.header('X-ESN-Items-Count', searchResult.totalCount);
-        res.status(200).json(responseJSON);
-      })
-      .catch(err => {
-        const details = 'Error while searching for events';
-
-        logger.error(details, err);
-
-        res.status(500).json({
-          error: {
-            code: 500,
-            message: 'Server Error',
-            details
-          }
-        });
-      });
-  }
-
-  function _handleSearchResult(searchResult, originalUrl) {
-    const events = searchResult.events.map(event => ({
-      _links: {
-        self: {
-          href: event.path
-        }
-      },
-      data: event.data
-    }));
-
-    return {
-      _links: {
-        self: {
-          href: originalUrl
-        }
-      },
-      _total_hits: searchResult.totalCount,
-      _embedded: {
-        events
-      }
-    };
   }
 };
