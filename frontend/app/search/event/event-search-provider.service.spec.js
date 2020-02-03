@@ -6,8 +6,8 @@ var expect = chai.expect;
 
 describe('The calSearchEventProviderService service', function() {
 
-  var $rootScope, calSearchEventProviderService, $httpBackend, calendarService, esnSearchProvider, calEventService;
-  var CAL_ADVANCED_SEARCH_CALENDAR_TYPES, ELEMENTS_PER_REQUEST;
+  var $rootScope, calSearchEventProviderService, calendarService, esnSearchProvider, calEventService;
+  var CAL_ADVANCED_SEARCH_CALENDAR_TYPES;
   var calendarHomeId = 'calendarHomeId';
 
   var mockUsers = [
@@ -44,71 +44,18 @@ describe('The calSearchEventProviderService service', function() {
     });
   });
 
-  beforeEach(inject(function(_$rootScope_, _$httpBackend_, _calSearchEventProviderService_, _calendarService_, _calEventService_, _CAL_ADVANCED_SEARCH_CALENDAR_TYPES_, _ELEMENTS_PER_REQUEST_) {
+  beforeEach(inject(function(_$rootScope_,
+    _calSearchEventProviderService_,
+    _calendarService_,
+    _calEventService_,
+    _CAL_ADVANCED_SEARCH_CALENDAR_TYPES_
+  ) {
     $rootScope = _$rootScope_;
     calSearchEventProviderService = _calSearchEventProviderService_;
-    $httpBackend = _$httpBackend_;
     calendarService = _calendarService_;
     calEventService = _calEventService_;
     CAL_ADVANCED_SEARCH_CALENDAR_TYPES = _CAL_ADVANCED_SEARCH_CALENDAR_TYPES_;
-    ELEMENTS_PER_REQUEST = _ELEMENTS_PER_REQUEST_;
   }));
-
-  it('should build a provider which is able to do a basic search for events from each calendar, return aggregated results having date prop', function(done) {
-    var calendarIds = ['calendar1', 'calendar2'];
-    var davCalendars = calendarIds.map(function(calendarId) {
-      return {
-        _links: {
-          self: { href: '/calendars/' + calendarHomeId + '/' + calendarId + '.json'}
-        }
-      };
-    });
-
-    $httpBackend.expectGET('/dav/api/calendars/' + calendarHomeId + '.json?personal=true&sharedDelegationStatus=accepted&sharedPublicSubscription=true&withRights=true').respond(200, {
-      _embedded: {
-        'dav:calendar': davCalendars
-      }
-    });
-
-    calSearchEventProviderService()
-      .then(assertThatRegisteredProviderTriggersDAVRequests);
-
-    $rootScope.$digest();
-    $httpBackend.flush();
-
-    function assertThatRegisteredProviderTriggersDAVRequests(provider) {
-      provider.options.fetch({ text: 'abcd' })()
-        .then(assertOnAggregatedResults)
-        .then(done);
-
-      function fakeEventRef(calendarId) {
-        return {
-          self: { href: '/prepath/path/to/' + calendarId + '/myuid.ics' }
-        };
-      }
-      function fakeSearchResults(calendarId) {
-        return [{
-          _links: fakeEventRef(calendarId),
-          data: {}
-        }];
-      }
-
-      calendarIds.forEach(function(calendarId) {
-        $httpBackend.expectGET('/calendar/api/calendars/' + calendarHomeId + '/' + calendarId + '/events.json?limit=' + ELEMENTS_PER_REQUEST + '&offset=0&query=abcd').respond(200, {
-          _embedded: {
-            events: fakeSearchResults(calendarId)
-          }
-        });
-      });
-
-      function assertOnAggregatedResults(events) {
-        expect(events.length).to.equal(calendarIds.length);
-        events.forEach(function(event) {
-          expect(event).to.have.ownProperty('date');
-        });
-      }
-    }
-  });
 
   it('should prevent error when sabre is down', function(done) {
     calendarService.listPersonalAndAcceptedDelegationCalendars = function() { return $q.reject(); };
@@ -154,24 +101,28 @@ describe('The calSearchEventProviderService service', function() {
         id: 'event1',
         calendarId: 'id1',
         start: 'Wed Apr 17 2019 14:58:24 GMT+0700',
+        end: 'Wed Apr 17 2019 15:00:00 GMT+0700',
         supposedUserCalendar: mockCalendars[0]
       },
       {
         id: 'event2',
         calendarId: 'id1',
         start: 'Wed Apr 17 2019 14:58:25 GMT+0700',
+        end: 'Wed Apr 17 2019 15:00:00 GMT+0700',
         supposedUserCalendar: mockCalendars[0]
       },
       {
         id: 'event3',
         calendarId: 'ida',
         start: 'Wed Apr 17 2019 14:58:26 GMT+0700',
+        end: 'Wed Apr 17 2019 15:00:00 GMT+0700',
         supposedUserCalendar: mockCalendars[1]
       },
       {
         id: 'event4',
         calendarId: 'idb',
         start: 'Wed Apr 17 2019 14:58:22 GMT+0700',
+        end: 'Wed Apr 17 2019 15:00:00 GMT+0700',
         supposedUserCalendar: mockCalendars[2]
       }
     ];
@@ -188,25 +139,25 @@ describe('The calSearchEventProviderService service', function() {
     };
 
     beforeEach(function() {
-      sinon.stub(calEventService, 'searchEventsBasic', function() {
-        return $q.when([]);
-      });
-
       sinon.stub(calendarService, 'listPersonalAndAcceptedDelegationCalendars', function() {
         return $q.when(mockCalendars);
       });
     });
 
-    it('should not call #calEventService.searchEventsAdvanced when there are no advanced options provided', function(done) {
-      calEventService.searchEventsAdvanced = sinon.spy(function() {
+    it('should call #calEventService.searchEvents when there are no advanced options provided', function(done) {
+      calEventService.searchEvents = sinon.spy(function() {
         return $q.when([]);
       });
+      query = { text: 'king' };
 
       calSearchEventProviderService()
         .then(function(provider) {
-          provider.options.fetch({ text: 'king' })()
+          provider.options.fetch(query)()
             .then(function() {
-              expect(calEventService.searchEventsAdvanced).to.have.not.been.called;
+              expect(calEventService.searchEvents).to.have.been.calledWith(sinon.match({
+                query: query,
+                calendars: mockCalendars
+              }));
               done();
             })
             .catch(function(err) {
@@ -217,16 +168,20 @@ describe('The calSearchEventProviderService service', function() {
       $rootScope.$digest();
     });
 
-    it('should not call #calEventService.searchEventsAdvanced when there are no calendars provided in the advanced options', function(done) {
-      calEventService.searchEventsAdvanced = sinon.spy(function() {
+    it('should not call #calEventService.searchEvents when there are no calendars provided in the advanced options', function(done) {
+      calEventService.searchEvents = sinon.spy(function() {
         return $q.when([]);
       });
+      query = { advanced: { contains: 'king' } };
 
       calSearchEventProviderService()
         .then(function(provider) {
-          provider.options.fetch({ advanced: { contains: 'king' } })()
+          provider.options.fetch(query)()
             .then(function() {
-              expect(calEventService.searchEventsAdvanced).to.have.not.been.called;
+              expect(calEventService.searchEvents).to.have.been.calledWith(sinon.match({
+                query: query,
+                calendars: mockCalendars
+              }));
               done();
             })
             .catch(function(err) {
@@ -237,8 +192,8 @@ describe('The calSearchEventProviderService service', function() {
       $rootScope.$digest();
     });
 
-    it('should call #calEventService.searchEventsAdvanced with good params including all calendars and return events with correct properties', function(done) {
-      calEventService.searchEventsAdvanced = sinon.spy(function() {
+    it('should call #calEventService.searchEvents with good params including all calendars and return events with correct properties', function(done) {
+      calEventService.searchEvents = sinon.spy(function() {
         return $q.when(mockEvents);
       });
 
@@ -248,9 +203,8 @@ describe('The calSearchEventProviderService service', function() {
         .then(function(provider) {
           provider.options.fetch(query)()
             .then(function(events) {
-              expect(calEventService.searchEventsAdvanced).to.have.been.calledWith(sinon.match({
+              expect(calEventService.searchEvents).to.have.been.calledWith(sinon.match({
                 query: query,
-                userId: calendarHomeId,
                 calendars: mockCalendars
               }));
               expect(events.length).to.equal(mockEvents.length);
@@ -268,8 +222,8 @@ describe('The calSearchEventProviderService service', function() {
       $rootScope.$digest();
     });
 
-    it('should call #calEventService.searchEventsAdvanced with good params including only my calendars and return events with correct properties', function(done) {
-      calEventService.searchEventsAdvanced = sinon.spy(function() {
+    it('should call #calEventService.searchEvents with good params including only my calendars and return events with correct properties', function(done) {
+      calEventService.searchEvents = sinon.spy(function() {
         return $q.when(myCalendarEvents);
       });
 
@@ -279,9 +233,8 @@ describe('The calSearchEventProviderService service', function() {
         .then(function(provider) {
           provider.options.fetch(query)()
             .then(function(events) {
-              expect(calEventService.searchEventsAdvanced).to.have.been.calledWith(sinon.match({
+              expect(calEventService.searchEvents).to.have.been.calledWith(sinon.match({
                 query: query,
-                userId: calendarHomeId,
                 calendars: [mockCalendars[0]]
               }));
               expect(events.length).to.equal(myCalendarEvents.length);
@@ -299,8 +252,8 @@ describe('The calSearchEventProviderService service', function() {
       $rootScope.$digest();
     });
 
-    it('should call #calEventService.searchEventsAdvanced with good params including only shared calendars and return events with correct properties', function(done) {
-      calEventService.searchEventsAdvanced = sinon.spy(function() {
+    it('should call #calEventService.searchEvents with good params including only shared calendars and return events with correct properties', function(done) {
+      calEventService.searchEvents = sinon.spy(function() {
         return $q.when(sharedCalendarEvents);
       });
 
@@ -310,9 +263,8 @@ describe('The calSearchEventProviderService service', function() {
         .then(function(provider) {
           provider.options.fetch(query)()
             .then(function(events) {
-              expect(calEventService.searchEventsAdvanced).to.have.been.calledWith(sinon.match({
+              expect(calEventService.searchEvents).to.have.been.calledWith(sinon.match({
                 query: query,
-                userId: calendarHomeId,
                 calendars: [mockCalendars[1], mockCalendars[2]]
               }));
               expect(events.length).to.equal(sharedCalendarEvents.length);
@@ -330,8 +282,8 @@ describe('The calSearchEventProviderService service', function() {
       $rootScope.$digest();
     });
 
-    it('should call #calEventService.searchEventsAdvanced with good params including only a specific calendar and return events with correct properties', function(done) {
-      calEventService.searchEventsAdvanced = sinon.spy(function() {
+    it('should call #calEventService.searchEvents with good params including only a specific calendar and return events with correct properties', function(done) {
+      calEventService.searchEvents = sinon.spy(function() {
         return $q.when(myCalendarEvents);
       });
 
@@ -341,9 +293,8 @@ describe('The calSearchEventProviderService service', function() {
         .then(function(provider) {
           provider.options.fetch(query)()
             .then(function(events) {
-              expect(calEventService.searchEventsAdvanced).to.have.been.calledWith(sinon.match({
+              expect(calEventService.searchEvents).to.have.been.calledWith(sinon.match({
                 query: query,
-                userId: calendarHomeId,
                 calendars: [mockCalendars[0]]
               }));
               expect(events.length).to.equal(myCalendarEvents.length);

@@ -1722,7 +1722,7 @@ describe('The calEventService service', function() {
 
   });
 
-  describe('The searchEventsAdvanced fn', function() {
+  describe('The searchEvents fn', function() {
     var searchOptions = {
       calendars: [
         { id: 'userId1', calendarHomeId: 'userId1' }
@@ -1737,7 +1737,7 @@ describe('The calEventService service', function() {
     };
 
     it('should return an empty array when no calendars are provided in the search options', function(done) {
-      self.calEventService.searchEventsAdvanced({ calendars: [] }).then(function(results) {
+      self.calEventService.searchEvents({ calendars: [] }).then(function(results) {
         expect(results).to.be.empty;
         done();
       }).catch(function(err) {
@@ -1747,7 +1747,7 @@ describe('The calEventService service', function() {
       self.$rootScope.$digest();
     });
 
-    it('should call #calendarAPI.searchEventsAdvanced with good parameters and return an array of events when it succeeds', function(done) {
+    it('should call #calendarAPI.searchEvents with good parameters and return an array of events when it succeeds', function(done) {
       var mockEvents = [{
         _links: {
           self: {
@@ -1759,13 +1759,13 @@ describe('The calEventService service', function() {
         }
       }];
 
-      sinon.stub(self.calendarAPI, 'searchEventsAdvanced', function(options) {
+      sinon.stub(self.calendarAPI, 'searchEvents', function(options) {
         expect(options).to.deep.equal(searchOptions);
 
         return $q.resolve(mockEvents);
       });
 
-      self.calEventService.searchEventsAdvanced(searchOptions).then(function(events) {
+      self.calEventService.searchEvents(searchOptions).then(function(events) {
         events.forEach(function(event, index) {
           expect(event).to.shallowDeepEqual(mockEvents[index].data);
         });
@@ -1778,14 +1778,14 @@ describe('The calEventService service', function() {
       self.$rootScope.$digest();
     });
 
-    it('should call #calendarAPI.searchEventsAdvanced with good parameters and fail if it fails', function(done) {
-      sinon.stub(self.calendarAPI, 'searchEventsAdvanced', function(options) {
+    it('should call #calendarAPI.searchEvents with good parameters and fail if it fails', function(done) {
+      sinon.stub(self.calendarAPI, 'searchEvents', function(options) {
         expect(options).to.deep.equal(searchOptions);
 
         return $q.reject(new Error('it is going to fail'));
       });
 
-      self.calEventService.searchEventsAdvanced(searchOptions)
+      self.calEventService.searchEvents(searchOptions)
         .then(function() {
           done(new Error('should not happen'));
         })

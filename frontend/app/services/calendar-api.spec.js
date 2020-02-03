@@ -497,28 +497,28 @@ describe('The calendar module apis', function() {
 
     });
 
-    describe('The searchEventsAdvanced request', function() {
+    describe('The searchEvents request', function() {
+      var eventSearchItems = [{
+        _links: {
+          self: {href: '/prepath/path/to/calendar/myuid.ics'}
+        },
+        data: {}
+      }];
+
+      var searchResponse = {
+        _links: {
+          self: { href: '/prepath/path/to/calendar.json' }
+        },
+        _embedded: {
+          events: eventSearchItems
+        }
+      };
+
       it('should have a correct request body and return an array of events', function(done) {
-        var eventSearchItems = [{
-          _links: {
-            self: {href: '/prepath/path/to/calendar/myuid.ics'}
-          },
-          data: {}
-        }];
-
-        var searchResponse = {
-          _links: {
-            self: { href: '/prepath/path/to/calendar.json' }
-          },
-          _embedded: {
-            events: eventSearchItems
-          }
-        };
-
         this.$httpBackend.expectPOST('/calendar/api/events/search?limit=' + this.ELEMENTS_PER_REQUEST + '&offset=0').respond(searchResponse);
 
         this.calendarRestangular.addRequestInterceptor(function(requestBody) {
-          expect(requestBody).to.deep({
+          expect(requestBody).to.deep.equal({
             calendars: [
               { userId: 'userId0', calendarId: 'userId0' },
               { userId: 'userId0', calendarId: 'calendarId1' },
@@ -530,7 +530,7 @@ describe('The calendar module apis', function() {
           });
         });
 
-        this.calendarAPI.searchEventsAdvanced({
+        this.calendarAPI.searchEvents({
           calendars: [
             { id: 'userId0', calendarHomeId: 'userId0' },
             { id: 'calendarId1', calendarHomeId: 'userId0' },
@@ -548,6 +548,64 @@ describe('The calendar module apis', function() {
               ],
               attendees: [{ id: 'userId0', email: 'user0@open-paas.org' }]
             }
+          },
+          offset: 0,
+          limit: this.ELEMENTS_PER_REQUEST
+        }).then(function(result) {
+          expect(result).to.deep.equal(eventSearchItems);
+
+          done();
+        }).catch(done);
+
+        this.$httpBackend.flush();
+      });
+
+      it('should have a correct request query if there are sortKey and sortOrder', function(done) {
+        this.$httpBackend.expectPOST('/calendar/api/events/search?limit=' + this.ELEMENTS_PER_REQUEST + '&offset=0&sortKey=start&sortOrder=asc').respond(searchResponse);
+
+        this.calendarAPI.searchEvents({
+          offset: 0,
+          limit: this.ELEMENTS_PER_REQUEST,
+          sortKey: 'start',
+          sortOrder: 'asc',
+          calendars: [],
+          query: {
+            advanced: {}
+          }
+        }).then(function(result) {
+          expect(result).to.deep.equal(eventSearchItems);
+
+          done();
+        }).catch(done);
+
+        this.$httpBackend.flush();
+      });
+
+      it('should have a correct request body and return an array of events if the search term is in #options.query', function(done) {
+        this.$httpBackend.expectPOST('/calendar/api/events/search?limit=' + this.ELEMENTS_PER_REQUEST + '&offset=0').respond(searchResponse);
+
+        this.calendarRestangular.addRequestInterceptor(function(requestBody) {
+          expect(requestBody).to.deep.equal({
+            calendars: [
+              { userId: 'userId0', calendarId: 'userId0' },
+              { userId: 'userId0', calendarId: 'calendarId1' },
+              { userId: 'userId1', calendarId: 'calendarId2' }
+            ],
+            query: 'king'
+          });
+        });
+
+        this.calendarAPI.searchEvents({
+          calendars: [
+            { id: 'userId0', calendarHomeId: 'userId0' },
+            { id: 'calendarId1', calendarHomeId: 'userId0' },
+            {
+              id: 'calendarId3', calendarHomeId: 'userId0',
+              source: { id: 'calendarId2', calendarHomeId: 'userId1' }
+            }
+          ],
+          query: {
+            text: 'king'
           },
           offset: 0,
           limit: this.ELEMENTS_PER_REQUEST
