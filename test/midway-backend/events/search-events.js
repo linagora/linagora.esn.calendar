@@ -1,155 +1,52 @@
-const expect = require('chai').expect;
+const { expect } = require('chai');
 const request = require('supertest');
-const async = require('async');
 const fs = require('fs');
 
-describe('The Calendar events search API', function() {
-  let user;
+describe('POST /api/events/search', function() {
+  let user, helpers, models;
   const password = 'secret';
 
   beforeEach(function(done) {
-    const self = this;
+    helpers = this.helpers;
 
-    self.helpers.api.applyDomainDeployment('linagora_IT', function(err, models) {
+    helpers.api.applyDomainDeployment('linagora_IT', function(err, _models) {
       if (err) {
         return done(err);
       }
-      user = models.users[0];
-      self.models = models;
+      user = _models.users[0];
+      models = _models;
 
       done();
     });
   });
 
   beforeEach(function() {
-    const expressApp = require('../../../backend/webserver/application')(this.helpers.modules.current.deps);
+    const expressApp = require('../../../backend/webserver/application')(helpers.modules.current.deps);
 
-    expressApp.use('/api', this.helpers.modules.current.lib.api);
-    this.app = this.helpers.modules.getWebServer(expressApp);
+    expressApp.use('/api', helpers.modules.current.lib.api);
+    this.app = helpers.modules.getWebServer(expressApp);
   });
 
   afterEach(function(done) {
-    const self = this;
-
-    self.helpers.api.cleanDomainDeployment(self.models, () => done());
+    helpers.api.cleanDomainDeployment(models, () => done());
   });
 
-  describe('/api/calendars/:userId/:calendarId/events.json', function() {
-    let localpubsub, message, counter = 1;
-    let expectedResult = [];
-
-    const testBasicSearch = function(term, done) {
-      const self = this;
-
-      localpubsub.topic('events:event:add').publish(message);
-
-      this.helpers.api.loginAsUser(this.app, user.emails[0], password, function(err, requestAsMember) {
-        if (err) {
-          return done(err);
-        }
-
-        self.helpers.elasticsearch.checkDocumentsIndexed({ index: 'events.idx', type: 'events', ids: [`${message.userId}--${message.eventUid}`] }, function(err) {
-          if (err) {
-            return done(err);
-          }
-
-          const req = requestAsMember(request(self.app).get('/api/calendars/' + message.userId + '/' + message.calendarId + '/events.json'));
-
-          req.query({query: term}).expect(200).end(function(err, res) {
-            expect(err).to.not.exist;
-            expect(res.body).to.exist;
-
-            const result = res.body._embedded.events.map(item => item._links.self.href);
-
-            expect(result).to.shallowDeepEqual(expectedResult);
-            expect(result.length).to.equal(expectedResult.length);
-            done();
-          });
-        });
-      });
-    };
-
-    beforeEach(function() {
-      require('../../../backend/lib/search')(this.helpers.modules.current.deps).listen();
-    });
-
-    beforeEach(function(done) {
-      localpubsub = this.helpers.requireBackend('core/pubsub').local;
-      message = {
-        userId: user._id,
-        calendarId: 'myCalendar',
-        eventUid: 'event_' + counter++
-      };
-      message.ics = fs.readFileSync(__dirname + '/../fixtures/completeMeeting.ics').toString('utf8');
-
-      setTimeout(() => {
-        this.helpers.redis.publishConfiguration();
-      }, 200);
-      this.helpers.elasticsearch.saveTestConfiguration(this.helpers.callbacks.noError(done));
-    });
-
-    it('should return nothing with non matching string', function(done) {
-      expectedResult = [];
-
-      testBasicSearch.apply(this, ['anonmatchingstring', done]);
-    });
-
-    it('should return nothing with empty string', function(done) {
-      expectedResult = [];
-
-      testBasicSearch.apply(this, ['', done]);
-    });
-
-    it('should return event with matching summary', function(done) {
-      expectedResult = [`/calendars/${message.userId}/${message.calendarId}/${message.eventUid}.ics`];
-
-      testBasicSearch.apply(this, ['withuser012edi', done]);
-    });
-
-    it('should return event with matching description', function(done) {
-      expectedResult = [`/calendars/${message.userId}/${message.calendarId}/${message.eventUid}.ics`];
-
-      testBasicSearch.apply(this, ['Lunch', done]);
-    });
-
-    it('should return event with matching organizer', function(done) {
-      expectedResult = [`/calendars/${message.userId}/${message.calendarId}/${message.eventUid}.ics`];
-
-      testBasicSearch.apply(this, ['robert', done]);
-    });
-
-    it('should return event with matching attendees', function(done) {
-      const self = this;
-
-      const searchFunctions = ['first0', 'last1', 'user2', 'Edinson'].map(function(attendee) {
-        return function(callback) {
-          expectedResult = [`/calendars/${message.userId}/${message.calendarId}/${message.eventUid}.ics`];
-
-          testBasicSearch.apply(self, [attendee, callback]);
-        };
-      });
-
-      async.parallel(searchFunctions, done);
-    });
-  });
-
-  describe('/api/calendars/events/search', function() {
-    const calendarIds = ['user1997calendar1', 'user0publiccalendar1'];
+  const calendarIds = ['user1997calendar1', 'user0publiccalendar1'];
     let localpubsub, message, counter,
         expectedResults = [], mockRequestBody, mockRequestQuery, mockEvents;
 
     function testAdvancedSearch({ requestBody, requestQuery }, eventElasIds, done) {
-      this.helpers.api.loginAsUser(this.app, user.emails[0], password, (err, requestAsMember) => {
+      helpers.api.loginAsUser(this.app, user.emails[0], password, (err, requestAsMember) => {
         if (err) {
           return done(err);
         }
 
-        this.helpers.elasticsearch.checkDocumentsIndexed({ index: 'events.idx', type: 'events', ids: eventElasIds }, err => {
+        helpers.elasticsearch.checkDocumentsIndexed({ index: 'events.idx', type: 'events', ids: eventElasIds }, err => {
           if (err) {
             return done(err);
           }
 
-          const req = requestAsMember(request(this.app).post(`/api/calendars/events/search?offset=${requestQuery.offset}&limit=${requestQuery.limit}`));
+          const req = requestAsMember(request(this.app).post(`/api/events/search?offset=${requestQuery.offset}&limit=${requestQuery.limit}`));
 
           req.send(requestBody).expect(200).end(function(err, res) {
             expect(err).to.not.exist;
@@ -166,12 +63,12 @@ describe('The Calendar events search API', function() {
     }
 
     function testError400(requestBody, done) {
-      this.helpers.api.loginAsUser(this.app, user.emails[0], password, (err, requestAsMember) => {
+      helpers.api.loginAsUser(this.app, user.emails[0], password, (err, requestAsMember) => {
         if (err) {
           return done(err);
         }
 
-        const req = requestAsMember(request(this.app).post('/api/calendars/events/search'));
+        const req = requestAsMember(request(this.app).post('/api/events/search'));
 
         req.send(requestBody);
         req.expect(400, done);
@@ -238,7 +135,57 @@ describe('The Calendar events search API', function() {
     });
 
     beforeEach(function(done) {
-      this.helpers.elasticsearch.saveTestConfiguration(this.helpers.callbacks.noError(done));
+      helpers.elasticsearch.saveTestConfiguration(helpers.callbacks.noError(done));
+    });
+
+    it('should send 400 if the query sort key is invalid', function(done) {
+      helpers.api.loginAsUser(this.app, user.emails[0], password, (err, requestAsMember) => {
+        if (err) {
+          return done(err);
+        }
+
+        const req = requestAsMember(request(this.app).post('/api/events/search?sortKey=invalid'));
+
+        req
+          .send(mockRequestBody)
+          .expect(400)
+          .end((err, res) => {
+            expect(err).to.not.exist;
+            expect(res.body).to.deep.equal({
+              error: {
+                code: 400,
+                message: 'Bad Request',
+                details: 'Sort key is invalid. Valid values are: start, end.'
+              }
+            });
+            done();
+          });
+      });
+    });
+
+    it('should send 400 if the query sort key is invalid', function(done) {
+      helpers.api.loginAsUser(this.app, user.emails[0], password, (err, requestAsMember) => {
+        if (err) {
+          return done(err);
+        }
+
+        const req = requestAsMember(request(this.app).post('/api/events/search?sortKey=start&sortOrder=invalid'));
+
+        req
+          .send(mockRequestBody)
+          .expect(400)
+          .end((err, res) => {
+            expect(err).to.not.exist;
+            expect(res.body).to.deep.equal({
+              error: {
+                code: 400,
+                message: 'Bad Request',
+                details: 'Sort order is invalid. Valid values are: asc, desc.'
+              }
+            });
+            done();
+          });
+      });
     });
 
     it('should send 400 if the query field in the request body is not a string', function(done) {
@@ -258,7 +205,7 @@ describe('The Calendar events search API', function() {
     });
 
     it('should return an empty array with a non-matching query string', function(done) {
-      localpubsub = this.helpers.requireBackend('core/pubsub').local;
+      localpubsub = helpers.requireBackend('core/pubsub').local;
 
       expectedResults = [];
 
@@ -286,7 +233,7 @@ describe('The Calendar events search API', function() {
     });
 
     it('should return events with multiple matching fields', function(done) {
-      localpubsub = this.helpers.requireBackend('core/pubsub').local;
+      localpubsub = helpers.requireBackend('core/pubsub').local;
 
       const mockEventList = [mockEvents[0], mockEvents[1]];
       const eventElasIds = [];
@@ -303,7 +250,7 @@ describe('The Calendar events search API', function() {
     });
 
     it('should return only one event when limit is set to 1', function(done) {
-      localpubsub = this.helpers.requireBackend('core/pubsub').local;
+      localpubsub = helpers.requireBackend('core/pubsub').local;
 
       const mockEventList = [mockEvents[0], mockEvents[1]];
       const eventElasIds = [];
@@ -322,7 +269,7 @@ describe('The Calendar events search API', function() {
     });
 
     it('should return only one event when offset is set to the last one', function(done) {
-      localpubsub = this.helpers.requireBackend('core/pubsub').local;
+      localpubsub = helpers.requireBackend('core/pubsub').local;
 
       const mockEventList = [mockEvents[0], mockEvents[1]];
       const eventElasIds = [];
@@ -342,7 +289,7 @@ describe('The Calendar events search API', function() {
     });
 
     it('should return events when searching across multiple calendars', function(done) {
-      localpubsub = this.helpers.requireBackend('core/pubsub').local;
+      localpubsub = helpers.requireBackend('core/pubsub').local;
 
       const eventElasIds = [];
 
@@ -373,7 +320,7 @@ describe('The Calendar events search API', function() {
     });
 
     it('should return an empty array with a non-matching organizer', function(done) {
-      localpubsub = this.helpers.requireBackend('core/pubsub').local;
+      localpubsub = helpers.requireBackend('core/pubsub').local;
 
       expectedResults = [];
 
@@ -385,7 +332,7 @@ describe('The Calendar events search API', function() {
     });
 
     it('should return events with one matching organizer when searching across multiple calendars', function(done) {
-      localpubsub = this.helpers.requireBackend('core/pubsub').local;
+      localpubsub = helpers.requireBackend('core/pubsub').local;
 
       const eventElasIds = [];
 
@@ -417,7 +364,7 @@ describe('The Calendar events search API', function() {
     });
 
     it('should return events with multiple matching organizers when searching across multiple calendars', function(done) {
-      localpubsub = this.helpers.requireBackend('core/pubsub').local;
+      localpubsub = helpers.requireBackend('core/pubsub').local;
 
       const eventElasIds = [];
 
@@ -449,7 +396,7 @@ describe('The Calendar events search API', function() {
     });
 
     it('should return an empty array with a non-matching attendee', function(done) {
-      localpubsub = this.helpers.requireBackend('core/pubsub').local;
+      localpubsub = helpers.requireBackend('core/pubsub').local;
 
       expectedResults = [];
 
@@ -461,7 +408,7 @@ describe('The Calendar events search API', function() {
     });
 
     it('should return events with one matching attendee when searching across multiple calendars', function(done) {
-      localpubsub = this.helpers.requireBackend('core/pubsub').local;
+      localpubsub = helpers.requireBackend('core/pubsub').local;
 
       const eventElasIds = [];
 
@@ -493,7 +440,7 @@ describe('The Calendar events search API', function() {
     });
 
     it('should return events with multiple matching attendees when searching across multiple calendars', function(done) {
-      localpubsub = this.helpers.requireBackend('core/pubsub').local;
+      localpubsub = helpers.requireBackend('core/pubsub').local;
 
       const eventElasIds = [];
 
@@ -525,7 +472,7 @@ describe('The Calendar events search API', function() {
     });
 
     it('should return an empty array with a non-matching pair of organizer and attendee when searching across multiple calendars', function(done) {
-      localpubsub = this.helpers.requireBackend('core/pubsub').local;
+      localpubsub = helpers.requireBackend('core/pubsub').local;
 
       const eventElasIds = [];
 
@@ -558,7 +505,7 @@ describe('The Calendar events search API', function() {
     });
 
     it('should return events with matching organizers and attendees when searching across multiple calendars', function(done) {
-      localpubsub = this.helpers.requireBackend('core/pubsub').local;
+      localpubsub = helpers.requireBackend('core/pubsub').local;
 
       const eventElasIds = [];
 
@@ -591,7 +538,7 @@ describe('The Calendar events search API', function() {
     });
 
     it('should be able to search for events in calendars with the same calendarId but different userId', function(done) {
-      localpubsub = this.helpers.requireBackend('core/pubsub').local;
+      localpubsub = helpers.requireBackend('core/pubsub').local;
 
       mockEvents = [
         {
@@ -625,5 +572,4 @@ describe('The Calendar events search API', function() {
 
       testAdvancedSearch.bind(this)({ requestBody: mockRequestBody, requestQuery: mockRequestQuery }, eventElasIds, done);
     });
-  });
 });

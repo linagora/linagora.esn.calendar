@@ -130,57 +130,7 @@ Update the attendee participation to an event (used by links in invitation email
 
     HTTP/1.1 200 OK
 
-## GET /api/calendars/:calendarId/events.json
-
-Search for events in Elasticsearch
-
-**Request Parameters**
-
-- calendarId: The id of the calendar to query.
-
-**Request URL Parameters:**
-
-- query (string): a string to be found in the events properties
-- limit (int): maximum number of events to be returned
-- offset (int): start the list of returned events after skipping N members where N=offset
-
-**Status Codes:**
-
-- 200 OK.
-- 400 Bad Request. Invalid request parameters.
-- 401 Unauthorized. The current request does not contains any valid data to be used for authentication.
-- 500 Internal server error.
-
-
-**Request:**
-
-    GET /api/calendars/:calendarId/events.json?query=meeting
-    Host: localhost:8080
-
-**Response:**
-
-    HTTP/1.1 200 OK
-    {
-      "_links": {
-        "self": {
-          "href": "/api/calendars/events/search?query=meeting"
-        }
-      },
-      "_total_hits": 1,
-      "_embedded": {
-        "dav:item": [
-          {
-            "_links": {
-              "self": "/calendars/54be3c051ce82d2c223d96d7/events/17c39404-0a39-4f62-9d23-1b0a12f158f9.ics"
-            },
-            "etag": "\'6464fc058586fff85e3522de255c3e9f\'",
-            "data": [****events as jcal****]
-          }
-        ]
-      }
-    }
-
-## POST /api/calendars/search
+## POST /api/events/search
 
 Search for events in Elasticsearch with advanced options
 
@@ -200,6 +150,8 @@ Search for events in Elasticsearch with advanced options
 
 - limit (int): the maximum number of events to be returned
 - offset (int): the starting position to search from (skipping the first N events where N=offset)
+- sortKey (string): a way to arrange data based by key
+- sortOrder (string): a way to arrange data based on value or data type.
 
 **Status Codes:**
 
@@ -210,7 +162,7 @@ Search for events in Elasticsearch with advanced options
 
 **Request:**
 
-    POST /api/calendars/events/search?offset=0&limit=30
+    POST /api/events/search?offset=0&limit=30
     Host: localhost:8080
 
 **Response:**
@@ -219,7 +171,7 @@ Search for events in Elasticsearch with advanced options
     {
       "_links": {
         "self": {
-          "href": "/api/calendars/events/search?offset=0&limit=30"
+          "href": "/api/events/search?offset=0&limit=30"
         }
       },
       "_total_hits": 1,

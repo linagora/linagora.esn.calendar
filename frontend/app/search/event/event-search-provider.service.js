@@ -38,7 +38,9 @@
             var eventSearch = calendarService.listPersonalAndAcceptedDelegationCalendars(calendarHomeId)
               .then(function(calendars) {
                 if (!query.advanced || _.isEmpty(query.advanced) || !query.advanced.cal) {
-                  return $q.all(calendars.map(_.partial(_searchInSingleCalendar, options)));
+                  options.calendars = calendars;
+
+                  return _searchEvents(options);
                 }
 
                 switch (query.advanced.cal) {
@@ -60,9 +62,7 @@
                     });
                 }
 
-                options.userId = calendarHomeId;
-
-                return _searchEventsAdvanced(options);
+                return _searchEvents(options);
               });
 
             return eventSearch
@@ -71,25 +71,8 @@
               });
           };
 
-          function _searchInSingleCalendar(context, calendar) {
-            var calendarToSearch = calendar.source ? calendar.source : calendar;
-
-            return calEventService.searchEventsBasic(calendarHomeId, calendarToSearch.id, context)
-              .then(function(events) {
-                offset += events.length;
-
-                return events.map(function(event) {
-                  event.calendar = calendar;
-                  event.type = name;
-                  _injectEventPropertiesForDisplay(event);
-
-                  return event;
-                });
-              });
-          }
-
-          function _searchEventsAdvanced(options) {
-            return calEventService.searchEventsAdvanced(options)
+          function _searchEvents(options) {
+            return calEventService.searchEvents(options)
               .then(function(events) {
                 offset += events.length;
 

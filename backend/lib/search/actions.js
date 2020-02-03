@@ -17,7 +17,7 @@ module.exports = dependencies => {
     removeEventsFromIndex,
     searchNextEvent,
     searchEventsBasic,
-    searchEventsAdvanced
+    searchEvents
   };
 
   function addEventToIndexThroughPubsub(message) {
@@ -96,7 +96,7 @@ module.exports = dependencies => {
     return _searchEventsFromElasticsearch({ query, mustOccur, filterOccur }, callback);
   }
 
-  function searchEventsAdvanced(query) {
+  function searchEvents(query) {
     const filterOccur = _getAdvancedSearchFilters(query);
     const mustOccur = [_getMultiMatchQuery(query.search)];
 

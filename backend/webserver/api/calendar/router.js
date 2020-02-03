@@ -1,5 +1,3 @@
-'use strict';
-
 var express = require('express');
 
 module.exports = (dependencies, moduleName) => {
@@ -107,60 +105,6 @@ module.exports = (dependencies, moduleName) => {
     tokenMW.generateNewToken(),
     davMiddleware.getDavEndpoint,
     controller.changeParticipation);
-
-  /**
-   * @swagger
-   * /{userId}/{calendarId}/events.json:
-   *   get:
-   *     tags:
-   *       - Calendar
-   *     description: Searchs for events in Elasticsearch
-   *     parameters:
-   *       - $ref: "#/parameters/calendar_calendar_id"
-   *       - $ref: "#/parameters/calendar_sort_key"
-   *       - $ref: "#/parameters/cm_limit"
-   *       - $ref: "#/parameters/cm_offset"
-   *       - $ref: "#/parameters/cm_search"
-   *       - $ref: "#/parameters/calendar_sort_order"
-   *       - $ref: "#/parameters/calendar_user_id"
-   *     responses:
-   *       200:
-   *         $ref: "#/responses/calendar_events"
-   *       401:
-   *         $ref: "#/responses/cm_401"
-   *       500:
-   *         $ref: "#/responses/cm_500"
-   */
-  router.get('/:userId/:calendarId/events.json',
-    authorizationMW.requiresAPILogin,
-    calendarMW.checkUserParameter,
-    controller.searchEventsBasic);
-
-  /**
-   * @swagger
-   * /events/search:
-   *   post:
-   *     tags:
-   *       - Calendar
-   *     description: Search for events in Elasticsearch with advanced options
-   *     parameters:
-   *       - $ref: "#/parameters/calendar_advanced_event_search"
-   *       - $ref: "#/parameters/cm_limit"
-   *       - $ref: "#/parameters/cm_offset"
-   *     responses:
-   *       200:
-   *         $ref: "#/responses/calendar_events"
-   *       400:
-   *         $ref: "#/responses/cm_400"
-   *       401:
-   *         $ref: "#/responses/cm_401"
-   *       500:
-   *         $ref: "#/responses/cm_500"
-   */
-  router.post('/events/search',
-    authorizationMW.requiresAPILogin,
-    calendarMW.validateAdvancedSearchQuery,
-    controller.searchEventsAdvanced);
 
   return router;
 };

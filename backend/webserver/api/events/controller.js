@@ -1,16 +1,17 @@
-'use strict';
-
 const moment = require('moment');
+const getEventUidFromElasticsearchId = require('../../../lib/search/denormalize').getEventUidFromElasticsearchId;
 
 module.exports = function(dependencies) {
-  const i18n = dependencies('i18n'),
-        elasticsearchActions = require('../../../lib/search/actions')(dependencies),
-        calDavClient = require('../../../lib/caldav-client')(dependencies);
+  const i18n = dependencies('i18n');
+  const logger = dependencies('logger');
+  const elasticsearchActions = require('../../../lib/search/actions')(dependencies);
+  const calDavClient = require('../../../lib/caldav-client')(dependencies);
 
   return {
     getNextEvent,
     newEventInDefaultCalendar,
-    cancelNextEvent
+    cancelNextEvent,
+    search
   };
 
   /////
@@ -35,6 +36,65 @@ module.exports = function(dependencies) {
           start = require(`./locales/${locale}`)(dependencies)(req.body.when, locale);
 
     _calAction(calDavClient.createEventInDefaultCalendar(req.user, { summary, location, start }), res);
+  }
+
+  function search(req, res) {
+    const query = {
+      calendars: req.body.calendars,
+      search: req.body.query,
+      attendees: req.body.attendees,
+      organizers: req.body.organizers,
+      offset: req.query.offset,
+      limit: req.query.limit,
+      sortKey: req.query.sortKey,
+      sortOrder: req.query.sortOrder,
+      userId: req.user.id
+    };
+
+    return elasticsearchActions.searchEvents(query)
+      .then(result => ({
+        totalCount: result.total_count,
+        events: result.list.map(event => ({
+          path: calDavClient.getEventPath(event._source.userId, event._source.calendarId, getEventUidFromElasticsearchId(event._id)),
+          data: event._source
+        }))
+      }))
+      .then(searchResult => {
+        const events = searchResult.events.map(event => ({
+          _links: {
+            self: {
+              href: event.path
+            }
+          },
+          data: event.data
+        }));
+
+        res.header('X-ESN-Items-Count', searchResult.totalCount);
+        res.status(200).json({
+          _links: {
+            self: {
+              href: req.originalUrl
+            }
+          },
+          _total_hits: searchResult.totalCount,
+          _embedded: {
+            events
+          }
+        });
+      })
+      .catch(err => {
+        const details = 'Error while searching for events';
+
+        logger.error(details, err);
+
+        res.status(500).json({
+          error: {
+            code: 500,
+            message: 'Server Error',
+            details
+          }
+        });
+      });
   }
 
   function _ensureNoSearchError(res, callback) {

@@ -3,10 +3,11 @@
 const express = require('express');
 
 module.exports = (dependencies, moduleName) => {
-  const controller = require('./controller')(dependencies),
-        authorizationMW = dependencies('authorizationMW'),
-        moduleMW = dependencies('moduleMW'),
-        router = express.Router();
+  const controller = require('./controller')(dependencies);
+  const authorizationMW = dependencies('authorizationMW');
+  const moduleMW = dependencies('moduleMW');
+  const eventsMW = require('./middleware');
+  const router = express.Router();
 
   router.all('/*',
     authorizationMW.requiresAPILogin,
@@ -71,6 +72,35 @@ module.exports = (dependencies, moduleName) => {
    *         $ref: "#/responses/cm_500"
    */
   router.post('/', controller.newEventInDefaultCalendar);
+
+  /**
+   * @swagger
+   * /search:
+   *   post:
+   *     tags:
+   *       - Event
+   *     description: Search for events in Elasticsearch
+   *     parameters:
+   *       - $ref: "#/parameters/calendar_event_search"
+   *       - $ref: "#/parameters/cm_limit"
+   *       - $ref: "#/parameters/cm_offset"
+   *       - $ref: "#/parameters/calendar_event_sort_key"
+   *       - $ref: "#/parameters/calendar_event_sort_order"
+   *     responses:
+   *       200:
+   *         $ref: "#/responses/calendar_events"
+   *       400:
+   *         $ref: "#/responses/cm_400"
+   *       401:
+   *         $ref: "#/responses/cm_401"
+   *       500:
+   *         $ref: "#/responses/cm_500"
+   */
+  router.post('/search',
+    authorizationMW.requiresAPILogin,
+    eventsMW.validateSearchQuery,
+    eventsMW.validateSearchPayload,
+    controller.search);
 
   return router;
 };
