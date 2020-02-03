@@ -227,7 +227,7 @@ describe('The calendar Elasticsearch actions', function() {
     });
   });
 
-  describe('The searchEventsAdvanced function', function() {
+  describe('The searchEvents function', function() {
     var advancedQuery;
 
     beforeEach(function() {
@@ -251,7 +251,7 @@ describe('The calendar Elasticsearch actions', function() {
 
       defaultSort[searchConstants.DEFAULT_SORT_KEY] = { order: searchConstants.DEFAULT_SORT_ORDER };
 
-      elasticsearchActions.searchEventsAdvanced(advancedQuery);
+      elasticsearchActions.searchEvents(advancedQuery);
 
       expect(deps.elasticsearch.searchDocuments).to.have.been.calledWith(sinon.match({
         index: 'events.idx',
@@ -265,7 +265,7 @@ describe('The calendar Elasticsearch actions', function() {
     });
 
     it('should call elasticsearch.searchDocuments with correct calendars option', function() {
-      elasticsearchActions.searchEventsAdvanced(advancedQuery);
+      elasticsearchActions.searchEvents(advancedQuery);
 
       expect(deps.elasticsearch.searchDocuments).to.have.been.calledWith(sinon.match(parameters => {
         expect(parameters.body.query.bool.filter).to.contain({
@@ -285,7 +285,7 @@ describe('The calendar Elasticsearch actions', function() {
     it('should call elasticsearch.searchDocuments with correct parameters including organizers option', function() {
       advancedQuery.organizers = ['user1997@open-paas.org', 'user0@open-paas.org'];
 
-      elasticsearchActions.searchEventsAdvanced(advancedQuery);
+      elasticsearchActions.searchEvents(advancedQuery);
 
       expect(deps.elasticsearch.searchDocuments).to.have.been.calledWith(sinon.match(parameters => {
         expect(parameters.body.query.bool.filter).to.contain(
@@ -303,7 +303,7 @@ describe('The calendar Elasticsearch actions', function() {
     it('should call elasticsearch.searchDocuments with correct parameters including attendees option', function() {
       advancedQuery.attendees = ['user1@open-paas.org', 'user2@open-paas.org'];
 
-      elasticsearchActions.searchEventsAdvanced(advancedQuery);
+      elasticsearchActions.searchEvents(advancedQuery);
 
       expect(deps.elasticsearch.searchDocuments).to.have.been.calledWith(sinon.match(parameters => {
         expect(parameters.body.query.bool.must).to.include(
@@ -331,7 +331,7 @@ describe('The calendar Elasticsearch actions', function() {
         });
       };
 
-      elasticsearchActions.searchEventsAdvanced(advancedQuery).then(result => {
+      elasticsearchActions.searchEvents(advancedQuery).then(result => {
         expect(result.total_count).to.equal(total);
         expect(result.list).to.deep.equal(hits);
         done();
@@ -343,7 +343,7 @@ describe('The calendar Elasticsearch actions', function() {
         return callback(new Error());
       };
 
-      elasticsearchActions.searchEventsAdvanced(advancedQuery)
+      elasticsearchActions.searchEvents(advancedQuery)
         .then(() => done(new Error('should not occur')))
         .catch(err => {
           expect(err).to.exist;

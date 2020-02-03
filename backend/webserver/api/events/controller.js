@@ -51,7 +51,7 @@ module.exports = function(dependencies) {
       userId: req.user.id
     };
 
-    return elasticsearchActions.searchEventsAdvanced(query)
+    return elasticsearchActions.searchEvents(query)
       .then(result => ({
         totalCount: result.total_count,
         events: result.list.map(event => ({
