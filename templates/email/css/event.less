@@ -9,6 +9,7 @@
 @esn-linagora: #BE1F3A;
 @published-date: darken(@esn-primary-lesslight, 20%);
 @font-color: #333;
+@warning-background-color: #FFFAEA;
 
 body {
   background-color: @esn-fa;
@@ -120,6 +121,11 @@ body {
     }
   }
 
+  .warning-message {
+    background-color: @warning-background-color;
+    padding: 10px;
+  }
+
   table {
     border-collapse: collapse;
     width: 100%;
@@ -139,6 +145,7 @@ body {
   footer {
     margin-right: 3px;
     margin-top:10px;
+
     .footer {
       text-align: right;
     }
