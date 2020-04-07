@@ -104,6 +104,9 @@ html.mail
                 a.red(href=content.no) #{translate('No')}
 
       footer
+        .warning-message
+          p.small #{translate('Forwarding this invitation could allow any recipient to send a response to the organizer and be added to the guest list, or invite others regardless of their own invitation status, or to modify your RSVP.')}
+
         div.footer
           if (content.consultLink)
             a(href=content.consultLink) #{translate('More details...')}
