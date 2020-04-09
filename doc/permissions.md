@@ -215,7 +215,7 @@ Used to convert the sharees rights in JSON request for Sabre
 - 200 OK
 - 400 Bad Request. Invalid request body or parameters.
 - 401 Unauthorized. The current request does not contains any valid data to be used for authentication.
-- 404 Not Found. The calendar id parameter is not a community id.
+- 404 Not Found. The calendar id parameter is not a collaboration id.
 - 500 Internal server error.
 
 **Request:**

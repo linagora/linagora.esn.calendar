@@ -26,7 +26,7 @@ All data of Sabre is stored in MongoDB. For that we developed a specific class t
 
 ####  Provisioning from the ESN
 
-When Sabre starts, principals are automatically created out of ESN users, communities and projects.
+When Sabre starts, principals are automatically created from ESN users.
 
 To do this, it queries directly the ESN MongoDB instance and builds the principals out of the objects stored there. (cf `lib/DAVACL/PrincipalBackend/Mongo.php`).
 

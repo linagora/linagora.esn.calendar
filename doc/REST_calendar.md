@@ -12,7 +12,7 @@ Note: A new event message is created in the activity stream of the collaboration
 
 **Request URL Parameters:**
 
-- objectType: The type of collaboration (community, project)
+- objectType: The type of collaboration (project)
 - calendarId: The calendar id (must match with a collaboration object)
 
 **Request JSON Object:**
@@ -35,7 +35,7 @@ Note: A new event message is created in the activity stream of the collaboration
 - 201 Created.
 - 400 Bad Request. Invalid request body or parameters.
 - 401 Unauthorized. The current request does not contains any valid data to be used for authentication.
-- 404 Not Found. The calendar id parameter is not a community id.
+- 404 Not Found. The calendar id parameter is not a collaboration id.
 - 500 Internal server error.
 
 

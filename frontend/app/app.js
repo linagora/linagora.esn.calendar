@@ -9,7 +9,6 @@
     'esn.avatar',
     'esn.cache',
     'esn.calMoment',
-    'linagora.esn.community',
     'esn.configuration',
     'esn.core',
     'esn.form.helper',

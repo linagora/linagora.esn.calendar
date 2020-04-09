@@ -10,11 +10,10 @@
   *   calendar_collabortion_object_type:
   *     name: objectType
   *     in: path
-  *     description: The type of collaboration (community, project)
+  *     description: The type of collaboration (project)
   *     required: true
   *     type: string
   *     enum:
-  *       - community
   *       - project
   *   calendar_collaboration_id:
   *     name: collaboration
