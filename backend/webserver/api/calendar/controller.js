@@ -2,6 +2,7 @@ const request = require('request');
 const urljoin = require('url-join');
 const ICAL = require('@linagora/ical.js');
 const jcalHelper = require('../../../lib/helpers/jcal');
+const { promisify } = require('util');
 const MAX_TRY_NUMBER = 12;
 
 module.exports = dependencies => {
@@ -10,6 +11,9 @@ module.exports = dependencies => {
   const configHelpers = dependencies('helpers').config;
   const userModule = dependencies('user');
   const invitation = require('../../../lib/invitation')(dependencies);
+
+  const findUserByEmail = promisify(userModule.findByEmail);
+  const getBaseUrl = promisify(configHelpers.getBaseUrl);
 
   return {
     dispatchEvent,
@@ -88,34 +92,39 @@ module.exports = dependencies => {
     });
   }
 
-  function changeParticipationSuccess(res, vcalendar, req) {
-    const attendeeEmail = req.eventPayload.attendeeEmail;
+  function changeParticipationSuccess({req, res, vcalendar, modified}) {
+    const { attendeeEmail, organizerEmail } = req.eventPayload;
 
-    userModule.findByEmail(attendeeEmail, (err, found) => {
-      if (err) {
-        logger.error('Error while redirecting after participation change', err);
-        redirectToStaticErrorPage(req, res, { code: 500 });
-      } else if (!found) {
-        configHelpers.getBaseUrl(null, (err, baseUrl) => {
-          if (err) {
-            logger.error('Error while rendering event consultation page', err);
+    findUserByEmail(attendeeEmail)
+      .then(foundUser => {
+        if (foundUser) {
+          res.status(200).redirect('/#/calendar');
 
-            return redirectToStaticErrorPage(req, res, { code: 500 });
-          }
+          return modified && invitation.email.send(
+            foundUser,
+            organizerEmail,
+            'REPLY',
+            vcalendar.toString(),
+            foundUser.id
+          );
+        }
 
-          invitation.link.generateActionLinks(baseUrl, req.eventPayload).then(links => {
+        return getBaseUrl(null)
+          .then(baseUrl => invitation.link.generateActionLinks(baseUrl, req.eventPayload))
+          .then(links => {
             res.status(200).render('../event-consultation-app/index', {
               eventJSON: vcalendar.toJSON(),
-              attendeeEmail: attendeeEmail,
-              links: links,
+              attendeeEmail,
+              links,
               locale: req.getLocale()
             });
           });
-        });
-      } else {
-        res.status(200).redirect('/#/calendar');
-      }
-    });
+      })
+      .catch(error => {
+        logger.error('Error while post-processing participation change', error);
+
+        redirectToStaticErrorPage(req, res, { code: 500 });
+      });
   }
 
   function tryUpdateParticipation(url, ESNToken, res, req, numTry) {
@@ -145,6 +154,10 @@ module.exports = dependencies => {
         return redirectToStaticErrorPage(req, res, { code: 400 });
       }
 
+      if (attendees.every(attendee => attendee.getParameter('partstat') === action)) {
+        return changeParticipationSuccess({ req, res, vcalendar, modified: false });
+      }
+
       attendees.forEach(attendee => {
         attendee.setParameter('partstat', action);
       });
@@ -155,7 +168,7 @@ module.exports = dependencies => {
         } else if (err || response.statusCode < 200 || response.statusCode >= 300) {
           redirectToStaticErrorPage(req, res, { code: response && response.statusCode });
         } else {
-          changeParticipationSuccess(res, vcalendar, req);
+          changeParticipationSuccess({ req, res, vcalendar, modified: true });
         }
       });
     });

@@ -52,6 +52,7 @@ describe('The calendar controller', function() {
         eventPayload: {
           event: ics,
           calendarURI: 'events',
+          organizerEmail: 'johndow@open-paas.org',
           attendeeEmail: 'janedoe@open-paas.org',
           uid: vcalendar.getFirstSubcomponent('vevent').getFirstPropertyValue('uid'),
           action: 'ACCEPTED'
@@ -272,33 +273,20 @@ describe('The calendar controller', function() {
           controller.changeParticipation(req, res);
         });
 
-      });
-
-      describe('when the event participation change has successed', function() {
-        it('should redirect to /#/calendars if the user can be found', function(done) {
-          var user = {_id: 'userId'};
-
-          userModuleMock.findByEmail = sinon.spy(function(email, callback) {
-            expect(email).to.equal(req.eventPayload.attendeeEmail);
-            callback(null, user);
-          });
-
-          callbackAfterGetDone = function() {
-            requestMock = function(options, callback) {
-              return callback(null, {statusCode: 200});
-            };
-            mockery.registerMock('request', requestMock);
+        it('should not send PUT request if attendee participation status had been already set to target value', function(done) {
+          req.eventPayload.attendeeEmail = 'babydoe@open-paas.org';
+          callbackAfterGetDone = () => {
+            requestMock = () => done(new Error('should not call request a second time'));
           };
 
-          var controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
-          var res = {
-            status: function(status) {
+          const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
+          const res = {
+            status: status => {
               expect(status).to.equal(200);
 
               return {
-                redirect: function(url) {
-                  expect(url).to.equal('/#/calendar');
-                  expect(userModuleMock.findByEmail).to.have.been.called;
+                render: page => {
+                  expect(page).to.equal('../event-consultation-app/index');
                   done();
                 }
               };
@@ -306,6 +294,72 @@ describe('The calendar controller', function() {
           };
 
           controller.changeParticipation(req, res);
+        });
+      });
+
+      describe('when the event participation change has successed', function() {
+        describe('if user is found', function() {
+          beforeEach(function() {
+            userModuleMock.findByEmail = (email, callback) => callback(null, { id: 'userId' });
+            callbackAfterGetDone = () => {
+              requestMock = (options, callback) => callback(null, {statusCode: 200});
+              mockery.registerMock('request', requestMock);
+            };
+          });
+
+          it('should redirect to /#/calendars', function(done) {
+            const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
+            const res = {
+              status: status => {
+                expect(status).to.equal(200);
+
+                return {
+                  redirect: url => {
+                    try {
+                      expect(url).to.equal('/#/calendar');
+                      done();
+                    } catch (error) {
+                      done(error);
+                    }
+                  }
+                };
+              }
+            };
+
+            controller.changeParticipation(req, res);
+          });
+
+          it('should not send notification message to organizer if event is not modified', function(done) {
+            req.eventPayload.attendeeEmail = 'babydoe@open-paas.org';
+
+            const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
+            const res = {
+              status: () => ({ redirect: () => process.nextTick(() => {
+                expect(sendMailSpy).to.not.have.been.called;
+                done();
+              })})
+            };
+
+            controller.changeParticipation(req, res);
+          });
+
+          it('should send notification message to organizer if event is modified', function(done) {
+            const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
+            const res = {
+              status: () => ({ redirect: () => process.nextTick(() => {
+                expect(sendMailSpy).to.have.been.calledWith(
+                  { id: 'userId' },
+                  req.eventPayload.organizerEmail,
+                  'REPLY',
+                  sinon.match.string,
+                  'userId'
+                );
+                done();
+              })})
+            };
+
+            controller.changeParticipation(req, res);
+          });
         });
 
         describe('if the user cannot be found', function() {
@@ -420,7 +474,7 @@ describe('The calendar controller', function() {
       });
 
       it('should work even if the attendee does not exist in the vevent but does in a subinstance of the event', function(done) {
-        var req = {
+        const req = {
           eventPayload: {
             calendarURI: 'uri',
             attendeeEmail: 'lduzan@linagora.com',
@@ -429,13 +483,20 @@ describe('The calendar controller', function() {
           user: {
             _id: 'c3po'
           },
-          davserver: 'davserver'
+          davserver: 'davserver',
+          getLocale: () => ''
         };
 
-        var res = {
-          status: function(status) {
+        const res = {
+          status: status => {
             expect(status).to.equal(200);
-            done();
+
+            return {
+              render: page => {
+                expect(page).to.equal('../event-consultation-app/index');
+                done();
+              }
+            };
           }
         };
 
