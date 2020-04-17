@@ -8,7 +8,7 @@ var q = require('q');
 var sinon = require('sinon');
 
 describe('The calendar controller', function() {
-  var userModuleMock, invitationMock, helpers, self, sendMailSpy;
+  var userModuleMock, invitationMock, calendarMock, helpers, self, sendMailSpy;
 
   beforeEach(function() {
     self = this;
@@ -18,7 +18,9 @@ describe('The calendar controller', function() {
         getBaseUrl: function(user, callback) { callback(null, 'baseUrl'); }
       }
     };
-    mockery.registerMock('./core', () => {});
+
+    calendarMock = {};
+    mockery.registerMock('./core', () => calendarMock);
     sendMailSpy = sinon.stub().returns(Promise.resolve());
     invitationMock = {
       email: {
@@ -39,6 +41,223 @@ describe('The calendar controller', function() {
     };
     this.moduleHelpers.addDep('user', userModuleMock);
     this.calendarModulePath = this.moduleHelpers.modulePath;
+  });
+
+  describe('The dispatchEvent function', function() {
+    let controller, req, result;
+
+    beforeEach(function() {
+      result = {
+        _id: '1',
+        objectType: 'a1'
+      };
+
+      req = {
+        user: 'a',
+        collaboration: 'b',
+        body: {
+          type: 'created',
+          event_id: 'c'
+        }
+      };
+
+      calendarMock.dispatch = (data, callback) => callback(null, result);
+      controller = require(`${this.moduleHelpers.backendPath}/webserver/api/calendar/controller`)(this.moduleHelpers.dependencies);
+    });
+
+    it('should respond 400 if not have user', function(done) {
+      delete req.user;
+
+      const res = {
+        status(code) {
+          try {
+            expect(code).to.equal(400);
+
+            return {
+              json: response => {
+                expect(response).to.deep.equal({
+                  error: {
+                    code: 400,
+                    message: 'Bad Request',
+                    details: 'You must be logged in to access this resource'
+                  }
+                });
+
+                done();
+              }
+            };
+          } catch (error) {
+            done(error);
+          }
+        }
+      };
+
+      controller.dispatchEvent(req, res);
+    });
+
+    it('should respond 400 if not have collaboration', function(done) {
+      delete req.collaboration;
+
+      const res = {
+        status(code) {
+          try {
+            expect(code).to.equal(400);
+
+            return {
+              json: response => {
+                expect(response).to.deep.equal({
+                  error: {
+                    code: 400,
+                    message: 'Bad Request',
+                    details: 'Collaboration id is missing'
+                  }
+                });
+
+                done();
+              }
+            };
+          } catch (error) {
+            done(error);
+          }
+        }
+      };
+
+      controller.dispatchEvent(req, res);
+    });
+
+    it('should respond 400 if not have event id', function(done) {
+      delete req.body.event_id;
+
+      const res = {
+        status(code) {
+          try {
+            expect(code).to.equal(400);
+
+            return {
+              json: response => {
+                expect(response).to.deep.equal({
+                  error: {
+                    code: 400,
+                    message: 'Bad Request',
+                    details: 'Event id is missing'
+                  }
+                });
+
+                done();
+              }
+            };
+          } catch (error) {
+            done(error);
+          }
+        }
+      };
+
+      controller.dispatchEvent(req, res);
+    });
+
+    it('should respond 500 if failed to dispatch calendar', function(done) {
+      calendarMock.dispatch = (data, callback) => callback(new Error('Something wrong'));
+      const res = {
+        status(code) {
+          try {
+            expect(code).to.equal(500);
+
+            return {
+              json: response => {
+                expect(response).to.deep.equal({
+                  error: {
+                    code: 500,
+                    message: 'Event creation error',
+                    details: 'Something wrong'
+                  }
+                });
+
+                done();
+              }
+            };
+          } catch (error) {
+            done(error);
+          }
+        }
+      };
+
+      controller.dispatchEvent(req, res);
+    });
+
+    it('should respond 403 if dispatch calendar result is null', function(done) {
+      calendarMock.dispatch = (data, callback) => callback(null, null);
+      const res = {
+        status(code) {
+          try {
+            expect(code).to.equal(403);
+
+            return {
+              json: response => {
+                expect(response).to.deep.equal({
+                  error: {
+                    code: 403,
+                    message: 'Forbidden',
+                    details: 'You may not create the calendar event'
+                  }
+                });
+
+                done();
+              }
+            };
+          } catch (error) {
+            done(error);
+          }
+        }
+      };
+
+      controller.dispatchEvent(req, res);
+    });
+
+    it('should respond 201 if successfully creates a calendar event', function(done) {
+      const res = {
+        status(code) {
+          try {
+            expect(code).to.equal(201);
+
+            return {
+              json: response => {
+                expect(response).to.deep.equal(result);
+
+                done();
+              }
+            };
+          } catch (error) {
+            done(error);
+          }
+        }
+      };
+
+      controller.dispatchEvent(req, res);
+    });
+
+    it('should respond 200 if successfully creates a calendar event', function(done) {
+      req.body.type = 'others';
+
+      const res = {
+        status(code) {
+          try {
+            expect(code).to.equal(200);
+
+            return {
+              json: response => {
+                expect(response).to.deep.equal(result);
+
+                done();
+              }
+            };
+          } catch (error) {
+            done(error);
+          }
+        }
+      };
+
+      controller.dispatchEvent(req, res);
+    });
   });
 
   describe('the changeParticipation function', function() {

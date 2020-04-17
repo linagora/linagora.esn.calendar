@@ -97,7 +97,7 @@ module.exports = dependencies => {
    * The callback result is false if there was a permission issue. Otherwise it
    * is an object with the event message data created or updated.
    *
-   * @param {object} data         The data which contain the user, the community
+   * @param {object} data         The data which contain the user, the collaboration
    *                                and the event
    * @param {function} callback   Callback function for results: function(err, result)
    */
