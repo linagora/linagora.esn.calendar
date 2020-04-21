@@ -5,9 +5,16 @@ fieldset
       calendar-search-form-dropdown(calendars="$ctrl.calendars", selected-cal="$ctrl.query.advanced.cal")
 
   .form-group.flex-form-group.full-width
-    .field-name.field-label #{__('Keywords')}
+    .field-name.field-label #{__('Keywords')}*
     .fg-line
-      input.input.form-control(type='text', ng-model="$ctrl.query.advanced.contains", autoclose="1", placeholder="{{ 'Keywords contained in events' | esnI18n }}")
+      input.input.form-control(
+        type='text',
+        ng-model="$ctrl.query.advanced.contains",
+        autoclose="1",
+        placeholder="{{ 'Keywords contained in events' | esnI18n }}",
+        auto-focus=true,
+        required
+      )
 
   .form-group.flex-form-group.full-width
     .field-name.field-label #{__('Organizers')}
