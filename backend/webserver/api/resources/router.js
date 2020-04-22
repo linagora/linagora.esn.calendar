@@ -16,7 +16,7 @@ module.exports = (dependencies, moduleName) => {
   /**
    * @swagger
    * /:resourceId/:eventId/participation:
-   *   put:
+   *   get:
    *     tags:
    *       - Resource
    *     description: Update participation status of a specific resource
@@ -38,7 +38,7 @@ module.exports = (dependencies, moduleName) => {
    *       500:
    *         $ref: "#/responses/cm_500"
    */
-  router.put('/:resourceId/:eventId/participation',
+  router.get('/:resourceId/:eventId/participation',
     resourceMW.requiresStatusQueryParameter,
     resourceMW.load,
     resourceMW.requiresCurrentUserAsAdministrator,
