@@ -86,7 +86,7 @@ module.exports = function(config) {
       { pattern: 'frontend/images/*.*', watched: false, included: false, served: true },
       { pattern: 'frontend/components/mdi/fonts/*.*', watched: false, included: false, served: true },
 
-      'node_modules/linagora-rse/test/fixtures/**/*.js',
+      'node_modules/linagora-rse/test/fixtures/code-generation/**/*.js',
       'node_modules/linagora-rse/frontend/js/modules/**/*.module.js',
       'node_modules/linagora-rse/frontend/js/modules/**/*.js',
       'node_modules/linagora-rse/frontend/views/modules/**/*.pug',
