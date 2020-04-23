@@ -172,6 +172,16 @@ module.exports = function(grunt) {
           'modules/*/backend/webserver/**/*.js'
         ]
       }
+    },
+
+    swagger_checker: {
+      options: {
+        path: './doc/swagger/calendar-swagger.json',
+        validate: {
+          schema: true,
+          spec: false
+        }
+      }
     }
   });
 
@@ -193,6 +203,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-puglint');
   grunt.loadNpmTasks('grunt-swagger-generate');
   grunt.loadNpmTasks('grunt-release');
+  grunt.loadNpmTasks('grunt-swagger-checker');
 
   grunt.loadTasks('tasks');
   grunt.registerTask('i18n', 'Check the translation files', ['i18n_checker']);
@@ -204,6 +215,7 @@ module.exports = function(grunt) {
   grunt.registerTask('test-frontend', 'Test frontend code', ['karma:unit']);
 
   grunt.registerTask('swagger-generate', 'Grunt plugin for swagger generate', ['swagger_generate']);
+  grunt.registerTask('swagger-validate', ['swagger_checker']);
 
   grunt.registerTask('test', ['linters', 'test-frontend', 'test-unit-backend', 'test-midway-backend']);
   grunt.registerTask('default', ['test']);
