@@ -8,18 +8,20 @@
   *     required: true
   *     schema:
   *       $ref: "#/definitions/cm_date"
-  *   calendar_event_summany:
-  *     name: summany
+  *   calendar_event_summary:
+  *     name: summary
   *     in: body
-  *     description: summany of new event.
+  *     description: summary of new event.
   *     required: true
-  *     type: string
+  *     schema:
+  *       type: string
   *   calendar_event_location:
   *     name: location
   *     in: body
   *     description: location of new event.
   *     required: true
-  *     type: string
+  *     schema:
+  *       type: string
   *   calendar_event_id:
   *     name: eventId
   *     description: Identity of an event
