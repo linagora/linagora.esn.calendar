@@ -13,7 +13,7 @@ module.exports = (dependencies, moduleName) => {
 
   /**
    * @swagger
-   * /{objectType}/{id}/events :
+   * /{objectType}/{calendarId}/events :
    *   post:
    *     tags:
    *       - Calendar

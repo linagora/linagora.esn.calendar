@@ -120,6 +120,7 @@ swagger:
   stage: swagger
   script:
     - ./node_modules/.bin/grunt swagger-generate
+    - ./node_modules/.bin/grunt swagger-validate
   artifacts:
     paths:
       - ./doc/swagger/calendar-swagger.json

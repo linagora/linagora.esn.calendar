@@ -61,7 +61,7 @@ module.exports = (dependencies, moduleName) => {
    *     description: creates new event in default calendar.
    *     parameters:
    *       - $ref: "#/parameters/calendar_event_when"
-   *       - $ref: "#/parameters/calendar_event_summany"
+   *       - $ref: "#/parameters/calendar_event_summary"
    *       - $ref: "#/parameters/calendar_event_location"
    *     responses:
    *       200:
