@@ -79,7 +79,7 @@
     "karma-phantomjs-launcher": "1.0.4",
     "karma-rawfixtures-preprocessor": "linagora/karma-rawfixtures-preprocessor",
     "karma-spec-reporter": "0.0.26",
-    "linagora-rse": "linagora/openpaas-esn",
+    "linagora-rse": "linagora/openpaas-esn#release-1.7.x",
     "linagora.esn.resource": "linagora/linagora.esn.resource",
     "mocha": "6.2.0",
     "mockery": "1.7.0",

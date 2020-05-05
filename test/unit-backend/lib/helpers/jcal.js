@@ -25,7 +25,7 @@ describe('The jcal helper module', function() {
       var ics = fs.readFileSync(this.calendarModulePath + '/test/unit-backend/fixtures/meeting.ics').toString('utf8');
       var vcalendar = icaljs.Component.fromString(ics).toJSON();
 
-      expect(this.jcalHelper.getAttendeesEmails(vcalendar)).to.deep.equal(['johndoe@open-paas.org', 'janedoe@open-paas.org']);
+      expect(this.jcalHelper.getAttendeesEmails(vcalendar)).to.deep.equal(['johndoe@open-paas.org', 'janedoe@open-paas.org', 'babydoe@open-paas.org']);
     });
   });
 
@@ -133,6 +133,10 @@ return this.jcalHelper.getVAlarmAsObject(valarm, vevent.getFirstProperty('dtstar
         attendees: {
           'johndoe@open-paas.org': {
             cn: 'John Doe',
+            partstat: 'ACCEPTED'
+          },
+          'babydoe@open-paas.org': {
+            cn: 'Baby Doe',
             partstat: 'ACCEPTED'
           },
           'janedoe@open-paas.org': {

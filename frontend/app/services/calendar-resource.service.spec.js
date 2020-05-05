@@ -27,7 +27,7 @@ describe('The calResourceService service', function() {
 
   describe('The acceptResourceReservation function', function() {
     it('should call the API correctly', function() {
-      $httpBackend.expect('PUT', '/calendar/api/resources/' + resourceId + '/' + eventId + '/participation?status=ACCEPTED').respond({});
+      $httpBackend.expect('GET', '/calendar/api/resources/' + resourceId + '/' + eventId + '/participation?status=ACCEPTED').respond({});
 
       calResourceService.acceptResourceReservation(resourceId, eventId);
 
@@ -37,7 +37,7 @@ describe('The calResourceService service', function() {
 
   describe('The declineResourceReservation function', function() {
     it('should call the API correctly', function() {
-      $httpBackend.expect('PUT', '/calendar/api/resources/' + resourceId + '/' + eventId + '/participation?status=DECLINED').respond({});
+      $httpBackend.expect('GET', '/calendar/api/resources/' + resourceId + '/' + eventId + '/participation?status=DECLINED').respond({});
 
       calResourceService.declineResourceReservation(resourceId, eventId);
 
