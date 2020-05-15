@@ -1,5 +1,3 @@
-'use strict';
-
 const {expect} = require('chai');
 const mockery = require('mockery');
 const fs = require('fs');
@@ -8,7 +6,8 @@ const ICAL = require('@linagora/ical.js');
 const CONSTANTS = require('../../../../backend/lib/constants');
 
 describe('The alarm module', function() {
-  let alarms, eventUid, notifyFunctions, amqpClientProviderMock, amqpClient, attendeeEmail, eventPath, alarmDB, jobLib, jobQueue, pubsubMock, nodeEnv;
+  let alarms, eventUid, notifyFunctions, amqpClientProviderMock, amqpClient, attendeeEmail, eventPath, alarmDB, jobLib, jobQueue, nodeEnv;
+  let pointToPointMock, ackMock;
 
   beforeEach(function() {
     this.calendarModulePath = this.moduleHelpers.modulePath;
@@ -46,28 +45,22 @@ describe('The alarm module', function() {
       getClient: () => Promise.resolve(amqpClient)
     };
 
-    pubsubMock = {
-      local: {
-        topic: function() {
-          return {
-            forward: function() {}
-          };
-        }
-      },
-      global: {
-        topic: topic => {
-          pubsubMock.global.currentTopic = topic;
+    pointToPointMock = {
+      get: topic => {
+        pointToPointMock.currentTopic = topic;
 
-          return pubsubMock.global;
-        },
-        subscribe: sinon.spy(notifyFn => {
-          notifyFunctions[pubsubMock.global.currentTopic] = notifyFn;
-        })
-      }
+        return pointToPointMock;
+      },
+      receive: sinon.spy(notifyFn => {
+        notifyFunctions[pointToPointMock.currentTopic] = notifyFn;
+      })
     };
+    ackMock = sinon.spy();
 
     this.moduleHelpers.addDep('amqpClientProvider', amqpClientProviderMock);
-    this.moduleHelpers.addDep('pubsub', pubsubMock);
+    this.moduleHelpers.addDep('messaging', {
+      pointToPoint: pointToPointMock
+    });
 
     mockery.registerMock('./handlers/email', function() {return {handle: function() {}, uniqueId: 'foo.bar.baz', action: 'EMAIL'};});
 
@@ -98,12 +91,14 @@ describe('The alarm module', function() {
         return true;
       })
     );
+    expect(ackMock).to.have.been.calledOnce;
 
     done && done();
   }
 
   function checkAlarmNotCreated(done) {
     expect(alarmDB.create).to.not.have.been.called;
+    expect(ackMock).to.have.been.calledOnce;
     done && done();
   }
 
@@ -114,7 +109,7 @@ describe('The alarm module', function() {
       module.init()
         .then(() => {
           expect(module.init).to.throw(/Already initialized/);
-          expect(pubsubMock.global.subscribe.callCount).to.equals(5);
+          expect(pointToPointMock.receive.callCount).to.equals(5);
           done();
         })
         .catch(done);
@@ -151,9 +146,10 @@ describe('The alarm module', function() {
           .catch(done);
 
         function test() {
-          return notifyFunctions[CONSTANTS.EVENTS.ALARM.DELETED]({eventPath})
+          return notifyFunctions[CONSTANTS.EVENTS.ALARM.DELETED]({eventPath}, { ack: ackMock })
             .then(() => {
               expect(alarmDB.remove).to.have.been.calledWith({eventPath});
+              expect(ackMock).to.have.been.calledOnce;
               done();
             });
         }
@@ -167,11 +163,12 @@ describe('The alarm module', function() {
         this.requireModule().init().then(test).catch(done);
 
         function test() {
-          return notifyFunctions[CONSTANTS.EVENTS.ALARM.DELETED]({eventPath})
+          return notifyFunctions[CONSTANTS.EVENTS.ALARM.DELETED]({eventPath}, { ack: ackMock })
             .then(() => done(new Error('Should not occur')))
             .catch(err => {
               expect(err).to.equal(error);
               expect(alarmDB.remove).to.have.been.calledWith({eventPath});
+              expect(ackMock).to.not.have.been.called;
               done();
             });
         }
@@ -188,7 +185,7 @@ describe('The alarm module', function() {
           return notifyFunctions[CONSTANTS.EVENTS.ALARM.CREATED]({
             eventPath,
             event: self.getEventAsJSON('withVALARM')
-          })
+          }, { ack: ackMock })
           .then(() => checkAlarmCreated(done));
         }
       });
@@ -202,7 +199,7 @@ describe('The alarm module', function() {
           return notifyFunctions[CONSTANTS.EVENTS.ALARM.CREATED]({
             eventPath,
             event: self.getEventAsJSON('withVALARMInPast')
-          })
+          }, { ack: ackMock })
           .then(() => checkAlarmNotCreated(done));
         }
       });
@@ -218,7 +215,7 @@ describe('The alarm module', function() {
           return notifyFunctions[CONSTANTS.EVENTS.ALARM.CREATED]({
             eventPath,
             event: self.getEventAsJSON('withVALARMInPast')
-          })
+          }, { ack: ackMock })
           .then(() => checkAlarmCreated(done));
         }
       });
@@ -232,7 +229,7 @@ describe('The alarm module', function() {
           return notifyFunctions[CONSTANTS.EVENTS.ALARM.CREATED]({
             eventPath,
             event: self.getEventAsJSON('allday')
-          })
+          }, { ack: ackMock })
           .then(() => {
             expect(alarmDB.create).to.not.have.been.called;
             done();
@@ -249,7 +246,7 @@ describe('The alarm module', function() {
           return notifyFunctions[CONSTANTS.EVENTS.ALARM.CREATED]({
             eventPath,
             event: self.getEventAsJSON('withVALARMandRRULE')
-          }).then(() => {
+          }, { ack: ackMock }).then(() => {
             expect(alarmDB.create).to.have.been.called.twice;
             checkAlarmCreated(done);
           });
@@ -265,7 +262,7 @@ describe('The alarm module', function() {
           return notifyFunctions[CONSTANTS.EVENTS.ALARM.CREATED]({
             eventPath,
             event: self.getEventAsJSON('with2VALARMs')
-          }).then(() => {
+          }, { ack: ackMock }).then(() => {
             expect(alarmDB.create).to.have.been.called.twice;
             expect(alarmDB.create).to.have.been.calledWithMatch({
               action: 'EMAIL',
@@ -278,6 +275,7 @@ describe('The alarm module', function() {
               eventUid,
               eventPath
             });
+            expect(ackMock).to.have.been.calledOnce;
             done();
           });
         }
@@ -295,7 +293,7 @@ describe('The alarm module', function() {
             eventPath,
             event: self.getEventAsJSON('withVALARM'),
             old_event: self.getEventAsJSON('allday')
-          }).then(() => {
+          }, { ack: ackMock }).then(() => {
             expect(alarmDB.remove).to.have.been.calledWith({eventPath, state: CONSTANTS.ALARM.STATE.WAITING});
             checkAlarmCreated();
             done();
@@ -316,12 +314,13 @@ describe('The alarm module', function() {
             eventPath,
             event: ics,
             old_event: ics
-          }).then(() => {
+          }, { ack: ackMock }).then(() => {
             done(new Error('Should not occur'));
           }).catch(err => {
             expect(err).to.equal(error);
             expect(alarmDB.remove).to.have.been.calledWith({ eventPath, state: CONSTANTS.ALARM.STATE.WAITING });
             expect(alarmDB.create).to.not.have.been.called;
+            expect(ackMock).to.not.have.been.called;
             done();
           });
         }
@@ -337,7 +336,7 @@ describe('The alarm module', function() {
             eventPath,
             event: ics,
             old_event: ics
-          }).then(() => {
+          }, { ack: ackMock }).then(() => {
             expect(alarmDB.remove).to.have.been.called;
             checkAlarmCreated(done);
           });
@@ -354,7 +353,7 @@ describe('The alarm module', function() {
             eventPath,
             event: self.getEventAsJSON('withVALARMandRRULE'),
             old_event: self.getEventAsJSON('allday')
-          }).then(() => {
+          }, { ack: ackMock }).then(() => {
             expect(alarmDB.remove).to.have.been.calledWith({ eventPath, state: CONSTANTS.ALARM.STATE.WAITING });
             checkAlarmCreated(done);
           });
