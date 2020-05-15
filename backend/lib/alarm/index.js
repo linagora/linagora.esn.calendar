@@ -9,7 +9,7 @@ let initialized = false;
 module.exports = dependencies => {
   const amqpClientProvider = dependencies('amqpClientProvider');
   const logger = dependencies('logger');
-  const pubsub = dependencies('pubsub');
+  const { pointToPoint: pointToPointMessaging } = dependencies('messaging');
   const db = require('./db')(dependencies);
   const handlers = require('./handlers')(dependencies);
   const cronjob = require('./cronjob')(dependencies);
@@ -36,19 +36,19 @@ module.exports = dependencies => {
   }
 
   function initListeners() {
-    pubsub.global.topic(CONSTANTS.EVENTS.ALARM.CANCEL).subscribe(messageHandler(onDelete));
-    pubsub.global.topic(CONSTANTS.EVENTS.ALARM.CREATED).subscribe(messageHandler(onCreate));
-    pubsub.global.topic(CONSTANTS.EVENTS.ALARM.DELETED).subscribe(messageHandler(onDelete));
-    pubsub.global.topic(CONSTANTS.EVENTS.ALARM.REQUEST).subscribe(messageHandler(onUpdate));
-    pubsub.global.topic(CONSTANTS.EVENTS.ALARM.UPDATED).subscribe(messageHandler(onUpdate));
+    pointToPointMessaging.get(CONSTANTS.EVENTS.ALARM.CANCEL).receive(messageHandler(onDelete));
+    pointToPointMessaging.get(CONSTANTS.EVENTS.ALARM.CREATED).receive(messageHandler(onCreate));
+    pointToPointMessaging.get(CONSTANTS.EVENTS.ALARM.DELETED).receive(messageHandler(onDelete));
+    pointToPointMessaging.get(CONSTANTS.EVENTS.ALARM.REQUEST).receive(messageHandler(onUpdate));
+    pointToPointMessaging.get(CONSTANTS.EVENTS.ALARM.UPDATED).receive(messageHandler(onUpdate));
 
     return Q.when(true);
 
     function messageHandler(handler) {
-      return function(jsonMessage, originalMessage) {
+      return function(jsonMessage, { ack } = {}) {
         return handler(jsonMessage)
           .then(amqpClientProvider.getClient)
-          .then(amqpClient => amqpClient.ack(originalMessage))
+          .then(() => typeof ack === 'function' && ack())
           .catch(err => {
             logger.error('calendar:alarm:init - Fail to process AMQP message', err);
             throw err;
