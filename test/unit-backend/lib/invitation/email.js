@@ -269,7 +269,7 @@ describe('The invitation email module', function() {
         this.module.send(organizer, emailAttendeeNotInvited, 'REQUEST', ics, 'calendarURI')
           .then(() => done())
           .catch(err => {
-            expect(err.message).to.match(/The user is not involved in the event/);
+            expect(err.message).to.match(/The attendee is not involved in the event/);
             expect(sendHTML).to.not.have.been.called;
             done();
           });

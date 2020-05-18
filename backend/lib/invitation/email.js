@@ -19,8 +19,8 @@ module.exports = dependencies => {
     send
   };
 
-  function send(user, attendeeEmail, method, ics, calendarURI, eventPath, domain, newEvent) {
-    if (!user || !user.domains || !user.domains.length) {
+  function send(sender, attendeeEmail, method, ics, calendarURI, eventPath, domain, newEvent) {
+    if (!sender || !sender.domains || !sender.domains.length) {
       return Promise.reject(new Error('User must be an User object'));
     }
 
@@ -36,10 +36,10 @@ module.exports = dependencies => {
       return Promise.reject(new Error('The ics is required'));
     }
 
-    const mailer = emailModule.getMailer(user);
+    const mailer = emailModule.getMailer(sender);
 
     return Promise.all([
-      Q.nfbind(configHelpers.getBaseUrl)(user),
+      Q.nfbind(configHelpers.getBaseUrl)(sender),
       Q.nfbind(userModule.findByEmail)(attendeeEmail),
       eventPath ? linksHelper.getEventDetails(eventPath) : Promise.resolve(false),
       linksHelper.getEventInCalendar(ics)
@@ -48,7 +48,7 @@ module.exports = dependencies => {
       const [, attendeeAsUser] = result;
       const emailContentOverrides = {};
 
-      return processors.process(method, { attendeeEmail, attendeeAsUser, ics, user, domain, emailContentOverrides })
+      return processors.process(method, { attendeeEmail, attendeeAsUser, ics, user: sender, domain, emailContentOverrides })
         .then(({ ics, emailContentOverrides }) => ({ result, ics, emailContentOverrides }))
         .catch(() => ({ result, ics, emailContentOverrides }));
     })
@@ -57,41 +57,34 @@ module.exports = dependencies => {
       const attendeePreferedEmail = attendee ? attendee.email || attendee.emails[0] : attendeeEmail;
       const isExternalUser = !attendee;
 
-      return i18nLib.getI18nForMailer(attendee).then(i18nConf => {
-        let subject = 'Unknown method';
-        const userEmail = user.email || user.emails[0];
+      return i18nLib.getI18nForMailer(attendee).then(({ i18n, locale, translate }) => {
+        const senderEmail = sender.email || sender.emails[0];
         const event = { ...jcal2content(ics, baseUrl), ...emailContentOverrides };
         const template = { name: 'event.invitation', path: TEMPLATES_PATH };
-        const i18n = i18nConf.i18n;
-        let inviteMessage;
 
-        switch (method) {
-          case 'REQUEST':
-            if (newEvent) {
-              subject = _i18nHelper('New event from {{userDisplayName}}: {{& summary}}', true, true);
-              template.name = 'event.invitation';
-              inviteMessage = _i18nHelper('has invited you to a meeting');
-            } else {
-              subject = _i18nHelper('Event {{& summary}} from {{userDisplayName}} updated', true, true);
-              template.name = 'event.update';
-              inviteMessage = _i18nHelper('has updated a meeting');
-            }
-            break;
-          case 'REPLY':
-            template.name = 'event.reply';
-            [subject, inviteMessage] = _getReplyContents();
-            break;
-          case 'CANCEL':
-            subject = _i18nHelper('Event {{& summary}} from {{userDisplayName}} canceled', true, true);
-            template.name = 'event.cancel';
-            inviteMessage = _i18nHelper('has canceled a meeting');
-            break;
-          case 'COUNTER':
-            subject = _i18nHelper('New changes proposed to event {{& summary}}', true, true);
-            template.name = 'event.counter';
-            inviteMessage = _i18nHelper('has proposed changes to the event');
-            break;
+        let attendeeIsInvolved = attendeeEmail === event.organizer.email;
+
+        if (event.attendees && event.attendees[attendeeEmail]) {
+          attendeeIsInvolved = event.attendees[attendeeEmail].partstat ? event.attendees[attendeeEmail].partstat !== 'DECLINED' : true;
         }
+
+        if (!attendeeIsInvolved) {
+          return Promise.reject(new Error('The attendee is not involved in the event'));
+        }
+
+        const senderParticipationStatus = event.attendees && event.attendees[senderEmail] && event.attendees[senderEmail].partstat;
+        const metadata = _getMetadata({
+          method,
+          senderParticipationStatus,
+          newEvent, 
+          summary: event.summary,
+          senderDisplayName: userModule.getDisplayName(sender)
+        });
+
+        const subject = i18n.__({ phrase: metadata.subject.phrase, locale }, metadata.subject.parameters);
+        const inviteMessage = i18n.__({ phrase: metadata.inviteMessage, locale }, {});
+
+        template.name = metadata.templateName;
 
         // This is a temporary fix since sabre does not send method in ICS and James needs it.
         const vcalendar = ICAL.Component.fromString(ics);
@@ -105,7 +98,7 @@ module.exports = dependencies => {
         }
 
         const message = {
-          from: userEmail,
+          from: senderEmail,
           subject,
           encoding: 'base64',
           alternatives: [{
@@ -124,24 +117,14 @@ module.exports = dependencies => {
           method,
           event,
           editor: {
-            displayName: userModule.getDisplayName(user),
-            email: user.email || user.emails[0]
+            displayName: userModule.getDisplayName(sender),
+            email: senderEmail
           },
-          calendarHomeId: user._id
+          calendarHomeId: sender._id
         };
 
         if (!isExternalUser) {
           content.seeInCalendarLink = seeInCalendarLink;
-        }
-
-        let userIsInvolved = attendeeEmail === event.organizer.email;
-
-        if (event.attendees && event.attendees[attendeeEmail]) {
-          userIsInvolved = event.attendees[attendeeEmail].partstat ? event.attendees[attendeeEmail].partstat !== 'DECLINED' : true;
-        }
-
-        if (!userIsInvolved) {
-          return Promise.reject(new Error('The user is not involved in the event'));
         }
 
         const jwtPayload = {
@@ -163,52 +146,126 @@ module.exports = dependencies => {
           return mailer.sendHTML(email, template, {
             content: contentWithLinks,
             filter: emailHelpers.filterEventAttachments(event),
-            translate: i18nConf.translate
+            translate
           });
         });
-
-        function _getReplyContents() {
-          const response = [];
-
-          switch (_getParticipationStatus(event, userEmail)) {
-            case 'ACCEPTED':
-              response.push(_i18nHelper('Accepted: {{& summary}} ({{userDisplayName}})', true, true));
-              response.push(_i18nHelper('has accepted this invitation'));
-              break;
-            case 'DECLINED':
-              response.push(_i18nHelper('Declined: {{& summary}} ({{userDisplayName}})', true, true));
-              response.push(_i18nHelper('has declined this invitation'));
-              break;
-            case 'TENTATIVE':
-              response.push(_i18nHelper('Tentatively accepted: {{& summary}} ({{userDisplayName}})', true, true));
-              response.push(_i18nHelper('has replied "Maybe" to this invitation'));
-              break;
-            default:
-              response.push(_i18nHelper('Participation updated: {{& summary}}', true));
-              response.push(_i18nHelper('has changed his participation'));
-          }
-
-          return response;
-        }
-
-        function _getParticipationStatus(event, attendeeEmail) {
-          if (!event.attendees || !event.attendees[attendeeEmail] || !event.attendees[attendeeEmail].partstat) {
-            return;
-          }
-
-          return event.attendees[attendeeEmail].partstat;
-        }
-
-        function _i18nHelper(phrase, isSummaryExist = false, isUserDisplayNameExists = false) {
-          const option = Object.assign(
-            {},
-            isSummaryExist ? { summary: event.summary } : {},
-            isUserDisplayNameExists ? { userDisplayName: userModule.getDisplayName(user) } : {}
-          );
-
-          return i18n.__({phrase: phrase, locale: i18nConf.locale}, option);
-        }
       });
     });
   }
-};
+
+  function _getMetadata({ method, senderParticipationStatus, newEvent = false, summary, senderDisplayName } = {}) {
+    let subject, templateName, inviteMessage;
+  
+    switch (method) {
+      case 'REQUEST':
+        if (newEvent) {
+          subject = {
+            phrase: 'New event from {{senderDisplayName}}: {{& summary}}',
+            parameters: {
+              summary,
+              senderDisplayName
+            }
+          };
+          templateName = 'event.invitation';
+          inviteMessage = 'has invited you to a meeting';
+        } else {
+          subject = {
+            phrase: 'Event {{& summary}} from {{senderDisplayName}} updated',
+            parameters: {
+              summary,
+              senderDisplayName
+            }
+          };
+          templateName = 'event.update';
+          inviteMessage = 'has updated a meeting';
+        }
+        break;
+      case 'REPLY':
+        templateName = 'event.reply';
+        ({ subject, inviteMessage } = _getReplyContents({ senderParticipationStatus, summary, senderDisplayName }));
+        break;
+      case 'CANCEL':
+        subject = {
+          phrase: 'Event {{& summary}} from {{senderDisplayName}} canceled',
+          parameters: {
+            summary,
+            senderDisplayName
+          }
+        };
+        templateName = 'event.cancel';
+        inviteMessage = 'has canceled a meeting';
+        break;
+      case 'COUNTER':
+        subject = {
+          phrase: 'New changes proposed to event {{& summary}}',
+          parameters: {
+            summary
+          }
+        };
+        templateName = 'event.counter';
+        inviteMessage = 'has proposed changes to the event';
+        break;
+      default:
+        subject = {
+          phrase: 'Unknown method'
+        };
+        templateName = 'event.invitation';
+    }
+  
+    return {
+      subject,
+      templateName,
+      inviteMessage
+    };
+  }
+  
+  function _getReplyContents({ senderParticipationStatus, summary, senderDisplayName } = {}) {
+    let subject, inviteMessage;
+  
+    switch (senderParticipationStatus) {
+      case 'ACCEPTED':
+        subject = {
+          phrase: 'Accepted: {{& summary}} ({{senderDisplayName}})',
+          parameters: {
+            summary,
+            senderDisplayName
+          }
+        };
+        inviteMessage = 'has accepted this invitation';
+        break;
+      case 'DECLINED':
+        subject = {
+          phrase: 'Declined: {{& summary}} ({{senderDisplayName}})',
+          parameters: {
+            summary,
+            senderDisplayName
+          }
+        };
+        inviteMessage = 'has declined this invitation';
+        break;
+      case 'TENTATIVE':
+        subject = {
+          phrase: 'Tentatively accepted: {{& summary}} ({{senderDisplayName}})',
+          parameters: {
+            summary,
+            senderDisplayName
+          }
+        };
+        inviteMessage = 'has replied "Maybe" to this invitation';
+        break;
+      default:
+        subject = {
+          phrase: 'Participation updated: {{& summary}}',
+          parameters: {
+            summary
+          }
+        };
+        inviteMessage = 'has changed his participation';
+    }
+  
+    return {
+      subject,
+      inviteMessage
+    };
+  }
+}
