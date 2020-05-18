@@ -1,5 +1,8 @@
 {
   "extends": "linagora-esn",
+  "parserOptions": {
+    "sourceType": "module"
+  },
   "rules": {
     "consistent-this": ["warn", "self"],
     "no-unused-vars": ["error", { "vars": "all", "args": "after-used" }],
