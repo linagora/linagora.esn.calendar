@@ -105,7 +105,7 @@ module.exports = dependencies => {
             organizerEmail,
             'REPLY',
             vcalendar.toString(),
-            foundUser.id
+            req.eventPayload.calendarURI
           );
         }
 

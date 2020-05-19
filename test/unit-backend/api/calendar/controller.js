@@ -571,7 +571,7 @@ describe('The calendar controller', function() {
                   req.eventPayload.organizerEmail,
                   'REPLY',
                   sinon.match.string,
-                  'userId'
+                  req.eventPayload.calendarURI
                 );
                 done();
               })})
