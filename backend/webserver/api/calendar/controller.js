@@ -76,7 +76,16 @@ module.exports = dependencies => {
 
     const notificationPromise = notify ? invitation.email.send : () => Promise.resolve();
 
-    notificationPromise(req.user, email, method, event, calendarURI, eventPath, req.domain, newEvent)
+    notificationPromise({
+      sender: req.user,
+      recipientEmail: email,
+      method,
+      ics: event,
+      calendarURI,
+      eventPath,
+      domain: req.domain,
+      newEvent
+    })
       .then(() => res.status(200).end())
       .catch(err => {
         logger.error('Error when trying to send invitations to attendees', err);
@@ -100,13 +109,14 @@ module.exports = dependencies => {
         if (foundUser) {
           res.status(200).redirect('/#/calendar');
 
-          return modified && invitation.email.send(
-            foundUser,
-            organizerEmail,
-            'REPLY',
-            vcalendar.toString(),
-            req.eventPayload.calendarURI
-          );
+          return modified && invitation.email.send({
+            sender: foundUser,
+            recipientEmail: organizerEmail,
+            method: 'REPLY',
+            ics: vcalendar.toString(),
+            calendarURI: req.eventPayload.calendarURI,
+            domain: req.domain
+          });
         }
 
         return getBaseUrl(null)

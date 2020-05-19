@@ -120,27 +120,27 @@ describe('The invitation email module', function() {
       });
 
       it('should return an error if organizer is undefined', function(done) {
-        this.module.send(null, 'foo@bar.com', 'REQUEST', 'ICS', 'calendarURI').then(done, () => done());
+        this.module.send({ sender: null, recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: 'ICS', calendarURI: 'calendarURI'}).then(done, () => done());
       });
 
       it('should return an error if attendeeEmails is not an email string', function(done) {
-        this.module.send({}, {}, 'REQUEST', 'ICS', 'calendarURI').then(done, () => done());
+        this.module.send({ sender: {}, recipientEmail: {}, method: 'REQUEST', ics: 'ICS', calendarURI: 'calendarURI' }).then(done, () => done());
       });
 
       it('should return an error if attendeeEmails is null object', function(done) {
-        this.module.send(organizer, null, 'REQUEST', 'ICS', 'calendarURI').then(done, () => done());
+        this.module.send({ sender: organizer, recipientEmail: null, method: 'REQUEST', ics: 'ICS', calendarURI: 'calendarURI' }).then(done, () => done());
       });
 
       it('should return an error if method is undefined', function(done) {
-        this.module.send({}, 'foo@bar.com', null, 'ICS', 'calendarURI').then(done, () => done());
+        this.module.send({ sender: {}, recipientEmail: 'foo@bar.com', method: null, ics: 'ICS', calendarURI: 'calendarURI'}).then(done, () => done());
       });
 
       it('should return an error if ics is undefined', function(done) {
-        this.module.send({}, 'foo@bar.com', 'REQUEST', null, 'calendarURI').then(done, () => done());
+        this.module.send({ sender: {}, recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: null, calendarURI: 'calendarURI' }).then(done, () => done());
       });
 
       it('should return an error if calendarURI is undefined', function(done) {
-        this.module.send({}, 'foo@bar.com', 'REQUEST', 'ICS', null).then(done, () => done());
+        this.module.send({ sender: {}, recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: 'ICS', calendarURI: null}).then(done, () => done());
       });
 
       it('should return an error if findByEmail return an error', function(done) {
@@ -148,7 +148,7 @@ describe('The invitation email module', function() {
           callback(new Error('Error in findByEmail'));
         };
 
-        this.module.send(organizer, attendeeEmail, 'REQUEST', ics, 'calendarURI').then(done, () => done());
+        this.module.send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, () => done());
       });
 
       it('should return an error it cannot retrieve base url', function(done) {
@@ -156,7 +156,7 @@ describe('The invitation email module', function() {
           callback(new Error('cannot get base_url'));
         };
 
-        this.module.send(organizer, attendeeEmail, 'REQUEST', ics, 'calendarURI').then(done, () => done());
+        this.module.send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, () => done());
       });
 
       it('should return an error if an error happens during links generation', function(done) {
@@ -172,7 +172,7 @@ describe('The invitation email module', function() {
           return callback(new Error());
         };
 
-        this.module.send(organizer, attendeeEmail, 'REQUEST', ics, 'calendarURI').then(done, () => done());
+        this.module.send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, () => done());
       });
 
       it('should generate a token with proper information', function(done) {
@@ -189,7 +189,7 @@ describe('The invitation email module', function() {
           callback(null, 'a_token');
         });
 
-        this.module.send(organizer, attendeeEmail, 'REQUEST', ics, 'calendarURI')
+        this.module.send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'})
           .then(() => {
             ['ACCEPTED', 'DECLINED', 'TENTATIVE'].forEach(action => testTokenWith(action, attendeeEmail));
 
@@ -224,7 +224,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module.send(organizer, attendeeEmail, 'REQUEST', ics, 'calendarURI').then(done, () => done());
+        this.module.send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, () => done());
       });
 
       it('should work even if findByEmail doesn\'t find the attendee', function(done) {
@@ -249,7 +249,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module.send(organizer, attendeeEmail, 'REQUEST', ics, 'calendarURI').then(done, done);
+        this.module.send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, done);
       });
 
       it('should not send an email if the attendee is not involved in the event', function(done) {
@@ -266,7 +266,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module.send(organizer, emailAttendeeNotInvited, 'REQUEST', ics, 'calendarURI')
+        this.module.send({ sender: organizer, recipientEmail: emailAttendeeNotInvited, method: 'REQUEST', ics, calendarURI: 'calendarURI'})
           .then(() => done())
           .catch(err => {
             expect(err.message).to.match(/The attendee is not involved in the event/);
@@ -336,7 +336,16 @@ describe('The invitation email module', function() {
 
         this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
 
-        this.module.send(attendeeEditor, organizer.preferredEmail, method, ics, 'calendarURI', null, null, newEvent).then(() => done(), done);
+        this.module.send({
+          sender: attendeeEditor,
+          recipientEmail: organizer.preferredEmail,
+          method,
+          ics,
+          calendarURI: 'calendarURI',
+          eventPath: null,
+          domain: null,
+          newEvent
+        }).then(() => done(), done);
       });
 
       it('should send HTML email with correct parameters', function(done) {
@@ -390,7 +399,16 @@ describe('The invitation email module', function() {
           };
         };
         this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send(organizer, attendeeEmail, method, ics, 'calendarURI', null, null, newEvent).then(() => done(), done);
+        this.module.send({
+          sender: organizer,
+          recipientEmail: attendeeEmail,
+          method,
+          ics,
+          calendarURI: 'calendarURI',
+          eventPath: null,
+          domain: null,
+          newEvent
+        }).then(() => done(), done);
       });
 
       it('should not include calendar link when attendee is external user', function(done) {
@@ -441,7 +459,16 @@ describe('The invitation email module', function() {
         };
 
         this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send(organizer, attendeeEmail, method, ics, 'calendarURI', null, null, newEvent).then(() => done(), done);
+        this.module.send({
+          sender: organizer,
+          recipientEmail: attendeeEmail,
+          method,
+          ics,
+          calendarURI: 'calendarURI',
+          eventPath: null,
+          domain: null,
+          newEvent
+        }).then(() => done(), done);
       });
     });
 
@@ -472,7 +499,16 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module.send(organizer, attendeeEmail, method, ics, 'calendarURI', null, null, newEvent).then(() => done(), done);
+        this.module.send({
+          sender: organizer,
+          recipientEmail: attendeeEmail,
+          method,
+          ics,
+          calendarURI: 'calendarURI',
+          eventPath: null,
+          domain: null,
+          newEvent
+        }).then(() => done(), done);
       });
 
       it('should send HTML email with event update subject and template if the guest existed in the updated event', function(done) {
@@ -495,7 +531,16 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module.send(organizer, attendeeEmail, method, ics, 'calendarURI', null, null, newEvent).then(() => done(), done);
+        this.module.send({
+          sender: organizer,
+          recipientEmail: attendeeEmail,
+          method,
+          ics,
+          calendarURI: 'calendarURI',
+          eventPath: null,
+          domain: null,
+          newEvent
+        }).then(() => done(), done);
       });
     });
 
@@ -526,7 +571,13 @@ describe('The invitation email module', function() {
         };
 
         this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send(organizer, attendeeEmail, method, ics, 'calendarURI').then(() => done(), done);
+        this.module.send({
+          sender: organizer,
+          recipientEmail: attendeeEmail,
+          method,
+          ics,
+          calendarURI: 'calendarURI'
+        }).then(() => done(), done);
       });
 
       it('should send email with correct content', function(done) {
@@ -556,7 +607,13 @@ describe('The invitation email module', function() {
         };
 
         this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send(attendee1, attendeeEmail, method, ics, 'calendarURI').then(() => done(), done);
+        this.module.send({
+          sender: attendee1,
+          recipientEmail: attendeeEmail,
+          method,
+          ics,
+          calendarURI: 'calendarURI'
+        }).then(() => done(), done);
       });
 
       it('should only send messages to involved users', function(done) {
@@ -584,7 +641,13 @@ describe('The invitation email module', function() {
         };
 
         this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send(attendee1, attendeeEmail, method, ics, 'calendarURI').then(() => {
+        this.module.send({
+          sender: attendee1,
+          recipientEmail: attendeeEmail,
+          method,
+          ics,
+          calendarURI: 'calendarURI'
+        }).then(() => {
           expect(called).to.equal(1);
           done();
         }, done);
@@ -618,7 +681,13 @@ describe('The invitation email module', function() {
         };
 
         this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send(organizer, attendeeEmail, method, ics, 'calendarURI').then(() => done(), done);
+        this.module.send({
+          sender: organizer,
+          recipientEmail: attendeeEmail,
+          method,
+          ics,
+          calendarURI: 'calendarURI'
+        }).then(() => done(), done);
       });
 
       it('should send email with correct content', function(done) {
@@ -649,7 +718,13 @@ describe('The invitation email module', function() {
         };
 
         this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send(attendee1, organizer.emails[0], method, ics, 'calendarURI').then(() => done(), done);
+        this.module.send({
+          sender: attendee1,
+          recipientEmail: organizer.emails[0],
+          method,
+          ics,
+          calendarURI: 'calendarURI'
+        }).then(() => done(), done);
       });
 
       it('should only send messages to organizer', function(done) {
@@ -677,7 +752,13 @@ describe('The invitation email module', function() {
         };
 
         this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send(attendee1, organizer.emails[0], method, ics, 'calendarURI').then(() => {
+        this.module.send({
+          sender: attendee1,
+          recipientEmail: organizer.emails[0],
+          method,
+          ics,
+          calendarURI: 'calendarURI'
+        }).then(() => {
           expect(called).to.equal(1);
           done();
         }, done);
@@ -711,7 +792,13 @@ describe('The invitation email module', function() {
         };
 
         this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send(organizer, attendeeEmail, method, ics, 'calendarURI').then(() => done(), done);
+        this.module.send({
+          sender: organizer,
+          recipientEmail: attendeeEmail,
+          method,
+          ics,
+          calendarURI: 'calendarURI'
+        }).then(() => done(), done);
       });
     });
   });

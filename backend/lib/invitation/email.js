@@ -19,12 +19,12 @@ module.exports = dependencies => {
     send
   };
 
-  function send(sender, attendeeEmail, method, ics, calendarURI, eventPath, domain, newEvent) {
+  function send({ sender, recipientEmail, method, ics, calendarURI, eventPath, domain, newEvent } = {}) {
     if (!sender || !sender.domains || !sender.domains.length) {
       return Promise.reject(new Error('User must be an User object'));
     }
 
-    if (!attendeeEmail) {
+    if (!recipientEmail) {
       return Promise.reject(new Error('The attendeeEmail is required'));
     }
 
@@ -40,35 +40,34 @@ module.exports = dependencies => {
 
     return Promise.all([
       Q.nfbind(configHelpers.getBaseUrl)(sender),
-      Q.nfbind(userModule.findByEmail)(attendeeEmail),
+      Q.nfbind(userModule.findByEmail)(recipientEmail),
       eventPath ? linksHelper.getEventDetails(eventPath) : Promise.resolve(false),
       linksHelper.getEventInCalendar(ics)
     ])
     .then(result => {
-      const [, attendeeAsUser] = result;
+      const [, recipientAsUser] = result;
       const emailContentOverrides = {};
 
-      return processors.process(method, { attendeeEmail, attendeeAsUser, ics, user: sender, domain, emailContentOverrides })
+      return processors.process(method, { attendeeEmail: recipientEmail, attendeeAsUser: recipientAsUser, ics, user: sender, domain, emailContentOverrides })
         .then(({ ics, emailContentOverrides }) => ({ result, ics, emailContentOverrides }))
         .catch(() => ({ result, ics, emailContentOverrides }));
     })
     .then(({ result, ics, emailContentOverrides }) => {
-      const [baseUrl, attendee, , seeInCalendarLink] = result;
-      const attendeePreferedEmail = attendee ? attendee.email || attendee.emails[0] : attendeeEmail;
-      const isExternalUser = !attendee;
+      const [baseUrl, recipient, , seeInCalendarLink] = result;
+      const isExternalUser = !recipient;
 
-      return i18nLib.getI18nForMailer(attendee).then(({ i18n, locale, translate }) => {
-        const senderEmail = sender.email || sender.emails[0];
+      return i18nLib.getI18nForMailer(recipient).then(({ i18n, locale, translate }) => {
+        const senderEmail = _getEmailFor(sender);
         const event = { ...jcal2content(ics, baseUrl), ...emailContentOverrides };
         const template = { name: 'event.invitation', path: TEMPLATES_PATH };
 
-        let attendeeIsInvolved = attendeeEmail === event.organizer.email;
+        let recipientIsInvolved = recipientEmail === event.organizer.email;
 
-        if (event.attendees && event.attendees[attendeeEmail]) {
-          attendeeIsInvolved = event.attendees[attendeeEmail].partstat ? event.attendees[attendeeEmail].partstat !== 'DECLINED' : true;
+        if (event.attendees && event.attendees[recipientEmail]) {
+          recipientIsInvolved = event.attendees[recipientEmail].partstat ? event.attendees[recipientEmail].partstat !== 'DECLINED' : true;
         }
 
-        if (!attendeeIsInvolved) {
+        if (!recipientIsInvolved) {
           return Promise.reject(new Error('The attendee is not involved in the event'));
         }
 
@@ -128,7 +127,7 @@ module.exports = dependencies => {
         }
 
         const jwtPayload = {
-          attendeeEmail: attendeePreferedEmail,
+          attendeeEmail: _getEmailFor(recipient) || recipientEmail,
           organizerEmail: event.organizer.email,
           uid: event.uid,
           calendarURI
@@ -140,7 +139,7 @@ module.exports = dependencies => {
 
           extend(true, contentWithLinks, content, links);
           extend(true, email, message, {
-            to: attendeeEmail
+            to: recipientEmail
           });
 
           return mailer.sendHTML(email, template, {
