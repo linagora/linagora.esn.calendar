@@ -19,7 +19,7 @@ module.exports = dependencies => {
     send
   };
 
-  function send({ sender, recipientEmail, method, ics, calendarURI, eventPath, domain, newEvent } = {}) {
+  function send({ sender, recipientEmail, method, ics, calendarURI, domain, newEvent } = {}) {
     if (!sender || !sender.domains || !sender.domains.length) {
       return Promise.reject(new Error('User must be an User object'));
     }
@@ -41,7 +41,6 @@ module.exports = dependencies => {
     return Promise.all([
       Q.nfbind(configHelpers.getBaseUrl)(sender),
       Q.nfbind(userModule.findByEmail)(recipientEmail),
-      eventPath ? linksHelper.getEventDetails(eventPath) : Promise.resolve(false),
       linksHelper.getEventInCalendar(ics)
     ])
     .then(result => {
@@ -53,7 +52,7 @@ module.exports = dependencies => {
         .catch(() => ({ result, ics, emailContentOverrides }));
     })
     .then(({ result, ics, emailContentOverrides }) => {
-      const [baseUrl, recipient, , seeInCalendarLink] = result;
+      const [baseUrl, recipient, seeInCalendarLink] = result;
       const isExternalUser = !recipient;
 
       return i18nLib.getI18nForMailer(recipient).then(({ i18n, locale, translate }) => {

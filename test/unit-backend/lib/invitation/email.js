@@ -342,7 +342,6 @@ describe('The invitation email module', function() {
           method,
           ics,
           calendarURI: 'calendarURI',
-          eventPath: null,
           domain: null,
           newEvent
         }).then(() => done(), done);
@@ -405,7 +404,6 @@ describe('The invitation email module', function() {
           method,
           ics,
           calendarURI: 'calendarURI',
-          eventPath: null,
           domain: null,
           newEvent
         }).then(() => done(), done);
@@ -465,7 +463,6 @@ describe('The invitation email module', function() {
           method,
           ics,
           calendarURI: 'calendarURI',
-          eventPath: null,
           domain: null,
           newEvent
         }).then(() => done(), done);
@@ -505,7 +502,6 @@ describe('The invitation email module', function() {
           method,
           ics,
           calendarURI: 'calendarURI',
-          eventPath: null,
           domain: null,
           newEvent
         }).then(() => done(), done);
@@ -537,7 +533,6 @@ describe('The invitation email module', function() {
           method,
           ics,
           calendarURI: 'calendarURI',
-          eventPath: null,
           domain: null,
           newEvent
         }).then(() => done(), done);
