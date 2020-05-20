@@ -65,13 +65,22 @@ const AwesomeCalendarModule = new AwesomeModule('linagora.esn.calendar', {
       app.use('/api', this.api);
 
       const webserverWrapper = dependencies('webserver-wrapper');
+      let frontendFullPathModules, frontendUriModules;
+      if (process.env.NODE_ENV !== 'production') {
+        frontendFullPathModules = glob.sync([
+          APP_ENTRY_POINT,
+          FRONTEND_JS_PATH + '**/!(*spec).js'
+        ]);
 
-      const frontendFullPathModules = glob.sync([
-        FRONTEND_JS_PATH_BUILD + '*.js',
-        FRONTEND_JS_PATH_BUILD + '!(*spec).js'
-      ]);
+        frontendUriModules = frontendFullPathModules.map(filepath => filepath.replace(FRONTEND_JS_PATH, ''));
+      } else {
+        frontendFullPathModules = glob.sync([
+          FRONTEND_JS_PATH_BUILD + '*.js',
+          FRONTEND_JS_PATH_BUILD + '!(*spec).js'
+        ]);
 
-      const frontendUriModules = frontendFullPathModules.map(filepath => filepath.replace(FRONTEND_JS_PATH_BUILD, ''));
+        frontendUriModules = frontendFullPathModules.map(filepath => filepath.replace(FRONTEND_JS_PATH_BUILD, ''));
+      }
       const fullCalendarPath = '../components/fullcalendar/dist';
       const fullCalendarJSFiles = ['fullcalendar.min.js', 'locale-all.js'].map(file => `${fullCalendarPath}/${file}`);
       const fullCalendarCSSFiles = ['fullcalendar.css'].map(file => `${fullCalendarPath}/${file}`);
