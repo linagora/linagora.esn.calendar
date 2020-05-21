@@ -1,13 +1,13 @@
 const ICAL = require('@linagora/ical.js');
-const Q = require('q');
 const path = require('path');
-const extend = require('extend');
-const {jcal2content} = require('./../helpers/jcal');
+const { promisify } = require('util');
+
+const { jcal2content } = require('./../helpers/jcal');
 const emailHelpers = require('./../helpers/email');
 const TEMPLATES_PATH = path.resolve(__dirname, '../../../templates/email');
 
 module.exports = dependencies => {
-  const userModule = dependencies('user');
+  const { getDisplayName, findByEmail } = dependencies('user');
   const configHelpers = dependencies('helpers').config;
   const emailModule = dependencies('email');
   const i18nLib = require('./../i18n')(dependencies);
@@ -15,13 +15,16 @@ module.exports = dependencies => {
   const linksHelper = require('../helpers/links')(dependencies);
   const processors = require('./processors')(dependencies);
 
+  const getBaseURL = promisify(configHelpers.getBaseUrl);
+  const findUserByEmail = promisify(findByEmail);
+
   return {
     send
   };
 
   function send({ sender, recipientEmail, method, ics, calendarURI, domain, newEvent } = {}) {
     if (!sender || !sender.domains || !sender.domains.length) {
-      return Promise.reject(new Error('User must be an User object'));
+      return Promise.reject(new Error('Sender must be an User object'));
     }
 
     if (!recipientEmail) {
@@ -36,142 +39,174 @@ module.exports = dependencies => {
       return Promise.reject(new Error('The ics is required'));
     }
 
-    const mailer = emailModule.getMailer(sender);
-
     return Promise.all([
-      Q.nfbind(configHelpers.getBaseUrl)(sender),
-      Q.nfbind(userModule.findByEmail)(recipientEmail),
-      linksHelper.getEventInCalendar(ics)
-    ])
-    .then(result => {
-      const [, recipientAsUser] = result;
-      const emailContentOverrides = {};
+      getBaseURL(sender),
+      findUserByEmail(recipientEmail)
+    ]).then(([baseURL, recipient]) => {
+      const mailer = emailModule.getMailer(sender);
 
-      return processors.process(method, { attendeeEmail: recipientEmail, attendeeAsUser: recipientAsUser, ics, user: sender, domain, emailContentOverrides })
-        .then(({ ics, emailContentOverrides }) => ({ result, ics, emailContentOverrides }))
-        .catch(() => ({ result, ics, emailContentOverrides }));
-    })
-    .then(({ result, ics, emailContentOverrides }) => {
-      const [baseUrl, recipient, seeInCalendarLink] = result;
-      const isExternalUser = !recipient;
-
-      return i18nLib.getI18nForMailer(recipient).then(({ i18n, locale, translate }) => {
-        const senderEmail = _getEmailFor(sender);
-        const event = { ...jcal2content(ics, baseUrl), ...emailContentOverrides };
-        const template = { name: 'event.invitation', path: TEMPLATES_PATH };
-
-        let recipientIsInvolved = recipientEmail === event.organizer.email;
-
-        if (event.attendees && event.attendees[recipientEmail]) {
-          recipientIsInvolved = event.attendees[recipientEmail].partstat ? event.attendees[recipientEmail].partstat !== 'DECLINED' : true;
-        }
-
-        if (!recipientIsInvolved) {
-          return Promise.reject(new Error('The attendee is not involved in the event'));
-        }
-
-        const senderParticipationStatus = event.attendees && event.attendees[senderEmail] && event.attendees[senderEmail].partstat;
-        const metadata = _getMetadata({
-          method,
-          senderParticipationStatus,
-          newEvent, 
-          summary: event.summary,
-          senderDisplayName: userModule.getDisplayName(sender)
-        });
-
-        const subject = i18n.__({ phrase: metadata.subject.phrase, locale }, metadata.subject.parameters);
-        const inviteMessage = i18n.__({ phrase: metadata.inviteMessage, locale }, {});
-
-        template.name = metadata.templateName;
-
-        // This is a temporary fix since sabre does not send method in ICS and James needs it.
-        const vcalendar = ICAL.Component.fromString(ics);
-        let methodProperty = vcalendar.getFirstProperty('method');
-
-        if (!methodProperty) {
-          methodProperty = new ICAL.Property('method');
-          methodProperty.setValue(method);
-          vcalendar.addProperty(methodProperty);
-          ics = vcalendar.toString();
-        }
-
-        const message = {
-          from: senderEmail,
-          subject,
-          encoding: 'base64',
-          alternatives: [{
-            content: ics,
-            contentType: `text/calendar; charset=UTF-8; method=${method}`
-          }],
-          attachments: [{
-            filename: 'meeting.ics',
-            content: ics,
-            contentType: 'application/ics'
-          }]
-        };
-        const content = {
-          baseUrl,
-          inviteMessage,
-          method,
-          event,
-          editor: {
-            displayName: userModule.getDisplayName(sender),
+      return _processorsHook({ method, ics, sender, recipient, recipientEmail, domain })
+        .then(({ ics, emailContentOverrides }) => {
+          const event = { ...jcal2content(ics, baseURL), ...emailContentOverrides };
+          const senderEmail = _getEmailFor(sender);
+          const editor = {
+            displayName: getDisplayName(sender),
             email: senderEmail
-          },
-          calendarHomeId: sender._id
-        };
+          };
 
-        if (!isExternalUser) {
-          content.seeInCalendarLink = seeInCalendarLink;
-        }
+          if (!_isRecipientInvolvedToEvent(recipientEmail, event)) {
+            return Promise.reject(new Error('The attendee is not involved in the event'));
+          }
 
-        const jwtPayload = {
-          attendeeEmail: _getEmailFor(recipient) || recipientEmail,
-          organizerEmail: event.organizer.email,
-          uid: event.uid,
-          calendarURI
-        };
+          return i18nLib.getI18nForMailer(recipient)
+            .then(({ i18n, locale, translate }) => {
+              const metadata = _getMetadata({
+                method,
+                event,
+                newEvent,
+                editor
+              });
 
-        return invitationLink.generateActionLinks(baseUrl, jwtPayload).then(links => {
-          const contentWithLinks = {};
-          const email = {};
+              const subject = i18n.__({ phrase: metadata.subject.phrase, locale }, metadata.subject.parameters);
+              const inviteMessage = i18n.__({ phrase: metadata.inviteMessage, locale }, {});
+              const template = { name: metadata.templateName, path: TEMPLATES_PATH };
+              const message = _buildMessage({ method, ics, subject, from: senderEmail, to: recipientEmail });
 
-          extend(true, contentWithLinks, content, links);
-          extend(true, email, message, {
-            to: recipientEmail
-          });
-
-          return mailer.sendHTML(email, template, {
-            content: contentWithLinks,
-            filter: emailHelpers.filterEventAttachments(event),
-            translate
-          });
+              return _buildMessageContent({
+                baseURL,
+                calendarHomeId: sender._id,
+                calendarURI,
+                editor,
+                event,
+                ics,
+                inviteMessage,
+                isExternalRecipient: !recipient,
+                method,
+                recipientEmail
+              }).then(content => mailer.sendHTML(message, template, {
+                content,
+                filter: emailHelpers.filterEventAttachments(event),
+                translate
+              }));
+            });
         });
-      });
     });
   }
 
-  function _getMetadata({ method, senderParticipationStatus, newEvent = false, summary, senderDisplayName } = {}) {
+  function _buildMessageContent({ method, baseURL, inviteMessage, ics, event, calendarURI, recipientEmail, editor, calendarHomeId, isExternalRecipient }) {
+    const jwtPayload = {
+      attendeeEmail: recipientEmail,
+      organizerEmail: event.organizer.email,
+      uid: event.uid,
+      calendarURI
+    };
+
+    return invitationLink.generateActionLinks(baseURL, jwtPayload)
+      .then(links => {
+        const content = {
+          baseUrl: baseURL,
+          inviteMessage,
+          method,
+          event,
+          editor,
+          ...links
+        };
+
+        if (calendarHomeId) {
+          content.calendarHomeId = calendarHomeId;
+        }
+
+        if (isExternalRecipient) {
+          return content;
+        }
+
+        return linksHelper.getEventInCalendar(ics)
+          .then(seeInCalendarLink => ({
+            ...content,
+            seeInCalendarLink
+          }));
+      });
+  }
+
+  function _buildMessage({ method, ics, subject, from, to }) {
+    // This is a temporary fix since sabre does not send method in ICS and James needs it.
+    const vcalendar = ICAL.Component.fromString(ics);
+    let methodProperty = vcalendar.getFirstProperty('method');
+
+    if (!methodProperty) {
+      methodProperty = new ICAL.Property('method');
+      methodProperty.setValue(method);
+      vcalendar.addProperty(methodProperty);
+      ics = vcalendar.toString();
+    }
+
+    const message = {
+      subject,
+      encoding: 'base64',
+      alternatives: [{
+        content: ics,
+        contentType: `text/calendar; charset=UTF-8; method=${method}`
+      }],
+      attachments: [{
+        filename: 'meeting.ics',
+        content: ics,
+        contentType: 'application/ics'
+      }],
+      to
+    };
+
+    if (from) {
+      message.from = from;
+    }
+
+    return message;
+  }
+
+  function _isRecipientInvolvedToEvent(recipientEmail, event) {
+    let recipientIsInvolved = recipientEmail === event.organizer.email;
+
+    if (event.attendees && event.attendees[recipientEmail]) {
+      recipientIsInvolved = event.attendees[recipientEmail].partstat ? event.attendees[recipientEmail].partstat !== 'DECLINED' : true;
+    }
+
+    return recipientIsInvolved;
+  }
+
+  function _processorsHook({ method, ics, sender, recipient, recipientEmail, domain }) {
+    const emailContentOverrides = {};
+
+    return processors.process(method, { attendeeEmail: recipientEmail, attendeeAsUser: recipient, ics, user: sender, domain, emailContentOverrides })
+      .then(({ ics, emailContentOverrides }) => ({ ics, emailContentOverrides }))
+      .catch(() => ({ ics, emailContentOverrides }));
+  }
+
+  function _getEmailFor(user) {
+    return user && (user.email || user.emails[0]);
+  }
+
+  function _getMetadata({ method, event, newEvent = false, editor } = {}) {
     let subject, templateName, inviteMessage;
-  
+    const { summary } = event;
+    const { displayName: editorDisplayName } = editor;
+
     switch (method) {
       case 'REQUEST':
         if (newEvent) {
           subject = {
-            phrase: 'New event from {{senderDisplayName}}: {{& summary}}',
+            phrase: 'New event from {{editorDisplayName}}: {{& summary}}',
             parameters: {
               summary,
-              senderDisplayName
+              editorDisplayName
             }
           };
           templateName = 'event.invitation';
           inviteMessage = 'has invited you to a meeting';
         } else {
           subject = {
-            phrase: 'Event {{& summary}} from {{senderDisplayName}} updated',
+            phrase: 'Event {{& summary}} from {{editorDisplayName}} updated',
             parameters: {
               summary,
-              senderDisplayName
+              editorDisplayName
             }
           };
           templateName = 'event.update';
@@ -180,14 +215,14 @@ module.exports = dependencies => {
         break;
       case 'REPLY':
         templateName = 'event.reply';
-        ({ subject, inviteMessage } = _getReplyContents({ senderParticipationStatus, summary, senderDisplayName }));
+        ({ subject, inviteMessage } = _getReplyContents({ event, editor }));
         break;
       case 'CANCEL':
         subject = {
-          phrase: 'Event {{& summary}} from {{senderDisplayName}} canceled',
+          phrase: 'Event {{& summary}} from {{editorDisplayName}} canceled',
           parameters: {
             summary,
-            senderDisplayName
+            editorDisplayName
           }
         };
         templateName = 'event.cancel';
@@ -209,44 +244,47 @@ module.exports = dependencies => {
         };
         templateName = 'event.invitation';
     }
-  
+
     return {
       subject,
       templateName,
       inviteMessage
     };
   }
-  
-  function _getReplyContents({ senderParticipationStatus, summary, senderDisplayName } = {}) {
+
+  function _getReplyContents({ event, editor } = {}) {
     let subject, inviteMessage;
-  
-    switch (senderParticipationStatus) {
+    const { summary } = event;
+    const { displayName: editorDisplayName, email: editorEmail } = editor;
+    const actorParticipationStatus = event.attendees && event.attendees[editorEmail] && event.attendees[editorEmail].partstat;
+
+    switch (actorParticipationStatus) {
       case 'ACCEPTED':
         subject = {
-          phrase: 'Accepted: {{& summary}} ({{senderDisplayName}})',
+          phrase: 'Accepted: {{& summary}} ({{editorDisplayName}})',
           parameters: {
             summary,
-            senderDisplayName
+            editorDisplayName
           }
         };
         inviteMessage = 'has accepted this invitation';
         break;
       case 'DECLINED':
         subject = {
-          phrase: 'Declined: {{& summary}} ({{senderDisplayName}})',
+          phrase: 'Declined: {{& summary}} ({{editorDisplayName}})',
           parameters: {
             summary,
-            senderDisplayName
+            editorDisplayName
           }
         };
         inviteMessage = 'has declined this invitation';
         break;
       case 'TENTATIVE':
         subject = {
-          phrase: 'Tentatively accepted: {{& summary}} ({{senderDisplayName}})',
+          phrase: 'Tentatively accepted: {{& summary}} ({{editorDisplayName}})',
           parameters: {
             summary,
-            senderDisplayName
+            editorDisplayName
           }
         };
         inviteMessage = 'has replied "Maybe" to this invitation';
@@ -260,10 +298,10 @@ module.exports = dependencies => {
         };
         inviteMessage = 'has changed his participation';
     }
-  
+
     return {
       subject,
       inviteMessage
     };
   }
-}
+};

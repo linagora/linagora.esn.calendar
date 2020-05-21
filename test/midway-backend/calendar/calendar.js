@@ -137,15 +137,6 @@ describe('The Calendar calendars API /api/calendars', function() {
       }, this.helpers, this.app, done);
     });
 
-    it('should send 400 if the request body "eventPath" property is invalid', function(done) {
-      testError400({
-        email: 'email1@domain1',
-        method: 'REQUEST',
-        event: 'ICS',
-        calendarURI: 'calId'
-      }, this.helpers, this.app, done);
-    });
-
     it('should send 200 if the request is correct', function(done) {
       const self = this;
 
