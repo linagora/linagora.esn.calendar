@@ -51,10 +51,27 @@
       return _canModifyEvent(calendar, event, userId);
     }
 
+    /**
+     * @name canModifyEventAttendees
+     * @description Check user permission to modify (add/remove) attendees of an event
+     *  To modify the attendees of an event list, a user must be satisfied with one of three conditions:
+     *  - User is the owner of a calendar and the organizer of the event on the calendar
+     *  - User is the sharee of the calendar and has the write permission
+     *  - The calendar is published with write permission and the user subscribes to the calendar
+     * @param  {CalendarCollectionShell}    calendar     a shell that wraps caldav calendar component
+     * @param  {CalendarShell}              event        a shell that wraps an ical.js VEVENT component
+     * @param  {string}                     userId       id of the user who needs to be checked
+     * @return {Boolean}                    true if the user can modify attendees of the provided event, otherwise, return false.
+     */
+
     function canModifyEventAttendees(calendar, event, userId) {
-      //Sharees with Write permissions cannot modify attendee list according to the RFC
-      //https://github.com/apple/ccs-calendarserver/blob/master/doc/Extensions/caldav-sharing.txt#L847
-      return !!event && _isOrganizerAndOwner(calendar, event, userId);
+      var canModifyAsOwnerAndOrganizer = !!event && _isOrganizerAndOwner(calendar, event, userId);
+
+      if (canModifyAsOwnerAndOrganizer) return true;
+
+      var canModifySubscribedCalendar = (calendar.isShared(userId) || calendar.isSubscription()) && calendar.isWritable(userId);
+
+      return canModifySubscribedCalendar;
     }
 
     function canModifyEventRecurrence(calendar, event, userId) {
