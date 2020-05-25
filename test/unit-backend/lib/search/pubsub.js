@@ -1,6 +1,4 @@
-'use strict';
-
-const expect = require('chai').expect;
+const { expect } = require('chai');
 const sinon = require('sinon');
 const fs = require('fs');
 const ICAL = require('@linagora/ical.js');
@@ -9,7 +7,7 @@ const CONSTANTS = require('../../../../backend/lib/constants');
 
 describe('The calendar search pubsub module', function() {
   let jcal, ics;
-  let logger, pubsub, globalpubsub, localpubsub;
+  let logger, pubsub, globalpubsub, localPubsub;
   let elasticsearchActionMock, jcalHelperMock;
 
   beforeEach(function() {
@@ -27,18 +25,18 @@ describe('The calendar search pubsub module', function() {
     mockery.registerMock('./actions', () => elasticsearchActionMock);
 
     globalpubsub = {};
-    localpubsub = {};
+    localPubsub = {};
 
     this.moduleHelpers.addDep('logger', logger);
     this.moduleHelpers.addDep('pubsub', pubsub);
-    this.moduleHelpers.addDep('pubsub', this.helpers.mock.pubsub('', localpubsub, globalpubsub));
+    this.moduleHelpers.addDep('pubsub', this.helpers.mock.pubsub('', localPubsub, globalpubsub));
 
     ics = fs.readFileSync(__dirname + '/../../fixtures/meeting.ics', 'utf-8');
     jcal = ICAL.Component.fromString(ics).jCal;
     ics = ICAL.Component.fromString(ics).toString();
   });
 
-  describe('On global pubsub events', function() {
+  describe('On local pubsub events', function() {
     let self, message, eventSourcePath, eventId, calendarId, userId, path, parsedMessage;
 
     beforeEach(function() {
@@ -61,23 +59,23 @@ describe('The calendar search pubsub module', function() {
       };
     });
 
-    function publishGlobalEvent(websocketEvent) {
+    function publishLocalEvent(websocketEvent) {
       require(self.moduleHelpers.backendPath + '/lib/search/pubsub')(self.moduleHelpers.dependencies).listen();
-      const handler = globalpubsub.topics[websocketEvent].handler;
+      const handler = localPubsub.topics[websocketEvent].handler;
 
       message.websocketEvent = websocketEvent;
       handler(message);
     }
 
     describe('On calendar:event:created', function() {
-      const globalEvent = CONSTANTS.EVENTS.EVENT.CREATED;
+      const localEvent = CONSTANTS.EVENTS.EVENT.CREATED;
 
       beforeEach(function() {
         elasticsearchActionMock.addEventToIndexThroughPubsub = sinon.stub();
       });
 
       it('should be able to add a normal event to index', function() {
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.been.calledOnce;
         expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.been.calledWith(sinon.match(parsedMessage));
@@ -89,7 +87,7 @@ describe('The calendar search pubsub module', function() {
         message.event = vcalendar.jCal;
         parsedMessage.ics = vcalendar.toString();
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.been.calledThrice;
         expect(elasticsearchActionMock.addEventToIndexThroughPubsub.getCall(0).calledWith(sinon.match(parsedMessage))).to.be.true;
@@ -100,7 +98,7 @@ describe('The calendar search pubsub module', function() {
       it('should do nothing when event has eventSourcePath', function() {
         message.eventSourcePath = eventSourcePath;
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.not.been.called;
       });
@@ -108,7 +106,7 @@ describe('The calendar search pubsub module', function() {
       it('should do nothing when event.eventPath is undefined', function() {
         delete message.eventPath;
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.not.been.called;
       });
@@ -116,14 +114,14 @@ describe('The calendar search pubsub module', function() {
       it('should do nothing when event.eventPath === /', function() {
         message.eventPath = '/';
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.not.been.called;
       });
     });
 
     describe('On calendar:event:request', function() {
-      const globalEvent = CONSTANTS.EVENTS.EVENT.REQUEST;
+      const localEvent = CONSTANTS.EVENTS.EVENT.REQUEST;
 
       beforeEach(function() {
         elasticsearchActionMock.addEventToIndexThroughPubsub = sinon.stub();
@@ -132,7 +130,7 @@ describe('The calendar search pubsub module', function() {
       it('should remove previous event(s) and add a new event to index', function(done) {
         elasticsearchActionMock.removeEventsFromIndex = sinon.stub().returns(Promise.resolve());
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.removeEventsFromIndex).to.have.been.calledOnce;
         expect(elasticsearchActionMock.removeEventsFromIndex).to.have.been.calledWith({
@@ -156,7 +154,7 @@ describe('The calendar search pubsub module', function() {
         message.event = vcalendar.jCal;
         parsedMessage.ics = vcalendar.toString();
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.removeEventsFromIndex).to.have.been.calledOnce;
         expect(elasticsearchActionMock.removeEventsFromIndex).to.have.been.calledWith({
@@ -182,7 +180,7 @@ describe('The calendar search pubsub module', function() {
         message.event = vcalendar.jCal;
         parsedMessage.ics = vcalendar.toString();
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.removeEventsFromIndex).to.have.been.calledOnce;
         expect(elasticsearchActionMock.removeEventsFromIndex).to.have.been.calledWith({
@@ -204,7 +202,7 @@ describe('The calendar search pubsub module', function() {
         logger.error = sinon.stub();
         elasticsearchActionMock.removeEventsFromIndex = sinon.stub().returns(Promise.reject(err));
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.removeEventsFromIndex).to.have.been.calledOnce;
         expect(elasticsearchActionMock.removeEventsFromIndex).to.have.been.calledWith({
@@ -224,7 +222,7 @@ describe('The calendar search pubsub module', function() {
       it('should do nothing when event has eventSourcePath', function() {
         message.eventSourcePath = eventSourcePath;
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.not.been.called;
       });
@@ -232,7 +230,7 @@ describe('The calendar search pubsub module', function() {
       it('should do nothing when event.eventPath is undefined', function() {
         delete message.eventPath;
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.not.been.called;
       });
@@ -240,13 +238,13 @@ describe('The calendar search pubsub module', function() {
       it('should do nothing when event.eventPath === /', function() {
         message.eventPath = '/';
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.addEventToIndexThroughPubsub).to.have.not.been.called;
       });
     });
 
-    const onEventUpdatedTests = globalEvent => () => {
+    const onEventUpdatedTests = localEvent => () => {
       const recurrenceIds = ['2016-05-26T17:00:00Z', '2016-05-27T17:00:00Z'];
       const recurrenceIdsToBeDeleted = ['2016-05-28T17:00:00Z'];
 
@@ -265,7 +263,7 @@ describe('The calendar search pubsub module', function() {
       it('should only update master event in index when no old event is provided', function() {
         delete message.old_event;
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.updateEventInIndexThroughPubsub).to.have.been.calledWith(sinon.match(parsedMessage));
       });
@@ -275,7 +273,7 @@ describe('The calendar search pubsub module', function() {
 
         jcalHelperMock.analyzeJCalsDiff = sinon.stub().returns({ actionType });
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(jcalHelperMock.analyzeJCalsDiff).to.have.been.calledWith(message.old_event, message.event);
         expect(elasticsearchActionMock.updateEventInIndexThroughPubsub).to.have.been.calledWith(sinon.match(parsedMessage));
@@ -287,7 +285,7 @@ describe('The calendar search pubsub module', function() {
 
         jcalHelperMock.analyzeJCalsDiff = sinon.stub().returns({ actionType, actionDetails });
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(jcalHelperMock.analyzeJCalsDiff).to.have.been.calledWith(message.old_event, message.event);
         expect(elasticsearchActionMock.addSpecialOccursToIndexIfAnyThroughPubsub).to.have.been.calledWith(actionDetails.newRecurrenceIds, sinon.match(parsedMessage));
@@ -304,7 +302,7 @@ describe('The calendar search pubsub module', function() {
 
         jcalHelperMock.analyzeJCalsDiff = sinon.stub().returns({ actionType, actionDetails });
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(jcalHelperMock.analyzeJCalsDiff).to.have.been.calledWith(message.old_event, message.event);
 
@@ -319,7 +317,7 @@ describe('The calendar search pubsub module', function() {
       it('should do nothing when event has eventSourcePath', function() {
         message.eventSourcePath = eventSourcePath;
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.not.been.called;
         expect(elasticsearchActionMock.updateEventInIndexThroughPubsub).to.have.not.been.called;
@@ -329,7 +327,7 @@ describe('The calendar search pubsub module', function() {
       it('should do nothing when event.eventPath is undefined', function() {
         delete message.eventPath;
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.not.been.called;
         expect(elasticsearchActionMock.updateEventInIndexThroughPubsub).to.have.not.been.called;
@@ -339,7 +337,7 @@ describe('The calendar search pubsub module', function() {
       it('should do nothing when event.eventPath === /', function() {
         message.eventPath = '/';
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.not.been.called;
         expect(elasticsearchActionMock.updateEventInIndexThroughPubsub).to.have.not.been.called;
@@ -352,7 +350,7 @@ describe('The calendar search pubsub module', function() {
     describe('On calendar:event:reply', onEventUpdatedTests(CONSTANTS.EVENTS.EVENT.REPLY));
 
     describe('On calendar:event:deleted', function() {
-      const globalEvent = CONSTANTS.EVENTS.EVENT.DELETED;
+      const localEvent = CONSTANTS.EVENTS.EVENT.DELETED;
 
       beforeEach(function() {
         elasticsearchActionMock.removeEventFromIndexThroughPubsub = sinon.stub();
@@ -377,7 +375,7 @@ describe('The calendar search pubsub module', function() {
         const recurrenceIds = ['20160526T170000Z', '20160527T170000Z'];
         jcalHelperMock.getRecurrenceIdsFromVEvents = sinon.stub().returns(recurrenceIds);
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         recurrenceIds.forEach((recurrenceId, index) => {
           expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub.getCall(index).calledWith(sinon.match({ ...parsedMessage, recurrenceId }))).to.be.true;
@@ -389,7 +387,7 @@ describe('The calendar search pubsub module', function() {
       it('should just remove the master event if it has no exceptions', function() {
         jcalHelperMock.getRecurrenceIdsFromVEvents = sinon.stub().returns([]);
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.been.calledOnce;
         expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.been.calledWith(sinon.match(parsedMessage));
@@ -398,7 +396,7 @@ describe('The calendar search pubsub module', function() {
       it('should do nothing when event has eventSourcePath', function() {
         message.eventSourcePath = eventSourcePath;
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.not.been.called;
       });
@@ -406,7 +404,7 @@ describe('The calendar search pubsub module', function() {
       it('should do nothing when event.eventPath is undefined', function() {
         delete message.eventPath;
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.not.been.called;
       });
@@ -414,14 +412,14 @@ describe('The calendar search pubsub module', function() {
       it('should do nothing when event.eventPath === /', function() {
         message.eventPath = '/';
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.not.been.called;
       });
     });
 
     describe('On calendar:event:cancel', function() {
-      const globalEvent = CONSTANTS.EVENTS.EVENT.CANCEL;
+      const localEvent = CONSTANTS.EVENTS.EVENT.CANCEL;
 
       beforeEach(function() {
         elasticsearchActionMock.removeEventFromIndexThroughPubsub = sinon.stub();
@@ -443,7 +441,7 @@ describe('The calendar search pubsub module', function() {
           eventUid: eventId
         };
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.not.been.called;
       });
@@ -464,7 +462,7 @@ describe('The calendar search pubsub module', function() {
           eventUid: eventId
         };
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.been.calledOnce;
         expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.been.calledWith(sinon.match(parsedMessage));
@@ -486,7 +484,7 @@ describe('The calendar search pubsub module', function() {
           eventUid: eventId
         };
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.been.calledOnce;
         expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.been.calledWith(sinon.match({ ...parsedMessage, recurrenceId: '2020-01-03T04:00:00Z' }));
@@ -495,7 +493,7 @@ describe('The calendar search pubsub module', function() {
       it('should do nothing when event has eventSourcePath', function() {
         message.eventSourcePath = eventSourcePath;
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.not.been.called;
       });
@@ -503,7 +501,7 @@ describe('The calendar search pubsub module', function() {
       it('should do nothing when event.eventPath is undefined', function() {
         delete message.eventPath;
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.not.been.called;
       });
@@ -511,7 +509,7 @@ describe('The calendar search pubsub module', function() {
       it('should do nothing when event.eventPath === /', function() {
         message.eventPath = '/';
 
-        publishGlobalEvent(globalEvent);
+        publishLocalEvent(localEvent);
 
         expect(elasticsearchActionMock.removeEventFromIndexThroughPubsub).to.have.not.been.called;
       });

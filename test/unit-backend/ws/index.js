@@ -1,6 +1,4 @@
-'use strict';
-
-const expect = require('chai').expect;
+const { expect } = require('chai');
 const mockery = require('mockery');
 const _ = require('lodash');
 const sinon = require('sinon');
@@ -31,12 +29,6 @@ describe('The calendar WS events module', function() {
       this.pubsub = {
         global: {
           topic: sinon.spy(function(name) {
-            if (eventsName.indexOf(name) > -1) {
-              return {
-                subscribe: self.eventSubscribeSpy
-              };
-            }
-
             if (subscriptionsName.indexOf(name) > -1) {
               return {
                 subscribe: self.subscriptionSubscribeSpy
@@ -49,7 +41,13 @@ describe('The calendar WS events module', function() {
           })
         },
         local: {
-          topic: sinon.spy(function() {
+          topic: sinon.spy(function(name) {
+            if (eventsName.indexOf(name) > -1) {
+              return {
+                subscribe: self.eventSubscribeSpy
+              };
+            }
+
             return {
               publish: self.publishSpy
             };
@@ -107,12 +105,12 @@ describe('The calendar WS events module', function() {
       });
     });
 
-    it('should register global pubsub subscribers for supported events', function() {
+    it('should register pubsub subscribers for supported events', function() {
       const mod = require(this.moduleHelpers.backendPath + '/ws');
 
       mod.init(this.moduleHelpers.dependencies);
       _.forOwn(CONSTANTS.EVENTS.EVENT, topic => {
-        expect(this.pubsub.global.topic).to.have.been.calledWith(topic);
+        expect(this.pubsub.local.topic).to.have.been.calledWith(topic);
       });
 
       _.forOwn(CONSTANTS.EVENTS.CALENDAR, topic => {
@@ -138,7 +136,6 @@ describe('The calendar WS events module', function() {
         self.eventUpdatedPubsubCallback(message);
 
         expect(eventHandler.notify).to.have.been.calledWith(CONSTANTS.EVENTS.EVENT[lastKey], message);
-        expect(self.publishSpy).to.have.been.calledWith(message);
       });
     });
 
