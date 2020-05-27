@@ -1,12 +1,10 @@
-'use strict';
-
 const { EVENTS, RECUR_EVENT_MODIFICATION_TYPE } = require('../constants');
 const eventHelper = require('../helpers/event');
 const jcalHelper = require('../helpers/jcal');
 const ICAL = require('@linagora/ical.js');
 
 module.exports = dependencies => {
-  const pubsub = dependencies('pubsub');
+  const { local: pubsubLocal } = dependencies('pubsub');
   const logger = dependencies('logger');
   const elasticsearchActions = require('./actions')(dependencies);
 
@@ -15,12 +13,12 @@ module.exports = dependencies => {
   };
 
   function listen() {
-    pubsub.global.topic(EVENTS.EVENT.CREATED).subscribe(onCreated);
-    pubsub.global.topic(EVENTS.EVENT.REQUEST).subscribe(onRequest);
-    pubsub.global.topic(EVENTS.EVENT.UPDATED).subscribe(onUpdated);
-    pubsub.global.topic(EVENTS.EVENT.REPLY).subscribe(onReply);
-    pubsub.global.topic(EVENTS.EVENT.DELETED).subscribe(onDeleted);
-    pubsub.global.topic(EVENTS.EVENT.CANCEL).subscribe(onCancel);
+    pubsubLocal.topic(EVENTS.EVENT.CREATED).subscribe(onCreated);
+    pubsubLocal.topic(EVENTS.EVENT.REQUEST).subscribe(onRequest);
+    pubsubLocal.topic(EVENTS.EVENT.UPDATED).subscribe(onUpdated);
+    pubsubLocal.topic(EVENTS.EVENT.REPLY).subscribe(onReply);
+    pubsubLocal.topic(EVENTS.EVENT.DELETED).subscribe(onDeleted);
+    pubsubLocal.topic(EVENTS.EVENT.CANCEL).subscribe(onCancel);
 
     function parse(msg) {
       const parsedMessage = eventHelper.parseEventPath(msg.eventPath);

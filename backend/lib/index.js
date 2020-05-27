@@ -23,6 +23,7 @@ module.exports = dependencies => {
     alarm.init();
     eventMailListener.init();
 
+    require('./messaging')(dependencies).listen();
     require('./resource')(dependencies).listen();
     require('./user')(dependencies).listen();
     require('./config')(dependencies).register();
