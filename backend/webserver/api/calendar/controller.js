@@ -52,7 +52,7 @@ module.exports = dependencies => {
   }
 
   function sendInvitation(req, res) {
-    const {email, notify, method, event, calendarURI, eventPath, newEvent} = req.body;
+    const {email, notify, method, event, calendarURI, newEvent} = req.body;
 
     if (!email) {
       return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'The "emails" array is required and must contain at least one element'}});
@@ -70,13 +70,17 @@ module.exports = dependencies => {
       return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'Calendar Id is required and must be a string'}});
     }
 
-    if (!eventPath || typeof eventPath !== 'string') {
-      return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'eventPath is required and must be a string'}});
-    }
-
     const notificationPromise = notify ? invitation.email.send : () => Promise.resolve();
 
-    notificationPromise(req.user, email, method, event, calendarURI, eventPath, req.domain, newEvent)
+    notificationPromise({
+      sender: req.user,
+      recipientEmail: email,
+      method,
+      ics: event,
+      calendarURI,
+      domain: req.domain,
+      newEvent
+    })
       .then(() => res.status(200).end())
       .catch(err => {
         logger.error('Error when trying to send invitations to attendees', err);
@@ -100,13 +104,14 @@ module.exports = dependencies => {
         if (foundUser) {
           res.status(200).redirect('/#/calendar');
 
-          return modified && invitation.email.send(
-            foundUser,
-            organizerEmail,
-            'REPLY',
-            vcalendar.toString(),
-            foundUser.id
-          );
+          return modified && invitation.email.send({
+            sender: foundUser,
+            recipientEmail: organizerEmail,
+            method: 'REPLY',
+            ics: vcalendar.toString(),
+            calendarURI: req.eventPayload.calendarURI,
+            domain: req.domain
+          });
         }
 
         return getBaseUrl(null)

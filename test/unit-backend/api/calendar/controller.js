@@ -518,8 +518,10 @@ describe('The calendar controller', function() {
 
       describe('when the event participation change has successed', function() {
         describe('if user is found', function() {
+          const userMock = { _id: 'userId' };
+
           beforeEach(function() {
-            userModuleMock.findByEmail = (email, callback) => callback(null, { id: 'userId' });
+            userModuleMock.findByEmail = (email, callback) => callback(null, userMock);
             callbackAfterGetDone = () => {
               requestMock = (options, callback) => callback(null, {statusCode: 200});
               mockery.registerMock('request', requestMock);
@@ -566,13 +568,14 @@ describe('The calendar controller', function() {
             const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
             const res = {
               status: () => ({ redirect: () => process.nextTick(() => {
-                expect(sendMailSpy).to.have.been.calledWith(
-                  { id: 'userId' },
-                  req.eventPayload.organizerEmail,
-                  'REPLY',
-                  sinon.match.string,
-                  'userId'
-                );
+                expect(sendMailSpy).to.have.been.calledWith({
+                  sender: userMock,
+                  recipientEmail: req.eventPayload.organizerEmail,
+                  method: 'REPLY',
+                  ics: sinon.match.string,
+                  calendarURI: req.eventPayload.calendarURI,
+                  domain: req.domain
+                });
                 done();
               })})
             };
@@ -738,9 +741,9 @@ describe('The calendar controller', function() {
 
     beforeEach(function() {
       req = {
-        user: 1,
+        user: { _id: 'userId' },
+        domain: { _id: '123' },
         body: {
-          eventPath: '/foo/bar/baz.ics',
           email: 'me@open-paas.org',
           method: 'REQUEST',
           event: 'The event',
@@ -771,22 +774,6 @@ describe('The calendar controller', function() {
       const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
 
       controller.sendInvitation(req, this.checkErrorResponse(400, 'The "emails" array is required and must contain at least one element', done));
-    });
-
-    it('should HTTP 400 when body.eventPath is not defined', function(done) {
-      delete req.body.eventPath;
-
-      const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
-
-      controller.sendInvitation(req, this.checkErrorResponse(400, 'eventPath is required and must be a string', done));
-    });
-
-    it('should HTTP 400 when body.eventPath is not a string', function(done) {
-      req.body.eventPath = {foo: 'bar'};
-
-      const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
-
-      controller.sendInvitation(req, this.checkErrorResponse(400, 'eventPath is required and must be a string', done));
     });
 
     it('should HTTP 400 when body.method is not defined', function(done) {
@@ -864,7 +851,15 @@ describe('The calendar controller', function() {
       controller.sendInvitation(req, {
         status: _status => {
           expect(_status).to.equal(500);
-          expect(sendMailSpy).to.have.been.calledWith(req.user, req.body.email, req.body.method, req.body.event, req.body.calendarURI);
+          expect(sendMailSpy).to.have.been.calledWith({
+            sender: req.user,
+            recipientEmail: req.body.email,
+            method: req.body.method,
+            ics: req.body.event,
+            calendarURI: req.body.calendarURI,
+            newEvent: req.body.newEvent,
+            domain: req.domain
+          });
 
           return {
             json: body => {
@@ -882,7 +877,15 @@ describe('The calendar controller', function() {
       controller.sendInvitation(req, {
         status: _status => {
           expect(_status).to.equal(200);
-          expect(sendMailSpy).to.have.been.calledWith(req.user, req.body.email, req.body.method, req.body.event, req.body.calendarURI);
+          expect(sendMailSpy).to.have.been.calledWith({
+            sender: req.user,
+            recipientEmail: req.body.email,
+            method: req.body.method,
+            ics: req.body.event,
+            calendarURI: req.body.calendarURI,
+            newEvent: req.body.newEvent,
+            domain: req.domain
+          });
 
           return {
             end: done

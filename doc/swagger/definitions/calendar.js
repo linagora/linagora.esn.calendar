@@ -31,8 +31,6 @@
   *         type: string
   *       method:
   *         type: string
-  *       eventPath:
-  *         type: string
   *   calendar_calendar_search_object:
   *     description: Describes the necessary fields to specify a calendar to search in
   *     type: object
