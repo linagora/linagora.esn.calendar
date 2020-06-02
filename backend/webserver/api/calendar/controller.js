@@ -123,6 +123,14 @@ module.exports = dependencies => {
               links,
               locale: req.getLocale()
             });
+
+            return modified && invitation.email.replyFromExternalUser({
+              editorEmail: attendeeEmail,
+              recipientEmail: organizerEmail,
+              ics: vcalendar.toString(),
+              calendarURI: req.eventPayload.calendarURI,
+              domain: req.domain
+            });
           });
       })
       .catch(error => {
