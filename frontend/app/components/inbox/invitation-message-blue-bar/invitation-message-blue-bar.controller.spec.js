@@ -7,7 +7,7 @@ var expect = chai.expect;
 describe('The calInboxInvitationMessageBlueBarController', function() {
   var $componentController, $rootScope, $q, calOpenEventForm, calEventService, session, shells = {}, CalendarShell, ICAL, INVITATION_MESSAGE_HEADERS;
 
-  function initCtrl(method, uid, sequence, recurrenceId, sender, attachments) {
+  function initCtrl(method, uid, sequence, recurrenceId, sender, attachments, replyTo) {
     var headers = {};
 
     headers[INVITATION_MESSAGE_HEADERS.METHOD] = method;
@@ -21,6 +21,7 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
         from: {
           email: sender
         },
+        replyTo: replyTo || [],
         headers: headers
       }
     });
@@ -285,6 +286,23 @@ describe('The calInboxInvitationMessageBlueBarController', function() {
 
       expect(ctrl.replyAttendee).to.shallowDeepEqual({
         email: 'ddolcimascolo@linagora.com',
+        partstat: 'NEEDS-ACTION'
+      });
+    });
+
+    it('should expose the replyAttendee when the meeting is a reply and the attendee is found by the given replyTo email', function() {
+      var replyToEmail = 'ddolcimascolo@linagora.com';
+      var ctrl = initCtrl('REPLY', '1234', '2', null, 'no-reply@linagora.com', null, [{
+        email: replyToEmail
+      }]);
+
+      session.user.emails = ['admin@linagora.com'];
+      calEventService.getEventByUID = qResolve(shells.recurringEventWithTwoExceptions);
+      ctrl.$onInit();
+      $rootScope.$digest();
+
+      expect(ctrl.replyAttendee).to.shallowDeepEqual({
+        email: replyToEmail,
         partstat: 'NEEDS-ACTION'
       });
     });
