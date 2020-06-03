@@ -155,6 +155,11 @@ describe('The calendarViewController', function() {
       stop: sinon.spy()
     };
 
+    this.esnDatetimeServiceMock = {
+      updateObjectToUserTimeZone: sinon.stub().returnsArg(0),
+      updateObjectToBrowserTimeZone: sinon.stub().returnsArg(0)
+    };
+
     module('esn.calendar');
     module(function($provide) {
       $provide.decorator('calendarUtils', function($delegate) {
@@ -176,6 +181,7 @@ describe('The calendarViewController', function() {
       $provide.value('usSpinnerService', self.usSpinnerServiceMock);
       $provide.value('calCachedEventCache', self.calCachedEventSourceMock);
       $provide.value('calFullCalendarRenderEventService', self.calFullCalendarRenderEventService);
+      $provide.value('esnDatetimeService', self.esnDatetimeServiceMock);
       $provide.factory('calendarEventSource', function() {
         return function() {
           return [{
@@ -207,6 +213,7 @@ describe('The calendarViewController', function() {
     calDefaultValue,
     calEventUtils,
     elementScrollService,
+    esnDatetimeService,
     $q,
     CAL_SPINNER_TIMEOUT_DURATION) {
     this.rootScope = $rootScope;
@@ -218,6 +225,7 @@ describe('The calendarViewController', function() {
     this.calMoment = calMoment;
     this.calDefaultValue = calDefaultValue;
     this.calEventUtils = calEventUtils;
+    this.esnDatetimeService = esnDatetimeService;
     this.elementScrollService = elementScrollService;
     this.CalendarShell = CalendarShell;
     this.moment = moment;

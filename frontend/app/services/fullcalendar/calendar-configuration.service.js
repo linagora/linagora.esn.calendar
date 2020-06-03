@@ -112,11 +112,7 @@
     function configureTimeZoneForCalendar(config) {
       var uiConfig = angular.extend({}, config);
       var timeZone = esnDatetimeService.getTimeZone();
-
-      uiConfig.calendar.now = function() {
-        return moment().tz(timeZone);
-      };
-
+      uiConfig.calendar.timezone = timeZone;
       return uiConfig;
     }
 

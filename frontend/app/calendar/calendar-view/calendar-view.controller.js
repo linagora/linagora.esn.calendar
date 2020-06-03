@@ -28,6 +28,7 @@
     calOpenEventForm,
     elementScrollService,
     esnWithPromiseResult,
+    esnDatetimeService,
     CAL_EVENTS,
     calDefaultValue,
     CAL_MAX_CALENDAR_RESIZE_HEIGHT,
@@ -238,8 +239,8 @@
         }
 
         var event = CalendarShell.fromIncompleteShell({
-          start: date.start,
-          end: date.end
+          start: esnDatetimeService.updateObjectToUserTimeZone(date.start),
+          end: esnDatetimeService.updateObjectToUserTimeZone(date.end)
         });
 
         calOpenEventForm($scope.calendarHomeId, event);

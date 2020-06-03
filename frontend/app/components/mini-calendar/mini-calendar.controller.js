@@ -20,6 +20,7 @@
     calendarCurrentView,
     userAndExternalCalendars,
     calendarVisibilityService,
+    esnDatetimeService,
     calFullUiConfiguration) {
 
       var miniCalendarDisplay = false;
@@ -97,6 +98,9 @@
             element.addClass('fc-event-color');
           }
         };
+
+        // Set up time zone for mini calendar
+        configuration.timezone = esnDatetimeService.getTimeZone();
 
         return configuration;
       }

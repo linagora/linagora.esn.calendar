@@ -76,6 +76,7 @@ describe('The calFullUiConfiguration service', function() {
 
   describe('The get function', function() {
     it('should return the default configuration if no configuration value', function(done) {
+      esnDatetimeServiceMock.getTimeZone = sinon.stub().returns('local');
       var payload = [
         {
           name: moduleName,
@@ -371,18 +372,6 @@ describe('The calFullUiConfiguration service', function() {
 
       expect(config.calendar.locale).to.be.equal('fr');
       });
-    });
-  });
-
-  describe('The configureTimeZoneForCalendar function', function() {
-    it('should set nowIndicator with the user TZ', function() {
-      esnDatetimeServiceMock.getTimeZone = sinon.stub().returns('Europe/Berlin');
-
-      var config = calFullUiConfiguration.configureTimeZoneForCalendar(uiConfig);
-
-      var now = config.calendar.now();
-
-      expect(now.tz()).to.be.equal('Europe/Berlin');
     });
   });
 });
