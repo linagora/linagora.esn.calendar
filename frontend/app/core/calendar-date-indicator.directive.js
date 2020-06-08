@@ -8,13 +8,16 @@
     var directive = {
       restrict: 'A',
       scope: true,
-      controller: CalendarDateIndicatorController,
+      controller: 'calendarDateIndicatorController',
       controllerAs: 'vm',
       bindToController: true
     };
 
     return directive;
   }
+
+  angular.module('esn.calendar')
+    .controller('calendarDateIndicatorController', CalendarDateIndicatorController);
 
   function CalendarDateIndicatorController($scope, CAL_EVENTS, calendarCurrentView) {
     var self = this;
