@@ -5,17 +5,16 @@
         span.input-group-addon
           i.mdi.mdi-clock
         .col-xs-12.col-md-4
-          .form-group
-            .fg-line
-              input.input.form-control.date(type="text", size="10", ng-model="ctrl.start", data-autoclose="1", data-start-week="1", data-date-format="{{::ctrl.dateFormat}}", placeholder=__('Start date'), ng-change="ctrl.onStartDateChange()", ng-blur="ctrl.dateOnBlurFn()", bs-datepicker, aria-expanded="false", ng-disabled="ctrl.disabled", cal-date-to-moment)
-            .fg-line(ng-if='!ctrl.full24HoursDay')
-              input.input.form-control(type="text", size="10", ng-model="ctrl.start", data-autoclose="0", placeholder=__('Time'), ng-change="ctrl.onStartDateTimeChange()", ng-blur="ctrl.dateOnBlurFn()", lng-clockpicker, lng-clockpicker-options="{twelvehour: !ctrl.use24hourFormat}", aria-expanded="false", ng-disabled="ctrl.full24HoursDay || ctrl.disabled")
+          esn-date-picker(ng-model='ctrl.start', ng-change="ctrl.onStartDateChange()", placeholder=__('Start date'),
+            ng-disabled="ctrl.disabled", ng-blur="ctrl.dateOnBlurFn()", size="10", date-format="{{::ctrl.dateFormat}}")
+          esn-clock-picker(ng-if='!ctrl.full24HoursDay', ng-model='ctrl.start', ng-change="ctrl.onEndDateTimeChange()", placeholder=__('Time'),
+            ng-disabled="ctrl.full24HoursDay || ctrl.disabled", ng-blur="ctrl.dateOnBlurFn()", size="10", options="{twelvehour: !ctrl.use24hourFormat}")
         .col-xs-12.col-md-4
-          .form-group
-            .fg-line
-              input.input.form-control.date(type="text", size="10", ng-model="ctrl.end", data-autoclose="1", data-start-week="1", data-date-format="{{::ctrl.dateFormat}}", data-min-date="{{ctrl.getMinEndDate()}}", placeholder=__('End date'), ng-change="ctrl.onEndDateChange()", aria-expanded="false", ng-disabled="ctrl.disabled", ng-blur="ctrl.dateOnBlurFn()", bs-datepicker, cal-date-to-moment, data-is-all-day="ctrl.full24HoursDay")
-            .fg-line(ng-if='!ctrl.full24HoursDay')
-              input.input.form-control(type="text", size="10", ng-model="ctrl.end", data-autoclose="0", placeholder=__('Time'), ng-change="ctrl.onEndDateTimeChange()", aria-expanded="false", ng-disabled="ctrl.full24HoursDay || ctrl.disabled", ng-blur="ctrl.dateOnBlurFn()", lng-clockpicker, lng-clockpicker-options="{twelvehour: !ctrl.use24hourFormat}")
+          esn-date-picker(ng-model='ctrl.end', ng-change="ctrl.onEndDateChange()", placeholder=__('End date'),
+            ng-disabled="ctrl.disabled", ng-blur="ctrl.dateOnBlurFn()", size="10", date-format="{{::ctrl.dateFormat}}",
+            isAllDay="ctrl.full24HoursDay", minDate="{{ctrl.getMinEndDate()}}")
+          esn-clock-picker(ng-if='!ctrl.full24HoursDay', ng-model='ctrl.end', ng-change="ctrl.onEndDateTimeChange()", placeholder=__('Time'),
+            ng-disabled="ctrl.full24HoursDay || ctrl.disabled", ng-blur="ctrl.dateOnBlurFn()", size="10", options="{twelvehour: !ctrl.use24hourFormat}")
         .col-xs-12.col-md-4.hidden-xs
           .form-group.text-center
             .fg-line.nopadding
