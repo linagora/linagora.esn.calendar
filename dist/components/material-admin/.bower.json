@@ -1,0 +1,33 @@
+{
+  "name": "material-admin",
+  "authors": [
+    "rushenn (https://wrapbootstrap.com/user/rushenn)"
+  ],
+  "description": "Material-Design Bootstrap theme",
+  "moduleType": [
+    "globals"
+  ],
+  "keywords": [
+    "material",
+    "admin"
+  ],
+  "license": "Commercial",
+  "homepage": "https://wrapbootstrap.com/theme/material-admin-responsive-angularjs-WB011H985",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests",
+    "data"
+  ],
+  "_release": "1.5.1.5",
+  "_resolution": {
+    "type": "tag",
+    "tag": "1.5.1.5",
+    "commit": "a070bfd7eb333605ca1a47b095491f8c8fe283c3"
+  },
+  "_source": "git://github.com/linagora/material-admin.git",
+  "_target": "1.5.1.5",
+  "_originalSource": "linagora/material-admin"
+}
