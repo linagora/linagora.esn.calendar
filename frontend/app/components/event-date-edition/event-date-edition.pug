@@ -7,7 +7,7 @@
         .col-xs-12.col-md-4
           esn-date-picker(ng-model='ctrl.start', ng-change="ctrl.onStartDateChange()", placeholder=__('Start date'),
             ng-disabled="ctrl.disabled", ng-blur="ctrl.dateOnBlurFn()", size="10", date-format="{{::ctrl.dateFormat}}")
-          esn-clock-picker(ng-if='!ctrl.full24HoursDay', ng-model='ctrl.start', ng-change="ctrl.onEndDateTimeChange()", placeholder=__('Time'),
+          esn-clock-picker(ng-if='!ctrl.full24HoursDay', ng-model='ctrl.start', ng-change="ctrl.onStartDateTimeChange()", placeholder=__('Time'),
             ng-disabled="ctrl.full24HoursDay || ctrl.disabled", ng-blur="ctrl.dateOnBlurFn()", size="10", options="{twelvehour: !ctrl.use24hourFormat}")
         .col-xs-12.col-md-4
           esn-date-picker(ng-model='ctrl.end', ng-change="ctrl.onEndDateChange()", placeholder=__('End date'),
