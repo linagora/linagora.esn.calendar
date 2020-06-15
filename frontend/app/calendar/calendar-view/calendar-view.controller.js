@@ -239,8 +239,12 @@
         }
 
         var event = CalendarShell.fromIncompleteShell({
-          start: esnDatetimeService.updateObjectToUserTimeZone(date.start),
-          end: esnDatetimeService.updateObjectToUserTimeZone(date.end)
+          start: esnDatetimeService.updateObjectToUserTimeZone(date.start, {
+            _ambigTime: !date.start.hasTime()
+          }),
+          end: esnDatetimeService.updateObjectToUserTimeZone(date.end, {
+            _ambigTime: !date.end.hasTime()
+          })
         });
 
         calOpenEventForm($scope.calendarHomeId, event);
