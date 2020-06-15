@@ -23,6 +23,9 @@ describe('The cal-event-form Angular module directives', function() {
       $provide.value('calEventUtils', self.calEventUtilsMock);
       $provide.value('esnI18nDateFormatService', self.esnI18nDateFormatService);
       $provide.factory('eventRecurrenceEditionDirective', function() { return {}; });
+      $provide.factory('esnDatePickerDirective', function() {
+        return [];
+      });
     });
   });
 
