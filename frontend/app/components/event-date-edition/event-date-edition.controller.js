@@ -4,7 +4,7 @@
   angular.module('esn.calendar')
     .controller('calEventDateEditionController', calEventDateEditionController);
 
-  function calEventDateEditionController(calMoment, calEventUtils, esnI18nDateFormatService) {
+  function calEventDateEditionController(calMoment, calEventUtils, esnI18nDateFormatService, esnDatetimeService) {
     var self = this;
     var previousStart;
     var previousEnd;
@@ -49,19 +49,21 @@
     function allDayOnChange() {
       if (self.full24HoursDay) {
         _saveEventDateTime(self.start, self.end);
-        self.start = calEventUtils.stripTimeWithTz(self.start);
-        self.end = calEventUtils.stripTimeWithTz(self.end);
+
+        // Strip time from moment object, make self.start & self.end timeless.
+        self.start = esnDatetimeService.setAmbigTime(self.start, true);
+        self.end = esnDatetimeService.setAmbigTime(self.end, true);
       // The user unchecks the 'All day' option after previously checking it.
       } else if (previousStart && previousEnd) {
-        self.start = _copyTime(self.start, previousStart);
-        self.end = _copyTime(self.end, previousEnd);
+        self.start = previousStart;
+        self.end = previousEnd;
 
       // The user unchecks the 'All day' option after just opening an all-day event.
       } else {
         var nextHour = calMoment().startOf('hour').add(1, 'hour').hour();
 
-        self.start = self.start.clone().startOf('day').hour(nextHour).utc();
-        self.end = _addDefaultEventDuration(self.end.clone().startOf('day').hour(nextHour).utc());
+        self.start = esnDatetimeService.setAmbigTime(self.start.clone().startOf('day').hour(nextHour), false);
+        self.end = esnDatetimeService.setAmbigTime(_addDefaultEventDuration(self.end.clone().startOf('day').hour(nextHour)), false);
       }
 
       _checkAndForceEndAfterStart();
@@ -146,12 +148,6 @@
 
     function _calcDateDiff() {
       diff = self.end.diff(self.start);
-    }
-
-    function _copyTime(src, ref) {
-      var refUtc = ref.clone().utc();
-
-      return src.clone().utc().startOf('day').hour(refUtc.hour()).minute(refUtc.minute());
     }
 
     function _onDateChange() {

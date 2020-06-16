@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('The calEventDateEditionController', function() {
-  var $controller, calMoment, calEventUtils, esnI18nDateFormatService;
+  var $controller, calMoment, calEventUtils, esnI18nDateFormatService, esnDatetimeService;
   var startTestMoment, endTestMoment;
   var longDateFormatMock = 'YYYY-MM-DD';
 
@@ -14,8 +14,17 @@ describe('The calEventDateEditionController', function() {
       getLongDateFormat: sinon.stub().returns(longDateFormatMock)
     };
 
+    esnDatetimeService = {
+      setAmbigTime: function(src, ambigTime) {
+        src._ambigTime = !!ambigTime;
+
+        return src;
+      }
+    };
+
     module('esn.calendar', function($provide) {
       $provide.value('esnI18nDateFormatService', esnI18nDateFormatService);
+      $provide.value('esnDatetimeService', esnDatetimeService);
     });
 
     inject(function(_$controller_, _calMoment_, _calEventUtils_) {
@@ -150,8 +159,8 @@ describe('The calEventDateEditionController', function() {
       ctrl.allDayOnChange();
       checkEventDateTimeSync(ctrl);
 
-      expect(ctrl.start.isSame(calEventUtils.stripTimeWithTz(startTestMoment))).to.be.true;
-      expect(ctrl.end.isSame(calEventUtils.stripTimeWithTz(endTestMoment))).to.be.true;
+      expect(ctrl.start.isSame(esnDatetimeService.setAmbigTime(startTestMoment, true))).to.be.true;
+      expect(ctrl.end.isSame(esnDatetimeService.setAmbigTime(endTestMoment, true))).to.be.true;
     });
 
     it('should set the time of start and end to next hour when unchecking the "All day" option after just opening an all-day event', function() {
@@ -197,8 +206,8 @@ describe('The calEventDateEditionController', function() {
       ctrl.allDayOnChange();
       checkEventDateTimeSync(ctrl);
 
-      expect(ctrl.start.isSame(calEventUtils.stripTimeWithTz(startTestMoment))).to.be.true;
-      expect(ctrl.end.isSame(calEventUtils.stripTimeWithTz(endTestMoment))).to.be.true;
+      expect(ctrl.start.isSame(esnDatetimeService.setAmbigTime(startTestMoment, true))).to.be.true;
+      expect(ctrl.end.isSame(esnDatetimeService.setAmbigTime(endTestMoment, true))).to.be.true;
 
       ctrl.full24HoursDay = false;
       ctrl.allDayOnChange();
