@@ -124,6 +124,10 @@
     }
 
     function setDefaultUntilDate(freq) {
+      if (self.event.rrule.until) {
+        return;
+      }
+
       var until = new Date();
 
       switch (freq) {
