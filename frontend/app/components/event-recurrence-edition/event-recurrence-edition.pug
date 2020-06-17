@@ -54,6 +54,7 @@
                   ng-disabled="!vm.canModifyEventRecurrence",
                   ng-model="vm.event.rrule.until",
                   ng-focus="selectEndRadioButton(2)",
+                  ng-click="vm.setDefaultUntilDate(vm.event.rrule.freq)"
                   data-autoclose="1",
                   data-min-date="{{vm.getMinDate()}}",
                   data-start-week="1",
