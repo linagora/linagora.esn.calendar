@@ -5,14 +5,18 @@
         span.input-group-addon
           i.mdi.mdi-clock
         .col-xs-12.col-md-4
-          esn-date-picker(
-            ng-model='ctrl.start',
-            ng-change="ctrl.onStartDateChange()",
-            placeholder=__('Start date'),
-            ng-disabled="ctrl.disabled",
-            ng-blur="ctrl.dateOnBlurFn()",
-            size="10",
-            date-format="{{::ctrl.dateFormat}}")
+          .fg-line
+            esn-date-picker(
+              ng-model='ctrl.start',
+              ng-change="ctrl.onStartDateChange()",
+              placeholder=__('Start date'),
+              ng-disabled="ctrl.disabled",
+              ng-blur="ctrl.dateOnBlurFn()",
+              size="10",
+              date-format="{{::ctrl.dateFormat}}",
+              autoclose="1",
+              start-week="1",
+              custom-attributes="{'cal-date-to-moment': 'cal-date-to-moment'}")
           .form-group
             .fg-line(ng-if='!ctrl.full24HoursDay')
               input.input.form-control(type="text",
@@ -27,16 +31,20 @@
                 aria-expanded="false",
                 ng-disabled="ctrl.full24HoursDay || ctrl.disabled")
         .col-xs-12.col-md-4
-          esn-date-picker(
-            ng-model='ctrl.end',
-            ng-change="ctrl.onEndDateChange()",
-            placeholder=__('End date'),
-            ng-disabled="ctrl.disabled",
-            ng-blur="ctrl.dateOnBlurFn()",
-            size="10",
-            date-format="{{::ctrl.dateFormat}}",
-            is-all-day="ctrl.full24HoursDay",
-            min-date="{{ctrl.getMinEndDate()}}")
+          .fg-line
+            esn-date-picker(
+              ng-model='ctrl.end',
+              ng-change="ctrl.onEndDateChange()",
+              placeholder=__('End date'),
+              ng-disabled="ctrl.disabled",
+              ng-blur="ctrl.dateOnBlurFn()",
+              size="10",
+              date-format="{{::ctrl.dateFormat}}",
+              is-all-day="ctrl.full24HoursDay",
+              min-date="ctrl.minEndDate",
+              autoclose="1",
+              start-week="1",
+              custom-attributes="{'cal-date-to-moment': 'cal-date-to-moment'}")
           .form-group
             .fg-line(ng-if='!ctrl.full24HoursDay')
               input.input.form-control(type="text",

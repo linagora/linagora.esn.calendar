@@ -31,6 +31,7 @@
 
       // On load, ensure the duration between start and end is calculated
       _calcDateDiff();
+      _updateMinEndDate();
     }
 
     function dateOnBlurFn() {
@@ -84,6 +85,7 @@
 
       // Move the end range from the start range plus the offset
       self.end = calMoment(self.start).add(diff / 1000, 'seconds');
+      _updateMinEndDate();
       _syncEventDateTime();
       _onDateChange();
     }
@@ -155,6 +157,10 @@
         start: self.start.clone(),
         end: self.end.clone()
       });
+    }
+
+    function _updateMinEndDate() {
+      self.minEndDate = getMinEndDate();
     }
   }
 })();
