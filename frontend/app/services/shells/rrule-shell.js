@@ -48,6 +48,7 @@
         return this.__until;
       },
       set until(value) {
+        value = calMoment.isMoment(value) ? value.toDate() : value;
         this.__until = undefined;
         this.rrule.until = value ? ICAL.Time.fromJSDate(value, true).convertToZone(ICAL.TimezoneService.get(this.timezone)) : undefined;
         this.updateParentEvent();
