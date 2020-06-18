@@ -90,6 +90,7 @@ module.exports = function(config) {
       'node_modules/linagora-rse/frontend/js/modules/**/*.module.js',
       'node_modules/linagora-rse/frontend/js/modules/**/*.js',
       'node_modules/linagora-rse/frontend/views/modules/**/*.pug',
+      'node_modules/linagora-rse/frontend/js/**/*.pug',
       'node_modules/linagora-rse/frontend/js/*.js',
 
       'node_modules/linagora-rse/modules/linagora.esn.graceperiod/frontend/js/*.js',
@@ -166,6 +167,7 @@ module.exports = function(config) {
         return filepath
           .replace(/pug$/, 'html')
           .replace(/^frontend/, '/calendar')
+          .replace(/^node_modules\/linagora-rse\/frontend\/js/, '/views')
           .replace(/^node_modules\/linagora-rse\/frontend/, '');
       },
       // setting this option will create only a single module that contains templates
