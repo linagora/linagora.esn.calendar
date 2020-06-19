@@ -12,7 +12,7 @@
       )
   .attendee-item-meta
     .name
-      span {{::ctrl.resource.name}}
+      span {{ctrl.resource.name}}
     .details
       span.freebusy(ng-if="ctrl.resource.freeBusy === ctrl.CAL_FREEBUSY.FREE") #{__('Free')}
       span.freebusy(ng-if="ctrl.resource.freeBusy === ctrl.CAL_FREEBUSY.BUSY") #{__('Busy')}
