@@ -38,7 +38,8 @@
     userUtils,
     CAL_EVENT_MODIFY_COMPARE_KEYS,
     CAL_ICAL,
-    CAL_EVENT_CLASS
+    CAL_EVENT_CLASS,
+    esnDatetimeService
   ) {
     var localTimezone = jstz.determine().name();
 
@@ -214,9 +215,11 @@
         return this.__start;
       },
       set start(value) {
+        var userTimezone = getUserTimeZone();
+
         this.__start = undefined;
         if (value) {
-          var dtstart = ICAL.Time.fromJSDate(value.toDate(), true).convertToZone(ICAL.TimezoneService.get(localTimezone));
+          var dtstart = ICAL.Time.fromJSDate(value.toDate(), true).convertToZone(ICAL.TimezoneService.get(userTimezone));
 
           dtstart.isDate = !value.hasTime();
 
@@ -224,7 +227,7 @@
             this.deleteAllException();
           }
 
-          this.vevent.updatePropertyWithValue('dtstart', dtstart).setParameter('tzid', localTimezone);
+          this.vevent.updatePropertyWithValue('dtstart', dtstart).setParameter('tzid', userTimezone);
         }
         this.ensureAlarmCoherence();
       },
@@ -237,9 +240,11 @@
         return this.__end;
       },
       set end(value) {
+        var userTimezone = getUserTimeZone();
+
         this.__end = undefined;
         if (value) {
-          var dtend = ICAL.Time.fromJSDate(value.toDate(), true).convertToZone(ICAL.TimezoneService.get(localTimezone));
+          var dtend = ICAL.Time.fromJSDate(value.toDate(), true).convertToZone(ICAL.TimezoneService.get(userTimezone));
 
           dtend.isDate = !value.hasTime();
 
@@ -247,7 +252,7 @@
             this.deleteAllException();
           }
 
-          this.vevent.updatePropertyWithValue('dtend', dtend).setParameter('tzid', localTimezone);
+          this.vevent.updatePropertyWithValue('dtend', dtend).setParameter('tzid', userTimezone);
         }
         this.ensureAlarmCoherence();
       },
@@ -304,15 +309,18 @@
       },
 
       get rrule() {
+        var userTimezone = getUserTimeZone();
         var rrule = this.vevent.getFirstPropertyValue('rrule');
 
         if (rrule && !this.__rrule) {
-          this.__rrule = new CalRRuleShell(rrule, this.vevent, localTimezone);
+          this.__rrule = new CalRRuleShell(rrule, this.vevent, userTimezone);
         }
 
         return this.__rrule;
       },
       set rrule(value) {
+        var userTimezone = getUserTimeZone();
+
         this.__rrule = undefined;
         if (!value) {
           this.vevent.removeProperty('rrule');
@@ -320,7 +328,7 @@
           return;
         }
         if (value.until) {
-          value.until = ICAL.Time.fromJSDate(value.until, true).convertToZone(ICAL.TimezoneService.get(localTimezone));
+          value.until = ICAL.Time.fromJSDate(value.until, true).convertToZone(ICAL.TimezoneService.get(userTimezone));
         }
         var rrule = new ICAL.Recur.fromData(value);
 
@@ -910,6 +918,10 @@
 
     function getAttendeeByEmail(email) {
       return _.find(this.attendees, { email: email });
+    }
+
+    function getUserTimeZone() {
+      return esnDatetimeService.getTimeZone() || localTimezone;
     }
 
     function ensureAlarmCoherence() {

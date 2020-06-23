@@ -32,6 +32,8 @@ describe('The calEventDateConsultationController', function() {
       };
       var ctrl = initController(bindings);
 
+      ctrl.event.start._ambigTime = false;
+
       expect(ctrl.start).to.equal(ctrl.event.start.format('MMM D'));
       expect(ctrl.end).to.be.undefined;
     });
@@ -61,6 +63,9 @@ describe('The calEventDateConsultationController', function() {
         })
       };
       var ctrl = initController(bindings);
+
+      ctrl.event.start._ambigTime = false;
+      ctrl.event.end._ambigTime = false;
 
       expect(ctrl.start).to.equal(ctrl.event.start.format('MMM D'));
       expect(ctrl.end).to.equal(ctrl.event.end.clone().subtract(1, 'day').format('MMM D'));

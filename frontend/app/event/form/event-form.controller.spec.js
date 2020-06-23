@@ -134,7 +134,10 @@ describe('The CalEventFormController controller', function() {
 
     var esnDatetimeServiceMock = {
       getTimeFormat: sinon.stub().returns(''),
-      is24hourFormat: sinon.stub().returns(true)
+      is24hourFormat: sinon.stub().returns(true),
+      getTimeZone: function() {
+        return 'Asia/Ho_Chi_Minh';
+      }
     };
 
     var sessionMock = {
