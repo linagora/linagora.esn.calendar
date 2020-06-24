@@ -6,25 +6,48 @@
       .col-xs-12.col-md-4
         .form-group
           .fg-line
-            input.input.form-control.date(type="text", size="10", ng-model="ctrl.event.start", data-autoclose="1", data-start-week="1", data-date-format="{{::ctrl.dateFormat}}", placeholder=__('Start date'), ng-change="ctrl.onStartDateChange()", ng-blur="ctrl.dateOnBlurFn()", bs-datepicker, aria-expanded="false", cal-date-to-moment)
-          .fg-line(ng-if='!ctrl.allDay')
-            input.input.form-control(type="text", size="10", ng-model="ctrl.event.start", data-autoclose="0", placeholder=__('Time'), ng-change="ctrl.onStartDateChange()", ng-blur="ctrl.dateOnBlurFn()", lng-clockpicker, lng-clockpicker-options="{twelvehour: !ctrl.use24hourFormat}", aria-expanded="false", ng-disabled="ctrl.allDay")
-          .fg-line(ng-if='ctrl.allDay')
-            input.input(type="text", size="10", class="form-control", ng-model="ctrl.previousStart", data-autoclose="0", placeholder=__('Time'), ng-change="ctrl.onEndDateChange()", aria-expanded="false", ng-disabled="ctrl.allDay", ng-blur="ctrl.dateOnBlurFn()", lng-clockpicker, lng-clockpicker-options="{twelvehour: !ctrl.use24hourFormat}")
+            esn-date-picker(
+              size="10",
+              ng-model="ctrl.start",
+              autoclose="1",
+              start-week="1",
+              date-format="{{::ctrl.dateFormat}}",
+              placeholder=__('Start date'),
+              ng-change="ctrl.onStartDateChange()",
+              ng-blur="ctrl.dateOnBlurFn()",
+              custom-attributes="{'cal-date-to-moment': 'cal-date-to-moment'}"
+            )
+          .fg-line(ng-if='!ctrl.full24HoursDay')
+            input.input.form-control(type="text", size="10", ng-model="ctrl.start", data-autoclose="0", placeholder=__('Time'), ng-change="ctrl.onStartDateChange()", ng-blur="ctrl.dateOnBlurFn()", lng-clockpicker, lng-clockpicker-options="{twelvehour: !ctrl.use24hourFormat}", aria-expanded="false", ng-disabled="ctrl.full24HoursDay")
+          .fg-line(ng-if='ctrl.full24HoursDay')
+            input.input(type="text", size="10", class="form-control", ng-model="ctrl.previousStart", data-autoclose="0", placeholder=__('Time'), ng-change="ctrl.onEndDateChange()", aria-expanded="false", ng-disabled="ctrl.full24HoursDay", ng-blur="ctrl.dateOnBlurFn()", lng-clockpicker, lng-clockpicker-options="{twelvehour: !ctrl.use24hourFormat}")
       .col-xs-12.col-md-4
         .form-group
           .fg-line
-            input.input.form-control.date(type="text", size="10", class="form-control", ng-model="ctrl.event.end", data-autoclose="1", data-start-week="1", data-date-format="{{::ctrl.dateFormat}}", data-min-date="{{ctrl.getMinDate()}}", placeholder=__('End date'), ng-change="ctrl.onEndDateChange()", aria-expanded="false", ng-blur="ctrl.dateOnBlurFn()", bs-datepicker, cal-date-to-moment, cal-friendlify-end-date, data-is-all-day="ctrl.allDay")
-          .fg-line(ng-if='!ctrl.allDay')
-            input.input(type="text", size="10", class="form-control", ng-model="ctrl.event.end", data-autoclose="0", placeholder=__('Time'), ng-change="ctrl.onEndDateChange()", aria-expanded="false", ng-disabled="ctrl.allDay", ng-blur="ctrl.dateOnBlurFn()", lng-clockpicker, lng-clockpicker-options="{twelvehour: !ctrl.use24hourFormat}")
-          .fg-line(ng-if='ctrl.allDay')
-            input.input(type="text", size="10", class="form-control", ng-model="ctrl.previousEnd", data-autoclose="0", placeholder=__('Time'), ng-change="ctrl.onEndDateChange()", aria-expanded="false", ng-disabled="ctrl.allDay", ng-blur="ctrl.dateOnBlurFn()", lng-clockpicker, lng-clockpicker-options="{twelvehour: !ctrl.use24hourFormat}")
+            esn-date-picker(
+              size="10",
+              class-name="form-control",
+              ng-model="ctrl.end",
+              autoclose="1",
+              start-week="1",
+              date-format="{{::ctrl.dateFormat}}",
+              placeholder=__('End date'),
+              min-date="ctrl.minEndDate",
+              ng-change="ctrl.onEndDateChange()",
+              ng-blur="ctrl.dateOnBlurFn()",
+              is-all-day="ctrl.full24HoursDay",
+              custom-attributes="{'cal-date-to-moment': 'cal-date-to-moment'}"
+            )
+          .fg-line(ng-if='!ctrl.full24HoursDay')
+            input.input(type="text", size="10", class="form-control", ng-model="ctrl.end", data-autoclose="0", placeholder=__('Time'), ng-change="ctrl.onEndDateChange()", aria-expanded="false", ng-disabled="ctrl.full24HoursDay", ng-blur="ctrl.dateOnBlurFn()", lng-clockpicker, lng-clockpicker-options="{twelvehour: !ctrl.use24hourFormat}")
+          .fg-line(ng-if='ctrl.full24HoursDay')
+            input.input(type="text", size="10", class="form-control", ng-model="ctrl.previousEnd", data-autoclose="0", placeholder=__('Time'), ng-change="ctrl.onEndDateChange()", aria-expanded="false", ng-disabled="ctrl.full24HoursDay", ng-blur="ctrl.dateOnBlurFn()", lng-clockpicker, lng-clockpicker-options="{twelvehour: !ctrl.use24hourFormat}")
       .col-xs-12.col-md-4
         .form-group.nopadding
           .fg-line
             .checkbox.allday
               label
-                input(type="checkbox", ng-model='ctrl.allDay', ng-change="ctrl.setEventDates();")
+                input(type="checkbox", ng-model='ctrl.full24HoursDay', ng-change="ctrl.setEventDates();")
                 i.input-helper
                 span #{__('All day')}
       .col-xs-12
