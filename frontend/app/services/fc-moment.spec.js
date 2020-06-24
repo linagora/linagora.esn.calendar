@@ -7,8 +7,8 @@ var expect = chai.expect;
 describe('calMoment factory', function() {
 
   beforeEach(function() {
-    this.calEventUtilsMock = {
-      stripTimeWithTz: sinon.spy()
+    this.esnDatetimeServiceMock = {
+      updateObjectToUserTimeZone: sinon.spy()
     };
 
     this.window = {
@@ -40,7 +40,7 @@ describe('calMoment factory', function() {
       $provide.value('$window', self.window);
       $provide.value('_', function() {});
       $provide.value('jstz', self.jstz);
-      $provide.value('calEventUtils', self.calEventUtilsMock);
+      $provide.value('esnDatetimeService', self.esnDatetimeServiceMock);
       $provide.constant('moment', self.moment);
     });
   });
@@ -77,15 +77,23 @@ describe('calMoment factory', function() {
 
     var emptyMomentObject = {};
 
+    var options = {
+      _ambigTime: true
+    };
+
     this.window.$.fullCalendar.moment = function(dt) {
       expect(dt).to.deep.equal(icalTime.toJSDate());
 
-      return emptyMomentObject;
+      return {
+        local: function() {
+          return emptyMomentObject;
+        }
+      };
     };
 
     this.calMoment(icalTime);
 
-    expect(this.calEventUtilsMock.stripTimeWithTz).to.have.been.calledWith(emptyMomentObject, true);
+    expect(this.esnDatetimeServiceMock.updateObjectToUserTimeZone).to.have.been.calledWith(emptyMomentObject, options);
   });
 
   it('has a duration method which is like moment.duration', function() {

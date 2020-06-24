@@ -5,7 +5,7 @@
 var expect = chai.expect;
 
 describe('CalendarShell factory', function() {
-  var CalendarShell, calMoment, calPathBuilder, ICAL, $rootScope, calEventService;
+  var CalendarShell, calMoment, calPathBuilder, ICAL, $rootScope, calEventService, esnDatetimeService;
 
   function loadICSFixtureAsCalendarShell(file, folder) {
     var path = 'frontend/app/fixtures/calendar/' + (folder ? folder + '/' : '') + file;
@@ -44,6 +44,7 @@ describe('CalendarShell factory', function() {
     };
 
     this.localTimezone = 'Asia/Ho_Chi_Minh';
+    this.userTimezone = 'Asia/Ho_Chi_Minh';
 
     this.jstzMock = {
       determine: _.constant({
@@ -53,12 +54,27 @@ describe('CalendarShell factory', function() {
 
     var self = this;
 
+    esnDatetimeService = {
+      updateObjectToUserTimeZone: function(date, options) {
+        var clone = date.clone();
+
+        clone = _.assign(date, options);
+
+        return clone;
+      },
+      updateObjectToBrowserTimeZone: sinon.stub().returnsArg(0),
+      getTimeZone: function() {
+        return self.userTimezone;
+      }
+    };
+
     angular.mock.module('esn.calendar');
     angular.mock.module(function($provide) {
       $provide.value('uuid4', self.uuid4);
       $provide.value('calEventAPI', self.calEventAPIMock);
       $provide.value('calMasterEventCache', self.calMasterEventCache);
       $provide.value('jstz', self.jstzMock);
+      $provide.value('esnDatetimeService', esnDatetimeService);
     });
   });
 
@@ -74,15 +90,15 @@ describe('CalendarShell factory', function() {
   });
 
   describe('set date', function() {
-    it('should convert date to localTimezone', function() {
+    it('should convert date to userTimezone', function() {
       var shell = CalendarShell.fromIncompleteShell({});
 
       shell.start = calMoment.tz([2015, 11, 11, 19, 0, 0], 'Europe/Paris');
-      expect(shell.vevent.getFirstProperty('dtstart').getParameter('tzid')).to.equal(this.localTimezone);
+      expect(shell.vevent.getFirstProperty('dtstart').getParameter('tzid')).to.equal(this.userTimezone);
       expect(shell.vevent.getFirstPropertyValue('dtstart').toString()).to.equal('2015-12-12T01:00:00');
 
       shell.end = calMoment.utc([2015, 11, 11, 19, 0, 0]);
-      expect(shell.vevent.getFirstProperty('dtend').getParameter('tzid')).to.equal(this.localTimezone);
+      expect(shell.vevent.getFirstProperty('dtend').getParameter('tzid')).to.equal(this.userTimezone);
       expect(shell.vevent.getFirstPropertyValue('dtend').toString()).to.equal('2015-12-12T02:00:00');
     });
 
@@ -124,7 +140,7 @@ describe('CalendarShell factory', function() {
       var midnight = calMoment.utc([2016, 2, 7, 17, 0]);
       var vcalendar = new ICAL.Component(ICAL.parse(__FIXTURES__['frontend/app/fixtures/calendar/reventWithTz.ics']));
 
-      vcalendar.getFirstSubcomponent('vevent').updatePropertyWithValue('dtstart', ICAL.Time.fromJSDate(midnight.toDate(), true).convertToZone(ICAL.TimezoneService.get(this.localTimezone)));
+      vcalendar.getFirstSubcomponent('vevent').updatePropertyWithValue('dtstart', ICAL.Time.fromJSDate(midnight.toDate(), true).convertToZone(ICAL.TimezoneService.get(this.userTimezone)));
 
       midnight.hasTime = function() {
         return false;
@@ -359,7 +375,7 @@ describe('CalendarShell factory', function() {
       ];
 
       shell = CalendarShell.fromIncompleteShell(shell);
-      expect(shell.vcalendar.toJSON()).to.deep.equal(getIcalWithRrule(rrule));
+      expect(JSON.stringify(shell.vcalendar.toJSON())).to.deep.equal(JSON.stringify(getIcalWithRrule(rrule)));
     });
 
     it('should correctly create a recurrent event: weekly + byday', function() {
@@ -967,6 +983,13 @@ describe('CalendarShell factory', function() {
       var shell = new CalendarShell(new ICAL.Component(vcalendar));
 
       var instances = shell.expand();
+
+      instances[0].start._ambigTime = false;
+      instances[1].start._ambigTime = false;
+      instances[0].end._ambigTime = false;
+      instances[1].end._ambigTime = false;
+      instances[0].recurrenceId._ambigTime = false;
+      instances[1].recurrenceId._ambigTime = false;
 
       expect(instances.length).to.equal(2);
       expect(instances[0].start.format('YYYY-M-D HH:mm:ss')).to.equal('2020-1-28 00:00:00');
