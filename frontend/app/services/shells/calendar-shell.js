@@ -309,11 +309,10 @@
       },
 
       get rrule() {
-        var userTimezone = getUserTimeZone();
         var rrule = this.vevent.getFirstPropertyValue('rrule');
 
         if (rrule && !this.__rrule) {
-          this.__rrule = new CalRRuleShell(rrule, this.vevent, userTimezone);
+          this.__rrule = new CalRRuleShell(rrule, this.vevent);
         }
 
         return this.__rrule;
