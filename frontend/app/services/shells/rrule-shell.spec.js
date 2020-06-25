@@ -1,6 +1,6 @@
 'use strict';
 
-/* global chai: false */
+/* global chai, moment: false */
 
 var expect = chai.expect;
 
@@ -60,6 +60,58 @@ describe('CalRRuleShell Factory', function() {
     it('should copy number as if (without packing them in an array)', function() {
       shell.count = 42;
       expect(shell.rrule.count).to.equals(42);
+    });
+  });
+
+  describe('set until', function() {
+    var shell, vevent;
+
+    beforeEach(function() {
+      var rrule = {
+        until: '20200625T114000'
+      };
+
+      vevent = new ICAL.Component('vevent');
+      shell = new CalRRuleShell(rrule, vevent);
+    });
+
+    it('should delete the until cache property', function() {
+      shell.__until = 42;
+      shell.until = '';
+      expect(shell.__until).to.be.undefined;
+    });
+
+    it('should accept undefined value', function() {
+      shell.until = undefined;
+      expect(shell.rrule.until).to.be.undefined;
+    });
+
+    it('should set time to the end of the until date and convert to UTC timezone if input is a Moment object', function() {
+      shell.until = moment.tz('2020-06-25 14:30:00', 'Asia/Thimphu'); // offset +0600
+
+      expect(shell.rrule.until._time).to.shallowDeepEqual({
+        year: 2020,
+        month: 6,
+        day: 25,
+        hour: 17,
+        minute: 59,
+        second: 59
+      });
+    });
+
+    it('should set time to the end of the until date and convert to UTC timezone if input is a Date object', function() {
+      shell.until = new Date('2020-06-25T14:30:00.000');
+
+      var expectedTime = new Date(2020, 5, 25, 23, 59, 59);
+
+      expect(shell.rrule.until._time).to.shallowDeepEqual({
+        year: expectedTime.getUTCFullYear(),
+        month: expectedTime.getUTCMonth() + 1,
+        day: expectedTime.getUTCDate(),
+        hour: expectedTime.getUTCHours(),
+        minute: expectedTime.getUTCMinutes(),
+        second: expectedTime.getUTCSeconds()
+      });
     });
   });
 });
