@@ -60,14 +60,14 @@ describe('The calEventDateSuggestionController', function() {
       var endBeforeBlur = ctrl.event.end;
 
       ctrl.dateOnBlurFn();
-      expect(ctrl.event.start).to.not.equal(startBeforeBlur);
-      expect(ctrl.event.end).to.not.equal(endBeforeBlur);
-      expect(ctrl.event.start.isSame(startBeforeBlur)).to.be.true;
-      expect(ctrl.event.end.isSame(endBeforeBlur)).to.be.true;
+      expect(ctrl.start).to.not.equal(startBeforeBlur);
+      expect(ctrl.end).to.not.equal(endBeforeBlur);
+      expect(ctrl.start.isSame(startBeforeBlur)).to.be.true;
+      expect(ctrl.end.isSame(endBeforeBlur)).to.be.true;
     });
 
     describe('The setEventDates function', function() {
-      it('should stripTime scope.event.allDay is true and add a day', function() {
+      it('should stripTime scope.event.full24HoursDay is true and add a day', function() {
         var bindings = {
           event: {
             start: startTestMoment,
@@ -86,22 +86,20 @@ describe('The calEventDateSuggestionController', function() {
         expect(ctrl.event.end.hasTime()).to.be.false;
       });
 
-      it('should set the time of start and end to next hour and set back utc flag to false', function() {
+      it('should set the time of start and end to next hour', function() {
         var bindings = {
           event: {
             start: startTestMoment.stripTime(),
             end: calMoment('2013-02-09 10:30').stripTime(),
-            allDay: false
+            full24HoursDay: false
           }
         };
         var ctrl = initController(bindings);
 
         ctrl.setEventDates();
 
-        expect(ctrl.event.start.hasTime()).to.be.true;
-        expect(ctrl.event.end.hasTime()).to.be.true;
-        expect(ctrl.event.start._isUTC).to.be.false;
-        expect(ctrl.event.end._isUTC).to.be.false;
+        expect(ctrl.start.hasTime()).to.be.true;
+        expect(ctrl.end.hasTime()).to.be.true;
 
         var nextHour = calMoment().startOf('hour').add(1, 'hour');
         var nextHourEnd = nextHour.clone().add(1, 'hour');
@@ -144,28 +142,28 @@ describe('The calEventDateSuggestionController', function() {
         };
         var ctrl = initController(bindings);
 
-        expect(ctrl.event.start.format('YYYY-MM-DD HH:mm:ss')).to.equal('2013-02-08 09:30:00');
-        expect(ctrl.event.start.hasTime()).to.be.true;
-        expect(ctrl.event.end.format('YYYY-MM-DD HH:mm:ss')).to.equal('2013-02-08 10:30:00');
-        expect(ctrl.event.end.hasTime()).to.be.true;
+        expect(ctrl.start.format('YYYY-MM-DD HH:mm:ss')).to.equal('2013-02-08 09:30:00');
+        expect(ctrl.start.hasTime()).to.be.true;
+        expect(ctrl.end.format('YYYY-MM-DD HH:mm:ss')).to.equal('2013-02-08 10:30:00');
+        expect(ctrl.end.hasTime()).to.be.true;
         expect(ctrl.diff).to.equal(1 * HOUR);
 
         ctrl.full24HoursDay = true;
         ctrl.setEventDates();
 
-        expect(ctrl.event.start.format('YYYY-MM-DD')).to.equal('2013-02-08');
-        expect(ctrl.event.start.hasTime()).to.be.false;
-        expect(ctrl.event.end.format('YYYY-MM-DD')).to.equal('2013-02-09');
-        expect(ctrl.event.end.hasTime()).to.be.false;
-        expect(ctrl.diff).to.equal(24 * HOUR);
+        expect(ctrl.start.format('YYYY-MM-DD')).to.equal('2013-02-08');
+        expect(ctrl.start.hasTime()).to.be.false;
+        expect(ctrl.end.format('YYYY-MM-DD')).to.equal('2013-02-08');
+        expect(ctrl.end.hasTime()).to.be.false;
+        expect(ctrl.diff).to.equal(0);
 
         ctrl.full24HoursDay = false;
         ctrl.setEventDates();
 
-        expect(ctrl.event.start.format('YYYY-MM-DD HH:mm:ss')).to.equal('2013-02-08 09:30:00');
-        expect(ctrl.event.start.hasTime()).to.be.true;
-        expect(ctrl.event.end.format('YYYY-MM-DD HH:mm:ss')).to.equal('2013-02-08 10:30:00');
-        expect(ctrl.event.end.hasTime()).to.be.true;
+        expect(ctrl.start.format('YYYY-MM-DD HH:mm:ss')).to.equal('2013-02-08 09:30:00');
+        expect(ctrl.start.hasTime()).to.be.true;
+        expect(ctrl.end.format('YYYY-MM-DD HH:mm:ss')).to.equal('2013-02-08 10:30:00');
+        expect(ctrl.end.hasTime()).to.be.true;
         expect(ctrl.diff).to.equal(1 * HOUR);
       });
     });
