@@ -13,13 +13,15 @@
   angular.module('esn.calMoment', ['angularMoment'])
     .factory('calMoment', calMoment);
 
-  function calMoment($window, ICAL, moment, calEventUtils) {
+  function calMoment($window, ICAL, moment, calEventUtils, esnDatetimeService) {
     function _calMoment(time) {
       if (time && (time instanceof ICAL.Time)) {
         var m = $window.$.fullCalendar.moment(time.toJSDate());
 
         if (time.isDate) {
-          m = calEventUtils.stripTimeWithTz(m, true);
+          m = esnDatetimeService.updateObjectToUserTimeZone(m.local(), {
+            _ambigTime: true
+          });
         }
 
         return m;

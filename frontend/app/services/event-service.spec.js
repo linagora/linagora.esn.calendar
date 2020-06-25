@@ -99,7 +99,7 @@ describe('The calEventService service', function() {
     });
   });
 
-  beforeEach(inject(function(calEventService, $httpBackend, $rootScope, _ICAL_, CalendarShell, calMoment, CAL_EVENTS, CAL_GRACE_DELAY, $window, esnI18nService, calEventAPI, calendarAPI) {
+  beforeEach(inject(function(calEventService, $httpBackend, $rootScope, _ICAL_, CalendarShell, calMoment, CAL_EVENTS, CAL_GRACE_DELAY, $window, esnI18nService, calEventAPI, calendarAPI, esnDatetimeService) {
     self.$httpBackend = $httpBackend;
     self.$rootScope = $rootScope;
     self.calEventService = calEventService;
@@ -112,6 +112,10 @@ describe('The calEventService service', function() {
     self.CAL_GRACE_DELAY = CAL_GRACE_DELAY;
     self.$window = $window;
     self.esnI18nService = esnI18nService;
+    self.esnDatetimeService = esnDatetimeService;
+    self.esnDatetimeService.getTimeZone = function() {
+      return 'Asia/Ho_Chi_Minh';
+    };
 
     self.CAL_GRACE_DELAY_IS_ACTIVE_MOCK = true;
   }));
