@@ -5,10 +5,9 @@
     .factory('CalRRuleShell', CalRRuleShellFactory);
 
   function CalRRuleShellFactory(calMoment, ICAL, CAL_RRULE_MODIFY_COMPARE_KEYS) {
-    function CalRRuleShell(rrule, vevent, timezone) {
+    function CalRRuleShell(rrule, vevent) {
       this.rrule = rrule;
       this.vevent = vevent;
-      this.timezone = timezone;
       this.updateParentEvent();
     }
 
@@ -48,8 +47,14 @@
         return this.__until;
       },
       set until(value) {
+        if (value) {
+          value = calMoment.isMoment(value) ? value : calMoment(value);
+          value = value.set({ hour: 23, minute: 59, second: 59, millisecond: 999 });
+          value = value.utc().toDate();
+        }
+
         this.__until = undefined;
-        this.rrule.until = value ? ICAL.Time.fromJSDate(value, true).convertToZone(ICAL.TimezoneService.get(this.timezone)) : undefined;
+        this.rrule.until = value ? ICAL.Time.fromJSDate(value, true) : undefined;
         this.updateParentEvent();
       },
 
