@@ -87,7 +87,7 @@ module.exports = dependencies => {
         action: valarm.getFirstPropertyValue('action'),
         eventPath,
         eventUid: vevent.getFirstPropertyValue('uid'),
-        dueDate: moment(alarmObject.alarmDueDate.format()).toDate(),
+        dueDate: moment.utc(alarmObject.alarmDueDate).toDate(),
         ics: vcalendar.toString()
       };
 
