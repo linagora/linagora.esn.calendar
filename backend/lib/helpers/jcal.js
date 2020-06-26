@@ -26,6 +26,14 @@ function _getEmail(attendee) {
   return attendee.getFirstValue().replace(/^MAILTO:/i, '');
 }
 
+/**
+ * Convert iCal date to Moment object
+ *
+ * The `timezone` property is the timezone of the date in string format.
+ *
+ * @param icalDate
+ * @returns object Moment
+ */
 function _icalDateToMoment(icalDate) {
   let dt;
   const momentDatetimeArg = [icalDate.year, icalDate.month - 1, icalDate.day, icalDate.hour, icalDate.minute, icalDate.second];
@@ -34,6 +42,8 @@ function _icalDateToMoment(icalDate) {
     dt = moment(momentDatetimeArg.slice(0, 3));
   } else if (icalDate.zone === ICAL.Timezone.utcTimezone) {
     dt = moment.utc(momentDatetimeArg);
+  } else if (icalDate.timezone && !!moment.tz.zone(icalDate.timezone)) {
+    dt = moment.tz(momentDatetimeArg, icalDate.timezone);
   } else {
     dt = moment(momentDatetimeArg);
   }
