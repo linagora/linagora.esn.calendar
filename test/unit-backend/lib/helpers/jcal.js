@@ -61,6 +61,28 @@ describe('The jcal helper module', function() {
     });
   });
 
+  describe('the getIcalDateAsMoment function', function() {
+    it('should parse the ical date WITHOUT timezone to correct moment object', function() {
+      const icalDate = icaljs.Time.fromJSDate(new Date('Mon Jun 29 2020 08:36:25'));
+      const parsedDate = this.jcalHelper.getIcalDateAsMoment(icalDate);
+      const result = moment('2020-06-29T08:36:25.000');
+
+      expect(parsedDate.format()).to.equal(result.format());
+      expect(parsedDate.utcOffset()).to.equal(result.utcOffset());
+    });
+
+    it('should parse the ical date WITH timezone to correct moment object', function() {
+      const timezone = 'Europe/Paris';
+      const icalDate = icaljs.Time.fromDateTimeString('2020-06-29T08:36:25.000Z');
+      icalDate.timezone = timezone;
+      const parsedDate = this.jcalHelper.getIcalDateAsMoment(icalDate);
+      const result = moment.tz('2020-06-29T08:36:25.000', timezone);
+
+      expect(parsedDate.format()).to.equal(result.format());
+      expect(parsedDate.utcOffset()).to.equal(result.utcOffset());
+    });
+  });
+
   describe('getVAlarmAsObject function', function() {
     beforeEach(function() {
       this.getAlarmObject = function(fileName) {
