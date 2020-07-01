@@ -3,7 +3,7 @@ const sinon = require('sinon');
 const mockery = require('mockery');
 
 describe('The email alarm handler', function() {
-  let event, ics, jcalHelper, getEventSummaryForUser, attendee, alarm, eventPath, emailModule, sendMock, helpers, userLib, esnConfigMock, baseURL, user;
+  let event, ics, jcalHelper, getEventSummaryForUser, attendee, alarm, eventPath, emailModule, sendMock, helpers, userLib, esnConfigMock, baseURL, user, db;
 
   beforeEach(function() {
     user = {_id: 1};
@@ -64,6 +64,13 @@ describe('The email alarm handler', function() {
     mockery.registerMock('../../helpers/i18n', () => ({ getEventSummaryForUser }));
     mockery.registerMock('../../email', () => emailModule);
 
+    db = {
+      findById: sinon.stub(),
+      setState: sinon.stub()
+    };
+
+    mockery.registerMock('../db', () => db);
+
     this.calendarModulePath = this.moduleHelpers.modulePath;
     this.requireModule = () => require(this.calendarModulePath + '/backend/lib/alarm/handlers/email')(this.moduleHelpers.dependencies);
   });
@@ -76,6 +83,10 @@ describe('The email alarm handler', function() {
   });
 
   describe('The handle function', function() {
+    beforeEach(function() {
+      db.findById.returns(Promise.resolve(alarm));
+    });
+
     it('should reject when attendee is not a user', function(done) {
       const stub = sinon.stub(userLib, 'findByEmail', (email, callback) => callback());
 
@@ -128,6 +139,40 @@ describe('The email alarm handler', function() {
         });
         done();
       }, done);
+    });
+
+    it('should update alarm state to `done` when sending mail successfully', function(done) {
+      alarm._id = '123';
+
+      db.findById.returns(Promise.resolve(Object.assign({}, alarm, { _id: '123' })));
+      db.setState.returns(Promise.resolve(Object.assign({}, alarm, { state: 'done' })));
+
+      this.requireModule().handle(alarm)
+        .then(() => {
+          expect(db.findById).to.have.been.calledWith('123');
+          expect(db.setState).to.have.been.calledWith(alarm, 'done');
+
+          done();
+        })
+        .catch(done);
+    });
+
+    it('should update alarm state to `error` when sending email has error', function(done) {
+      alarm._id = '123';
+
+      db.findById.returns(Promise.resolve(Object.assign({}, alarm, { _id: '123' })));
+      db.setState.returns(Promise.resolve(Object.assign({}, alarm, { state: 'error' })));
+      sendMock.returns(Promise.reject(new Error('123')));
+
+      this.requireModule().handle(alarm)
+        .then(() => {
+          done(new Error('abc'));
+        })
+        .catch(() => {
+          expect(db.findById).to.have.been.calledWith('123');
+          expect(db.setState).to.have.been.calledWith(alarm, 'error');
+          done();
+        });
     });
   });
 });
