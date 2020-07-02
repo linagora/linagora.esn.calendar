@@ -22,11 +22,13 @@ function init(dependencies) {
     return;
   }
 
-  _.forOwn(EVENTS.EVENT, topic => {
+  _.forOwn(WEBSOCKET.EVENTS, topic => {
     logger.debug(`Subscribing to ${topic} local topic for calendar events operations`);
-    pubsub.local.topic(topic).subscribe(msg => {
-      logger.debug(`Received a message on local topic ${topic} for calendar events operations`, msg);
-      eventHandler.notify(topic, msg);
+    pubsub.global.topic(topic).subscribe(msg => {
+      logger.debug(`Received a message on global topic ${topic} for calendar websocket sevents operations`, msg);
+      const notifyingTopic = getNotifyingTopic(topic);
+
+      notifyingTopic && eventHandler.notify(notifyingTopic, msg);
     });
   });
 
@@ -61,4 +63,27 @@ function init(dependencies) {
       });
     });
   initialized = true;
+}
+
+/**
+ * This function will take input as a websocket topic, map it with the corresponding calendar event topic to publish to client.
+ * @param {string} topic: Websocket topic name
+ */
+function getNotifyingTopic(topic) {
+  switch (topic) {
+    case WEBSOCKET.EVENTS.EVENT_CREATED:
+      return EVENTS.EVENT.CREATED;
+    case WEBSOCKET.EVENTS.EVENT_UPDATED:
+      return EVENTS.EVENT.UPDATED;
+    case WEBSOCKET.EVENTS.EVENT_CANCEL:
+      return EVENTS.EVENT.CANCEL;
+    case WEBSOCKET.EVENTS.EVENT_REPLY:
+      return EVENTS.EVENT.REPLY;
+    case WEBSOCKET.EVENTS.EVENT_DELETED:
+      return EVENTS.EVENT.DELETED;
+    case WEBSOCKET.EVENTS.EVENT_REQUEST:
+      return EVENTS.EVENT.REQUEST;
+    default:
+      return;
+  }
 }
