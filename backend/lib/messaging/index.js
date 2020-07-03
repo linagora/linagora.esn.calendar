@@ -1,14 +1,25 @@
 module.exports = dependencies => {
   const { pointToPoint } = dependencies('messaging');
-  const { local: pubsubLocal } = dependencies('pubsub');
-  const { EVENTS: { EVENT } } = require('../constants');
+  const { local: pubsubLocal, global: pubsubGlobal } = dependencies('pubsub');
+  const { EVENTS: { EVENT }, WEBSOCKET } = require('../constants');
 
-  const eventCreatedTopic = pubsubLocal.topic(EVENT.CREATED);
-  const eventRequestTopic = pubsubLocal.topic(EVENT.REQUEST);
-  const eventUpdatedTopic = pubsubLocal.topic(EVENT.UPDATED);
-  const eventReplyTopic = pubsubLocal.topic(EVENT.REPLY);
-  const eventDeletedTopic = pubsubLocal.topic(EVENT.DELETED);
-  const eventCancelTopic = pubsubLocal.topic(EVENT.CANCEL);
+  const localTopic = {
+    eventCreatedTopic: pubsubLocal.topic(EVENT.CREATED),
+    eventRequestTopic: pubsubLocal.topic(EVENT.REQUEST),
+    eventUpdatedTopic: pubsubLocal.topic(EVENT.UPDATED),
+    eventReplyTopic: pubsubLocal.topic(EVENT.REPLY),
+    eventDeletedTopic: pubsubLocal.topic(EVENT.DELETED),
+    eventCancelTopic: pubsubLocal.topic(EVENT.CANCEL)
+  };
+
+  const globalTopic = {
+    eventCreatedTopic: pubsubGlobal.topic(WEBSOCKET.EVENTS.EVENT_CREATED),
+    eventRequestTopic: pubsubGlobal.topic(WEBSOCKET.EVENTS.EVENT_REQUEST),
+    eventUpdatedTopic: pubsubGlobal.topic(WEBSOCKET.EVENTS.EVENT_UPDATED),
+    eventReplyTopic: pubsubGlobal.topic(WEBSOCKET.EVENTS.EVENT_REPLY),
+    eventDeletedTopic: pubsubGlobal.topic(WEBSOCKET.EVENTS.EVENT_DELETED),
+    eventCancelTopic: pubsubGlobal.topic(WEBSOCKET.EVENTS.EVENT_CANCEL)
+  };
 
   return {
     listen
@@ -24,26 +35,32 @@ module.exports = dependencies => {
   }
 
   function onEventCreated(message) {
-    eventCreatedTopic.publish(message);
+    globalTopic.eventCreatedTopic.publish(message);
+    localTopic.eventCreatedTopic.publish(message);
   }
 
   function onEventRequest(message) {
-    eventRequestTopic.publish(message);
+    globalTopic.eventRequestTopic.publish(message);
+    localTopic.eventRequestTopic.publish(message);
   }
 
   function onEventUpdated(message) {
-    eventUpdatedTopic.publish(message);
+    globalTopic.eventUpdatedTopic.publish(message);
+    localTopic.eventUpdatedTopic.publish(message);
   }
 
   function onEventReply(message) {
-    eventReplyTopic.publish(message);
+    globalTopic.eventReplyTopic.publish(message);
+    localTopic.eventReplyTopic.publish(message);
   }
 
   function onEventDeleted(message) {
-    eventDeletedTopic.publish(message);
+    globalTopic.eventDeletedTopic.publish(message);
+    localTopic.eventDeletedTopic.publish(message);
   }
 
   function onEventCancel(message) {
-    eventCancelTopic.publish(message);
+    globalTopic.eventCancelTopic.publish(message);
+    localTopic.eventCancelTopic.publish(message);
   }
 };
