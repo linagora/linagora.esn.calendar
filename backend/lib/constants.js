@@ -73,7 +73,15 @@ module.exports = {
     }
   },
   WEBSOCKET: {
-    NAMESPACE: '/calendars'
+    NAMESPACE: '/calendars',
+    EVENTS: {
+      EVENT_CREATED: 'calendar:ws:event:created',
+      EVENT_UPDATED: 'calendar:ws:event:updated',
+      EVENT_REQUEST: 'calendar:ws:event:request',
+      EVENT_CANCEL: 'calendar:ws:event:cancel',
+      EVENT_DELETED: 'calendar:ws:event:deleted',
+      EVENT_REPLY: 'calendar:ws:event:reply'
+    }
   },
   ALARM: {
     DEFAULT_CRON_EXPRESSION: '0 * * * * *',

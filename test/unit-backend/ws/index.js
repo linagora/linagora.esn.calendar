@@ -3,7 +3,7 @@ const mockery = require('mockery');
 const _ = require('lodash');
 const sinon = require('sinon');
 const CONSTANTS = require('../../../backend/lib/constants');
-const eventsName = Object.keys(CONSTANTS.EVENTS.EVENT).map(key => CONSTANTS.EVENTS.EVENT[key]);
+const wsEventsName = Object.keys(CONSTANTS.WEBSOCKET.EVENTS).map(key => CONSTANTS.WEBSOCKET.EVENTS[key]);
 const subscriptionsName = Object.keys(CONSTANTS.EVENTS.SUBSCRIPTION).map(key => CONSTANTS.EVENTS.SUBSCRIPTION[key]);
 
 describe('The calendar WS events module', function() {
@@ -35,21 +35,14 @@ describe('The calendar WS events module', function() {
               };
             }
 
-            return {
-              subscribe: self.calendarSubscribeSpy
-            };
-          })
-        },
-        local: {
-          topic: sinon.spy(function(name) {
-            if (eventsName.indexOf(name) > -1) {
+            if (wsEventsName.indexOf(name) > -1) {
               return {
                 subscribe: self.eventSubscribeSpy
               };
             }
 
             return {
-              publish: self.publishSpy
+              subscribe: self.calendarSubscribeSpy
             };
           })
         }
@@ -109,8 +102,8 @@ describe('The calendar WS events module', function() {
       const mod = require(this.moduleHelpers.backendPath + '/ws');
 
       mod.init(this.moduleHelpers.dependencies);
-      _.forOwn(CONSTANTS.EVENTS.EVENT, topic => {
-        expect(this.pubsub.local.topic).to.have.been.calledWith(topic);
+      _.forOwn(CONSTANTS.WEBSOCKET.EVENTS, topic => {
+        expect(this.pubsub.global.topic).to.have.been.calledWith(topic);
       });
 
       _.forOwn(CONSTANTS.EVENTS.CALENDAR, topic => {
@@ -129,13 +122,12 @@ describe('The calendar WS events module', function() {
         mod.init(this.moduleHelpers.dependencies);
       });
 
-      it('should publish it to local and call eventHandler.notify', function() {
+      it('should publish it to global and call eventHandler.notify with corresponding event', function() {
         const message = {foo: 'bar'};
-        const lastKey = Object.keys(CONSTANTS.EVENTS.EVENT).pop();
 
         self.eventUpdatedPubsubCallback(message);
 
-        expect(eventHandler.notify).to.have.been.calledWith(CONSTANTS.EVENTS.EVENT[lastKey], message);
+        expect(eventHandler.notify).to.have.been.calledWith(CONSTANTS.EVENTS.EVENT.REPLY, message);
       });
     });
 
