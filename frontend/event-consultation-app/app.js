@@ -22,6 +22,7 @@
     'esn.object-type',
     'esn.user',
     'esn.url',
+    'esn.datetime',
     'mgcrea.ngStrap.popover',
     'ngSanitize',
     'op.dynamicDirective',
@@ -41,5 +42,9 @@
     });
   angular.module('esn.avatar', []);
   angular.module('esn.ui', []);
+  angular.module('esn.datetime', [])
+    .factory('esnDatetimeService', function() {
+      return {};
+    });
   angular.module('esn.header', []).service('headerService', function() {});
 })(angular);
