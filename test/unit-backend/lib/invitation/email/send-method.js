@@ -1,10 +1,10 @@
-const {expect} = require('chai');
+const { expect } = require('chai');
 const sinon = require('sinon');
-const mockery = require('mockery');
 const fs = require('fs');
 
 describe('The invitation email module', function() {
   let userMock, helpersMock, authMock, emailMock, esnConfigMock;
+  let getModule;
 
   beforeEach(function() {
     authMock = {
@@ -68,6 +68,8 @@ describe('The invitation email module', function() {
     this.moduleHelpers.addDep('email', emailMock);
     this.moduleHelpers.addDep('esn-config', esnConfigMock);
     this.moduleHelpers.addDep('i18n', this.helpers.requireBackend('core/i18n'));
+
+    getModule = () => require(`${this.moduleHelpers.backendPath}/lib/invitation/email`)(this.moduleHelpers.dependencies);
   });
 
   describe('The send function', function() {
@@ -115,32 +117,28 @@ describe('The invitation email module', function() {
     const newEvent = true;
 
     describe('The inviteAttendees fn', function() {
-      beforeEach(function() {
-        this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-      });
-
       it('should return an error if organizer is undefined', function(done) {
-        this.module.send({ sender: null, recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: 'ICS', calendarURI: 'calendarURI'}).then(done, () => done());
+        getModule().send({ sender: null, recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: 'ICS', calendarURI: 'calendarURI'}).then(done, () => done());
       });
 
       it('should return an error if attendeeEmails is not an email string', function(done) {
-        this.module.send({ sender: {}, recipientEmail: {}, method: 'REQUEST', ics: 'ICS', calendarURI: 'calendarURI' }).then(done, () => done());
+        getModule().send({ sender: {}, recipientEmail: {}, method: 'REQUEST', ics: 'ICS', calendarURI: 'calendarURI' }).then(done, () => done());
       });
 
       it('should return an error if attendeeEmails is null object', function(done) {
-        this.module.send({ sender: organizer, recipientEmail: null, method: 'REQUEST', ics: 'ICS', calendarURI: 'calendarURI' }).then(done, () => done());
+        getModule().send({ sender: organizer, recipientEmail: null, method: 'REQUEST', ics: 'ICS', calendarURI: 'calendarURI' }).then(done, () => done());
       });
 
       it('should return an error if method is undefined', function(done) {
-        this.module.send({ sender: {}, recipientEmail: 'foo@bar.com', method: null, ics: 'ICS', calendarURI: 'calendarURI'}).then(done, () => done());
+        getModule().send({ sender: {}, recipientEmail: 'foo@bar.com', method: null, ics: 'ICS', calendarURI: 'calendarURI'}).then(done, () => done());
       });
 
       it('should return an error if ics is undefined', function(done) {
-        this.module.send({ sender: {}, recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: null, calendarURI: 'calendarURI' }).then(done, () => done());
+        getModule().send({ sender: {}, recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: null, calendarURI: 'calendarURI' }).then(done, () => done());
       });
 
       it('should return an error if calendarURI is undefined', function(done) {
-        this.module.send({ sender: {}, recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: 'ICS', calendarURI: null}).then(done, () => done());
+        getModule().send({ sender: {}, recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: 'ICS', calendarURI: null}).then(done, () => done());
       });
 
       it('should return an error if findByEmail return an error', function(done) {
@@ -148,7 +146,7 @@ describe('The invitation email module', function() {
           callback(new Error('Error in findByEmail'));
         };
 
-        this.module.send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, () => done());
+        getModule().send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, () => done());
       });
 
       it('should return an error it cannot retrieve base url', function(done) {
@@ -156,7 +154,7 @@ describe('The invitation email module', function() {
           callback(new Error('cannot get base_url'));
         };
 
-        this.module.send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, () => done());
+        getModule().send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, () => done());
       });
 
       it('should return an error if an error happens during links generation', function(done) {
@@ -172,7 +170,7 @@ describe('The invitation email module', function() {
           return callback(new Error());
         };
 
-        this.module.send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, () => done());
+        getModule().send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, () => done());
       });
 
       it('should generate a token with proper information', function(done) {
@@ -189,7 +187,7 @@ describe('The invitation email module', function() {
           callback(null, 'a_token');
         });
 
-        this.module.send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'})
+        getModule().send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'})
           .then(() => {
             ['ACCEPTED', 'DECLINED', 'TENTATIVE'].forEach(action => testTokenWith(action, attendeeEmail));
 
@@ -224,7 +222,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module.send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, () => done());
+        getModule().send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, () => done());
       });
 
       it('should work even if findByEmail doesn\'t find the attendee', function(done) {
@@ -249,7 +247,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module.send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, done);
+        getModule().send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, done);
       });
 
       it('should not send an email if the attendee is not involved in the event', function(done) {
@@ -266,10 +264,10 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module.send({ sender: organizer, recipientEmail: emailAttendeeNotInvited, method: 'REQUEST', ics, calendarURI: 'calendarURI'})
+        getModule().send({ sender: organizer, recipientEmail: emailAttendeeNotInvited, method: 'REQUEST', ics, calendarURI: 'calendarURI'})
           .then(() => done())
           .catch(err => {
-            expect(err.message).to.match(/The attendee is not involved in the event/);
+            expect(err.message).to.match(/The recipient is not involved in the event/);
             expect(sendHTML).to.not.have.been.called;
             done();
           });
@@ -288,12 +286,6 @@ describe('The invitation email module', function() {
         helpersMock.config.getBaseUrl = function(user, callback) {
           callback(null, 'http://localhost:8888');
         };
-
-        mockery.registerMock('./../helpers/jcal', {
-          jcal2content: function() {
-            return {};
-          }
-        });
 
         userMock.findByEmail = function(email, callback) {
           if (email === attendee1.emails[0]) {
@@ -334,9 +326,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-
-        this.module.send({
+        getModule().send({
           sender: attendeeEditor,
           recipientEmail: organizer.preferredEmail,
           method,
@@ -353,11 +343,6 @@ describe('The invitation email module', function() {
         helpersMock.config.getBaseUrl = function(user, callback) {
           callback(null, 'http://localhost:8888');
         };
-        mockery.registerMock('./../helpers/jcal', {
-          jcal2content: function() {
-            return {};
-          }
-        });
 
         userMock.findByEmail = function(email, callback) {
           return callback(null, (email === attendee1.emails[0]) ? attendee1 : otherAttendee);
@@ -397,8 +382,7 @@ describe('The invitation email module', function() {
             }
           };
         };
-        this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send({
+        getModule().send({
           sender: organizer,
           recipientEmail: attendeeEmail,
           method,
@@ -415,11 +399,6 @@ describe('The invitation email module', function() {
         helpersMock.config.getBaseUrl = function(user, callback) {
           callback(null, 'http://localhost:8888');
         };
-        mockery.registerMock('./../helpers/jcal', {
-          jcal2content: function() {
-            return {};
-          }
-        });
 
         userMock.findByEmail = function(email, callback) {
           return callback();
@@ -456,8 +435,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send({
+        getModule().send({
           sender: organizer,
           recipientEmail: attendeeEmail,
           method,
@@ -474,11 +452,10 @@ describe('The invitation email module', function() {
 
       beforeEach(function() {
         method = 'REQUEST';
-        this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
       });
 
       it('should send email with new event subject and template if it\'s a new event for the attendee', function(done) {
-        const ics = fs.readFileSync(__dirname + '/../../fixtures/request-new-event.ics', 'utf-8');
+        const ics = fs.readFileSync(__dirname + '/../../../fixtures/request-new-event.ics', 'utf-8');
 
         userMock.findByEmail = function(email, callback) {
           return callback(null, attendee1);
@@ -496,7 +473,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module.send({
+        getModule().send({
           sender: organizer,
           recipientEmail: attendeeEmail,
           method,
@@ -508,7 +485,7 @@ describe('The invitation email module', function() {
       });
 
       it('should send HTML email with event update subject and template if the guest existed in the updated event', function(done) {
-        const ics = fs.readFileSync(__dirname + '/../../fixtures/request-event-update.ics', 'utf-8');
+        const ics = fs.readFileSync(__dirname + '/../../../fixtures/request-event-update.ics', 'utf-8');
         const newEvent = false;
 
         userMock.findByEmail = function(email, callback) {
@@ -527,7 +504,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module.send({
+        getModule().send({
           sender: organizer,
           recipientEmail: attendeeEmail,
           method,
@@ -547,7 +524,7 @@ describe('The invitation email module', function() {
       });
 
       it('should send email with reply event subject and template', function(done) {
-        const ics = fs.readFileSync(__dirname + '/../../fixtures/reply.ics', 'utf-8');
+        const ics = fs.readFileSync(__dirname + '/../../../fixtures/reply.ics', 'utf-8');
 
         userMock.findByEmail = function(email, callback) {
           callback(null, attendee1);
@@ -565,8 +542,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send({
+        getModule().send({
           sender: organizer,
           recipientEmail: attendeeEmail,
           method,
@@ -576,7 +552,7 @@ describe('The invitation email module', function() {
       });
 
       it('should send email with correct content', function(done) {
-        const ics = fs.readFileSync(__dirname + '/../../fixtures/reply.ics', 'utf-8');
+        const ics = fs.readFileSync(__dirname + '/../../../fixtures/reply.ics', 'utf-8');
 
         attendee1.domains = [{ domain_id: 'domain_id' }];
         userMock.findByEmail = function(email, callback) {
@@ -601,8 +577,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send({
+        getModule().send({
           sender: attendee1,
           recipientEmail: attendeeEmail,
           method,
@@ -613,7 +588,7 @@ describe('The invitation email module', function() {
 
       it('should only send messages to involved users', function(done) {
         let called = 0;
-        const ics = fs.readFileSync(__dirname + '/../../fixtures/involved.ics', 'utf-8');
+        const ics = fs.readFileSync(__dirname + '/../../../fixtures/involved.ics', 'utf-8');
 
         userMock.findByEmail = function(email, callback) {
           if (email === 'attendee1@open-paas.org') {
@@ -635,8 +610,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send({
+        getModule().send({
           sender: attendee1,
           recipientEmail: attendeeEmail,
           method,
@@ -657,7 +631,7 @@ describe('The invitation email module', function() {
       });
 
       it('should send email with reply event subject and template', function(done) {
-        const ics = fs.readFileSync(__dirname + '/../../fixtures/counter.ics', 'utf-8');
+        const ics = fs.readFileSync(__dirname + '/../../../fixtures/counter.ics', 'utf-8');
 
         userMock.findByEmail = function(email, callback) {
           callback(null, attendee1);
@@ -675,8 +649,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send({
+        getModule().send({
           sender: organizer,
           recipientEmail: attendeeEmail,
           method,
@@ -686,7 +659,7 @@ describe('The invitation email module', function() {
       });
 
       it('should send email with correct content', function(done) {
-        const ics = fs.readFileSync(__dirname + '/../../fixtures/counter.ics', 'utf-8');
+        const ics = fs.readFileSync(__dirname + '/../../../fixtures/counter.ics', 'utf-8');
 
         attendee1.domains = [{ domain_id: 'domain_id' }];
         userMock.findByEmail = function(email, callback) {
@@ -712,8 +685,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send({
+        getModule().send({
           sender: attendee1,
           recipientEmail: organizer.emails[0],
           method,
@@ -724,7 +696,7 @@ describe('The invitation email module', function() {
 
       it('should only send messages to organizer', function(done) {
         let called = 0;
-        const ics = fs.readFileSync(__dirname + '/../../fixtures/counter.ics', 'utf-8');
+        const ics = fs.readFileSync(__dirname + '/../../../fixtures/counter.ics', 'utf-8');
 
         userMock.findByEmail = function(email, callback) {
           if (email === 'organizer@open-paas.org') {
@@ -746,8 +718,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send({
+        getModule().send({
           sender: attendee1,
           recipientEmail: organizer.emails[0],
           method,
@@ -768,7 +739,7 @@ describe('The invitation email module', function() {
       });
 
       it('should send HTML email with cancel event subject', function(done) {
-        const ics = fs.readFileSync(__dirname + '/../../fixtures/cancel.ics', 'utf-8');
+        const ics = fs.readFileSync(__dirname + '/../../../fixtures/cancel.ics', 'utf-8');
 
         userMock.findByEmail = function(email, callback) {
           callback(null, attendee1);
@@ -786,8 +757,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        this.module = require(this.moduleHelpers.backendPath + '/lib/invitation/email')(this.moduleHelpers.dependencies);
-        this.module.send({
+        getModule().send({
           sender: organizer,
           recipientEmail: attendeeEmail,
           method,

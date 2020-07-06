@@ -8,7 +8,8 @@ var q = require('q');
 var sinon = require('sinon');
 
 describe('The calendar controller', function() {
-  var userModuleMock, invitationMock, calendarMock, helpers, self, sendMailSpy;
+  let userModuleMock, invitationMock, calendarMock, helpers, self;
+  let sendMailSpy, replyFromExternalUserMock;
 
   beforeEach(function() {
     self = this;
@@ -22,9 +23,11 @@ describe('The calendar controller', function() {
     calendarMock = {};
     mockery.registerMock('./core', () => calendarMock);
     sendMailSpy = sinon.stub().returns(Promise.resolve());
+    replyFromExternalUserMock = sinon.stub().returns(Promise.resolve());
     invitationMock = {
       email: {
-        send: sendMailSpy
+        send: sendMailSpy,
+        replyFromExternalUser: replyFromExternalUserMock
       },
       link: {
         generateActionLinks: function() {
@@ -678,6 +681,56 @@ describe('The calendar controller', function() {
                       locale
                     });
                     done();
+                  }
+                };
+              }
+            };
+
+            controller.changeParticipation(req, res);
+          });
+
+          it('should send notification message to organizer', function(done) {
+            var links = 'links';
+
+            invitationMock.link.generateActionLinks = sinon.spy(function(url, eventData) {
+              expect(url).to.equal('baseUrl');
+              expect(eventData).to.deep.equal(req.eventPayload);
+
+              return Promise.resolve(links);
+            });
+
+            callbackAfterGetDone = function() {
+              requestMock = function(options, callback) {
+
+                return callback(null, { statusCode: 200 });
+              };
+              mockery.registerMock('request', requestMock);
+            };
+
+            var controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
+            var res = {
+              status: function(status) {
+                expect(status).to.equal(200);
+
+                return {
+                  render: function(template, locals) {
+                    expect(invitationMock.link.generateActionLinks).to.have.been.called;
+                    expect(locals).to.shallowDeepEqual({
+                      attendeeEmail: req.eventPayload.attendeeEmail,
+                      links,
+                      locale
+                    });
+
+                    return process.nextTick(() => {
+                      expect(replyFromExternalUserMock).to.have.been.calledWith({
+                        editorEmail: req.eventPayload.attendeeEmail,
+                        recipientEmail: req.eventPayload.organizerEmail,
+                        ics: sinon.match.string,
+                        calendarURI: req.eventPayload.calendarURI,
+                        domain: req.domain
+                      });
+                      done();
+                    });
                   }
                 };
               }

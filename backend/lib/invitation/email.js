@@ -19,7 +19,8 @@ module.exports = dependencies => {
   const findUserByEmail = promisify(findByEmail);
 
   return {
-    send
+    send,
+    replyFromExternalUser
   };
 
   function send({ sender, recipientEmail, method, ics, calendarURI, domain, newEvent } = {}) {
@@ -45,7 +46,7 @@ module.exports = dependencies => {
     ]).then(([baseURL, recipient]) => {
       const mailer = emailModule.getMailer(sender);
 
-      return _processorsHook({ method, ics, sender, recipient, recipientEmail, domain })
+      return _processorsHook({ method, ics, user: sender, recipient, recipientEmail, domain })
         .then(({ ics, emailContentOverrides }) => {
           const event = { ...jcal2content(ics, baseURL), ...emailContentOverrides };
           const senderEmail = _getEmailFor(sender);
@@ -55,7 +56,7 @@ module.exports = dependencies => {
           };
 
           if (!_isRecipientInvolvedToEvent(recipientEmail, event)) {
-            return Promise.reject(new Error('The attendee is not involved in the event'));
+            return Promise.reject(new Error('The recipient is not involved in the event'));
           }
 
           return i18nLib.getI18nForMailer(recipient)
@@ -75,6 +76,72 @@ module.exports = dependencies => {
               return _buildMessageContent({
                 baseURL,
                 calendarHomeId: sender._id,
+                calendarURI,
+                editor,
+                event,
+                ics,
+                inviteMessage,
+                isExternalRecipient: !recipient,
+                method,
+                recipientEmail
+              }).then(content => mailer.sendHTML(message, template, {
+                content,
+                filter: emailHelpers.filterEventAttachments(event),
+                translate
+              }));
+            });
+        });
+    });
+  }
+
+  function replyFromExternalUser({ editorEmail, recipientEmail, ics, calendarURI, domain } = {}) {
+    const method = 'REPLY';
+
+    if (!editorEmail) {
+      return Promise.reject(new Error('The editorEmail is required'));
+    }
+
+    if (!recipientEmail) {
+      return Promise.reject(new Error('The attendeeEmail is required'));
+    }
+
+    if (!method) {
+      return Promise.reject(new Error('The method is required'));
+    }
+
+    if (!ics) {
+      return Promise.reject(new Error('The ics is required'));
+    }
+
+    return Promise.all([
+      getBaseURL(null),
+      findUserByEmail(recipientEmail)
+    ]).then(([baseURL, recipient]) => {
+      const mailer = emailModule.getMailer(recipient);
+      const editor = {
+        displayName: editorEmail,
+        email: editorEmail
+      };
+
+      return _processorsHook({ method, ics, user: editor, recipient, recipientEmail, domain })
+        .then(({ ics, emailContentOverrides }) => {
+          const event = { ...jcal2content(ics, baseURL), ...emailContentOverrides };
+
+          if (!_isRecipientInvolvedToEvent(recipientEmail, event)) {
+            return Promise.reject(new Error('The recipient is not involved in the event'));
+          }
+
+          return i18nLib.getI18nForMailer(recipient)
+            .then(({ i18n, locale, translate }) => {
+              const template = { name: 'event.reply', path: TEMPLATES_PATH };
+              const metadata = _getReplyContents({ event, editor });
+
+              const subject = i18n.__({ phrase: metadata.subject.phrase, locale }, metadata.subject.parameters);
+              const inviteMessage = i18n.__({ phrase: metadata.inviteMessage, locale }, {});
+              const message = _buildMessage({ method, ics, subject, replyTo: editorEmail, to: recipientEmail });
+
+              return _buildMessageContent({
+                baseURL,
                 calendarURI,
                 editor,
                 event,
@@ -128,7 +195,7 @@ module.exports = dependencies => {
       });
   }
 
-  function _buildMessage({ method, ics, subject, from, to }) {
+  function _buildMessage({ method, ics, subject, from, replyTo, to }) {
     // This is a temporary fix since sabre does not send method in ICS and James needs it.
     const vcalendar = ICAL.Component.fromString(ics);
     let methodProperty = vcalendar.getFirstProperty('method');
@@ -140,7 +207,7 @@ module.exports = dependencies => {
       ics = vcalendar.toString();
     }
 
-    const message = {
+    return {
       subject,
       encoding: 'base64',
       alternatives: [{
@@ -152,14 +219,10 @@ module.exports = dependencies => {
         content: ics,
         contentType: 'application/ics'
       }],
-      to
+      to,
+      ...from ? { from } : {},
+      ...replyTo ? { replyTo } : {}
     };
-
-    if (from) {
-      message.from = from;
-    }
-
-    return message;
   }
 
   function _isRecipientInvolvedToEvent(recipientEmail, event) {
@@ -172,10 +235,10 @@ module.exports = dependencies => {
     return recipientIsInvolved;
   }
 
-  function _processorsHook({ method, ics, sender, recipient, recipientEmail, domain }) {
+  function _processorsHook({ method, ics, user, recipient, recipientEmail, domain }) {
     const emailContentOverrides = {};
 
-    return processors.process(method, { attendeeEmail: recipientEmail, attendeeAsUser: recipient, ics, user: sender, domain, emailContentOverrides })
+    return processors.process(method, { attendeeEmail: recipientEmail, attendeeAsUser: recipient, ics, user, domain, emailContentOverrides })
       .then(({ ics, emailContentOverrides }) => ({ ics, emailContentOverrides }))
       .catch(() => ({ ics, emailContentOverrides }));
   }
@@ -256,9 +319,9 @@ module.exports = dependencies => {
     let subject, inviteMessage;
     const { summary } = event;
     const { displayName: editorDisplayName, email: editorEmail } = editor;
-    const actorParticipationStatus = event.attendees && event.attendees[editorEmail] && event.attendees[editorEmail].partstat;
+    const editorParticipationStatus = event.attendees && event.attendees[editorEmail] && event.attendees[editorEmail].partstat;
 
-    switch (actorParticipationStatus) {
+    switch (editorParticipationStatus) {
       case 'ACCEPTED':
         subject = {
           phrase: 'Accepted: {{& summary}} ({{editorDisplayName}})',

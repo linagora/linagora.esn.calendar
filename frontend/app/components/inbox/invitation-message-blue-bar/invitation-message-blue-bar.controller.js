@@ -170,7 +170,9 @@
 
     function bindReplyAttendeeToController() {
       if (self.meeting.method === CAL_EVENT_METHOD.REPLY || self.meeting.method === CAL_EVENT_METHOD.COUNTER) {
-        self.replyAttendee = self.event.getAttendeeByEmail(self.message.from.email);
+        var replyToEmail = Array.isArray(self.message.replyTo) && self.message.replyTo.length ? self.message.replyTo[0].email : self.message.from.email;
+
+        self.replyAttendee = self.event.getAttendeeByEmail(replyToEmail);
       }
     }
 
