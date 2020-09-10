@@ -7,7 +7,6 @@ const jcalHelper = require('../helpers/jcal');
 let initialized = false;
 
 module.exports = dependencies => {
-  const amqpClientProvider = dependencies('amqpClientProvider');
   const logger = dependencies('logger');
   const { pointToPoint: pointToPointMessaging } = dependencies('messaging');
   const db = require('./db')(dependencies);
@@ -36,25 +35,13 @@ module.exports = dependencies => {
   }
 
   function initListeners() {
-    pointToPointMessaging.get(CONSTANTS.EVENTS.ALARM.CANCEL).receive(messageHandler(onDelete));
-    pointToPointMessaging.get(CONSTANTS.EVENTS.ALARM.CREATED).receive(messageHandler(onCreate));
-    pointToPointMessaging.get(CONSTANTS.EVENTS.ALARM.DELETED).receive(messageHandler(onDelete));
-    pointToPointMessaging.get(CONSTANTS.EVENTS.ALARM.REQUEST).receive(messageHandler(onUpdate));
-    pointToPointMessaging.get(CONSTANTS.EVENTS.ALARM.UPDATED).receive(messageHandler(onUpdate));
+    pointToPointMessaging.get(CONSTANTS.EVENTS.ALARM.CANCEL).receive(onDelete);
+    pointToPointMessaging.get(CONSTANTS.EVENTS.ALARM.CREATED).receive(onCreate);
+    pointToPointMessaging.get(CONSTANTS.EVENTS.ALARM.DELETED).receive(onDelete);
+    pointToPointMessaging.get(CONSTANTS.EVENTS.ALARM.REQUEST).receive(onUpdate);
+    pointToPointMessaging.get(CONSTANTS.EVENTS.ALARM.UPDATED).receive(onUpdate);
 
     return Q.when(true);
-
-    function messageHandler(handler) {
-      return function(jsonMessage, { ack } = {}) {
-        return handler(jsonMessage)
-          .then(amqpClientProvider.getClient)
-          .then(() => typeof ack === 'function' && ack())
-          .catch(err => {
-            logger.error('calendar:alarm:init - Fail to process AMQP message', err);
-            throw err;
-          });
-      };
-    }
   }
 
   function onCreate(msg) {
