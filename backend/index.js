@@ -38,7 +38,6 @@ const AwesomeCalendarModule = new AwesomeModule('linagora.esn.calendar', {
     new Dependency(Dependency.TYPE_NAME, 'linagora.esn.davserver', 'davserver'),
     new Dependency(Dependency.TYPE_NAME, 'linagora.esn.cron', 'cron'),
     new Dependency(Dependency.TYPE_NAME, 'linagora.esn.jobqueue', 'jobqueue'),
-    new Dependency(Dependency.TYPE_NAME, 'linagora.esn.core.amqp', 'amqpClientProvider'),
     new Dependency(Dependency.TYPE_NAME, 'linagora.esn.resource', 'resource'),
     new Dependency(Dependency.TYPE_NAME, 'linagora.esn.core.technical-user', 'technical-user'),
     new Dependency(Dependency.TYPE_NAME, 'linagora.esn.autoconf', 'autoconf', true),
