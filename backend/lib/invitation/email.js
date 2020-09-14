@@ -249,27 +249,27 @@ module.exports = dependencies => {
 
   function _getMetadata({ method, event, newEvent = false, editor } = {}) {
     let subject, templateName, inviteMessage;
-    const { summary } = event;
-    const { displayName: editorDisplayName } = editor;
+    const { summary, organizer } = event;
+    const organizerName = organizer.cn || organizer.email;
 
     switch (method) {
       case 'REQUEST':
         if (newEvent) {
           subject = {
-            phrase: 'New event from {{editorDisplayName}}: {{& summary}}',
+            phrase: 'New event from {{organizerName}}: {{& summary}}',
             parameters: {
               summary,
-              editorDisplayName
+              organizerName: organizerName
             }
           };
           templateName = 'event.invitation';
           inviteMessage = 'has invited you to a meeting';
         } else {
           subject = {
-            phrase: 'Event {{& summary}} from {{editorDisplayName}} updated',
+            phrase: 'Event {{& summary}} from {{organizerName}} updated',
             parameters: {
               summary,
-              editorDisplayName
+              organizerName: organizerName
             }
           };
           templateName = 'event.update';
@@ -282,10 +282,10 @@ module.exports = dependencies => {
         break;
       case 'CANCEL':
         subject = {
-          phrase: 'Event {{& summary}} from {{editorDisplayName}} canceled',
+          phrase: 'Event {{& summary}} from {{organizerName}} canceled',
           parameters: {
             summary,
-            editorDisplayName
+            organizerName: organizerName
           }
         };
         templateName = 'event.cancel';

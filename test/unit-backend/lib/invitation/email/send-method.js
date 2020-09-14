@@ -300,7 +300,7 @@ describe('The invitation email module', function() {
               expect(email.from).to.equal(attendeeEditor.emails[0]);
               expect(email.to).to.equal(organizer.preferredEmail);
               expect(email).to.shallowDeepEqual({
-                subject: 'New event from ' + attendeeEditor.firstname + ' ' + attendeeEditor.lastname + ': description',
+                subject: 'New event from ' + organizer.firstname + ' ' + organizer.lastname + ': description',
                 encoding: 'base64',
                 alternatives: [{
                   content: ics,
