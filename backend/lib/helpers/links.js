@@ -17,7 +17,7 @@ module.exports = dependencies => {
     const parsedEventPath = parseEventPath(eventPath);
 
     return Q.nfcall(helpers.config.getBaseUrl, null)
-      .then(baseUrl => _.template('<%= baseUrl %>/#/calendar/<%= calendarId %>/event/<%= eventUid %>/consult')({
+      .then(baseUrl => _.template('<%= baseUrl %>/calendar/#/calendar/<%= calendarId %>/event/<%= eventUid %>/consult')({
         baseUrl,
         calendarId: parsedEventPath.calendarId,
         eventUid: parsedEventPath.eventUid
@@ -31,7 +31,7 @@ module.exports = dependencies => {
       moment(event.start.date, DATE_FORMAT)).format(DATE_FORMAT);
 
     return Q.nfcall(helpers.config.getBaseUrl, null)
-      .then(baseUrl => _.template('<%= baseUrl %>/#/calendar?start=<%= formatedDate %>')({
+      .then(baseUrl => _.template('<%= baseUrl %>/calendar/#/calendar?start=<%= formatedDate %>')({
         baseUrl,
         formatedDate: dateEvent
       }));
