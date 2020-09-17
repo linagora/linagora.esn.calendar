@@ -232,31 +232,23 @@ describe('The EventMailListener module', function() {
   });
 
   describe('recipient email checks', function() {
-    it('should ignore message and log if recipient not found in OP and ack the message', function(done) {
+    it('should ignore message and log if recipient not found in OP', function(done) {
       userMock.findByEmail = (email, cb) => {
         cb(null, null);
-      };
-
-      const context = {
-        ack: sinon.stub().returns(Promise.resolve())
       };
 
       this.requireModule()
         .init()
         .then(function() {
           processMessageFunction = receive.firstCall.args[0];
-          processMessageFunction(jsonMessage, context);
+          processMessageFunction(jsonMessage);
 
           setTimeout(function() {
             expect(caldavClientMock.iTipRequest).to.not.have.been.called;
-            expect(context.ack).to.have.been.calledOnce;
-
             done();
           });
         })
-        .catch(function(err) {
-          done(err || 'Err');
-        });
+        .catch(err => done(err || new Error('should resolve')));
     });
 
     it('should ignore message and log if userModule fail', function(done) {
@@ -286,28 +278,16 @@ describe('The EventMailListener module', function() {
   });
 
   describe('_handleMessage function', function() {
-    it('should send request if message is valid and ack the message', function(done) {
-      const context = {
-        ack: sinon.stub().returns(Promise.resolve())
-      };
-
+    it('should send request if message is valid', function(done) {
       this.requireModule()
         .init()
         .then(function() {
           processMessageFunction = receive.firstCall.args[0];
-          processMessageFunction(jsonMessage, context);
-
+          processMessageFunction(jsonMessage);
           expect(caldavClientMock.iTipRequest).to.have.been.calledWith('userId', jsonMessage);
-
-          setTimeout(function() {
-            expect(context.ack).to.have.been.calledOnce;
-
-            done();
-          });
+          done();
         })
-        .catch(function(err) {
-          done(err || 'Err');
-        });
+        .catch(err => done(err || new Error('should resolve')));
     });
   });
 });
