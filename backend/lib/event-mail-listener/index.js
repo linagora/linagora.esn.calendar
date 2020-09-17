@@ -38,13 +38,15 @@ module.exports = dependencies => {
     return esnConfig('external-event-listener').inModule('linagora.esn.calendar').get();
   }
 
-  function _processMessage(message, context) {
+  function _processMessage(message) {
     logger.debug('CalEventMailListener, new message received');
+
     if (!_checkMandatoryFields(message)) {
       logger.warn('CalEventMailListener : Missing some mandatory fields, event ignored');
 
       return;
     }
+
     logger.debug(`CalEventMailListener[${message.uid}] : Processing message`);
 
     userModule.findByEmail(message.recipient, (err, user) => {
@@ -56,14 +58,11 @@ module.exports = dependencies => {
 
       if (user) {
         return caldavClient.iTipRequest(user.id, message)
-          .then(() => context.ack())
           .then(() => logger.debug(`CalEventMailListener[${message.uid}] : Successfully sent to DAV server`))
           .catch(logError('Error handling message'));
       }
 
-      context.ack()
-        .then(() => logger.warn(`CalEventMailListener[${message.uid}] : Recipient user unknown in OpenPaas ${message.recipient}, skipping event`))
-        .catch(logError('Error acknowledging message'));
+      logger.warn(`CalEventMailListener[${message.uid}] : Recipient user unknown in OpenPaas ${message.recipient}, skipping event`);
 
       function logError(msg) {
         return err => {
