@@ -89,22 +89,13 @@ module.exports = dependencies => {
       });
   }
 
-  function redirectToStaticErrorPage(req, res, error) {
-    res.status(200).render('../event-consultation-app/error', {
-      error,
-      locale: req.getLocale()
-    });
-  }
-
   function changeParticipationSuccess({req, res, vcalendar, modified}) {
     const { attendeeEmail, organizerEmail } = req.eventPayload;
 
     findUserByEmail(attendeeEmail)
       .then(foundUser => {
         if (foundUser) {
-          res.status(200).redirect('/#/calendar');
-
-          return modified && invitation.email.send({
+          modified && invitation.email.send({
             sender: foundUser,
             recipientEmail: organizerEmail,
             method: 'REPLY',
@@ -112,31 +103,43 @@ module.exports = dependencies => {
             calendarURI: req.eventPayload.calendarURI,
             domain: req.domain
           });
+
+          return res.status(200).json({
+            redirect: true,
+            locale: req.getLocale()
+          });
         }
 
         return getBaseUrl(null)
           .then(baseUrl => invitation.link.generateActionLinks(baseUrl, req.eventPayload))
           .then(links => {
-            res.status(200).render('../event-consultation-app/index', {
-              eventJSON: vcalendar.toJSON(),
-              attendeeEmail,
-              links,
-              locale: req.getLocale()
-            });
-
-            return modified && invitation.email.replyFromExternalUser({
+            modified && invitation.email.replyFromExternalUser({
               editorEmail: attendeeEmail,
               recipientEmail: organizerEmail,
               ics: vcalendar.toString(),
               calendarURI: req.eventPayload.calendarURI,
               domain: req.domain
             });
+
+            return res.status(200).json({
+              eventJSON: vcalendar.toJSON(),
+              attendeeEmail,
+              links,
+              locale: req.getLocale()
+            });
           });
       })
-      .catch(error => {
-        logger.error('Error while post-processing participation change', error);
+      .catch(err => {
+        logger.error('Error while post-processing participation change', err);
 
-        redirectToStaticErrorPage(req, res, { code: 500 });
+        return res.status(500).json({
+          error: {
+            code: 500,
+            message: 'Can not update participation',
+            details: err.message || 'Error while post-processing participation change'
+          },
+          locale: req.getLocale()
+        });
       });
   }
 
@@ -145,12 +148,28 @@ module.exports = dependencies => {
     if (numTry > MAX_TRY_NUMBER) {
       logger.error('Exceeded max number of try for atomic update of event');
 
-      return redirectToStaticErrorPage(req, res, { code: 500 });
+      return res.status(500).json({
+        error: {
+          code: 500,
+          message: 'Can not update participation',
+          details: 'Exceeded max number of try for atomic update of event'
+        },
+        locale: req.getLocale()
+      });
     }
 
     request({method: 'GET', url: url, headers: {ESNToken: ESNToken}}, (err, response) => {
       if (err || response.statusCode < 200 || response.statusCode >= 300) {
-        return redirectToStaticErrorPage(req, res, { code: response && response.statusCode });
+        const statusCode = response && response.statusCode || 500;
+
+        return res.status(statusCode).json({
+          error: {
+            code: statusCode,
+            message: 'Can not update participation',
+            details: 'Can not update participation'
+          },
+          locale: req.getLocale()
+        });
       }
 
       const icalendar = new ICAL.parse(response.body);
@@ -164,7 +183,14 @@ module.exports = dependencies => {
       if (!attendees.length) {
         logger.error(`Can not find the attendee ${attendeeEmail} in the event`);
 
-        return redirectToStaticErrorPage(req, res, { code: 400 });
+        return res.status(400).json({
+          error: {
+            code: 400,
+            message: 'Can not update participation',
+            details: `Can not find the attendee ${attendeeEmail} in the event`
+          },
+          locale: req.getLocale()
+        });
       }
 
       if (attendees.every(attendee => attendee.getParameter('partstat') === action)) {
@@ -179,7 +205,16 @@ module.exports = dependencies => {
         if (!err && response.statusCode === 412) {
           tryUpdateParticipation(url, ESNToken, res, req, numTry);
         } else if (err || response.statusCode < 200 || response.statusCode >= 300) {
-          redirectToStaticErrorPage(req, res, { code: response && response.statusCode });
+          const statusCode = response && response.statusCode || 500;
+
+          return res.status(statusCode).json({
+            error: {
+              code: statusCode,
+              message: 'Can not update participation',
+              details: 'Can not update participation'
+            },
+            locale: req.getLocale()
+          });
         } else {
           changeParticipationSuccess({ req, res, vcalendar, modified: true });
         }
