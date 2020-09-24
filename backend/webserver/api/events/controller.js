@@ -9,7 +9,6 @@ module.exports = function(dependencies) {
 
   return {
     getNextEvent,
-    newEventInDefaultCalendar,
     cancelNextEvent,
     search
   };
@@ -28,14 +27,6 @@ module.exports = function(dependencies) {
 
   function cancelNextEvent(req, res) {
     elasticsearchActions.searchNextEvent(req.user, _ensureNoSearchErrorAndOneResult(res, event => _calAction(calDavClient.deleteEventInDefaultCalendar(req.user, event.uid), res)));
-  }
-
-  function newEventInDefaultCalendar(req, res) {
-    const { summary, location } = req.body,
-          locale = req.getLocale(),
-          start = require(`./locales/${locale}`)(dependencies)(req.body.when, locale);
-
-    _calAction(calDavClient.createEventInDefaultCalendar(req.user, { summary, location, start }), res);
   }
 
   function search(req, res) {
