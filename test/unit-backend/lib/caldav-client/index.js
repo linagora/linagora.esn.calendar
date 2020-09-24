@@ -1,7 +1,6 @@
 const { expect } = require('chai');
 const sinon = require('sinon');
 const mockery = require('mockery');
-const moment = require('moment');
 const fs = require('fs');
 
 describe('The caldav-client module', function() {
@@ -500,50 +499,6 @@ describe('The caldav-client module', function() {
       });
 
       getModule().deleteEventInDefaultCalendar({ id: userId }, eventId);
-    });
-
-  });
-
-  describe('the createEventInDefaultCalendar function', function() {
-
-    it('should create a 1h event in the default calendar', function(done) {
-      const summary = 'Summary',
-        location = 'Location',
-        start = moment('2017-01-01T12:00:00Z'),
-        event = [
-          'vcalendar',
-          [],
-          [
-            [
-              'vevent',
-              [
-                ['uid', {}, 'text', 'UUIDv4'],
-                ['summary', {}, 'text', summary],
-                ['location', {}, 'text', location],
-                ['dtstart', {}, 'date-time', '2017-01-01T12:00:00Z'],
-                ['dtend', {}, 'date-time', '2017-01-01T13:00:00Z'] // 1h event
-              ],
-              []
-            ]
-          ]
-        ];
-
-      mockery.registerMock('uuid/v4', () => 'UUIDv4');
-      mockery.registerMock('request', opts => {
-        expect(opts).to.shallowDeepEqual({
-          method: 'PUT',
-          url: [davEndpoint, 'calendars', userId, userId, 'UUIDv4.ics'].join('/'),
-          json: true,
-          headers: {
-            ESNToken: token
-          }
-        });
-        expect(opts.body.jCal).to.deep.equal(event);
-
-        done();
-      });
-
-      getModule().createEventInDefaultCalendar({ id: userId }, { summary, location, start });
     });
 
   });
