@@ -52,7 +52,7 @@ describe('The links helper', function() {
       this.requireModule().getEventInCalendar(ics)
         .then(result => {
           expect(spy).to.have.been.calledOnce;
-          expect(result).to.equal(`${url}/#/calendar?start=06-12-2115`);
+          expect(result).to.equal(`${url}/calendar/#/calendar?start=06-12-2115`);
           done();
         })
         .catch(done);
@@ -95,7 +95,7 @@ describe('The links helper', function() {
       this.requireModule().getEventDetails(eventPath)
         .then(result => {
           expect(spy).to.have.been.calledOnce;
-          expect(result).to.equal(`${url}/#/calendar/calendarId/event/eventId/consult`);
+          expect(result).to.equal(`${url}/calendar/#/calendar/calendarId/event/eventId/consult`);
           done();
         })
         .catch(done);
