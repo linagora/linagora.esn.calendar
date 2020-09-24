@@ -21,7 +21,7 @@ module.exports = dependencies => {
           return reject(err);
         }
 
-        resolve(urljoin(baseUrl, '/calendar/api/calendars/event/participation/?jwt=' + token));
+        resolve(urljoin(baseUrl, '/excal?jwt=' + token));
       });
     });
   }

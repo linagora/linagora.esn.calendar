@@ -40,7 +40,7 @@ describe('The invitation link module', function() {
     });
 
     it('should resolve to an object containing correct links', function(done) {
-      const linkBase = baseUrl + '/calendar/api/calendars/event/participation?jwt=token';
+      const linkBase = baseUrl + '/excal?jwt=token';
       const authMock = {
         jwt: {
           generateWebToken: function(p, callback) {
