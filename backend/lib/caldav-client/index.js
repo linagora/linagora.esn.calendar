@@ -3,7 +3,6 @@ const urljoin = require('url-join');
 const Q = require('q');
 const _ = require('lodash');
 const path = require('path');
-const uuidV4 = require('uuid/v4');
 const ICAL = require('@linagora/ical.js');
 const { parseEventPath } = require('../helpers/event');
 
@@ -36,7 +35,6 @@ module.exports = dependencies => {
     deleteEvent,
     deleteEventInDefaultCalendar,
     iTipRequest,
-    createEventInDefaultCalendar,
     importEvent
   };
 
@@ -203,13 +201,6 @@ module.exports = dependencies => {
     });
   }
 
-  function createEventInDefaultCalendar(user, options) {
-    const eventUid = uuidV4(),
-      event = _buildJCalEvent(eventUid, options);
-
-    return storeEventInDefaultCalendar(user, eventUid, event);
-  }
-
   function storeEventInDefaultCalendar(user, eventUid, event) {
     return storeEvent(user, user.id, eventUid, event);
   }
@@ -362,22 +353,6 @@ module.exports = dependencies => {
     }
 
     return new Promise(resolve => davserver.getDavEndpoint(davserver => resolve(urljoin(davserver, path))));
-  }
-
-  function _buildJCalEvent(uid, options) {
-    const vCalendar = new ICAL.Component(['vcalendar', [], []]),
-      vEvent = new ICAL.Component('vevent'),
-      event = new ICAL.Event(vEvent);
-
-    event.uid = uid;
-    event.summary = options.summary;
-    event.location = options.location;
-    event.startDate = ICAL.Time.fromJSDate(options.start.toDate(), true);
-    event.endDate = ICAL.Time.fromJSDate(options.start.add(1, 'hour').toDate(), true);
-
-    vCalendar.addSubcomponent(vEvent);
-
-    return vCalendar;
   }
 
   function getEventFromUrl({ url, ESNToken }) {

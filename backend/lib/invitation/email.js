@@ -1,8 +1,7 @@
 const ICAL = require('@linagora/ical.js');
 const path = require('path');
 const { promisify } = require('util');
-
-const { jcal2content } = require('./../helpers/jcal');
+const { jcal2content, getIcalDateAsMoment, getIcalEvent } = require('./../helpers/jcal');
 const emailHelpers = require('./../helpers/email');
 const TEMPLATES_PATH = path.resolve(__dirname, '../../../templates/email');
 
@@ -10,6 +9,8 @@ module.exports = dependencies => {
   const { getDisplayName, findByEmail } = dependencies('user');
   const configHelpers = dependencies('helpers').config;
   const emailModule = dependencies('email');
+  const esnConfig = dependencies('esn-config');
+  const datetimeHelpers = require('../helpers/datetime')(dependencies);
   const i18nLib = require('./../i18n')(dependencies);
   const invitationLink = require('./link')(dependencies);
   const linksHelper = require('../helpers/links')(dependencies);
@@ -44,53 +45,16 @@ module.exports = dependencies => {
       getBaseURL(sender),
       findUserByEmail(recipientEmail)
     ]).then(([baseURL, recipient]) => {
+      const esnDatetimeConfig = esnConfig('datetime').inModule('core');
       const mailer = emailModule.getMailer(sender);
 
-      return _processorsHook({ method, ics, user: sender, recipient, recipientEmail, domain })
-        .then(({ ics, emailContentOverrides }) => {
-          const event = { ...jcal2content(ics, baseURL), ...emailContentOverrides };
-          const senderEmail = _getEmailFor(sender);
-          const editor = {
-            displayName: getDisplayName(sender),
-            email: senderEmail
-          };
+      if (!recipient) {
+        return esnDatetimeConfig.forUser(sender, true).get()
+          .then(datetimeOptions => _sendToRecipient({ method, ics, sender, recipient, recipientEmail, domain, baseURL, newEvent, calendarURI, mailer, datetimeOptions }));
+      }
 
-          if (!_isRecipientInvolvedToEvent(recipientEmail, event)) {
-            return Promise.reject(new Error('The recipient is not involved in the event'));
-          }
-
-          return i18nLib.getI18nForMailer(recipient)
-            .then(({ i18n, locale, translate }) => {
-              const metadata = _getMetadata({
-                method,
-                event,
-                newEvent,
-                editor
-              });
-
-              const subject = i18n.__({ phrase: metadata.subject.phrase, locale }, metadata.subject.parameters);
-              const inviteMessage = i18n.__({ phrase: metadata.inviteMessage, locale }, {});
-              const template = { name: metadata.templateName, path: TEMPLATES_PATH };
-              const message = _buildMessage({ method, ics, subject, from: senderEmail, to: recipientEmail });
-
-              return _buildMessageContent({
-                baseURL,
-                calendarHomeId: sender._id,
-                calendarURI,
-                editor,
-                event,
-                ics,
-                inviteMessage,
-                isExternalRecipient: !recipient,
-                method,
-                recipientEmail
-              }).then(content => mailer.sendHTML(message, template, {
-                content,
-                filter: emailHelpers.filterEventAttachments(event),
-                translate
-              }));
-            });
-        });
+      return esnDatetimeConfig.forUser(recipient, true).get()
+        .then(datetimeOptions => _sendToRecipient({ method, ics, sender, recipient, recipientEmail, domain, baseURL, newEvent, calendarURI, mailer, datetimeOptions }));
     });
   }
 
@@ -158,6 +122,76 @@ module.exports = dependencies => {
             });
         });
     });
+  }
+
+  function _sendToRecipient({ method, ics, sender, recipient, recipientEmail, domain, baseURL, newEvent, calendarURI, mailer, datetimeOptions }) {
+    return _processorsHook({ method, ics, user: sender, recipient, recipientEmail, domain })
+      .then(({ ics, emailContentOverrides }) => {
+        const event = { ...jcal2content(ics, baseURL), ...emailContentOverrides };
+        const senderEmail = _getEmailFor(sender);
+        const editor = {
+          displayName: getDisplayName(sender),
+          email: senderEmail
+        };
+
+        if (!_isRecipientInvolvedToEvent(recipientEmail, event)) {
+          return Promise.reject(new Error('The recipient is not involved in the event'));
+        }
+
+        return i18nLib.getI18nForMailer(recipient)
+          .then(({ i18n, locale, translate }) => {
+            const metadata = _getMetadata({
+              method,
+              event,
+              newEvent,
+              editor
+            });
+
+            const subject = i18n.__({ phrase: metadata.subject.phrase, locale }, metadata.subject.parameters);
+            const inviteMessage = i18n.__({ phrase: metadata.inviteMessage, locale }, {});
+            const template = { name: metadata.templateName, path: TEMPLATES_PATH };
+            const message = _buildMessage({ method, ics, subject, from: senderEmail, to: recipientEmail });
+
+            return _buildMessageContent({
+              baseURL,
+              calendarHomeId: sender._id,
+              calendarURI,
+              editor,
+              event,
+              ics,
+              inviteMessage,
+              isExternalRecipient: !recipient,
+              method,
+              recipientEmail
+            }).then(content => {
+              const { timeZone: timezone, use24hourFormat } = datetimeOptions;
+              const convertTzOptions = { timezone, locale, use24hourFormat };
+              const icalEvent = getIcalEvent(ics);
+              const { date: startDateString, time: startTimeString } = datetimeHelpers.formatDatetime(getIcalDateAsMoment(icalEvent.startDate), convertTzOptions);
+              const { date: endDateString, time: endTimeString } = datetimeHelpers.formatDatetime(getIcalDateAsMoment(icalEvent.endDate), convertTzOptions);
+
+              content.event = {
+                ...content.event,
+                start: {
+                  date: startDateString,
+                  time: startTimeString,
+                  timezone
+                },
+                end: {
+                  date: endDateString,
+                  time: endTimeString,
+                  timezone
+                }
+              };
+
+              return mailer.sendHTML(message, template, {
+                content,
+                filter: emailHelpers.filterEventAttachments(event),
+                translate
+              });
+            });
+          });
+      });
   }
 
   function _buildMessageContent({ method, baseURL, inviteMessage, ics, event, calendarURI, recipientEmail, editor, calendarHomeId, isExternalRecipient }) {

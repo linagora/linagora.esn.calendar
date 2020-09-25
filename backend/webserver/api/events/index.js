@@ -54,27 +54,6 @@ module.exports = (dependencies, moduleName) => {
 
   /**
    * @swagger
-   * /:
-   *   post:
-   *     tags:
-   *       - Event
-   *     description: creates new event in default calendar.
-   *     parameters:
-   *       - $ref: "#/parameters/calendar_event_when"
-   *       - $ref: "#/parameters/calendar_event_summary"
-   *       - $ref: "#/parameters/calendar_event_location"
-   *     responses:
-   *       200:
-   *         $ref: "#/responses/cm_200"
-   *       401:
-   *         $ref: "#/responses/cm_401"
-   *       500:
-   *         $ref: "#/responses/cm_500"
-   */
-  router.post('/', controller.newEventInDefaultCalendar);
-
-  /**
-   * @swagger
    * /search:
    *   post:
    *     tags:
