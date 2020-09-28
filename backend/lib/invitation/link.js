@@ -21,7 +21,7 @@ module.exports = dependencies => {
           return reject(err);
         }
 
-        resolve(urljoin(baseUrl, '/excal?jwt=' + token));
+        resolve(urljoin(baseUrl, '/excal/?jwt=' + token));
       });
     });
   }
