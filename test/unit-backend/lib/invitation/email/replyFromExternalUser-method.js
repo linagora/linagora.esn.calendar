@@ -276,9 +276,9 @@ describe('The invitation email module', function() {
             expect(locals.content.method).to.equal(method);
             expect(locals.content.seeInCalendarLink).to.be.defined;
             expect(locals.content.baseUrl).to.equal('http://localhost:8888');
-            expect(locals.content.yes).to.equal('http://localhost:8888/excal?jwt=token');
-            expect(locals.content.no).to.equal('http://localhost:8888/excal?jwt=token');
-            expect(locals.content.maybe).to.equal('http://localhost:8888/excal?jwt=token');
+            expect(locals.content.yes).to.equal('http://localhost:8888/excal/?jwt=token');
+            expect(locals.content.no).to.equal('http://localhost:8888/excal/?jwt=token');
+            expect(locals.content.maybe).to.equal('http://localhost:8888/excal/?jwt=token');
 
             return Promise.resolve();
           }
