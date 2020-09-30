@@ -1,5 +1,5 @@
 const extend = require('extend');
-const urljoin = require('url-join');
+const _ = require('lodash');
 const { ACCEPTED, DECLINED, TENTATIVE } = require('../constants').ATTENDEE.ACTIONS;
 
 module.exports = dependencies => {
@@ -21,7 +21,7 @@ module.exports = dependencies => {
           return reject(err);
         }
 
-        resolve(urljoin(baseUrl, '/excal/?jwt=' + token));
+        resolve(urlJoin(baseUrl + '/excal', '?jwt=' + token));
       });
     });
   }
@@ -45,5 +45,9 @@ module.exports = dependencies => {
       no: links[1],
       maybe: links[2]
     }));
+  }
+
+  function urlJoin(a, b) {
+    return _.trimEnd(a, '/') + '/' + _.trimStart(b, '/');
   }
 };
