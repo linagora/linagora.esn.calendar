@@ -1,0 +1,117 @@
+mjml
+  mj-head
+    mj-style(inline='inline')
+      | .part-table table {
+      |   max-width: 250px;
+      | }
+      |
+      | .part-button {
+      |   border: 1px solid #ccc;
+      |   border-radius: 8px;
+      |   padding: 12px;
+      |   margin: 8px;
+      |   text-decoration: none;
+      |   font-family: Roboto;
+      |   font-weight: 500;
+      |   font-size: 14px;
+      | }
+      |
+      | .part-button-container {
+      |   width: 1%;
+      |   white-space: nowrap;
+      | }
+      |
+      | .warning-text {
+      |   background-color: #fffaea;
+      |   font-family: Roboto;
+      |   padding: 12px;
+      |   font-size: 14px;
+      |   margin: 0;
+      |   color: #434343;
+      | }
+      |
+      | .link {
+      |   text-decoration: none;
+      |   color: #4d91c9;
+      | }
+      |
+      | .align-left {
+      |   text-align: left;
+      | }
+  mj-body
+    mj-wrapper(padding-bottom='0')
+      mj-section(padding-bottom='0')
+        mj-column
+          mj-image(width='200px', src="cid:logo", alt="OpenPaas Logo")
+          mj-divider(border-color='#f6c015')
+          mj-social(font-size='17px', font-family='Roboto', icon-size='48px')
+            mj-social-element(name='avatar', src=content.event.organizer.avatar, alt=translate('Organizer Avatar'), css-class='align-left')
+              mj-text
+                a.link(style='font-weight: 500;', href=`mailto:${content.event.organizer.email}`) #{content.event.organizer.cn}
+                | &nbsp;#{translate('has invited you to a meeting')}
+      mj-section(padding-top='0', padding-bottom='0')
+        mj-column(width='100%')
+          mj-text(font-size='20px', color='#434343', font-family='Roboto', font-weight='500', align='center') #{content.event.summary}
+          if (content.seeInCalendarLink)
+            mj-text(padding='0', font-size='14px', font-family='Roboto', align='center')
+              | (
+              a.link(href=content.seeInCalendarLink) #{translate('See in calendar')}
+              | )
+          mj-social(font-size='14px', color='#434343', font-family='Roboto', font-weight='500', icon-size='20px', align='left', padding-bottom='0')
+            mj-social-element(src='cid:clock', vertical-align='top')
+              if (!content.event.allDay)
+                span
+                  if (content.event.start.date === content.event.end.date)
+                    | #{content.event.start.fullDateTime} - #{content.event.end.time}
+                  else
+                    | #{content.event.start.fullDateTime} - #{content.event.end.fullDateTime}
+                span(style='color: #787878; font-weight: 400;') &nbsp;#{content.event.start.timezone}
+              else
+                span
+                  if (content.event.start.date === content.event.end.date)
+                    | #{content.event.start.fullDate} (#{translate('All day')})
+                  else
+                    | #{content.event.start.fullDate} - #{content.event.end.fullDate} (#{translate('All day')})
+          if (content.event.location)
+            mj-social(font-size='14px', color='#434343', font-family='Roboto', icon-size='20px', align='left', padding-bottom='0')
+              mj-social-element(src='cid:map-marker', vertical-align='top')
+                span #{content.event.location}
+                | &nbsp;(
+                a.link(href=`https://www.openstreetmap.org/search?query=${content.event.location}`) #{translate('See in map')}
+                | )
+          if (content.event.videoconferenceLink)
+            mj-social(font-size='14px', color='#434343', font-family='Roboto', icon-size='20px', align='left', padding-bottom='0')
+              mj-social-element(src='cid:videoconference', vertical-align='top')
+                a.link(href=content.event.videoconferenceLink) #{translate('Join the video conference')}
+          mj-social(font-size='14px', color='#434343', font-family='Roboto', icon-size='20px', align='left', padding-bottom='0')
+            mj-social-element(src='cid:account-multiple', vertical-align='top')
+              include ../mixins/attendees.pug
+              +displayAttendees(content.event.attendees, content.event.organizer)
+          if (content.event.hasResources)
+            mj-social(font-size='14px', color='#434343', font-family='Roboto', icon-size='20px', align='left', padding-bottom='0')
+              mj-social-element(src='cid:resource', vertical-align='top')
+                include ../mixins/resources.pug
+                +displayResources(content.event.resources)
+          if (content.event.description)
+            mj-social(font-size='14px' color='#595959', font-family='Roboto', icon-size='20px', align='left', padding-bottom='0')
+              mj-social-element(src='cid:format-align-justify' vertical-align='top')
+                | #{content.event.description}
+      if (content.method != 'CANCEL')
+        mj-section(padding='0')
+          mj-column(width='100%')
+            mj-divider(border-color='#dddddd', border-width='1px')
+            mj-text(font-size='17px', font-family='Roboto', align='center') #{translate('Will you attend?')}
+            mj-table(css-class='part-table', align='center')
+              tr
+                td.part-button-container
+                  a.part-button(href=content.yes, style='color: green;') &check; #{translate('Yes')}
+                td.part-button-container
+                  a.part-button(href=content.maybe, style='color: orange;') ? #{translate('Maybe')}
+                td.part-button-container
+                  a.part-button(href=content.no, style='color: red;') &#x2715; #{translate('No')}
+    mj-wrapper
+      mj-section(padding='0')
+        mj-column(width='100%')
+          mj-text(padding='0')
+            p.warning-text
+              | #{translate('Forwarding this invitation could allow any recipient to send a response to the organizer and be added to the guest list, or invite others regardless of their own invitation status, or to modify your RSVP.')}
