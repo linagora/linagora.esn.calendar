@@ -17,7 +17,6 @@ module.exports = dependencies => {
 
   return {
     dispatchEvent,
-    sendInvitation,
     changeParticipation
   };
 
@@ -49,44 +48,6 @@ module.exports = dependencies => {
 
       res.status(req.body.type === 'created' ? 201 : 200).json({ _id: result._id, objectType: result.objectType });
     });
-  }
-
-  function sendInvitation(req, res) {
-    const {email, notify, method, event, calendarURI, newEvent} = req.body;
-
-    if (!email) {
-      return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'The "emails" array is required and must contain at least one element'}});
-    }
-
-    if (!method || typeof method !== 'string') {
-      return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'Method is required and must be a string (REQUEST, REPLY, CANCEL, etc.)'}});
-    }
-
-    if (!event || typeof event !== 'string') {
-      return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'Event is required and must be a string (ICS format)'}});
-    }
-
-    if (!calendarURI || typeof calendarURI !== 'string') {
-      return res.status(400).json({error: {code: 400, message: 'Bad Request', details: 'Calendar Id is required and must be a string'}});
-    }
-
-    const notificationPromise = notify ? invitation.email.send : () => Promise.resolve();
-
-    notificationPromise({
-      sender: req.user,
-      recipientEmail: email,
-      method,
-      ics: event,
-      calendarURI,
-      domain: req.domain,
-      newEvent
-    })
-      .then(() => res.status(200).end())
-      .catch(err => {
-        logger.error('Error when trying to send invitations to attendees', err);
-
-        res.status(500).json({error: {code: 500, message: 'Error when trying to send invitations to attendees', details: err.message}});
-      });
   }
 
   function changeParticipationSuccess({req, res, vcalendar, modified}) {
