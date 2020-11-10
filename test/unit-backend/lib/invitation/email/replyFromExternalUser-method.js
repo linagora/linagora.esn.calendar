@@ -3,7 +3,7 @@ const sinon = require('sinon');
 const fs = require('fs');
 
 describe('The invitation email module', function() {
-  let userMock, helpersMock, authMock, emailMock, esnConfigMock;
+  let userMock, domainMock, helpersMock, authMock, emailMock, esnConfigMock;
   let getModule;
   const method = 'REPLY';
 
@@ -26,6 +26,12 @@ describe('The invitation email module', function() {
       },
       findByEmail: function(email, callback) {
         return callback(this._err, this._user);
+      }
+    };
+
+    domainMock = {
+      load: function(domainId, callback) {
+        callback(null, { _id: 'domainId '});
       }
     };
 
@@ -64,6 +70,7 @@ describe('The invitation email module', function() {
     };
 
     this.moduleHelpers.addDep('user', userMock);
+    this.moduleHelpers.addDep('domain', domainMock);
     this.moduleHelpers.addDep('helpers', helpersMock);
     this.moduleHelpers.addDep('auth', authMock);
     this.moduleHelpers.addDep('email', emailMock);
