@@ -22,7 +22,6 @@ module.exports = dependencies => {
   const findDomainById = promisify(domainModule.load);
 
   return {
-    send,
     sendNotificationEmails,
     replyFromExternalUser
   };
@@ -71,40 +70,6 @@ module.exports = dependencies => {
             .then(datetimeOptions => _sendToRecipient({ method, ics, sender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }));
         });
       });
-  }
-
-  function send({ sender, recipientEmail, method, ics, calendarURI, domain, isNewEvent } = {}) {
-    if (!sender || !sender.domains || !sender.domains.length) {
-      return Promise.reject(new Error('Sender must be an User object'));
-    }
-
-    if (!recipientEmail) {
-      return Promise.reject(new Error('The attendeeEmail is required'));
-    }
-
-    if (!method) {
-      return Promise.reject(new Error('The method is required'));
-    }
-
-    if (!ics) {
-      return Promise.reject(new Error('The ics is required'));
-    }
-
-    return Promise.all([
-      getBaseURL(sender),
-      findUserByEmail(recipientEmail)
-    ]).then(([baseURL, recipient]) => {
-      const esnDatetimeConfig = esnConfig('datetime').inModule('core');
-      const mailer = emailModule.getMailer(sender);
-
-      if (!recipient) {
-        return esnDatetimeConfig.forUser(sender, true).get()
-          .then(datetimeOptions => _sendToRecipient({ method, ics, sender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }));
-      }
-
-      return esnDatetimeConfig.forUser(recipient, true).get()
-        .then(datetimeOptions => _sendToRecipient({ method, ics, sender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }));
-    });
   }
 
   function replyFromExternalUser({ editorEmail, recipientEmail, ics, calendarURI, domain } = {}) {
