@@ -1,10 +1,9 @@
 const { expect } = require('chai');
 const sinon = require('sinon');
-const mockery = require('mockery');
 const fs = require('fs');
 
 describe('The invitation email module', function() {
-  let userMock, helpersMock, authMock, emailMock, esnConfigMock, datetimeHelpersMock;
+  let userMock, helpersMock, authMock, emailMock, esnConfigMock;
   let getModule;
   const method = 'REPLY';
 
@@ -64,10 +63,6 @@ describe('The invitation email module', function() {
       };
     };
 
-    datetimeHelpersMock = () => ({
-      formatDatetime: () => ({})
-    });
-
     this.moduleHelpers.addDep('user', userMock);
     this.moduleHelpers.addDep('helpers', helpersMock);
     this.moduleHelpers.addDep('auth', authMock);
@@ -75,8 +70,6 @@ describe('The invitation email module', function() {
     this.moduleHelpers.addDep('esn-config', esnConfigMock);
     this.moduleHelpers.addDep('i18n', this.helpers.requireBackend('core/i18n'));
 
-    mockery.registerMock('../helpers/datetime', datetimeHelpersMock);
-    mockery.registerMock('mjml', {});
     getModule = () => require(`${this.moduleHelpers.backendPath}/lib/invitation/email`)(this.moduleHelpers.dependencies);
   });
 

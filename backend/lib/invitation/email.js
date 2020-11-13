@@ -4,7 +4,6 @@ const { promisify } = require('util');
 const { jcal2content, getIcalDateAsMoment, getIcalEvent } = require('./../helpers/jcal');
 const emailHelpers = require('./../helpers/email');
 const TEMPLATES_PATH = path.resolve(__dirname, '../../../templates/email');
-const mjml2html = require('mjml');
 
 module.exports = dependencies => {
   const { getDisplayName, findByEmail } = dependencies('user');
@@ -168,57 +167,27 @@ module.exports = dependencies => {
               const { timeZone: timezone, use24hourFormat } = datetimeOptions;
               const convertTzOptions = { timezone, locale, use24hourFormat };
               const icalEvent = getIcalEvent(ics);
-              const {
-                date: startDateString,
-                time: startTimeString,
-                fullDate: startFullDateString,
-                fullDateTime: startFullDateTimeString
-              } = datetimeHelpers.formatDatetime(getIcalDateAsMoment(icalEvent.startDate), convertTzOptions);
-              const {
-                date: endDateString,
-                time: endTimeString,
-                fullDate: endFullDateString,
-                fullDateTime: endFullDateTimeString
-              } = datetimeHelpers.formatDatetime(content.event.allDay ? getIcalDateAsMoment(icalEvent.endDate).subtract(1, 'day') : getIcalDateAsMoment(icalEvent.endDate), convertTzOptions);
+              const { date: startDateString, time: startTimeString } = datetimeHelpers.formatDatetime(getIcalDateAsMoment(icalEvent.startDate), convertTzOptions);
+              const { date: endDateString, time: endTimeString } = datetimeHelpers.formatDatetime(getIcalDateAsMoment(icalEvent.endDate), convertTzOptions);
 
               content.event = {
                 ...content.event,
                 start: {
                   date: startDateString,
                   time: startTimeString,
-                  fullDate: startFullDateString,
-                  fullDateTime: startFullDateTimeString,
                   timezone
                 },
                 end: {
                   date: endDateString,
                   time: endTimeString,
-                  fullDate: endFullDateString,
-                  fullDateTime: endFullDateTimeString,
                   timezone
                 }
               };
 
-              // Only applies the new template for event creation notification email for the time being
-              // When we have finished all the email templates for all email notification types, this check
-              // should no longer be needed since we will only use mailer.sendWithCustomTemplateFunction.
-              if (method === 'REQUEST' && newEvent) {
-                return mailer.sendWithCustomTemplateFunction({
-                  message,
-                  template,
-                  templateFn: _mjmlTemplateFunction,
-                  locals: {
-                    content,
-                    translate,
-                    filter: emailHelpers.filterEventAttachments(event)
-                  }
-                });
-              }
-
               return mailer.sendHTML(message, template, {
                 content,
-                translate,
-                filter: emailHelpers.filterEventAttachments(event)
+                filter: emailHelpers.filterEventAttachments(event),
+                translate
               });
             });
           });
@@ -431,9 +400,5 @@ module.exports = dependencies => {
       subject,
       inviteMessage
     };
-  }
-
-  function _mjmlTemplateFunction(html) {
-    return mjml2html(html).html;
   }
 };
