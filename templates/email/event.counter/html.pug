@@ -13,7 +13,7 @@ html.mail
 
         table
           tr.table-header
-            td.logo(colspan="2", style="max-width: 120px;")
+            td.logo(colspan="2")
               div
                 a(href=content.baseUrl)
                   img(src="cid:logo", alt="OpenPaas Logo")
@@ -66,14 +66,14 @@ html.mail
             td.indent
               img(src="cid:account-multiple", alt=translate('Attendees'))
             td(colspan="5")
-              include ../mixins/old/attendees.pug
+              include ../mixins/attendees.pug
               +displayAttendees(content.event.attendees)
           if (content.event.hasResources)
             tr
               td.indent
                 img(src="cid:resource", alt=translate('Resources'))
               td(colspan="5")
-                include ../mixins/old/resources.pug
+                include ../mixins/resources.pug
                 +displayResources(content.event.resources)
           if (content.event.description)
             tr
