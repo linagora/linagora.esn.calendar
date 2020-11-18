@@ -1,5 +1,5 @@
 const extend = require('extend');
-const urljoin = require('url-join');
+const _ = require('lodash');
 const { ACCEPTED, DECLINED, TENTATIVE } = require('../constants').ATTENDEE.ACTIONS;
 
 module.exports = dependencies => {
@@ -10,7 +10,15 @@ module.exports = dependencies => {
     generateActionLinks
   };
 
-  function generateActionLink(baseUrl, jwtPayload, action) {
+  /**
+   * Generate action link depending on the type of recipient
+   * @param {String} baseUrl the baseUrl of the ESN backend server
+   * @param {Object} jwtPayload the payload to be used to generate the JWT for the link
+   * @param {String} action
+   * @param {Boolean} isExternalRecipient whether or not the recipient is an external user
+   * @returns {Promise} a promise resolving to an object containing the yes, no and maybe links
+   */
+  function generateActionLink(baseUrl, jwtPayload, action, isExternalRecipient) {
     const payload = {};
 
     extend(true, payload, jwtPayload, {action});
@@ -21,7 +29,9 @@ module.exports = dependencies => {
           return reject(err);
         }
 
-        resolve(urljoin(baseUrl, '/calendar/api/calendars/event/participation/?jwt=' + token));
+        const pathUrl = isExternalRecipient ? '/excal' : '/calendar/#/calendar/participation';
+
+        resolve(urlJoin(baseUrl + pathUrl, `?jwt=${token}&eventUid=${payload.uid}`));
       });
     });
   }
@@ -33,17 +43,22 @@ module.exports = dependencies => {
    *
    * @param {String} baseUrl the baseUrl of the ESN
    * @param {Object} jwtPayload the payload to be used to generate the JWT for the link
+   * @param {Boolean} isExternalRecipient whether or not the recipient is an external user
    * @returns {Promise} a promise resolving to an object containing the yes, no and maybe links
    */
-  function generateActionLinks(baseUrl, jwtPayload) {
+  function generateActionLinks(baseUrl, jwtPayload, isExternalRecipient) {
     return Promise.all([
-      generateActionLink(baseUrl, jwtPayload, ACCEPTED),
-      generateActionLink(baseUrl, jwtPayload, DECLINED),
-      generateActionLink(baseUrl, jwtPayload, TENTATIVE)
+      generateActionLink(baseUrl, jwtPayload, ACCEPTED, isExternalRecipient),
+      generateActionLink(baseUrl, jwtPayload, DECLINED, isExternalRecipient),
+      generateActionLink(baseUrl, jwtPayload, TENTATIVE, isExternalRecipient)
     ]).then(links => ({
       yes: links[0],
       no: links[1],
       maybe: links[2]
     }));
+  }
+
+  function urlJoin(a, b) {
+    return _.trimEnd(a, '/') + '/' + _.trimStart(b, '/');
   }
 };

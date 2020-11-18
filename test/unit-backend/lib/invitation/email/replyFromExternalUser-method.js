@@ -283,9 +283,9 @@ describe('The invitation email module', function() {
             expect(locals.content.method).to.equal(method);
             expect(locals.content.seeInCalendarLink).to.be.defined;
             expect(locals.content.baseUrl).to.equal('http://localhost:8888');
-            expect(locals.content.yes).to.equal('http://localhost:8888/calendar/api/calendars/event/participation?jwt=token');
-            expect(locals.content.no).to.equal('http://localhost:8888/calendar/api/calendars/event/participation?jwt=token');
-            expect(locals.content.maybe).to.equal('http://localhost:8888/calendar/api/calendars/event/participation?jwt=token');
+            expect(locals.content.yes).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token&eventUid=123123');
+            expect(locals.content.no).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token&eventUid=123123');
+            expect(locals.content.maybe).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token&eventUid=123123');
 
             return Promise.resolve();
           }

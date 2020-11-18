@@ -216,7 +216,7 @@ module.exports = dependencies => {
       calendarURI
     };
 
-    return invitationLink.generateActionLinks(baseURL, jwtPayload)
+    return invitationLink.generateActionLinks(baseURL, jwtPayload, isExternalRecipient)
       .then(links => {
         const content = {
           baseUrl: baseURL,
