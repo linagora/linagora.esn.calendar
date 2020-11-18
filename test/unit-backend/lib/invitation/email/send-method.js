@@ -284,7 +284,7 @@ describe('The invitation email module', function() {
           });
       });
 
-      it('should send HTML email with correct parameters if the editor is an attendee', function(done) {
+      it('should send HTML email with correct parameters when the editor is an internal user', function(done) {
         const method = 'REQUEST';
         const attendeeEditor = {
           firstname: 'attendeeFistname',
@@ -328,9 +328,9 @@ describe('The invitation email module', function() {
               expect(locals.filter).is.a.function;
               expect(locals.content.method).to.equal(method);
               expect(locals.content.baseUrl).to.equal('http://localhost:8888');
-              expect(locals.content.yes).to.equal('http://localhost:8888/excal/?jwt=token');
-              expect(locals.content.no).to.equal('http://localhost:8888/excal/?jwt=token');
-              expect(locals.content.maybe).to.equal('http://localhost:8888/excal/?jwt=token');
+              expect(locals.content.yes).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token&eventUid=123123');
+              expect(locals.content.no).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token&eventUid=123123');
+              expect(locals.content.maybe).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token&eventUid=123123');
 
               return Promise.resolve();
             }
@@ -348,7 +348,7 @@ describe('The invitation email module', function() {
         }).then(() => done(), done);
       });
 
-      it('should send HTML email with correct parameters', function(done) {
+      it('should send HTML email with correct parameters for internal users', function(done) {
         const method = 'REQUEST';
 
         helpersMock.config.getBaseUrl = function(user, callback) {
@@ -385,9 +385,9 @@ describe('The invitation email module', function() {
               expect(locals.content.method).to.equal(method);
               expect(locals.content.seeInCalendarLink).to.be.defined;
               expect(locals.content.baseUrl).to.equal('http://localhost:8888');
-              expect(locals.content.yes).to.equal('http://localhost:8888/excal/?jwt=token');
-              expect(locals.content.no).to.equal('http://localhost:8888/excal/?jwt=token');
-              expect(locals.content.maybe).to.equal('http://localhost:8888/excal/?jwt=token');
+              expect(locals.content.yes).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token&eventUid=123123');
+              expect(locals.content.no).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token&eventUid=123123');
+              expect(locals.content.maybe).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token&eventUid=123123');
 
               return Promise.resolve();
             }
@@ -402,6 +402,65 @@ describe('The invitation email module', function() {
           domain: null,
           newEvent
         }).then(() => done(), done);
+      });
+
+      it('should send HTML email with correct parameters for external users', function(done) {
+        const method = 'REQUEST';
+
+        helpersMock.config.getBaseUrl = function(user, callback) {
+          callback(null, 'http://localhost:8888');
+        };
+
+        userMock.findByEmail = function(email, callback) {
+          return callback();
+        };
+
+        emailMock.getMailer = function() {
+          return {
+            sendHTML: function(email, template, locals) {
+              expect(email.from).to.equal(organizer.emails[0]);
+
+              expect(email.to).to.equal(attendee1.emails[0]);
+              expect(email).to.shallowDeepEqual({
+                subject: 'New event from ' + organizer.firstname + ' ' + organizer.lastname + ': description',
+                encoding: 'base64',
+                alternatives: [{
+                  content: ics,
+                  contentType: `text/calendar; charset=UTF-8; method=${method}`
+                }],
+                attachments: [{
+                  filename: 'meeting.ics',
+                  content: ics,
+                  contentType: 'application/ics'
+                }]
+              });
+              expect(template.name).to.equal('event.invitation');
+              expect(template.path).to.match(/templates\/email/);
+              expect(locals).to.be.an('object');
+              expect(locals.filter).is.a.function;
+              expect(locals.content.method).to.equal(method);
+              expect(locals.content.seeInCalendarLink).to.be.defined;
+              expect(locals.content.baseUrl).to.equal('http://localhost:8888');
+              expect(locals.content.yes).to.equal('http://localhost:8888/excal/?jwt=token&eventUid=123123');
+              expect(locals.content.no).to.equal('http://localhost:8888/excal/?jwt=token&eventUid=123123');
+              expect(locals.content.maybe).to.equal('http://localhost:8888/excal/?jwt=token&eventUid=123123');
+
+              return Promise.resolve();
+            }
+          };
+        };
+
+        getModule().send({
+          sender: organizer,
+          recipientEmail: attendeeEmail,
+          method,
+          ics,
+          calendarURI: 'calendarURI',
+          domain: null,
+          newEvent
+        })
+          .then(done)
+          .catch(err => done(err || new Error('should resolve')));
       });
 
       it('should not include calendar link when attendee is external user', function(done) {
