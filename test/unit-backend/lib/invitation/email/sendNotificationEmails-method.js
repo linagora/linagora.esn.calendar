@@ -4,7 +4,7 @@ const fs = require('fs');
 const mockery = require('mockery');
 
 describe('The invitation email module', function() {
-  let userMock, helpersMock, authMock, emailMock, esnConfigMock, datetimeOptions;
+  let userMock, domainMock, helpersMock, authMock, emailMock, esnConfigMock, datetimeOptions, datetimeHelpersMock;
   let getModule;
 
   beforeEach(function() {
@@ -19,14 +19,18 @@ describe('The invitation email module', function() {
 
     userMock = {
       getDisplayName: user => user.firstname + ' ' + user.lastname,
-      _user: {},
-      _err: null,
       get: function(id, callback) {
-        return callback(this._err, this._user);
+        return callback(null, {});
       },
       findByEmail: function(email, callback) {
-        return callback(this._err, this._user);
+        return callback(null, {});
       }
+    };
+
+    domainMock = {
+      load: sinon.spy(function(domainId, callback) {
+        callback(null, { _id: 'domainId' });
+      })
     };
 
     helpersMock = {
@@ -40,7 +44,7 @@ describe('The invitation email module', function() {
       },
       config: {
         getBaseUrl: function(user, callback) {
-          callback();
+          callback(null, 'baseUrl');
         }
       }
     };
@@ -73,6 +77,11 @@ describe('The invitation email module', function() {
       };
     };
 
+    datetimeHelpersMock = () => ({
+      formatDatetime: () => ({})
+    });
+
+    this.moduleHelpers.addDep('domain', domainMock);
     this.moduleHelpers.addDep('user', userMock);
     this.moduleHelpers.addDep('helpers', helpersMock);
     this.moduleHelpers.addDep('auth', authMock);
@@ -80,10 +89,11 @@ describe('The invitation email module', function() {
     this.moduleHelpers.addDep('esn-config', esnConfigMock);
     this.moduleHelpers.addDep('i18n', this.helpers.requireBackend('core/i18n'));
 
+    mockery.registerMock('../helpers/datetime', datetimeHelpersMock);
     getModule = () => require(`${this.moduleHelpers.backendPath}/lib/invitation/email`)(this.moduleHelpers.dependencies);
   });
 
-  describe('The send function', function() {
+  describe('The sendNotificationEmails function', function() {
     const organizer = {
       firstname: 'organizerFirstname',
       lastname: 'organizerLastname',
@@ -99,14 +109,16 @@ describe('The invitation email module', function() {
       lastname: 'attendee1Lastname',
       emails: [
         'attendee1@open-paas.org'
-      ]
+      ],
+      domains: [{ domain_id: 'domain123' }]
     };
     const otherAttendee = {
       firstname: 'attendee2Firstname',
       lastname: 'attendee2Lastname',
       emails: [
         'attendee2@open-paas.org'
-      ]
+      ],
+      domains: [{ domain_id: 'domain123' }]
     };
     const attendeeEmail = attendee1.emails[0];
 
@@ -125,50 +137,181 @@ describe('The invitation email module', function() {
       'END:VCALENDAR'
     ].join('\r\n');
 
-    const newEvent = true;
+    const isNewEvent = true;
 
-    describe('The inviteAttendees fn', function() {
-      it('should return an error if organizer is undefined', function(done) {
-        getModule().send({ sender: null, recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: 'ICS', calendarURI: 'calendarURI'}).then(done, () => done());
+    beforeEach(function() {
+      userMock.findByEmail = function(email, callback) {
+        if (typeof email !== 'string') return callback(null, null);
+
+        return callback(null, organizer);
+      };
+    });
+
+    describe('The common cases', function() {
+      it('should reject if the sender email is not a string', function(done) {
+        getModule().sendNotificationEmails({ senderEmail: {}, recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: 'ICS', calendarURI: 'calendarURI' })
+          .then(() => done(new Error('should not resolve')))
+          .catch(err => {
+            expect(err).to.exist;
+            expect(err.message).to.equal('The senderEmail must be a string');
+            done();
+          });
       });
 
-      it('should return an error if attendeeEmails is not an email string', function(done) {
-        getModule().send({ sender: {}, recipientEmail: {}, method: 'REQUEST', ics: 'ICS', calendarURI: 'calendarURI' }).then(done, () => done());
+      it('should reject if the sender is not a User object', function(done) {
+        userMock.findByEmail = function(email, callback) {
+          return callback(null, {});
+        };
+
+        getModule().sendNotificationEmails({ senderEmail: 'bar@foo.com', recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: 'ICS', calendarURI: 'calendarURI' })
+          .then(() => done(new Error('should not resolve')))
+          .catch(err => {
+            expect(err).to.exist;
+            expect(err.message).to.equal('Sender must be a User object with at least one domain');
+            done();
+          });
       });
 
-      it('should return an error if attendeeEmails is null object', function(done) {
-        getModule().send({ sender: organizer, recipientEmail: null, method: 'REQUEST', ics: 'ICS', calendarURI: 'calendarURI' }).then(done, () => done());
+      it('should reject if the sender is a User object but does not have a domain', function(done) {
+        userMock.findByEmail = (email, callback) => {
+          callback(null, { domains: [] });
+        };
+
+        getModule().sendNotificationEmails({ senderEmail: 'bar@foo.com', recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: 'ICS', calendarURI: 'calendarURI' })
+          .then(() => done(new Error('should not resolve')))
+          .catch(err => {
+            expect(err).to.exist;
+            expect(err.message).to.equal('Sender must be a User object with at least one domain');
+            done();
+          });
       });
 
-      it('should return an error if method is undefined', function(done) {
-        getModule().send({ sender: {}, recipientEmail: 'foo@bar.com', method: null, ics: 'ICS', calendarURI: 'calendarURI'}).then(done, () => done());
+      it('should reject if the recipient email is not a string', function(done) {
+        getModule().sendNotificationEmails({ senderEmail: 'bar@foo.com', recipientEmail: {}, method: 'REQUEST', ics: 'ICS', calendarURI: 'calendarURI' })
+          .then(() => done(new Error('should not resolve')))
+          .catch(err => {
+            expect(err).to.exist;
+            expect(err.message).to.equal('The recipientEmail must be a string');
+            done();
+          });
       });
 
-      it('should return an error if ics is undefined', function(done) {
-        getModule().send({ sender: {}, recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: null, calendarURI: 'calendarURI' }).then(done, () => done());
+      it('should reject if method is not a string', function(done) {
+        getModule().sendNotificationEmails({ senderEmail: 'bar@foo.com', recipientEmail: 'foo@bar.com', method: 123123, ics: 'ICS', calendarURI: 'calendarURI' })
+        .then(() => done(new Error('should not resolve')))
+        .catch(err => {
+          expect(err).to.exist;
+          expect(err.message).to.equal('The method must be a string');
+          done();
+        });
       });
 
-      it('should return an error if calendarURI is undefined', function(done) {
-        getModule().send({ sender: {}, recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: 'ICS', calendarURI: null}).then(done, () => done());
+      it('should reject if ics is not a string', function(done) {
+        getModule().sendNotificationEmails({ senderEmail: 'bar@foo.com', recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: {}, calendarURI: 'calendarURI' })
+        .then(() => done(new Error('should not resolve')))
+        .catch(err => {
+          expect(err).to.exist;
+          expect(err.message).to.equal('The ics must be a string');
+          done();
+        });
       });
 
-      it('should return an error if findByEmail return an error', function(done) {
+      it('should reject if calendarURI is not a string', function(done) {
+        getModule().sendNotificationEmails({ senderEmail: 'bar@foo.com', recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: 'ics', calendarURI: {} })
+        .then(() => done(new Error('should not resolve')))
+        .catch(err => {
+          expect(err).to.exist;
+          expect(err.message).to.equal('The calendarURI must be a string');
+          done();
+        });
+      });
+
+      it('should reject if there is an error while finding the sender by email', function(done) {
         userMock.findByEmail = function(email, callback) {
           callback(new Error('Error in findByEmail'));
         };
 
-        getModule().send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, () => done());
+        getModule().sendNotificationEmails({ senderEmail: 'bar@foo.com', recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI' })
+          .then(() => done(new Error('should not resolve')))
+          .catch(err => {
+            expect(err).to.exist;
+            expect(err.message).to.equal('Error in findByEmail');
+            done();
+          });
       });
 
-      it('should return an error it cannot retrieve base url', function(done) {
+      it('should reject if there is an error while finding the recipient by email', function(done) {
+        let callCount = 0;
+
+        userMock.findByEmail = function(email, callback) {
+          if (callCount === 1) {
+            expect(email).to.equal(attendeeEmail);
+
+            return callback(new Error('Error in findByEmail'));
+          }
+
+          callback(null, { domains: [{ _id: 'domainId' }]});
+          callCount++;
+        };
+
+        getModule().sendNotificationEmails({ senderEmail: 'bar@foo.com', recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI' })
+          .then(() => done(new Error('should not resolve')))
+          .catch(err => {
+            expect(err).to.exist;
+            expect(err.message).to.equal('Error in findByEmail');
+            done();
+          });
+      });
+
+      it('should reject if the base url cannot be retrieved', function(done) {
+        const sender = {
+          domains: [{ _id: 'domainId' }],
+          perferredDomainId: 'domainId'
+        };
+
+        userMock.findByEmail = (email, callback) => {
+          callback(null, sender);
+        };
+
         helpersMock.config.getBaseUrl = function(user, callback) {
+          expect(user).to.equal(sender);
           callback(new Error('cannot get base_url'));
         };
 
-        getModule().send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, () => done());
+        getModule().sendNotificationEmails({ senderEmail: 'bar@foo.com', recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI' })
+          .then(() => done(new Error('should not resolve')))
+          .catch(err => {
+            expect(err).to.exist;
+            expect(err.message).to.equal('cannot get base_url');
+            done();
+          });
       });
 
-      it('should return an error if an error happens during links generation', function(done) {
+      it('should reject if the sender domain cannot be retrieved', function(done) {
+        const sender = {
+          domains: [{ _id: 'domainId' }],
+          preferredDomainId: 'domainId'
+        };
+
+        userMock.findByEmail = (email, callback) => {
+          callback(null, sender);
+        };
+
+        domainMock.load = function(domainId, callback) {
+          expect(domainId).to.equal(sender.preferredDomainId);
+          callback(new Error('cannot get domain'));
+        };
+
+        getModule().sendNotificationEmails({ senderEmail: 'bar@foo.com', recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI' })
+          .then(() => done(new Error('should not resolve')))
+          .catch(err => {
+            expect(err).to.exist;
+            expect(err.message).to.equal('cannot get domain');
+            done();
+          });
+      });
+
+      it('should reject if an error happens during links generation', function(done) {
         userMock.findByEmail = function(email, callback) {
           if (email === attendee1.emails[0]) {
             return callback(null, attendee1);
@@ -181,30 +324,38 @@ describe('The invitation email module', function() {
           return callback(new Error());
         };
 
-        getModule().send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, () => done());
+        getModule().sendNotificationEmails({ senderEmail: 'bar@foo.com', recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI' }).then(done, () => done());
       });
 
       it('should generate a token with proper information', function(done) {
+        let findByEmailCallCount = 0;
+
         userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 1) {
+            return callback(null, organizer);
+          }
+
           if (email === attendee1.emails[0]) {
             return callback(null, attendee1);
           }
+
           callback(null, otherAttendee);
         };
 
-        emailMock.getMailer = () => ({sendHTML: () => Promise.resolve()});
+        emailMock.getMailer = () => ({ sendHTML: () => Promise.resolve() });
 
         authMock.jwt.generateWebToken = sinon.spy(function(token, callback) {
           callback(null, 'a_token');
         });
 
-        getModule().send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'})
+        getModule().sendNotificationEmails({ senderEmail: 'bar@foo.com', recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI' })
           .then(() => {
             ['ACCEPTED', 'DECLINED', 'TENTATIVE'].forEach(action => testTokenWith(action, attendeeEmail));
-
             done();
           })
-          .catch(done);
+          .catch(err => done(err || new Error('should resolve')));
 
         function testTokenWith(action, attendeeEmail) {
           expect(authMock.jwt.generateWebToken).to.have.been.calledWith({
@@ -217,7 +368,7 @@ describe('The invitation email module', function() {
         }
       });
 
-      it('should return an error if there is an error while sending email', function(done) {
+      it('should reject if there is an error while sending email', function(done) {
         userMock.findByEmail = function(email, callback) {
           if (email === attendee1.emails[0]) {
             return callback(null, attendee1);
@@ -233,11 +384,19 @@ describe('The invitation email module', function() {
           };
         };
 
-        getModule().send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, () => done());
+        getModule().sendNotificationEmails({ senderEmail: 'bar@foo.com', recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI' }).then(done, () => done());
       });
 
       it('should work even if findByEmail doesn\'t find the attendee', function(done) {
+        let findByEmailCallCount = 0;
+
         userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 1) {
+            return callback(null, organizer);
+          }
+
           if (email === attendee1.emails[0]) {
             return callback(null, attendee1);
           }
@@ -258,14 +417,23 @@ describe('The invitation email module', function() {
           };
         };
 
-        getModule().send({ sender: organizer, recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI'}).then(done, done);
+        getModule().sendNotificationEmails({ senderEmail: 'bar@foo.com', recipientEmail: attendeeEmail, method: 'REQUEST', ics, calendarURI: 'calendarURI' })
+          .then(done)
+          .catch(err => done(err || new Error('should resolve')));
       });
 
       it('should not send an email if the attendee is not involved in the event', function(done) {
         const emailAttendeeNotInvited = 'toto@open-paas.org';
         const sendHTML = sinon.spy();
+        let findByEmailCallCount = 0;
 
         userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 1) {
+            return callback(null, organizer);
+          }
+
           callback();
         };
 
@@ -275,7 +443,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        getModule().send({ sender: organizer, recipientEmail: emailAttendeeNotInvited, method: 'REQUEST', ics, calendarURI: 'calendarURI'})
+        getModule().sendNotificationEmails({ senderEmail: 'bar@foo.com', recipientEmail: emailAttendeeNotInvited, method: 'REQUEST', ics, calendarURI: 'calendarURI' })
           .then(() => done())
           .catch(err => {
             expect(err.message).to.match(/The recipient is not involved in the event/);
@@ -284,7 +452,7 @@ describe('The invitation email module', function() {
           });
       });
 
-      it('should send HTML email with correct parameters when the editor is an internal user', function(done) {
+      it('should send HTML email with correct parameters when the editor is an attendee', function(done) {
         const method = 'REQUEST';
         const attendeeEditor = {
           firstname: 'attendeeFistname',
@@ -293,15 +461,23 @@ describe('The invitation email module', function() {
           preferredEmail: 'attendee1@open-paas.org',
           domains: [{ domains_id: 'domain123' }]
         };
+        let findByEmailCallCount = 0;
 
         helpersMock.config.getBaseUrl = function(user, callback) {
           callback(null, 'http://localhost:8888');
         };
 
         userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 2) {
+            return callback(null, organizer);
+          }
+
           if (email === attendee1.emails[0]) {
             return callback(null, attendee1);
           }
+
           callback(null, otherAttendee);
         };
 
@@ -337,25 +513,34 @@ describe('The invitation email module', function() {
           };
         };
 
-        getModule().send({
-          sender: attendeeEditor,
+        getModule().sendNotificationEmails({
+          senderEmail: attendee1.emails[0],
           recipientEmail: organizer.preferredEmail,
           method,
           ics,
           calendarURI: 'calendarURI',
           domain: null,
-          newEvent
-        }).then(() => done(), done);
+          isNewEvent
+        })
+          .then(done)
+          .catch(err => done(err || new Error('should resolve')));
       });
 
-      it('should send HTML email with correct parameters for internal users', function(done) {
+      it('should send HTML email with correct parameters', function(done) {
         const method = 'REQUEST';
+        let findByEmailCallCount = 0;
 
         helpersMock.config.getBaseUrl = function(user, callback) {
           callback(null, 'http://localhost:8888');
         };
 
         userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 1) {
+            return callback(null, organizer);
+          }
+
           return callback(null, (email === attendee1.emails[0]) ? attendee1 : otherAttendee);
         };
 
@@ -393,71 +578,14 @@ describe('The invitation email module', function() {
             }
           };
         };
-        getModule().send({
-          sender: organizer,
+        getModule().sendNotificationEmails({
+          senderEmail: 'bar@foo.com',
           recipientEmail: attendeeEmail,
           method,
           ics,
           calendarURI: 'calendarURI',
           domain: null,
-          newEvent
-        }).then(() => done(), done);
-      });
-
-      it('should send HTML email with correct parameters for external users', function(done) {
-        const method = 'REQUEST';
-
-        helpersMock.config.getBaseUrl = function(user, callback) {
-          callback(null, 'http://localhost:8888');
-        };
-
-        userMock.findByEmail = function(email, callback) {
-          return callback();
-        };
-
-        emailMock.getMailer = function() {
-          return {
-            sendHTML: function(email, template, locals) {
-              expect(email.from).to.equal(organizer.emails[0]);
-
-              expect(email.to).to.equal(attendee1.emails[0]);
-              expect(email).to.shallowDeepEqual({
-                subject: 'New event from ' + organizer.firstname + ' ' + organizer.lastname + ': description',
-                encoding: 'base64',
-                alternatives: [{
-                  content: ics,
-                  contentType: `text/calendar; charset=UTF-8; method=${method}`
-                }],
-                attachments: [{
-                  filename: 'meeting.ics',
-                  content: ics,
-                  contentType: 'application/ics'
-                }]
-              });
-              expect(template.name).to.equal('event.invitation');
-              expect(template.path).to.match(/templates\/email/);
-              expect(locals).to.be.an('object');
-              expect(locals.filter).is.a.function;
-              expect(locals.content.method).to.equal(method);
-              expect(locals.content.seeInCalendarLink).to.be.defined;
-              expect(locals.content.baseUrl).to.equal('http://localhost:8888');
-              expect(locals.content.yes).to.equal('http://localhost:8888/excal/?jwt=token&eventUid=123123');
-              expect(locals.content.no).to.equal('http://localhost:8888/excal/?jwt=token&eventUid=123123');
-              expect(locals.content.maybe).to.equal('http://localhost:8888/excal/?jwt=token&eventUid=123123');
-
-              return Promise.resolve();
-            }
-          };
-        };
-
-        getModule().send({
-          sender: organizer,
-          recipientEmail: attendeeEmail,
-          method,
-          ics,
-          calendarURI: 'calendarURI',
-          domain: null,
-          newEvent
+          isNewEvent
         })
           .then(done)
           .catch(err => done(err || new Error('should resolve')));
@@ -465,12 +593,19 @@ describe('The invitation email module', function() {
 
       it('should not include calendar link when attendee is external user', function(done) {
         const method = 'REQUEST';
+        let findByEmailCallCount = 0;
 
         helpersMock.config.getBaseUrl = function(user, callback) {
           callback(null, 'http://localhost:8888');
         };
 
         userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 1) {
+            return callback(null, organizer);
+          }
+
           return callback();
         };
 
@@ -505,15 +640,17 @@ describe('The invitation email module', function() {
           };
         };
 
-        getModule().send({
-          sender: organizer,
+        getModule().sendNotificationEmails({
+          senderEmail: 'bar@foo.com',
           recipientEmail: attendeeEmail,
           method,
           ics,
           calendarURI: 'calendarURI',
           domain: null,
-          newEvent
-        }).then(() => done(), done);
+          isNewEvent
+        })
+          .then(done)
+          .catch(err => done(err || new Error('should resolve')));
       });
 
       it('should use the attendee\'s timezone and locale configuration if the attendee is an internal user', function(done) {
@@ -521,6 +658,7 @@ describe('The invitation email module', function() {
         const datetimeHelpersMock = {
           formatDatetime: sinon.stub()
         };
+        let findByEmailCallCount = 0;
 
         datetimeHelpersMock.formatDatetime.onCall(0).returns({ date: '01/01/2015', time: '01:01' });
         datetimeHelpersMock.formatDatetime.onCall(1).returns({ date: '01/01/2015', time: '02:02' });
@@ -572,6 +710,12 @@ describe('The invitation email module', function() {
         };
 
         userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 1) {
+            return callback(null, organizer);
+          }
+
           return callback(null, attendee1);
         };
 
@@ -615,14 +759,14 @@ describe('The invitation email module', function() {
           };
         };
 
-        getModule().send({
-          sender: organizer,
+        getModule().sendNotificationEmails({
+          senderEmail: 'bar@foo.com',
           recipientEmail: attendee1.emails[0],
           method,
           ics,
           calendarURI: 'calendarURI',
           domain: null,
-          newEvent
+          isNewEvent
         })
           .then(() => {
             const convertTzOptions = {
@@ -635,7 +779,7 @@ describe('The invitation email module', function() {
             expect(datetimeHelpersMock.formatDatetime.getCall(1).args[1]).to.deep.equal(convertTzOptions);
             done();
           })
-          .catch(done);
+          .catch(err => done(err || new Error('should resolve')));
       });
 
       it('should use the organizer\'s timezone and locale configuration if the attendee is an external user', function(done) {
@@ -643,6 +787,7 @@ describe('The invitation email module', function() {
         const datetimeHelpersMock = {
           formatDatetime: sinon.stub()
         };
+        let findByEmailCallCount = 0;
 
         datetimeHelpersMock.formatDatetime.onCall(0).returns({ date: '01/01/2015', time: '01:01 SA' });
         datetimeHelpersMock.formatDatetime.onCall(1).returns({ date: '01/01/2015', time: '02:02 SA' });
@@ -693,6 +838,12 @@ describe('The invitation email module', function() {
         };
 
         userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 1) {
+            return callback(null, organizer);
+          }
+
           return callback();
         };
 
@@ -736,14 +887,14 @@ describe('The invitation email module', function() {
           };
         };
 
-        getModule().send({
-          sender: organizer,
+        getModule().sendNotificationEmails({
+          senderEmail: 'bar@foo.com',
           recipientEmail: attendeeEmail,
           method,
           ics,
           calendarURI: 'calendarURI',
           domain: null,
-          newEvent
+          isNewEvent
         })
           .then(() => {
             const convertTzOptions = {
@@ -756,7 +907,7 @@ describe('The invitation email module', function() {
             expect(datetimeHelpersMock.formatDatetime.getCall(1).args[1]).to.deep.equal(convertTzOptions);
             done();
           })
-          .catch(done);
+          .catch(err => done(err || new Error('should resolve')));
       });
     });
 
@@ -769,8 +920,15 @@ describe('The invitation email module', function() {
 
       it('should send email with new event subject and template if it\'s a new event for the attendee', function(done) {
         const ics = fs.readFileSync(__dirname + '/../../../fixtures/request-new-event.ics', 'utf-8');
+        let findByEmailCallCount = 0;
 
         userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 1) {
+            return callback(null, organizer);
+          }
+
           return callback(null, attendee1);
         };
 
@@ -786,22 +944,31 @@ describe('The invitation email module', function() {
           };
         };
 
-        getModule().send({
-          sender: organizer,
+        getModule().sendNotificationEmails({
+          senderEmail: 'bar@foo.com',
           recipientEmail: attendeeEmail,
           method,
           ics,
           calendarURI: 'calendarURI',
           domain: null,
-          newEvent
-        }).then(() => done(), done);
+          isNewEvent
+        })
+          .then(done)
+          .catch(err => done(err || new Error('should resolve')));
       });
 
       it('should send HTML email with event update subject and template if the guest existed in the updated event', function(done) {
         const ics = fs.readFileSync(__dirname + '/../../../fixtures/request-event-update.ics', 'utf-8');
-        const newEvent = false;
+        const isNewEvent = false;
+        let findByEmailCallCount = 0;
 
         userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 1) {
+            return callback(null, organizer);
+          }
+
           return callback(null, attendee1);
         };
 
@@ -817,15 +984,17 @@ describe('The invitation email module', function() {
           };
         };
 
-        getModule().send({
-          sender: organizer,
+        getModule().sendNotificationEmails({
+          senderEmail: 'bar@foo.com',
           recipientEmail: attendeeEmail,
           method,
           ics,
           calendarURI: 'calendarURI',
           domain: null,
-          newEvent
-        }).then(() => done(), done);
+          isNewEvent
+        })
+          .then(done)
+          .catch(err => done(err || new Error('should resolve')));
       });
     });
 
@@ -838,8 +1007,15 @@ describe('The invitation email module', function() {
 
       it('should send email with reply event subject and template', function(done) {
         const ics = fs.readFileSync(__dirname + '/../../../fixtures/reply.ics', 'utf-8');
+        let findByEmailCallCount = 0;
 
         userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 1) {
+            return callback(null, organizer);
+          }
+
           callback(null, attendee1);
         };
 
@@ -855,20 +1031,29 @@ describe('The invitation email module', function() {
           };
         };
 
-        getModule().send({
-          sender: organizer,
+        getModule().sendNotificationEmails({
+          senderEmail: 'bar@foo.com',
           recipientEmail: attendeeEmail,
           method,
           ics,
           calendarURI: 'calendarURI'
-        }).then(() => done(), done);
+        })
+          .then(done)
+          .catch(err => done(err || new Error('should resolve')));
       });
 
       it('should send email with correct content', function(done) {
         const ics = fs.readFileSync(__dirname + '/../../../fixtures/reply.ics', 'utf-8');
+        let findByEmailCallCount = 0;
 
         attendee1.domains = [{ domain_id: 'domain_id' }];
         userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 2) {
+            return callback(null, organizer);
+          }
+
           callback(null, attendee1);
         };
 
@@ -890,31 +1075,37 @@ describe('The invitation email module', function() {
           };
         };
 
-        getModule().send({
-          sender: attendee1,
+        getModule().sendNotificationEmails({
+          senderEmail: attendee1.emails[0],
           recipientEmail: attendeeEmail,
           method,
           ics,
           calendarURI: 'calendarURI'
-        }).then(() => done(), done);
+        })
+          .then(done)
+          .catch(err => done(err || new Error('should resolve')));
       });
 
       it('should only send messages to involved users', function(done) {
-        let called = 0;
+        let getMailerCallCount = 0;
+        let findByEmailCallCount = 0;
         const ics = fs.readFileSync(__dirname + '/../../../fixtures/involved.ics', 'utf-8');
 
         userMock.findByEmail = function(email, callback) {
-          if (email === 'attendee1@open-paas.org') {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 1 && email === 'attendee1@open-paas.org') {
             return callback(null, attendee1);
           }
+
           callback(null, otherAttendee);
         };
 
         emailMock.getMailer = function() {
           return {
             sendHTML: function(email) {
-              called++;
-              if (called === 1) {
+              getMailerCallCount++;
+              if (getMailerCallCount === 1) {
                 expect(email.to).to.deep.equal(attendee1.emails[0]);
               }
 
@@ -923,14 +1114,14 @@ describe('The invitation email module', function() {
           };
         };
 
-        getModule().send({
-          sender: attendee1,
+        getModule().sendNotificationEmails({
+          senderEmail: attendee1.emails[0],
           recipientEmail: attendeeEmail,
           method,
           ics,
           calendarURI: 'calendarURI'
         }).then(() => {
-          expect(called).to.equal(1);
+          expect(getMailerCallCount).to.equal(1);
           done();
         }, done);
       });
@@ -945,8 +1136,15 @@ describe('The invitation email module', function() {
 
       it('should send email with reply event subject and template', function(done) {
         const ics = fs.readFileSync(__dirname + '/../../../fixtures/counter.ics', 'utf-8');
+        let findByEmailCallCount = 0;
 
         userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 1) {
+            return callback(null, organizer);
+          }
+
           callback(null, attendee1);
         };
 
@@ -962,20 +1160,29 @@ describe('The invitation email module', function() {
           };
         };
 
-        getModule().send({
-          sender: organizer,
+        getModule().sendNotificationEmails({
+          senderEmail: 'bar@foo.com',
           recipientEmail: attendeeEmail,
           method,
           ics,
           calendarURI: 'calendarURI'
-        }).then(() => done(), done);
+        })
+          .then(done)
+          .catch(err => done(err || new Error('should resolve')));
       });
 
       it('should send email with correct content', function(done) {
         const ics = fs.readFileSync(__dirname + '/../../../fixtures/counter.ics', 'utf-8');
+        let findByEmailCallCount = 0;
 
         attendee1.domains = [{ domain_id: 'domain_id' }];
         userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 2) {
+            return callback(null, organizer);
+          }
+
           callback(null, attendee1);
         };
 
@@ -998,31 +1205,37 @@ describe('The invitation email module', function() {
           };
         };
 
-        getModule().send({
-          sender: attendee1,
+        getModule().sendNotificationEmails({
+          senderEmail: attendee1.emails[0],
           recipientEmail: organizer.emails[0],
           method,
           ics,
           calendarURI: 'calendarURI'
-        }).then(() => done(), done);
+        })
+          .then(done)
+          .catch(err => done(err || new Error('should resolve')));
       });
 
       it('should only send messages to organizer', function(done) {
-        let called = 0;
+        let getMailerCallCount = 0;
+        let findByEmailCallCount = 0;
         const ics = fs.readFileSync(__dirname + '/../../../fixtures/counter.ics', 'utf-8');
 
         userMock.findByEmail = function(email, callback) {
-          if (email === 'organizer@open-paas.org') {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 2 || email === 'organizer@open-paas.org') {
             return callback(null, organizer);
           }
+
           callback(null, otherAttendee);
         };
 
         emailMock.getMailer = function() {
           return {
             sendHTML: function(email) {
-              called++;
-              if (called === 1) {
+              getMailerCallCount++;
+              if (getMailerCallCount === 1) {
                 expect(email.to).to.deep.equal(organizer.emails[0]);
               }
 
@@ -1031,14 +1244,14 @@ describe('The invitation email module', function() {
           };
         };
 
-        getModule().send({
-          sender: attendee1,
+        getModule().sendNotificationEmails({
+          senderEmail: attendee1.emails[0],
           recipientEmail: organizer.emails[0],
           method,
           ics,
           calendarURI: 'calendarURI'
         }).then(() => {
-          expect(called).to.equal(1);
+          expect(getMailerCallCount).to.equal(1);
           done();
         }, done);
       });
@@ -1053,8 +1266,15 @@ describe('The invitation email module', function() {
 
       it('should send HTML email with cancel event subject', function(done) {
         const ics = fs.readFileSync(__dirname + '/../../../fixtures/cancel.ics', 'utf-8');
+        let findByEmailCallCount = 0;
 
         userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 1) {
+            return callback(null, organizer);
+          }
+
           callback(null, attendee1);
         };
 
@@ -1070,13 +1290,15 @@ describe('The invitation email module', function() {
           };
         };
 
-        getModule().send({
-          sender: organizer,
+        getModule().sendNotificationEmails({
+          senderEmail: 'bar@foo.com',
           recipientEmail: attendeeEmail,
           method,
           ics,
           calendarURI: 'calendarURI'
-        }).then(() => done(), done);
+        })
+          .then(done)
+          .catch(err => done(err || new Error('should resolve')));
       });
     });
   });

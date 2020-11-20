@@ -61,6 +61,9 @@ module.exports = {
       REPLY: 'calendar:event:alarm:reply',
       CANCEL: 'calendar:event:alarm:cancel'
     },
+    NOTIFICATION_EMAIL: {
+      SEND: 'calendar:event:notificationEmail:send'
+    },
     RESOURCE: {
       CREATED: 'resource:created',
       UPDATED: 'resource:updated',
