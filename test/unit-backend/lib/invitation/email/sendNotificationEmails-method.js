@@ -637,7 +637,7 @@ describe('The invitation email module', function() {
           };
         };
 
-        getModule().send({
+        getModule().sendNotificationEmails({
           sender: organizer,
           recipientEmail: attendeeEmail,
           method,

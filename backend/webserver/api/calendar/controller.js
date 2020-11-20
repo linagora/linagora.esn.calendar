@@ -56,7 +56,7 @@ module.exports = dependencies => {
     findUserByEmail(attendeeEmail)
       .then(foundUser => {
         if (foundUser) {
-          modified && invitation.email.send({
+          modified && invitation.email.sendNotificationEmails({
             sender: foundUser,
             recipientEmail: organizerEmail,
             method: 'REPLY',
