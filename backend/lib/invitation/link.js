@@ -31,7 +31,7 @@ module.exports = dependencies => {
 
         const pathUrl = isExternalRecipient ? '/excal' : '/calendar/#/calendar/participation';
 
-        resolve(urlJoin(baseUrl + pathUrl, `?jwt=${token}&eventUid=${jwtPayload.uid}`));
+        resolve(urlJoin(baseUrl + pathUrl, `?jwt=${token}`));
       });
     });
   }
