@@ -1,14 +1,12 @@
 var express = require('express');
 
-module.exports = (dependencies, moduleName) => {
+module.exports = dependencies => {
   const controller = require('./controller')(dependencies);
   const calendarMW = require('./middleware')(dependencies);
   const authorizationMW = dependencies('authorizationMW');
   const collaborationMW = dependencies('collaborationMW');
-  const domainMW = dependencies('domainMW');
   const davMiddleware = dependencies('davserver').davMiddleware;
   const tokenMW = dependencies('tokenMW');
-  const moduleMW = dependencies('moduleMW');
   const router = express.Router();
 
   /**
@@ -43,36 +41,6 @@ module.exports = (dependencies, moduleName) => {
     collaborationMW.load,
     collaborationMW.requiresCollaborationMember,
     controller.dispatchEvent);
-
-  router.post('/inviteattendees', (req, res) => res.redirect('/calendar/api/calendars/event/invite'));
-
-  router.all('/event/invite*',
-    authorizationMW.requiresAPILogin,
-    moduleMW.requiresModuleIsEnabledInCurrentDomain(moduleName)
-  );
-
-  /**
-   * @swagger
-   * /event/invite:
-   *   post:
-   *     tags:
-   *       - Calendar
-   *     description: Creates notification for specified attendees (called by the CalDAV server).
-   *     parameters:
-   *       - $ref: "#/parameters/calendar_invite"
-   *     responses:
-   *       200:
-   *         $ref: "#/responses/cm_200"
-   *       400:
-   *         $ref: "#/responses/cm_400"
-   *       401:
-   *         $ref: "#/responses/cm_401"
-   *       500:
-   *         $ref: "#/responses/cm_500"
-   */
-  router.post('/event/invite',
-    domainMW.loadSessionDomain,
-    controller.sendInvitation);
 
   /**
    * @swagger
