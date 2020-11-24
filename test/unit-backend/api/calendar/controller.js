@@ -26,7 +26,7 @@ describe('The calendar controller', function() {
     replyFromExternalUserMock = sinon.stub().returns(Promise.resolve());
     invitationMock = {
       email: {
-        send: sendMailSpy,
+        sendNotificationEmails: sendMailSpy,
         replyFromExternalUser: replyFromExternalUserMock
       },
       link: {
@@ -351,7 +351,7 @@ describe('The calendar controller', function() {
       require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies).changeParticipation(req, res);
     });
 
-    describe('when the vevent has the attendee', function() {
+    describe('when the vevent has attendees', function() {
       it('should send a request to the davserver to fetch the event, and should return status 500 if request fails', function(done) {
         requestMock = function(options, callback) {
           expect(options.method).to.equal('GET');
@@ -575,15 +575,12 @@ describe('The calendar controller', function() {
             const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
             const res = {
               status: () => ({
-                  redirect: () => process.nextTick(() => {
-                    expect(sendMailSpy).to.not.have.been.called;
-                    done();
-                  }),
                   json: function(result) {
                     expect(result).to.shallowDeepEqual({
                       redirect: true,
                       locale: req.getLocale()
                     });
+                    expect(sendMailSpy).to.have.not.been.called;
                     done();
                   }
                 })
@@ -596,7 +593,7 @@ describe('The calendar controller', function() {
             const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
             const res = {
               status: () => ({
-                redirect: () => process.nextTick(() => {
+                json: function(result) {
                   expect(sendMailSpy).to.have.been.calledWith({
                     sender: userMock,
                     recipientEmail: req.eventPayload.organizerEmail,
@@ -605,9 +602,6 @@ describe('The calendar controller', function() {
                     calendarURI: req.eventPayload.calendarURI,
                     domain: req.domain
                   });
-                  done();
-                }),
-                json: function(result) {
                   expect(result).to.shallowDeepEqual({
                     redirect: true,
                     locale: req.getLocale()

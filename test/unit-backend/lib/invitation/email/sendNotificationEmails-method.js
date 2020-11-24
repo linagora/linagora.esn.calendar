@@ -148,7 +148,17 @@ describe('The invitation email module', function() {
     });
 
     describe('The common cases', function() {
-      it('should reject if the sender email is not a string', function(done) {
+      it('should reject if the provided sender is a User object', function(done) {
+        getModule().sendNotificationEmails({ sender: {}, recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: 'ICS', calendarURI: 'calendarURI' })
+          .then(() => done(new Error('should not resolve')))
+          .catch(err => {
+            expect(err).to.exist;
+            expect(err.message).to.equal('Sender must be a User object with at least one domain');
+            done();
+          });
+      });
+
+      it('should reject if there is no sender object provided and the sender email is not a string', function(done) {
         getModule().sendNotificationEmails({ senderEmail: {}, recipientEmail: 'foo@bar.com', method: 'REQUEST', ics: 'ICS', calendarURI: 'calendarURI' })
           .then(() => done(new Error('should not resolve')))
           .catch(err => {
@@ -158,7 +168,7 @@ describe('The invitation email module', function() {
           });
       });
 
-      it('should reject if the sender is not a User object', function(done) {
+      it('should reject if the found sender is not a User object', function(done) {
         userMock.findByEmail = function(email, callback) {
           return callback(null, {});
         };
@@ -172,7 +182,7 @@ describe('The invitation email module', function() {
           });
       });
 
-      it('should reject if the sender is a User object but does not have a domain', function(done) {
+      it('should reject if the found sender is a User object but does not have a domain', function(done) {
         userMock.findByEmail = (email, callback) => {
           callback(null, { domains: [] });
         };
@@ -452,7 +462,7 @@ describe('The invitation email module', function() {
           });
       });
 
-      it('should send HTML email with correct parameters when the editor is an attendee', function(done) {
+      it('should send HTML email with correct parameters when the editor is an internal user', function(done) {
         const method = 'REQUEST';
         const attendeeEditor = {
           firstname: 'attendeeFistname',
@@ -504,9 +514,9 @@ describe('The invitation email module', function() {
               expect(locals.filter).is.a.function;
               expect(locals.content.method).to.equal(method);
               expect(locals.content.baseUrl).to.equal('http://localhost:8888');
-              expect(locals.content.yes).to.equal('http://localhost:8888/calendar/api/calendars/event/participation?jwt=token');
-              expect(locals.content.no).to.equal('http://localhost:8888/calendar/api/calendars/event/participation?jwt=token');
-              expect(locals.content.maybe).to.equal('http://localhost:8888/calendar/api/calendars/event/participation?jwt=token');
+              expect(locals.content.yes).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token&eventUid=123123');
+              expect(locals.content.no).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token&eventUid=123123');
+              expect(locals.content.maybe).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token&eventUid=123123');
 
               return Promise.resolve();
             }
@@ -526,7 +536,7 @@ describe('The invitation email module', function() {
           .catch(err => done(err || new Error('should resolve')));
       });
 
-      it('should send HTML email with correct parameters', function(done) {
+      it('should send HTML email with correct parameters using the provided sender email', function(done) {
         const method = 'REQUEST';
         let findByEmailCallCount = 0;
 
@@ -570,9 +580,9 @@ describe('The invitation email module', function() {
               expect(locals.content.method).to.equal(method);
               expect(locals.content.seeInCalendarLink).to.be.defined;
               expect(locals.content.baseUrl).to.equal('http://localhost:8888');
-              expect(locals.content.yes).to.equal('http://localhost:8888/calendar/api/calendars/event/participation?jwt=token');
-              expect(locals.content.no).to.equal('http://localhost:8888/calendar/api/calendars/event/participation?jwt=token');
-              expect(locals.content.maybe).to.equal('http://localhost:8888/calendar/api/calendars/event/participation?jwt=token');
+              expect(locals.content.yes).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token&eventUid=123123');
+              expect(locals.content.no).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token&eventUid=123123');
+              expect(locals.content.maybe).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token&eventUid=123123');
 
               return Promise.resolve();
             }
@@ -580,6 +590,67 @@ describe('The invitation email module', function() {
         };
         getModule().sendNotificationEmails({
           senderEmail: 'bar@foo.com',
+          recipientEmail: attendeeEmail,
+          method,
+          ics,
+          calendarURI: 'calendarURI',
+          domain: null,
+          isNewEvent
+        })
+          .then(done)
+          .catch(err => done(err || new Error('should resolve')));
+      });
+
+      it('should send HTML email with correct parameters using the provided sender object', function(done) {
+        const method = 'REQUEST';
+
+        helpersMock.config.getBaseUrl = function(user, callback) {
+          callback(null, 'http://localhost:8888');
+        };
+
+        userMock.findByEmail = sinon.spy(function(email, callback) {
+          return callback(null, (email === attendee1.emails[0]) ? attendee1 : otherAttendee);
+        });
+
+        emailMock.getMailer = function() {
+          return {
+            sendHTML: function(email, template, locals) {
+              expect(email.from).to.equal(organizer.emails[0]);
+
+              expect(email.to).to.equal(attendee1.emails[0]);
+              expect(email).to.shallowDeepEqual({
+                subject: 'New event from ' + organizer.firstname + ' ' + organizer.lastname + ': description',
+                encoding: 'base64',
+                alternatives: [{
+                  content: ics,
+                  contentType: `text/calendar; charset=UTF-8; method=${method}`
+                }],
+                attachments: [{
+                  filename: 'meeting.ics',
+                  content: ics,
+                  contentType: 'application/ics'
+                }]
+              });
+              expect(template.name).to.equal('event.invitation');
+              expect(template.path).to.match(/templates\/email/);
+              expect(locals).to.be.an('object');
+              expect(locals.filter).is.a.function;
+              expect(locals.content.method).to.equal(method);
+              expect(locals.content.seeInCalendarLink).to.be.defined;
+              expect(locals.content.baseUrl).to.equal('http://localhost:8888');
+              expect(locals.content.yes).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token&eventUid=123123');
+              expect(locals.content.no).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token&eventUid=123123');
+              expect(locals.content.maybe).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token&eventUid=123123');
+              expect(userMock.findByEmail).to.have.been.calledOnce;
+              expect(userMock.findByEmail).to.have.been.calledWith(attendeeEmail);
+
+              return Promise.resolve();
+            }
+          };
+        };
+
+        getModule().sendNotificationEmails({
+          sender: organizer,
           recipientEmail: attendeeEmail,
           method,
           ics,

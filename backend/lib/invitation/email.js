@@ -26,70 +26,49 @@ module.exports = dependencies => {
     replyFromExternalUser
   };
 
-  function sendNotificationEmails({ senderEmail, recipientEmail, method, ics, calendarURI, isNewEvent } = {}) {
+  function sendNotificationEmails({ sender, senderEmail, recipientEmail, method, ics, calendarURI, isNewEvent } = {}) {
+    const validationError = _validateMessage({ recipientEmail, method, ics, calendarURI });
+
+    if (validationError) return Promise.reject(validationError);
+
+    if (sender) return _send(sender);
+
     if (typeof senderEmail !== 'string') {
       return Promise.reject(new Error('The senderEmail must be a string'));
     }
 
-    if (typeof recipientEmail !== 'string') {
-      return Promise.reject(new Error('The recipientEmail must be a string'));
-    }
+    return findUserByEmail(senderEmail).then(_send);
 
-    if (typeof method !== 'string') {
-      return Promise.reject(new Error('The method must be a string'));
-    }
+    function _send(emailSender) {
+      if (!emailSender || !emailSender.domains || !emailSender.domains.length) {
+        return Promise.reject(new Error('Sender must be a User object with at least one domain'));
+      }
 
-    if (typeof ics !== 'string') {
-      return Promise.reject(new Error('The ics must be a string'));
-    }
+      return Promise.all([
+        getBaseURL(emailSender),
+        findUserByEmail(recipientEmail),
+        findDomainById(emailSender.preferredDomainId)
+      ]).then(([baseURL, recipient, domain]) => {
+        const esnDatetimeConfig = esnConfig('datetime').inModule('core');
+        const mailer = emailModule.getMailer(emailSender);
 
-    if (typeof calendarURI !== 'string') {
-      return Promise.reject(new Error('The calendarURI must be a string'));
-    }
-
-    return findUserByEmail(senderEmail)
-      .then(sender => {
-        if (!sender || !sender.domains || !sender.domains.length) {
-          return Promise.reject(new Error('Sender must be a User object with at least one domain'));
+        if (!recipient) {
+          return esnDatetimeConfig.forUser(emailSender, true).get()
+            .then(datetimeOptions => _sendToRecipient({ method, ics, sender: emailSender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }));
         }
 
-        return Promise.all([
-          getBaseURL(sender),
-          findUserByEmail(recipientEmail),
-          findDomainById(sender.preferredDomainId)
-        ]).then(([baseURL, recipient, domain]) => {
-          const esnDatetimeConfig = esnConfig('datetime').inModule('core');
-          const mailer = emailModule.getMailer(sender);
-
-          if (!recipient) {
-            return esnDatetimeConfig.forUser(sender, true).get()
-              .then(datetimeOptions => _sendToRecipient({ method, ics, sender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }));
-          }
-
-          return esnDatetimeConfig.forUser(recipient, true).get()
-            .then(datetimeOptions => _sendToRecipient({ method, ics, sender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }));
-        });
+        return esnDatetimeConfig.forUser(recipient, true).get()
+          .then(datetimeOptions => _sendToRecipient({ method, ics, sender: emailSender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }));
       });
+    }
   }
 
   function replyFromExternalUser({ editorEmail, recipientEmail, ics, calendarURI, domain } = {}) {
     const method = 'REPLY';
 
-    if (!editorEmail) {
-      return Promise.reject(new Error('The editorEmail is required'));
-    }
+    const validationError = _validateMessage({ recipientEmail, method, ics, calendarURI });
 
-    if (!recipientEmail) {
-      return Promise.reject(new Error('The attendeeEmail is required'));
-    }
-
-    if (!method) {
-      return Promise.reject(new Error('The method is required'));
-    }
-
-    if (!ics) {
-      return Promise.reject(new Error('The ics is required'));
-    }
+    if (validationError) return Promise.reject(validationError);
 
     return Promise.all([
       getBaseURL(null),
@@ -216,7 +195,7 @@ module.exports = dependencies => {
       calendarURI
     };
 
-    return invitationLink.generateActionLinks(baseURL, jwtPayload)
+    return invitationLink.generateActionLinks(baseURL, jwtPayload, isExternalRecipient)
       .then(links => {
         const content = {
           baseUrl: baseURL,
@@ -414,5 +393,23 @@ module.exports = dependencies => {
       subject,
       inviteMessage
     };
+  }
+
+  function _validateMessage({ recipientEmail, method, ics, calendarURI }) {
+    if (typeof recipientEmail !== 'string') {
+      return new Error('The recipientEmail must be a string');
+    }
+
+    if (typeof method !== 'string') {
+      return new Error('The method must be a string');
+    }
+
+    if (typeof ics !== 'string') {
+      return new Error('The ics must be a string');
+    }
+
+    if (typeof calendarURI !== 'string') {
+      return new Error('The calendarURI must be a string');
+    }
   }
 };
