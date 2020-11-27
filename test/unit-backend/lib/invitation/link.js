@@ -42,7 +42,6 @@ describe('The invitation link module', function() {
 
     it('should resolve to an object containing correct links for an internal user', function(done) {
       const linkPrefix = 'http://localhost:0000/calendar/#/calendar/participation/?jwt=123456';
-      const linkSuffix = '&eventUid=' + payload.uid;
       const authMock = {
         jwt: {
           generateWebToken: function(p, callback) {
@@ -57,9 +56,9 @@ describe('The invitation link module', function() {
       this.module.generateActionLinks(baseUrl, payload, false)
         .then(links => {
           expect(links).to.deep.equal({
-            yes: `${linkPrefix}ACCEPTED${linkSuffix}`,
-            no: `${linkPrefix}DECLINED${linkSuffix}`,
-            maybe: `${linkPrefix}TENTATIVE${linkSuffix}`
+            yes: `${linkPrefix}ACCEPTED`,
+            no: `${linkPrefix}DECLINED`,
+            maybe: `${linkPrefix}TENTATIVE`
           });
           done();
         })
@@ -68,7 +67,6 @@ describe('The invitation link module', function() {
 
     it('should resolve to an object containing correct links for an external user', function(done) {
       const linkPrefix = 'http://localhost:0000/excal/?jwt=123456';
-      const linkSuffix = '&eventUid=' + payload.uid;
       const authMock = {
         jwt: {
           generateWebToken: function(p, callback) {
@@ -83,9 +81,9 @@ describe('The invitation link module', function() {
       this.module.generateActionLinks(baseUrl, payload, true)
         .then(links => {
           expect(links).to.deep.equal({
-            yes: `${linkPrefix}ACCEPTED${linkSuffix}`,
-            no: `${linkPrefix}DECLINED${linkSuffix}`,
-            maybe: `${linkPrefix}TENTATIVE${linkSuffix}`
+            yes: `${linkPrefix}ACCEPTED`,
+            no: `${linkPrefix}DECLINED`,
+            maybe: `${linkPrefix}TENTATIVE`
           });
           done();
         })
@@ -142,7 +140,7 @@ describe('The invitation link module', function() {
 
       this.module.generateActionLink(baseUrl, payload, 'ACCEPTED', true)
         .then(actionLink => {
-          expect(actionLink).to.deep.equal('http://localhost:0000/excal/?jwt=123456&eventUid=' + payload.uid);
+          expect(actionLink).to.deep.equal('http://localhost:0000/excal/?jwt=123456');
           done();
         })
         .catch(err => done(err || new Error('should resolve')));
@@ -162,7 +160,7 @@ describe('The invitation link module', function() {
 
       this.module.generateActionLink(baseUrl, payload, 'ACCEPTED', false)
         .then(actionLink => {
-          expect(actionLink).to.deep.equal('http://localhost:0000/calendar/#/calendar/participation/?jwt=123456&eventUid=' + payload.uid);
+          expect(actionLink).to.deep.equal('http://localhost:0000/calendar/#/calendar/participation/?jwt=123456');
           done();
         })
         .catch(err => done(err || new Error('should resolve')));
