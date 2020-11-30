@@ -4,6 +4,7 @@ const ICAL = require('@linagora/ical.js');
 const jcalHelper = require('../../../lib/helpers/jcal');
 const { promisify } = require('util');
 const MAX_TRY_NUMBER = 12;
+const extend = require('extend');
 
 module.exports = dependencies => {
   const logger = dependencies('logger');
@@ -11,13 +12,16 @@ module.exports = dependencies => {
   const configHelpers = dependencies('helpers').config;
   const userModule = dependencies('user');
   const invitation = require('../../../lib/invitation')(dependencies);
+  const jwt = dependencies('auth');
 
   const findUserByEmail = promisify(userModule.findByEmail);
   const getBaseUrl = promisify(configHelpers.getBaseUrl);
 
   return {
     dispatchEvent,
-    changeParticipation
+    changeParticipation,
+    downloadIcsFile,
+    generateJWTforSecretLink
   };
 
   function dispatchEvent(req, res) {
@@ -188,5 +192,42 @@ module.exports = dependencies => {
     const url = urljoin(req.davserver, 'calendars', req.user._id, req.eventPayload.calendarURI, req.eventPayload.uid + '.ics');
 
     tryUpdateParticipation(url, ESNToken, res, req);
+  }
+
+  function downloadIcsFile(req, res) {
+    const ESNToken = req.token && req.token.token ? req.token.token : '';
+    const url = urljoin(req.davserver, 'calendars', req.linkPayload.calendarHomeId, req.linkPayload.calendarId + '?export');
+
+    request({ method: 'GET', url: url, headers: { ESNToken: ESNToken, 'Content-Disposition': 'attachment;filename=MyCalendar.ics' } }, (err, response) => {
+      if (err || response.statusCode < 200 || response.statusCode >= 300) {
+        const statusCode = response && response.statusCode || 500;
+
+        return res.status(statusCode).json({
+          error: {
+            code: statusCode,
+            message: 'Can not download ics file',
+            details: 'Can not download ics file'
+          }
+        });
+      }
+      const icsFile = response.body;
+
+      return res.status(200).json(icsFile);
+    });
+  }
+
+  function generateJWTforSecretLink(req, res) {
+    const payload = {};
+    const jwtPayload = req.body;
+
+    extend(true, payload, jwtPayload);
+
+    jwt.generateWebToken(payload, (err, token) => {
+      if (err) {
+        return res.status(500).json({ error: { code: 500, message: 'Error when trying to generate a token for the secret link', details: err.message } });
+      }
+
+      return res.status(200).json({ token });
+    });
   }
 };

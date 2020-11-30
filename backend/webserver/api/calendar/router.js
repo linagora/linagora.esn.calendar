@@ -69,10 +69,57 @@ module.exports = dependencies => {
    */
   router.get('/event/participation',
     authorizationMW.requiresJWT,
-    calendarMW.decodeJWT,
+    calendarMW.decodeParticipationJWT,
     tokenMW.generateNewToken(),
     davMiddleware.getDavEndpoint,
     controller.changeParticipation);
+
+  /**
+   * @swagger
+   * /generateTokenForSecretLink:
+   *   post:
+   *     tags:
+   *       - Calendar
+   *     description: Generate token for the secret link to download calendar in ical format
+   *     responses:
+   *       200:
+   *         $ref: "#/responses/cm_200"
+   *       400:
+   *         $ref: "#/responses/cm_400"
+   *       401:
+   *         $ref: "#/responses/cm_401"
+   *       500:
+   *         $ref: "#/responses/cm_500"
+   */
+  router.post('/generateJWTforSecretLink',
+    authorizationMW.requiresAPILogin,
+    controller.generateJWTforSecretLink);
+
+  /**
+   * @swagger
+   * /secretLink:
+   *   get:
+   *     tags:
+   *       - Calendar
+   *     description: Generate secret link to download ics calendar.
+   *     parameters:
+   *       - $ref: "#/parameters/calendar_token"
+   *     responses:
+   *       200:
+   *         $ref: "#/responses/cm_200"
+   *       400:
+   *         $ref: "#/responses/cm_400"
+   *       401:
+   *         $ref: "#/responses/cm_401"
+   *       500:
+   *         $ref: "#/responses/cm_500"
+   */
+  router.get('/secretLink',
+    authorizationMW.requiresJWT,
+    calendarMW.decodeSecretLinkJWT,
+    tokenMW.generateNewToken(),
+    davMiddleware.getDavEndpoint,
+    controller.downloadIcsFile);
 
   return router;
 };

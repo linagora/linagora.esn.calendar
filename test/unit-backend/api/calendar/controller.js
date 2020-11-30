@@ -833,5 +833,111 @@ describe('The calendar controller', function() {
       });
     });
   });
+  describe('the generateSecretLink function', function() {
+    var req, callbackAfterGetDone, requestMock, setGetRequest;
+
+    function setMock() {
+      req = {
+        linkPayload: {
+          calendarHomeId: '123',
+          calendarId: '123',
+          userId: '12345'
+        },
+        user: {
+          _id: '12345'
+        },
+        davserver: 'http://davserver',
+        headers: { 'Content-Disposition': 'attachment; filename=MyCalendar.ics' }
+      };
+
+      callbackAfterGetDone = function() { };
+      setGetRequest = function() {
+        requestMock = function(options, callback) {
+          callbackAfterGetDone();
+
+          return callback();
+        };
+
+        mockery.registerMock('request', function(options, callback) {
+          requestMock(options, callback);
+        });
+      };
+
+      setGetRequest();
+    }
+
+    beforeEach(function() {
+      setMock();
+    });
+
+    it('should send a request to the davserver to get get my calendar , and should return status 500 if request fails', function(done) {
+
+      requestMock = function(options, callback) {
+        expect(options.method).to.equal('GET');
+        expect(options.url).to.equal([
+          req.davserver,
+          'calendars',
+          req.linkPayload.calendarHomeId,
+          req.linkPayload.calendarId + '?export'
+        ].join('/'));
+
+        return callback(new Error('Can not download ics file'));
+      };
+
+      var res = {
+        status: function(status) {
+          expect(status).to.equal(500);
+
+          return {
+            json: function(result) {
+              expect(result).to.shallowDeepEqual({
+                error: {
+                  code: 500,
+                  message: 'Can not download ics file'
+                }
+              });
+              done();
+            }
+          };
+        }
+      };
+
+      require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies).downloadIcsFile(req, res);
+    });
+
+    it('should send the ICS content of the calendar ', function(done) {
+      requestMock = function(options, callback) {
+        expect(options.method).to.equal('GET');
+        expect(options.url).to.equal([
+          req.davserver,
+          'calendars',
+          req.linkPayload.calendarHomeId,
+          req.linkPayload.calendarId + '?export'
+        ].join('/'));
+
+        return callback('data', { statusCode: 200 });
+      };
+      const controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
+      const res = {
+        status(code) {
+          try {
+            expect(code).to.equal(200);
+
+            return {
+              json: function(result) {
+                expect(result).to.be.not.null;
+                done();
+              }
+            };
+          } catch (error) {
+            done(error);
+          }
+        }
+      };
+
+      controller.downloadIcsFile(req, res);
+    });
+
+  });
 
 });
