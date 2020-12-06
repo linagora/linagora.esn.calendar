@@ -76,7 +76,7 @@ module.exports = dependencies => {
 
   /**
    * @swagger
-   * /generateTokenForSecretLink:
+   * /generateJWTforSecretLink:
    *   post:
    *     tags:
    *       - Calendar
@@ -101,7 +101,7 @@ module.exports = dependencies => {
    *   get:
    *     tags:
    *       - Calendar
-   *     description: Generate secret link to download ics calendar.
+   *     description: Download ics file of calendar from external link.
    *     parameters:
    *       - $ref: "#/parameters/calendar_token"
    *     responses:
