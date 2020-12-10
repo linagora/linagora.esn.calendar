@@ -1,12 +1,15 @@
+const jwt_decode = require('jwt-decode');
+
 module.exports = dependencies => {
   const logger = dependencies('logger');
   const userModule = dependencies('user');
 
   return {
-    decodeJWT
+    decodeParticipationJWT,
+    decodeSecretLinkJWT
   };
 
-  function decodeJWT(req, res, next) {
+  function decodeParticipationJWT(req, res, next) {
     const payload = req.user;
     let badRequest;
 
@@ -44,5 +47,29 @@ module.exports = dependencies => {
       req.user = organizer;
       next();
     });
+  }
+
+  function decodeSecretLinkJWT(req, res, next) {
+    const jwt = req.query.jwt;
+    const payload = jwt_decode.default(jwt);
+    let badRequest;
+
+    if (!payload.calendarHomeId) {
+      badRequest = 'Calendar Home id is required';
+    }
+
+    if (!payload.calendarId) {
+      badRequest = 'Calendar Id is required';
+    }
+    if (!payload.userId) {
+      badRequest = 'User Id is required';
+    }
+
+    if (badRequest) {
+      return res.status(400).json({ error: { code: 400, message: 'Bad request', details: badRequest } });
+    }
+    req.linkPayload = payload;
+    req.user._id = payload.userId;
+    next();
   }
 };
