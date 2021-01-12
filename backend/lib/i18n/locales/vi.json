@@ -98,7 +98,7 @@
   "Enter the title of your event": "Nhập tên sự kiện",
   "Error while getting updated event": "Lỗi khi nhận sự kiện được cập nhật",
   "Event {{& summary}} from {{organizerName}} canceled": "{{& summary}} sự kiện từ {{organizerName}} đã bị hủy",
-  "Event {{& summary}} from {{organizerName}} updated": "Đã cập nhật sự kiện được dịch {{& summary}} từ {{organizerName}}",
+  "Event {{& summary}} from {{organizerName}} updated": "Đã cập nhật sự kiện {{& summary}} từ {{organizerName}}",
   "Event created": "Đã tạo sự kiện",
   "Event creation failed": "Tạo sự kiện thất bại",
   "Event creation failed. Please refresh your calendar": "Tạo sự kiện thất bại. Vui lòng tải lại lịch biểu",
