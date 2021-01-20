@@ -58,8 +58,11 @@ html.mail
             tr
               td(colspan="1").indent
                 img(src="cid:map-marker", alt=translate('Location'))
-              td(colspan="3").indent
-                | #{content.event.location}
+              if (content.event.location.startsWith('http'))
+                td(colspan="3").indent
+                  a(href=`${content.event.location}`) #{content.event.location}
+              else
+                td(colspan="3").indent #{content.event.location}              
 
           tr
             td.indent
