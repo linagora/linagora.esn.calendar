@@ -71,10 +71,14 @@ html.mail
           if (content.event.location)
             tr
               td.indent
-                img(src="cid:map-marker", alt=translate("Location"))
-              td(colspan="4") #{content.event.location}
-              td.indent-right
-                a(href=`https://www.openstreetmap.org/search?query=${content.event.location}`) #{translate("Map")}
+                img(src="cid:map-marker", alt=translate('Location'))
+              if (content.event.location.startsWith('http'))
+                td(colspan="4") 
+                  a(href=`${content.event.location}`) #{content.event.location}
+              else
+                td(colspan="4")  #{content.event.location}              
+                td.indent-right
+                  a(href=`https://www.openstreetmap.org/search?query=${content.event.location}`) #{translate('Map')}
           tr
             td.indent
               img(src="cid:account-multiple", alt=translate("Attendees"))
