@@ -6,6 +6,7 @@ module.exports = dependencies => ({
   configurations: {
     workingDays: require('./working-days')(dependencies),
     hideDeclinedEvents: require('./hide-declined-events')(dependencies),
-    features: require('./features')(dependencies)
+    features: require('./features')(dependencies),
+    secretLinkToken: require('./secret-link-token')(dependencies)
   }
 });
