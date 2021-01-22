@@ -207,10 +207,9 @@ module.exports = dependencies => {
         return secretLinkTokenEsnConfig.get('secretLinkSettings');
       })
       .then(secretLinks => {
-        const secretLinkSettingforCalendar = secretLinks.find(({ calendarId }) => calendarId === req.linkPayload.calendarId);
+        const secretLinkSettingForCalendar = secretLinks.find(({ calendarId }) => calendarId === req.linkPayload.calendarId);
 
-        if (secretLinkSettingforCalendar && secretLinkSettingforCalendar.token !== req.query.jwt) {
-
+        if (secretLinkSettingForCalendar && secretLinkSettingForCalendar.token !== req.query.jwt) {
           return res.status(403).json({
             error: {
               code: 403,
@@ -219,15 +218,18 @@ module.exports = dependencies => {
             }
           });
         }
-        request({ method: 'GET', url: url, headers: { ESNToken: ESNToken } }, (err, response) => {
+
+        request({ method: 'GET', url, headers: { ESNToken } }, (err, response) => {
           if (err || response.statusCode < 200 || response.statusCode >= 300) {
             const statusCode = response && response.statusCode || 500;
+
+            logger.error(`Can not download ics file due to an error while requesting to Sabre: GET ${url} with ESNToken = '${ESNToken}'. Status code: ${statusCode}`, err);
 
             return res.status(statusCode).json({
               error: {
                 code: statusCode,
-                message: 'Can not download ics file',
-                details: 'Can not download ics file'
+                message: 'Can not download the ics file',
+                details: 'Can not download the ics file'
               }
             });
           }
@@ -239,13 +241,17 @@ module.exports = dependencies => {
           return res.status(200).json(icsFile);
         });
       })
-      .catch(err => res.status(500).json({
-        error: {
-          code: 500,
-          message: 'Can not download the ics file',
-          details: err.message || 'Can not download the ics file'
-        }
-      }));
+      .catch(err => {
+        logger.error('Can not download ics file due to an unexpected error', err);
+
+        res.status(500).json({
+          error: {
+            code: 500,
+            message: 'Can not download the ics file due to an unexpected error',
+            details: err.message || 'Can not download the ics file due to an unexpected error'
+          }
+        });
+      });
   }
 
   function generateJWTforSecretLink(req, res) {
@@ -253,8 +259,11 @@ module.exports = dependencies => {
     const jwtPayload = req.body;
 
     extend(true, payload, jwtPayload);
+
     auth.jwt.generateWebToken(payload, (err, token) => {
       if (err) {
+        logger.error('Error when trying to generate a token for the secret link', err);
+
         return res.status(500).json({ error: { code: 500, message: 'Error when trying to generate a token for the secret link', details: err.message } });
       }
 
@@ -267,13 +276,18 @@ module.exports = dependencies => {
       }])
         .then(() => {
           res.status(200).json({ token });
-        }).catch(err => res.status(500).json({
-          error: {
-            code: 500,
-            message: 'Can not generate token',
-            details: err.message || 'Can not generate token'
-          }
-        }));
+        })
+        .catch(err => {
+          logger.error('Can not generate a token for the secret link due to an unexpected error', err);
+
+          res.status(500).json({
+            error: {
+              code: 500,
+              message: 'Can not generate token',
+              details: err.message || 'Can not generate token'
+            }
+          });
+        });
     });
   }
 };
