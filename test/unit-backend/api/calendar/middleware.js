@@ -5,7 +5,16 @@ const sinon = require('sinon');
 let jwtDecodeMock;
 
 describe('The calendar middlewares', function() {
+  let userModuleMock;
+
   beforeEach(function() {
+    userModuleMock = {
+      get: function(userId, callback) {
+        callback(null, { _id: userId });
+      }
+    };
+
+    this.moduleHelpers.addDep('user', userModuleMock);
     this.loadModule = () => require(`${this.moduleHelpers.modulePath}/backend/webserver/api/calendar/middleware`)(this.moduleHelpers.dependencies);
   });
 
@@ -106,12 +115,11 @@ describe('The calendar middlewares', function() {
           organizerEmail: 'organizerEmail'
         }
       };
-      const userModuleMock = {
-        findByEmail: function(email, callback) {
-          expect(email).to.equal(req.user.organizerEmail);
 
-          return callback();
-        }
+      userModuleMock.findByEmail = function(email, callback) {
+        expect(email).to.equal(req.user.organizerEmail);
+
+        return callback();
       };
 
       this.moduleHelpers.addDep('user', userModuleMock);
@@ -128,12 +136,11 @@ describe('The calendar middlewares', function() {
           organizerEmail: 'organizerEmail'
         }
       };
-      const userModuleMock = {
-        findByEmail: function(email, callback) {
-          expect(email).to.equal(req.user.organizerEmail);
 
-          return callback(new Error());
-        }
+      userModuleMock.findByEmail = function(email, callback) {
+        expect(email).to.equal(req.user.organizerEmail);
+
+        return callback(new Error());
       };
 
       this.moduleHelpers.addDep('user', userModuleMock);
@@ -166,12 +173,11 @@ describe('The calendar middlewares', function() {
           organizerEmail: 'organizerEmail'
         }
       };
-      const userModuleMock = {
-        findByEmail: function(email, callback) {
-          expect(email).to.equal(req.user.organizerEmail);
 
-          return callback(null, {_id: 'userId'});
-        }
+      userModuleMock.findByEmail = function(email, callback) {
+        expect(email).to.equal(req.user.organizerEmail);
+
+        return callback(null, {_id: 'userId'});
       };
 
       this.moduleHelpers.addDep('user', userModuleMock);
@@ -248,7 +254,36 @@ describe('The calendar middlewares', function() {
       this.check400(req, done);
     });
 
-    it('should call next if all the required properties are present and valid', function(done) {
+    it('should find the user and call next if all the required properties are present and valid', function(done) {
+      const jwt = '123';
+      const payload = {
+        calendarHomeId: 'calendarHomeId',
+        calendarId: 'calendarId',
+        userId: 'userId'
+      };
+      const userMock = { _id: payload.userId };
+
+      jwtDecodeMock.default.returns(payload);
+
+      const req = { query: { jwt }, linkPayload: null, user: null };
+
+      userModuleMock.get = function(userId, callback) {
+        expect(userId).to.equal(req.linkPayload.userId);
+
+        callback(null, userMock);
+      };
+
+      this.moduleHelpers.addDep('user', userModuleMock);
+
+      this.loadModule().decodeSecretLinkJWT(req, null, () => {
+        expect(req.user).to.deep.equal(userMock);
+        done();
+      });
+
+      expect(req.linkPayload).to.equal(payload);
+    });
+
+    it('should return 404 if the user cannot be found', function(done) {
       const jwt = '123';
       const payload = {
         calendarHomeId: 'calendarHomeId',
@@ -257,11 +292,73 @@ describe('The calendar middlewares', function() {
       };
 
       jwtDecodeMock.default.returns(payload);
-      const req = { query: { jwt: jwt }, linkPayload: '', user: '' };
 
-      this.loadModule().decodeSecretLinkJWT(req, null, done);
+      const req = { query: { jwt }, linkPayload: null, user: null };
+      const res = {
+        status: function(status) {
+          expect(status).to.equal(404);
+
+          return {
+            json: function(responseBody) {
+              expect(responseBody).to.deep.equal({ error: { code: 404, message: 'Not Found', details: 'User not found' } });
+              done();
+            }
+          };
+        }
+      };
+
+      userModuleMock.get = function(userId, callback) {
+        expect(userId).to.equal(req.linkPayload.userId);
+
+        callback(null, null);
+      };
+
+      this.moduleHelpers.addDep('user', userModuleMock);
+
+      this.loadModule().decodeSecretLinkJWT(req, res, () => {
+        throw new Error('next should have not been called');
+      });
+
       expect(req.linkPayload).to.equal(payload);
-      expect(req.user._id).to.equal(payload.userId);
+    });
+
+    it('should return 500 if an unexpected error happens when finding the user', function(done) {
+      const jwt = '123';
+      const payload = {
+        calendarHomeId: 'calendarHomeId',
+        calendarId: 'calendarId',
+        userId: 'userId'
+      };
+
+      jwtDecodeMock.default.returns(payload);
+
+      const req = { query: { jwt }, linkPayload: null, user: null };
+      const res = {
+        status: function(status) {
+          expect(status).to.equal(500);
+
+          return {
+            json: function(responseBody) {
+              expect(responseBody).to.deep.equal({ error: { code: 500, message: 'Internal Server Error', details: 'Error while searching for user' } });
+              done();
+            }
+          };
+        }
+      };
+
+      userModuleMock.get = function(userId, callback) {
+        expect(userId).to.equal(req.linkPayload.userId);
+
+        callback(new Error('Something unexpected happened'));
+      };
+
+      this.moduleHelpers.addDep('user', userModuleMock);
+
+      this.loadModule().decodeSecretLinkJWT(req, res, () => {
+        throw new Error('next should have not been called');
+      });
+
+      expect(req.linkPayload).to.equal(payload);
     });
   });
 });

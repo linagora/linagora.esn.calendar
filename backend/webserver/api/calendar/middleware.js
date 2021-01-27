@@ -1,8 +1,10 @@
+const { promisify } = require('util');
 const jwtDecode = require('jwt-decode');
 
 module.exports = dependencies => {
   const logger = dependencies('logger');
   const userModule = dependencies('user');
+  const findUserById = promisify(userModule.get);
 
   return {
     decodeParticipationJWT,
@@ -71,8 +73,23 @@ module.exports = dependencies => {
     }
 
     req.linkPayload = payload;
-    req.user._id = payload.userId;
 
-    next();
+    findUserById(payload.userId)
+      .then(user => {
+        if (!user) {
+          logger.error(`decodeSecretLinkJWT middleware: User with id ${payload.userId} could not be found`);
+
+          return res.status(404).json({ error: { code: 404, message: 'Not Found', details: 'User not found' } });
+        }
+
+        req.user = user;
+
+        next();
+      })
+      .catch(error => {
+        logger.error('decodeSecretLinkJWT middleware: Error while searching for user', error);
+
+        return res.status(500).json({ error: { code: 500, message: 'Internal Server Error', details: 'Error while searching for user' } });
+      });
   }
 };
