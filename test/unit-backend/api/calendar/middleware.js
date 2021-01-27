@@ -217,7 +217,7 @@ describe('The calendar middlewares', function() {
       };
 
       jwtDecodeMock.default.returns(payload);
-      const req = {query: {jwt: 'jwt'}};
+      const req = { query: { jwt: 'jwt' } };
 
       this.check400(req, done);
     });

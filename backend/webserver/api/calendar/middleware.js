@@ -1,4 +1,4 @@
-const jwt_decode = require('jwt-decode');
+const jwtDecode = require('jwt-decode');
 
 module.exports = dependencies => {
   const logger = dependencies('logger');
@@ -51,25 +51,28 @@ module.exports = dependencies => {
 
   function decodeSecretLinkJWT(req, res, next) {
     const jwt = req.query.jwt;
-    const payload = jwt_decode.default(jwt);
-    let badRequest;
+    const payload = jwtDecode.default(jwt);
+    let errorDetails;
 
     if (!payload.calendarHomeId) {
-      badRequest = 'Calendar Home id is required';
+      errorDetails = 'Calendar Home Id is required';
     }
 
     if (!payload.calendarId) {
-      badRequest = 'Calendar Id is required';
-    }
-    if (!payload.userId) {
-      badRequest = 'User Id is required';
+      errorDetails = 'Calendar Id is required';
     }
 
-    if (badRequest) {
-      return res.status(400).json({ error: { code: 400, message: 'Bad request', details: badRequest } });
+    if (!payload.userId) {
+      errorDetails = 'User Id is required';
     }
+
+    if (errorDetails) {
+      return res.status(400).json({ error: { code: 400, message: 'Bad request', details: errorDetails } });
+    }
+
     req.linkPayload = payload;
     req.user._id = payload.userId;
+
     next();
   }
 };
