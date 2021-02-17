@@ -4,8 +4,9 @@ const fs = require('fs');
 const mockery = require('mockery');
 
 describe('The invitation email module', function() {
-  let userMock, domainMock, helpersMock, authMock, emailMock, esnConfigMock, datetimeOptions, datetimeHelpersMock;
+  let userMock, domainMock, helpersMock, authMock, emailMock, esnConfigMock, datetimeOptions, datetimeHelpersMock, mjmlMock;
   let getModule;
+  let transformedHTML;
 
   beforeEach(function() {
     authMock = {
@@ -81,6 +82,10 @@ describe('The invitation email module', function() {
       formatDatetime: () => ({})
     });
 
+    transformedHTML = '<span>transformed html</span>';
+
+    mjmlMock = sinon.stub().returns({ html: transformedHTML });
+
     this.moduleHelpers.addDep('domain', domainMock);
     this.moduleHelpers.addDep('user', userMock);
     this.moduleHelpers.addDep('helpers', helpersMock);
@@ -90,8 +95,18 @@ describe('The invitation email module', function() {
     this.moduleHelpers.addDep('i18n', this.helpers.requireBackend('core/i18n'));
 
     mockery.registerMock('../helpers/datetime', datetimeHelpersMock);
+    mockery.registerMock('mjml', mjmlMock);
+
     getModule = () => require(`${this.moduleHelpers.backendPath}/lib/invitation/email`)(this.moduleHelpers.dependencies);
   });
+
+  function checkTemplateFn(templateFn) {
+    const untransformedHTML = '<span>untransformed html</span>';
+    const html = templateFn(untransformedHTML);
+
+    expect(mjmlMock).to.have.been.calledWith(untransformedHTML);
+    expect(html).to.equal(transformedHTML);
+  }
 
   describe('The sendNotificationEmails function', function() {
     const organizer = {
@@ -354,7 +369,7 @@ describe('The invitation email module', function() {
           callback(null, otherAttendee);
         };
 
-        emailMock.getMailer = () => ({ sendHTML: () => Promise.resolve() });
+        emailMock.getMailer = () => ({ sendWithCustomTemplateFunction: () => Promise.resolve() });
 
         authMock.jwt.generateWebToken = sinon.spy(function(token, callback) {
           callback(null, 'a_token');
@@ -388,7 +403,7 @@ describe('The invitation email module', function() {
 
         emailMock.getMailer = function() {
           return {
-            sendHTML: function() {
+            sendWithCustomTemplateFunction: function() {
               return Promise.reject(new Error('an error'));
             }
           };
@@ -416,11 +431,13 @@ describe('The invitation email module', function() {
 
         emailMock.getMailer = function() {
           return {
-            sendHTML: function(email, template, locals) {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn, locals }) {
               expect(email.from).to.equal(organizer.emails[0]);
               expect(email.to).to.equal(attendee1.emails[0]);
               expect(template).to.be.a.string;
               expect(locals).to.be.an('object');
+
+              checkTemplateFn(templateFn);
 
               return Promise.resolve();
             }
@@ -493,7 +510,7 @@ describe('The invitation email module', function() {
 
         emailMock.getMailer = function() {
           return {
-            sendHTML: function(email, template, locals) {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn, locals }) {
               expect(email.from).to.equal(attendeeEditor.emails[0]);
               expect(email.to).to.equal(organizer.preferredEmail);
               expect(email).to.shallowDeepEqual({
@@ -517,6 +534,8 @@ describe('The invitation email module', function() {
               expect(locals.content.yes).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
               expect(locals.content.no).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
               expect(locals.content.maybe).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
+
+              checkTemplateFn(templateFn);
 
               return Promise.resolve();
             }
@@ -556,7 +575,7 @@ describe('The invitation email module', function() {
 
         emailMock.getMailer = function() {
           return {
-            sendHTML: function(email, template, locals) {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn, locals }) {
               expect(email.from).to.equal(organizer.emails[0]);
 
               expect(email.to).to.equal(attendee1.emails[0]);
@@ -583,6 +602,8 @@ describe('The invitation email module', function() {
               expect(locals.content.yes).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
               expect(locals.content.no).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
               expect(locals.content.maybe).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
+
+              checkTemplateFn(templateFn);
 
               return Promise.resolve();
             }
@@ -614,7 +635,7 @@ describe('The invitation email module', function() {
 
         emailMock.getMailer = function() {
           return {
-            sendHTML: function(email, template, locals) {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn, locals }) {
               expect(email.from).to.equal(organizer.emails[0]);
 
               expect(email.to).to.equal(attendee1.emails[0]);
@@ -643,6 +664,8 @@ describe('The invitation email module', function() {
               expect(locals.content.maybe).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
               expect(userMock.findByEmail).to.have.been.calledOnce;
               expect(userMock.findByEmail).to.have.been.calledWith(attendeeEmail);
+
+              checkTemplateFn(templateFn);
 
               return Promise.resolve();
             }
@@ -681,7 +704,7 @@ describe('The invitation email module', function() {
 
         emailMock.getMailer = function() {
           return {
-            sendHTML: function(email, template, locals) {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn, locals }) {
               expect(email.from).to.equal(organizer.emails[0]);
 
               expect(email.to).to.equal(attendeeEmail);
@@ -704,6 +727,8 @@ describe('The invitation email module', function() {
               expect(locals.filter).is.a.function;
               expect(locals.content.seeInCalendarLink).to.not.be.defined;
               expect(locals.content.method).to.equal(method);
+
+              checkTemplateFn(templateFn);
 
               return Promise.resolve();
             }
@@ -730,8 +755,8 @@ describe('The invitation email module', function() {
         };
         let findByEmailCallCount = 0;
 
-        datetimeHelpersMock.formatDatetime.onCall(0).returns({ date: '01/01/2015', time: '01:01' });
-        datetimeHelpersMock.formatDatetime.onCall(1).returns({ date: '01/01/2015', time: '02:02' });
+        datetimeHelpersMock.formatDatetime.onCall(0).returns({ date: '01/01/2015', time: '01:01', fullDateTime: '2015年1月1日星期四01点01分', fullDate: '2015年1月1日星期四' });
+        datetimeHelpersMock.formatDatetime.onCall(1).returns({ date: '01/01/2015', time: '02:02', fullDateTime: '2015年1月1日星期四02点02分', fullDate: '2015年1月1日星期四' });
 
         datetimeOptions = {
           timeZone: 'Asia/Shanghai',
@@ -791,7 +816,7 @@ describe('The invitation email module', function() {
 
         emailMock.getMailer = function() {
           return {
-            sendHTML: function(email, template, locals) {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn, locals }) {
               expect(email.from).to.equal(organizer.emails[0]);
 
               expect(email.to).to.equal(attendeeEmail);
@@ -816,13 +841,19 @@ describe('The invitation email module', function() {
               expect(locals.content.event.start).to.deep.equal({
                 date: '01/01/2015',
                 time: '01:01',
-                timezone: 'Asia/Shanghai'
+                timezone: 'Asia/Shanghai',
+                fullDateTime: '2015年1月1日星期四01点01分',
+                fullDate: '2015年1月1日星期四'
               });
               expect(locals.content.event.end).to.deep.equal({
                 date: '01/01/2015',
                 time: '02:02',
-                timezone: 'Asia/Shanghai'
+                timezone: 'Asia/Shanghai',
+                fullDateTime: '2015年1月1日星期四02点02分',
+                fullDate: '2015年1月1日星期四'
               });
+
+              checkTemplateFn(templateFn);
 
               return Promise.resolve();
             }
@@ -859,8 +890,8 @@ describe('The invitation email module', function() {
         };
         let findByEmailCallCount = 0;
 
-        datetimeHelpersMock.formatDatetime.onCall(0).returns({ date: '01/01/2015', time: '01:01 SA' });
-        datetimeHelpersMock.formatDatetime.onCall(1).returns({ date: '01/01/2015', time: '02:02 SA' });
+        datetimeHelpersMock.formatDatetime.onCall(0).returns({ date: '01/01/2015', time: '01:01 SA', fullDateTime: 'Thứ năm ngày 1 tháng 1 năm 2015, 01:01 SA', fullDate: 'Thứ năm ngày 1 tháng 1 năm 2015' });
+        datetimeHelpersMock.formatDatetime.onCall(1).returns({ date: '01/01/2015', time: '02:02 SA', fullDateTime: 'Thứ năm ngày 1 tháng 1 năm 2015, 02:02 SA', fullDate: 'Thứ năm ngày 1 tháng 1 năm 2015' });
 
         datetimeOptions = {
           timeZone: 'Asia/Ho_Chi_Minh'
@@ -919,7 +950,7 @@ describe('The invitation email module', function() {
 
         emailMock.getMailer = function() {
           return {
-            sendHTML: function(email, template, locals) {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn, locals }) {
               expect(email.from).to.equal(organizer.emails[0]);
 
               expect(email.to).to.equal(attendeeEmail);
@@ -944,13 +975,19 @@ describe('The invitation email module', function() {
               expect(locals.content.event.start).to.deep.equal({
                 date: '01/01/2015',
                 time: '01:01 SA',
-                timezone: 'Asia/Ho_Chi_Minh'
+                timezone: 'Asia/Ho_Chi_Minh',
+                fullDateTime: 'Thứ năm ngày 1 tháng 1 năm 2015, 01:01 SA',
+                fullDate: 'Thứ năm ngày 1 tháng 1 năm 2015'
               });
               expect(locals.content.event.end).to.deep.equal({
                 date: '01/01/2015',
                 time: '02:02 SA',
-                timezone: 'Asia/Ho_Chi_Minh'
+                timezone: 'Asia/Ho_Chi_Minh',
+                fullDateTime: 'Thứ năm ngày 1 tháng 1 năm 2015, 02:02 SA',
+                fullDate: 'Thứ năm ngày 1 tháng 1 năm 2015'
               });
+
+              checkTemplateFn(templateFn);
 
               return Promise.resolve();
             }
@@ -1004,10 +1041,12 @@ describe('The invitation email module', function() {
 
         emailMock.getMailer = function() {
           return {
-            sendHTML: function(email, template) {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn }) {
               expect(template.name).to.equal('event.invitation');
               expect(template.path).to.match(/templates\/email/);
               expect(email.subject).to.equal('New event from ' + organizer.firstname + ' ' + organizer.lastname + ': Démo OPENPAAS');
+
+              checkTemplateFn(templateFn);
 
               return Promise.resolve();
             }
@@ -1044,10 +1083,12 @@ describe('The invitation email module', function() {
 
         emailMock.getMailer = function() {
           return {
-            sendHTML: function(email, template) {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn }) {
               expect(template.name).to.equal('event.update');
               expect(template.path).to.match(/templates\/email/);
               expect(email.subject).to.equal('Event Démo OPENPAAS from ' + organizer.firstname + ' ' + organizer.lastname + ' updated');
+
+              checkTemplateFn(templateFn);
 
               return Promise.resolve();
             }
@@ -1091,10 +1132,13 @@ describe('The invitation email module', function() {
 
         emailMock.getMailer = function() {
           return {
-            sendHTML: function(email, template) {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn, locals }) {
               expect(template.name).to.equal('event.reply');
               expect(template.path).to.match(/templates\/email/);
               expect(email.subject).to.equal('Accepted: Démo OPENPAAS (organizerFirstname organizerLastname)');
+              expect(locals.content.rawInviteMessage).to.equal('has accepted this invitation');
+
+              checkTemplateFn(templateFn);
 
               return Promise.resolve();
             }
@@ -1134,11 +1178,14 @@ describe('The invitation email module', function() {
 
         emailMock.getMailer = function() {
           return {
-            sendHTML: function(email, template, locals) {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn, locals }) {
               expect(template.name).to.equal('event.reply');
               expect(template.path).to.match(/templates\/email/);
               expect(email.subject).to.equal('Participation updated: Démo OPENPAAS');
               expect(locals.content.editor).to.deep.equal(editor);
+              expect(locals.content.rawInviteMessage).to.equal('has changed his participation');
+
+              checkTemplateFn(templateFn);
 
               return Promise.resolve();
             }
@@ -1173,11 +1220,13 @@ describe('The invitation email module', function() {
 
         emailMock.getMailer = function() {
           return {
-            sendHTML: function(email) {
+            sendWithCustomTemplateFunction: function({ message: email, templateFn }) {
               getMailerCallCount++;
               if (getMailerCallCount === 1) {
                 expect(email.to).to.deep.equal(attendee1.emails[0]);
               }
+
+              checkTemplateFn(templateFn);
 
               return Promise.resolve();
             }
@@ -1220,10 +1269,12 @@ describe('The invitation email module', function() {
 
         emailMock.getMailer = function() {
           return {
-            sendHTML: function(email, template) {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn }) {
               expect(template.name).to.equal('event.counter');
               expect(template.path).to.match(/templates\/email/);
               expect(email.subject).to.equal('New changes proposed to event Démo OPENPAAS');
+
+              checkTemplateFn(templateFn);
 
               return Promise.resolve();
             }
@@ -1263,12 +1314,14 @@ describe('The invitation email module', function() {
 
         emailMock.getMailer = function() {
           return {
-            sendHTML: function(email, template, locals) {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn, locals }) {
               expect(template.name).to.equal('event.counter');
               expect(template.path).to.match(/templates\/email/);
               expect(email.subject).to.equal('New changes proposed to event Démo OPENPAAS');
               expect(locals.content.event.comment).to.contains('This demo is going to be awesome!');
               expect(locals.content.editor).to.deep.equal(editor);
+
+              checkTemplateFn(templateFn);
 
               return Promise.resolve();
             }
@@ -1303,7 +1356,7 @@ describe('The invitation email module', function() {
 
         emailMock.getMailer = function() {
           return {
-            sendHTML: function(email) {
+            sendWithCustomTemplateFunction: function({ message: email }) {
               getMailerCallCount++;
               if (getMailerCallCount === 1) {
                 expect(email.to).to.deep.equal(organizer.emails[0]);
@@ -1350,10 +1403,12 @@ describe('The invitation email module', function() {
 
         emailMock.getMailer = function() {
           return {
-            sendHTML: function(email, template) {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn }) {
               expect(template.name).to.equal('event.cancel');
               expect(template.path).to.match(/templates\/email/);
               expect(email.subject).to.equal('Event Démo OPENPAAS from ' + organizer.firstname + ' ' + organizer.lastname + ' canceled');
+
+              checkTemplateFn(templateFn);
 
               return Promise.resolve();
             }
