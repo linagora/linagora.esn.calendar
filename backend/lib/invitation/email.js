@@ -1,7 +1,9 @@
 const ICAL = require('@linagora/ical.js');
 const path = require('path');
 const { promisify } = require('util');
+const mjml2html = require('mjml');
 const { jcal2content, getIcalDateAsMoment, getIcalEvent } = require('./../helpers/jcal');
+const { isValidURL, isAbsoluteURL } = require('../helpers/url');
 const emailHelpers = require('./../helpers/email');
 const TEMPLATES_PATH = path.resolve(__dirname, '../../../templates/email');
 
@@ -160,27 +162,50 @@ module.exports = dependencies => {
               const { timeZone: timezone, use24hourFormat } = datetimeOptions;
               const convertTzOptions = { timezone, locale, use24hourFormat };
               const icalEvent = getIcalEvent(ics);
-              const { date: startDateString, time: startTimeString } = datetimeHelpers.formatDatetime(getIcalDateAsMoment(icalEvent.startDate), convertTzOptions);
-              const { date: endDateString, time: endTimeString } = datetimeHelpers.formatDatetime(getIcalDateAsMoment(icalEvent.endDate), convertTzOptions);
+              const {
+                date: startDateString,
+                time: startTimeString,
+                fullDate: startFullDateString,
+                fullDateTime: startFullDateTimeString
+              } = datetimeHelpers.formatDatetime(getIcalDateAsMoment(icalEvent.startDate), convertTzOptions);
+              const {
+                date: endDateString,
+                time: endTimeString,
+                fullDate: endFullDateString,
+                fullDateTime: endFullDateTimeString
+              } = datetimeHelpers.formatDatetime(content.event.allDay ? getIcalDateAsMoment(icalEvent.endDate).subtract(1, 'day') : getIcalDateAsMoment(icalEvent.endDate), convertTzOptions);
 
               content.event = {
                 ...content.event,
+                isLocationAValidURL: isValidURL(content.event.location),
+                isLocationAnAbsoluteURL: isAbsoluteURL(content.event.location),
                 start: {
                   date: startDateString,
                   time: startTimeString,
+                  fullDate: startFullDateString,
+                  fullDateTime: startFullDateTimeString,
                   timezone
                 },
                 end: {
                   date: endDateString,
                   time: endTimeString,
+                  fullDate: endFullDateString,
+                  fullDateTime: endFullDateTimeString,
                   timezone
                 }
               };
 
-              return mailer.sendHTML(message, template, {
-                content,
-                filter: emailHelpers.filterEventAttachments(event),
-                translate
+              content.rawInviteMessage = metadata.inviteMessage;
+
+              return mailer.sendWithCustomTemplateFunction({
+                message,
+                template,
+                templateFn: _mjmlTemplateFunction,
+                locals: {
+                  content,
+                  translate,
+                  filter: emailHelpers.filterEventAttachments(event)
+                }
               });
             });
           });
@@ -411,5 +436,9 @@ module.exports = dependencies => {
     if (typeof calendarURI !== 'string') {
       return new Error('The calendarURI must be a string');
     }
+  }
+
+  function _mjmlTemplateFunction(html) {
+    return mjml2html(html).html;
   }
 };

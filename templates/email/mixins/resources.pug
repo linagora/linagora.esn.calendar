@@ -1,8 +1,4 @@
-mixin displayResources(resources)
-  each resource in resources
-    span
-      +displayResource(resource)
+- const groupResources = resources => Object.values(resources).map(resource => resource.cn).join(', ');
 
-mixin displayResource(resource)
-  div
-    span #{resource.cn}
+mixin displayResources(resources)
+  span #{groupResources(resources)}
