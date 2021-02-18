@@ -2,7 +2,7 @@ const ICAL = require('@linagora/ical.js');
 const path = require('path');
 const { promisify } = require('util');
 const mjml2html = require('mjml');
-const { jcal2content, getIcalDateAsMoment, getIcalEvent } = require('./../helpers/jcal');
+const { jcal2content } = require('./../helpers/jcal');
 const { isValidURL, isAbsoluteURL } = require('../helpers/url');
 const emailHelpers = require('./../helpers/email');
 const TEMPLATES_PATH = path.resolve(__dirname, '../../../templates/email');
@@ -13,10 +13,10 @@ module.exports = dependencies => {
   const configHelpers = dependencies('helpers').config;
   const emailModule = dependencies('email');
   const esnConfig = dependencies('esn-config');
-  const datetimeHelpers = require('../helpers/datetime')(dependencies);
   const i18nLib = require('./../i18n')(dependencies);
   const invitationLink = require('./link')(dependencies);
   const linksHelper = require('../helpers/links')(dependencies);
+  const emailEventHelper = require('../helpers/email-event')(dependencies);
   const processors = require('./processors')(dependencies);
 
   const getBaseURL = promisify(configHelpers.getBaseUrl);
@@ -160,39 +160,18 @@ module.exports = dependencies => {
               recipientEmail
             }).then(content => {
               const { timeZone: timezone, use24hourFormat } = datetimeOptions;
-              const convertTzOptions = { timezone, locale, use24hourFormat };
-              const icalEvent = getIcalEvent(ics);
-              const {
-                date: startDateString,
-                time: startTimeString,
-                fullDate: startFullDateString,
-                fullDateTime: startFullDateTimeString
-              } = datetimeHelpers.formatDatetime(getIcalDateAsMoment(icalEvent.startDate), convertTzOptions);
-              const {
-                date: endDateString,
-                time: endTimeString,
-                fullDate: endFullDateString,
-                fullDateTime: endFullDateTimeString
-              } = datetimeHelpers.formatDatetime(content.event.allDay ? getIcalDateAsMoment(icalEvent.endDate).subtract(1, 'day') : getIcalDateAsMoment(icalEvent.endDate), convertTzOptions);
 
               content.event = {
                 ...content.event,
                 isLocationAValidURL: isValidURL(content.event.location),
                 isLocationAnAbsoluteURL: isAbsoluteURL(content.event.location),
-                start: {
-                  date: startDateString,
-                  time: startTimeString,
-                  fullDate: startFullDateString,
-                  fullDateTime: startFullDateTimeString,
-                  timezone
-                },
-                end: {
-                  date: endDateString,
-                  time: endTimeString,
-                  fullDate: endFullDateString,
-                  fullDateTime: endFullDateTimeString,
-                  timezone
-                }
+                ...emailEventHelper.getContentEventStartAndEnd({
+                  ics,
+                  isAllDay: content.event.allDay,
+                  timezone,
+                  use24hourFormat,
+                  locale
+                })
               };
 
               content.rawInviteMessage = metadata.inviteMessage;
@@ -201,11 +180,7 @@ module.exports = dependencies => {
                 message,
                 template,
                 templateFn: _mjmlTemplateFunction,
-                locals: {
-                  content,
-                  translate,
-                  filter: emailHelpers.filterEventAttachments(event)
-                }
+                locals: { content, translate }
               });
             });
           });
