@@ -179,7 +179,7 @@
   "Notes": "Notes",
   "Notes...": "Notes...",
   "Notification": "Notification",
-  "Notification: {{summary}}": "Notification: {{summary}}",
+  "Notification: {{{summary}}}": "Notification: {{{summary}}}",
   "occurrences": "occurrences",
   "OK": "OK",
   "On days": "On days",
