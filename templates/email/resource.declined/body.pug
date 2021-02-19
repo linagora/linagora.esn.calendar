@@ -1,0 +1,64 @@
+mj-body
+  mj-wrapper(padding-bottom='0')
+    mj-section(padding-top='0' padding-bottom='0')
+      mj-column(width='100%' css-class='resource-declined-title-container' padding-top='4px' padding-bottom='4px')
+        mj-text(font-size='16px' color='#222222' padding='0' padding-left='20px' padding-right='20px' padding-top='8px' padding-bottom='8px')
+          span &nbsp;#{translate('The booking request has been declined for the resource')}
+          span &nbsp;#{content.resource.name}
+      mj-column(width='100%' css-class='content')
+        mj-text(font-size='20px' color='#434343' font-weight='500' padding='20px') #{content.event.summary}
+        mj-table(font-size='14px' color='#434343' cellpadding='4px' padding='20px' padding-top='0px')
+          tr
+            td(valign='top' style='min-width: 80px;')
+              strong #{translate('Time')}
+            td
+              if (!content.event.allDay)
+                span(style='display: inline-block;')
+                  if (content.event.start.date === content.event.end.date)
+                    | #{content.event.start.fullDateTime} - #{content.event.end.time}
+                  else
+                    | #{content.event.start.fullDateTime} - #{content.event.end.fullDateTime}
+                span(style='display: inline-block; color: #787878; font-weight: 400;') &nbsp;#{content.event.start.timezone}
+              else
+                span(style='display: inline-block;')
+                  if (content.event.start.date === content.event.end.date)
+                    | #{content.event.start.fullDate} (#{translate('All day')})
+                  else
+                    | #{content.event.start.fullDate} - #{content.event.end.fullDate} (#{translate('All day')})
+              if (content.seeInCalendarLink)
+                | &nbsp;(
+                a.link(href=content.seeInCalendarLink) #{translate('See in Calendar')}
+                | )
+          if (content.event.location)
+            tr
+              td(style="min-width: 96px;" valign='top')
+                strong #{translate('Location')}
+              td
+                if (content.event.isLocationAValidURL)
+                  if (content.event.isLocationAnAbsoluteURL)
+                    a.link(href=content.event.location) #{content.event.location}
+                  else
+                    a.link(href=`//${content.event.location}`) #{content.event.location}
+                else
+                  | #{content.event.location} (
+                  a(href=`https://www.openstreetmap.org/search?query=${content.event.location}`) #{translate('See in Map')}
+                  | )
+          tr
+            td(valign='top')
+              strong #{translate('Attendees')}
+            td
+              include ../mixins/attendees.pug
+              +displayAttendees(content.event.attendees, content.event.organizer)
+          if (content.event.hasResources)
+            tr
+              td(valign='top')
+                strong #{translate('Resources')}
+              td
+                include ../mixins/resources.pug
+                +displayResources(content.event.resources)
+          if (content.event.description)
+            tr
+              td(valign='top')
+                strong #{translate('Notes')}
+              td #{content.event.description}
+
