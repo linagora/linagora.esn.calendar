@@ -179,7 +179,7 @@
   "Notes": "Remarques",
   "Notes...": "Remarques...",
   "Notification": "Notification",
-  "Notification: {{summary}}": "Notification: {{summary}}",
+  "Notification: {{{summary}}}": "Notification: {{{summary}}}",
   "occurrences": "occurrences",
   "OK": "OK",
   "On days": "Sur les jours",

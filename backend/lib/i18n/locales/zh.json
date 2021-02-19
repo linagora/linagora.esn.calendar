@@ -179,7 +179,7 @@
   "Notes": "注释",
   "Notes...": "注释...",
   "Notification": "通知",
-  "Notification: {{summary}}": "通知：{{summary}}",
+  "Notification: {{{summary}}}": "通知：{{{summary}}}",
   "occurrences": "次",
   "OK": "好",
   "On days": "星期",
