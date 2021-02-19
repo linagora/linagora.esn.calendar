@@ -241,6 +241,7 @@
   "The resource reservation event can not be retrieved.": "L'évènement lié à la réservation de la ressource n'a pas pu être chargé.",
   "This event": "Cet événement",
   "This event has been cancelled": "Cet événement a été annulé",
+  "This event is about to begin": "Cet événement est sur le point de commencer",
   "This message contains an invitation to an event": "Ce message contient une invitation à un événement",
   "This message contains an resource to manage": "Ce message contient une ressource à gérer",
   "This message contains some meeting information. Please wait while we fetch the event details...": "Ce message contient des informations d'événement. Merci de patienter pendant que nous récupérons les détails de l'événement",

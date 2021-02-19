@@ -241,6 +241,7 @@
   "The resource reservation event can not be retrieved.": "Không thể truy xuất sự kiện đặt trước tài nguyên.",
   "This event": "Sự kiện này",
   "This event has been cancelled": "Sự kiện này đã bị hủy",
+  "This event is about to begin": "Sự kiện này sắp bắt đầu",
   "This message contains an invitation to an event": "Tin nhắn này chứa một lời mời đến một sự kiện",
   "This message contains an resource to manage": "Thư này chứa một tài nguyên để quản lý",
   "This message contains some meeting information. Please wait while we fetch the event details...": "Tin nhắn này chứa thông tin cuộc họp. Vui lòng đợi trong khi tải các thông tin chi tiết...",

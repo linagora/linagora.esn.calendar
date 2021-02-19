@@ -241,6 +241,7 @@
   "The resource reservation event can not be retrieved.": "Событие резервирования ресурса не может быть получено.",
   "This event": "Это событие",
   "This event has been cancelled": "Это событие было отменено",
+  "This event is about to begin": "Это событие вот-вот начнется",
   "This message contains an invitation to an event": "Это сообщение содержит приглашение на событие",
   "This message contains an resource to manage": "Это сообщение содержит ресурс для управления",
   "This message contains some meeting information. Please wait while we fetch the event details...": "Это сообщение содержит некоторую информацию о встрече. Пожалуйста, подождите, пока мы получим информацию о событии ...",
