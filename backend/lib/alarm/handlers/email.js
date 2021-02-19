@@ -31,7 +31,7 @@ module.exports = dependencies => {
       })
       .then(user => i18nHelper.getEventSummaryForUser(event.summary, user))
       .then(summary => ({
-        phrase: 'Notification: {{summary}}',
+        phrase: 'Notification: {{{summary}}}',
         parameters: {
           summary
         }

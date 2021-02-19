@@ -131,7 +131,7 @@ describe('The email alarm handler', function() {
         expect(sendMock).to.have.been.calledWith({
           to: attendee,
           subject: sinon.match({
-            phrase: 'Notification: {{summary}}'
+            phrase: 'Notification: {{{summary}}}'
           }),
           ics,
           eventPath,

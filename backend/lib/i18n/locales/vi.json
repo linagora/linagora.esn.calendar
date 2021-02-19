@@ -179,7 +179,7 @@
   "Notes": "Ghi chú",
   "Notes...": "Ghi chú...",
   "Notification": "Thông báo",
-  "Notification: {{summary}}": "Thông báo: {{summary}}",
+  "Notification: {{{summary}}}": "Thông báo: {{{summary}}}",
   "occurrences": "lần lặp",
   "OK": "OK",
   "On days": "Vào ngày",

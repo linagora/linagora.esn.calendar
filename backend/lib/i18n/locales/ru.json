@@ -179,7 +179,7 @@
   "Notes": "Заметки",
   "Notes...": "Заметки...",
   "Notification": "Уведомление",
-  "Notification: {{summary}}": "Уведомление: {{summary}}",
+  "Notification: {{{summary}}}": "Уведомление: {{{summary}}}",
   "occurrences": "частота",
   "OK": "OK",
   "On days": "По дням",
