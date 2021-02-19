@@ -25,7 +25,7 @@ describe('The email alarm handler', function() {
     sendMock = sinon.stub().returns(Promise.resolve({}));
     emailModule = {
       sender: {
-        send: sendMock
+        sendWithCustomTemplateFunction: sendMock
       }
     };
     helpers = {
