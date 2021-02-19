@@ -22,7 +22,7 @@ module.exports = dependencies => {
       }
 
       return getEventCreator()
-        .then(creator => emailModule.sender.send({
+        .then(creator => emailModule.sender.sendWithCustomTemplateFunction({
           to: creator,
           subject: { phrase: subject, parameters: { name: resource.name }},
           ics,
