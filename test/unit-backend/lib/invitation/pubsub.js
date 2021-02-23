@@ -85,6 +85,7 @@ describe('The event invitation pubsub module', function() {
         notify: true,
         method: 'REQUEST',
         event: 'someEventIcs',
+        oldEvent: 'someOldEventIcs',
         calendarURI: '/some/calendar/uri',
         isNewEvent: true
       };
@@ -196,6 +197,7 @@ describe('The event invitation pubsub module', function() {
             recipientEmail: msg.recipientEmail,
             method: msg.method,
             ics: msg.event,
+            oldIcs: msg.oldEvent,
             calendarURI: msg.calendarURI,
             isNewEvent: msg.isNewEvent
           });
@@ -218,6 +220,7 @@ describe('The event invitation pubsub module', function() {
             recipientEmail: msg.recipientEmail,
             method: msg.method,
             ics: msg.event,
+            oldIcs: msg.oldEvent,
             calendarURI: msg.calendarURI,
             isNewEvent: msg.isNewEvent
           });

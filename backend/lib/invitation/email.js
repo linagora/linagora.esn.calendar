@@ -28,7 +28,7 @@ module.exports = dependencies => {
     replyFromExternalUser
   };
 
-  function sendNotificationEmails({ sender, senderEmail, recipientEmail, method, ics, calendarURI, isNewEvent } = {}) {
+  function sendNotificationEmails({ sender, senderEmail, recipientEmail, method, ics, oldIcs, calendarURI, isNewEvent } = {}) {
     const validationError = _validateMessage({ recipientEmail, method, ics, calendarURI });
 
     if (validationError) return Promise.reject(validationError);
@@ -56,11 +56,11 @@ module.exports = dependencies => {
 
         if (!recipient) {
           return esnDatetimeConfig.forUser(emailSender, true).get()
-            .then(datetimeOptions => _sendToRecipient({ method, ics, sender: emailSender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }));
+            .then(datetimeOptions => _sendToRecipient({ method, ics, oldIcs, sender: emailSender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }));
         }
 
         return esnDatetimeConfig.forUser(recipient, true).get()
-          .then(datetimeOptions => _sendToRecipient({ method, ics, sender: emailSender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }));
+          .then(datetimeOptions => _sendToRecipient({ method, ics, oldIcs, sender: emailSender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }));
       });
     }
   }
@@ -119,7 +119,7 @@ module.exports = dependencies => {
     });
   }
 
-  function _sendToRecipient({ method, ics, sender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }) {
+  function _sendToRecipient({ method, ics, oldIcs, sender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }) {
     return _processorsHook({ method, ics, user: sender, recipient, recipientEmail, domain })
       .then(({ ics, emailContentOverrides }) => {
         const event = { ...jcal2content(ics, baseURL), ...emailContentOverrides };
@@ -175,6 +175,23 @@ module.exports = dependencies => {
               };
 
               content.rawInviteMessage = metadata.inviteMessage;
+
+              if (method === 'COUNTER' && oldIcs) {
+                const oldEvent = jcal2content(oldIcs, baseURL);
+
+                content.oldEvent = {
+                  ...oldEvent,
+                  isLocationAValidURL: isValidURL(oldEvent.location),
+                  isLocationAnAbsoluteURL: isAbsoluteURL(oldEvent.location),
+                  ...emailEventHelper.getContentEventStartAndEnd({
+                    ics: oldIcs,
+                    isAllDay: oldEvent.allDay,
+                    timezone,
+                    use24hourFormat,
+                    locale
+                  })
+                };
+              }
 
               return mailer.sendWithCustomTemplateFunction({
                 message,
