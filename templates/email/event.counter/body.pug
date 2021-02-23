@@ -1,0 +1,89 @@
+mj-body
+  mj-wrapper(padding-bottom='0')
+    mj-section(padding-top='0' padding-bottom='0')
+      mj-column(width='100%' css-class='propose-time-title-container' padding-top='4px' padding-bottom='4px')
+        mj-text(font-size='16px' color='#222222' padding='0' padding-left='20px' padding-right='20px' padding-top='8px' padding-bottom='8px')
+          span(style='font-weight: 500;') #{content.editor.displayName}
+          span &nbsp;#{content.inviteMessage}
+      mj-column(width='100%' css-class='content')
+        mj-text(font-size='20px' color='#434343' font-weight='500' padding='20px') #{translate('The details of the proposal')}
+        mj-table(font-size='14px' color='#434343' cellpadding='4px' padding='16px' padding-top='0px')
+          tr
+            td(valign='top' style='min-width: 80px;')
+              strong #{translate('New time')}
+            td
+              if (!content.event.allDay)
+                span(style='display: inline-block;')
+                  if (content.event.start.date === content.event.end.date)
+                    | #{content.event.start.fullDateTime} - #{content.event.end.time}
+                  else
+                    | #{content.event.start.fullDateTime} - #{content.event.end.fullDateTime}
+                span(style='display: inline-block; color: #787878; font-weight: 400;') &nbsp;#{content.event.start.timezone}
+              else
+                span(style='display: inline-block;')
+                  if (content.event.start.date === content.event.end.date)
+                    | #{content.event.start.fullDate} (#{translate('All day')})
+                  else
+                    | #{content.event.start.fullDate} - #{content.event.end.fullDate} (#{translate('All day')})
+          if (content.event.comment)
+            tr
+              td(valign='top')
+                strong #{translate('Comment')}
+              td #{content.event.comment}
+      if (content.oldEvent)
+        mj-column(width='100%' css-class='content')
+          mj-text(font-size='20px' color='#434343' font-weight='500' padding='20px') #{content.oldEvent.summary}
+          mj-table(font-size='14px' color='#434343' cellpadding='4px' padding='20px' padding-top='0px')
+            tr
+              td(valign='top' style='min-width: 80px;')
+                strong #{translate('Time')}
+              td
+                if (!content.oldEvent.allDay)
+                  span(style='display: inline-block;')
+                    if (content.oldEvent.start.date === content.oldEvent.end.date)
+                      | #{content.oldEvent.start.fullDateTime} - #{content.oldEvent.end.time}
+                    else
+                      | #{content.oldEvent.start.fullDateTime} - #{content.oldEvent.end.fullDateTime}
+                  span(style='display: inline-block; color: #787878; font-weight: 400;') &nbsp;#{content.oldEvent.start.timezone}
+                else
+                  span(style='display: inline-block;')
+                    if (content.oldEvent.start.date === content.oldEvent.end.date)
+                      | #{content.oldEvent.start.fullDate} (#{translate('All day')})
+                    else
+                      | #{content.oldEvent.start.fullDate} - #{content.oldEvent.end.fullDate} (#{translate('All day')})
+                if (content.seeInCalendarLink)
+                  | &nbsp;(
+                  a.link(href=content.seeInCalendarLink) #{translate('See in Calendar')}
+                  | )
+            if (content.oldEvent.location)
+              tr
+                td(style="min-width: 96px;" valign='top')
+                  strong #{translate('Location')}
+                td
+                  if (content.oldEvent.isLocationAValidURL)
+                    if (content.oldEvent.isLocationAnAbsoluteURL)
+                      a.link(href=content.oldEvent.location) #{content.oldEvent.location}
+                    else
+                      a.link(href=`//${content.oldEvent.location}`) #{content.oldEvent.location}
+                  else
+                    | #{content.oldEvent.location} (
+                    a(href=`https://www.openstreetmap.org/search?query=${content.oldEvent.location}`) #{translate('See in Map')}
+                    | )
+            tr
+              td(valign='top')
+                strong #{translate('Attendees')}
+              td
+                include ../mixins/attendees.pug
+                +displayAttendees(content.oldEvent.attendees, content.oldEvent.organizer)
+            if (content.oldEvent.hasResources)
+              tr
+                td(valign='top')
+                  strong #{translate('Resources')}
+                td
+                  include ../mixins/resources.pug
+                  +displayResources(content.oldEvent.resources)
+            if (content.oldEvent.description)
+              tr
+                td(valign='top')
+                  strong #{translate('Notes')}
+                td #{content.oldEvent.description}

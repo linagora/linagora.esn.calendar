@@ -1339,6 +1339,62 @@ describe('The invitation email module', function() {
           .catch(err => done(err || new Error('should resolve')));
       });
 
+      it('should send email with correct content including the \'old\' event', function(done) {
+        const ics = fs.readFileSync(__dirname + '/../../../fixtures/counter.ics', 'utf-8');
+        const oldIcs = ics;
+        let findByEmailCallCount = 0;
+
+        attendee1.domains = [{ domain_id: 'domain_id' }];
+        userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 2) {
+            return callback(null, organizer);
+          }
+
+          callback(null, attendee1);
+        };
+
+        const editor = {
+          displayName: attendee1.firstname + ' ' + attendee1.lastname,
+          email: attendee1.emails[0]
+        };
+
+        emailMock.getMailer = function() {
+          return {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn, locals }) {
+              expect(template.name).to.equal('event.counter');
+              expect(template.path).to.match(/templates\/email/);
+              expect(email.subject).to.equal('New changes proposed to event Démo OPENPAAS');
+              expect(locals.content.event.comment).to.contains('This demo is going to be awesome!');
+              expect(locals.content.editor).to.deep.equal(editor);
+              expect(locals.content.oldEvent.summary).to.equal('Démo OPENPAAS');
+              expect(locals.content.oldEvent.isLocationAValidURL).to.be.true;
+              expect(locals.content.oldEvent.isLocationAnAbsoluteURL).to.be.true;
+              expect(locals.content.oldEvent.start.date).to.equal('06/12/2015');
+              expect(locals.content.oldEvent.start.time).to.equal('1:00 PM');
+              expect(locals.content.oldEvent.end.date).to.equal('06/12/2015');
+              expect(locals.content.oldEvent.end.time).to.equal('1:30 PM');
+
+              checkTemplateFn(templateFn);
+
+              return Promise.resolve();
+            }
+          };
+        };
+
+        getModule().sendNotificationEmails({
+          senderEmail: attendee1.emails[0],
+          recipientEmail: organizer.emails[0],
+          method,
+          ics,
+          oldIcs,
+          calendarURI: 'calendarURI'
+        })
+          .then(done)
+          .catch(err => done(err || new Error('should resolve')));
+      });
+
       it('should only send messages to organizer', function(done) {
         let getMailerCallCount = 0;
         let findByEmailCallCount = 0;
