@@ -1,5 +1,5 @@
 const emailTemplateName = 'event.alarm';
-const Q = require('q');
+const { promisify } = require('util');
 const CONSTANTS = require('../../constants');
 
 module.exports = dependencies => {
@@ -9,6 +9,7 @@ module.exports = dependencies => {
   const db = require('../db')(dependencies);
   const i18nHelper = require('../../helpers/i18n')(dependencies);
   const emailModule = require('../../email')(dependencies);
+  const findUserByEmail = promisify(userModule.findByEmail);
 
   return {
     uniqueId: 'linagora.esn.calendar.alarm.email',
@@ -18,10 +19,11 @@ module.exports = dependencies => {
 
   function handle({ _id, ics, attendee, eventPath }) {
     let error;
+
     logger.debug(`Sending alarm by email to ${attendee} for event ${eventPath}`);
     const event = jcalHelper.jcal2content(ics);
 
-    return Q.denodeify(userModule.findByEmail)(attendee)
+    return findUserByEmail(attendee)
       .then(user => {
         if (!user) {
           throw new Error(`User can not be found from email ${attendee}`);
@@ -36,7 +38,7 @@ module.exports = dependencies => {
           summary
         }
       }))
-      .then(subject => emailModule.sender.send({
+      .then(subject => emailModule.sender.sendWithCustomTemplateFunction({
         to: attendee,
         subject,
         ics,

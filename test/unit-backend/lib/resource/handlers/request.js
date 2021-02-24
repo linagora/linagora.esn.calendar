@@ -26,7 +26,7 @@ describe('The Resource request handler module', function() {
 
     emailModule = {
       sender: {
-        send: sinon.stub()
+        sendWithCustomTemplateFunction: sinon.stub()
       }
     };
 
@@ -101,7 +101,7 @@ describe('The Resource request handler module', function() {
 
       this.requireModule().handle(payload)
         .then(() => {
-          expect(emailModule.sender.send).to.not.have.been.called;
+          expect(emailModule.sender.sendWithCustomTemplateFunction).to.not.have.been.called;
           expect(resourceModule.lib.resource.get).to.have.been.calledWith(payload.resourceId);
           expect(resourceModule.lib.administrator.resolve).to.have.been.calledWith(resource);
           expect(attendeeModule.setParticipation).to.have.been.called;
@@ -117,7 +117,7 @@ describe('The Resource request handler module', function() {
 
       this.requireModule().handle(payload)
         .then(() => {
-          expect(emailModule.sender.send).to.not.have.been.called;
+          expect(emailModule.sender.sendWithCustomTemplateFunction).to.not.have.been.called;
           expect(resourceModule.lib.resource.get).to.have.been.calledWith(payload.resourceId);
           expect(resourceModule.lib.administrator.resolve).to.have.been.calledWith(resource);
           expect(attendeeModule.setParticipation).to.have.been.called;
@@ -137,7 +137,7 @@ describe('The Resource request handler module', function() {
 
       this.requireModule().handle(payload)
         .then(() => {
-          expect(emailModule.sender.send).to.have.been.calledWith({
+          expect(emailModule.sender.sendWithCustomTemplateFunction).to.have.been.calledWith({
             to: [user1, user2],
             subject: sinon.match.any,
             ics: sinon.match.any,

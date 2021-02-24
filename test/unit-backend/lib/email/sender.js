@@ -1,10 +1,13 @@
+const path = require('path');
 const { expect } = require('chai');
 const sinon = require('sinon');
 const mockery = require('mockery');
 
 describe('The email sender module', function() {
-  let emailModule, error, translate, eventDetails, baseUrl, eventInCalendar, helpers, payload, jcalHelper, linksHelper, userModule, sendHTML, i18nModule;
-  let from, to, subject, ics, eventPath, emailTemplateName, context;
+  let emailModule, error, translate, eventDetails, baseUrl, eventInCalendar, helpers, payload, jcalHelper, linksHelper,
+    userModule, sendHTML, i18nModule, emailEventHelper, esnConfig, sendWithCustomTemplateFunctionStub, urlHelper;
+  let from, to, subject, ics, eventPath, emailTemplateName, context, locale, event, user;
+  let getContentEventStartAndEndStub;
 
   beforeEach(function() {
     error = new Error('I failed');
@@ -26,23 +29,26 @@ describe('The email sender module', function() {
     };
 
     sendHTML = sinon.stub().returns(Promise.resolve());
+    sendWithCustomTemplateFunctionStub = sinon.stub().returns(Promise.resolve());
     emailModule = {
       getMailer: sinon.spy(() => ({
-        sendHTML
+        sendHTML,
+        sendWithCustomTemplateFunction: sendWithCustomTemplateFunctionStub
       }))
     };
 
     translate = sinon.stub().returns('translated');
+    locale = 'en';
     i18nModule = {
-      getI18nForMailer: sinon.stub().returns(Promise.resolve({ translate }))
+      getI18nForMailer: sinon.stub().returns(Promise.resolve({ translate, locale }))
     };
 
     baseUrl = 'http://localhost';
     helpers = {
       config: {
-        getBaseUrl: function(arg, callback) {
+        getBaseUrl: sinon.spy(function(arg, callback) {
           callback(null, baseUrl);
-        }
+        })
       }
     };
 
@@ -53,14 +59,26 @@ describe('The email sender module', function() {
       getEventInCalendar: sinon.stub().returns(Promise.resolve(eventInCalendar))
     };
 
+    event = { uid: 'uid', allDay: false, location: 'Hanoi' };
     jcalHelper = {
-      jcal2content: sinon.stub().returns('A CAL Object')
+      jcal2content: sinon.stub().returns(event)
     };
 
+    user = { _id: 1 };
     userModule = {
       findByEmail: sinon.spy(function(email, callback) {
-        callback(null, {_id: 1});
+        callback(null, user);
       })
+    };
+
+    getContentEventStartAndEndStub = sinon.stub();
+    emailEventHelper = () => ({
+      getContentEventStartAndEnd: getContentEventStartAndEndStub
+    });
+
+    urlHelper = {
+      isValidURL: sinon.stub().returns(false),
+      isAbsoluteURL: sinon.stub().returns(false)
     };
 
     this.moduleHelpers.addDep('helpers', helpers);
@@ -69,6 +87,8 @@ describe('The email sender module', function() {
     mockery.registerMock('../i18n', () => i18nModule);
     mockery.registerMock('../helpers/links', () => linksHelper);
     mockery.registerMock('../helpers/jcal', jcalHelper);
+    mockery.registerMock('../helpers/email-event', emailEventHelper);
+    mockery.registerMock('../helpers/url', urlHelper);
     this.requireModule = function() {
       return require(`${this.moduleHelpers.modulePath}/backend/lib/email/sender`)(this.moduleHelpers.dependencies);
     };
@@ -149,5 +169,328 @@ describe('The email sender module', function() {
         .catch(done);
     });
 
+  });
+
+  describe('The sendWithCustomTemplateFunction function', function() {
+    it('should reject when getBaseUrl rejects', function(done) {
+      helpers.config.getBaseUrl = function(arg, callback) {
+        expect(arg).to.be.null;
+        callback(error);
+      };
+
+      this.requireModule().sendWithCustomTemplateFunction(payload)
+        .then(() => done(new Error('should not resolve')))
+        .catch(err => {
+          expect(err).to.equal(error);
+          done();
+        });
+    });
+
+    it('should reject when getEventInCalendar rejects', function(done) {
+      linksHelper.getEventInCalendar.returns(Promise.reject(error));
+
+      this.requireModule().sendWithCustomTemplateFunction(payload)
+        .then(() => done(new Error('should not resolve')))
+        .catch(err => {
+          expect(linksHelper.getEventInCalendar).to.have.been.calledWith(ics);
+          expect(err).to.equal(error);
+          done();
+        });
+    });
+
+    it('should send email with the default custom template function', function(done) {
+      esnConfig = config => {
+        expect(config).to.equal('datetime');
+
+        return {
+          inModule: module => {
+            expect(module).to.equal('core');
+
+            return {
+              forUser: (whichUser, isUserWide) => {
+                expect(whichUser).to.equal(user);
+                expect(isUserWide).to.be.true;
+
+                return {
+                  get: (...args) => {
+                    expect(args).to.be.deep.equal([]);
+
+                    return {
+                      timeZone: 'Asia/Ho_Chi_Minh',
+                      use24hourFormat: true
+                    };
+                  }
+                };
+              }
+            };
+          }
+        };
+      };
+
+      this.moduleHelpers.addDep('esn-config', esnConfig);
+
+      const html = '<span>whatever</span>';
+      const untransformedMJML = '<mjml-span>whatever</mjml-span>';
+      mockery.registerMock('mjml', mjml => {
+        expect(mjml).to.equal(untransformedMJML);
+
+        return { html };
+      });
+
+      this.requireModule().sendWithCustomTemplateFunction(payload)
+        .then(() => {
+          expect(helpers.config.getBaseUrl).to.have.been.calledWith(null);
+          expect(linksHelper.getEventInCalendar).to.have.been.calledWith(ics);
+          expect(userModule.findByEmail).to.have.been.calledWith(to);
+          expect(i18nModule.getI18nForMailer).to.have.been.calledWith(user);
+          expect(jcalHelper.jcal2content).to.have.been.calledWith(ics, baseUrl);
+          expect(getContentEventStartAndEndStub).to.have.been.calledWith({
+            ics,
+            isAllDay: false,
+            timezone: 'Asia/Ho_Chi_Minh',
+            use24hourFormat: true,
+            locale
+          });
+          expect(urlHelper.isValidURL).to.have.been.calledWith(event.location);
+          expect(urlHelper.isAbsoluteURL).to.have.been.calledWith(event.location);
+          expect(emailModule.getMailer).to.have.been.calledWith(user);
+          expect(sendWithCustomTemplateFunctionStub).to.have.been.calledWith(sinon.match({
+            message: {
+              encoding: 'base64',
+              from,
+              to,
+              subject: 'translated',
+              headers: {}
+            },
+            template: { name: emailTemplateName, path: path.resolve(__dirname, '../../../../templates/email') },
+            locals: {
+              content: {
+                ...context,
+                baseUrl,
+                event: {
+                  ...event,
+                  isLocationAValidURL: false,
+                  isLocationAnAbsoluteURL: false
+                },
+                seeInCalendarLink: eventInCalendar
+              },
+              translate
+            }
+          }));
+          expect(sendWithCustomTemplateFunctionStub.getCall(0).args[0].templateFn(untransformedMJML)).to.equal(html);
+          done();
+        })
+        .catch(err => done(err || new Error('should resolve')));
+    });
+
+    it('should send email with the provided custom template function', function(done) {
+      esnConfig = config => {
+        expect(config).to.equal('datetime');
+
+        return {
+          inModule: module => {
+            expect(module).to.equal('core');
+
+            return {
+              forUser: (whichUser, isUserWide) => {
+                expect(whichUser).to.equal(user);
+                expect(isUserWide).to.be.true;
+
+                return {
+                  get: (...args) => {
+                    expect(args).to.be.deep.equal([]);
+
+                    return {
+                      timeZone: 'Asia/Ho_Chi_Minh',
+                      use24hourFormat: true
+                    };
+                  }
+                };
+              }
+            };
+          }
+        };
+      };
+
+      this.moduleHelpers.addDep('esn-config', esnConfig);
+
+      const html = '<span>whatever</span>';
+      const untransformedMarkup = 'span whatever';
+      const templateFn = toBeTransformedMarkup => {
+        expect(toBeTransformedMarkup).to.equal(untransformedMarkup);
+
+        return html;
+      };
+
+      this.requireModule().sendWithCustomTemplateFunction({ ...payload, templateFn })
+        .then(() => {
+          expect(helpers.config.getBaseUrl).to.have.been.calledWith(null);
+          expect(linksHelper.getEventInCalendar).to.have.been.calledWith(ics);
+          expect(userModule.findByEmail).to.have.been.calledWith(to);
+          expect(i18nModule.getI18nForMailer).to.have.been.calledWith(user);
+          expect(jcalHelper.jcal2content).to.have.been.calledWith(ics, baseUrl);
+          expect(getContentEventStartAndEndStub).to.have.been.calledWith({
+            ics,
+            isAllDay: false,
+            timezone: 'Asia/Ho_Chi_Minh',
+            use24hourFormat: true,
+            locale
+          });
+          expect(urlHelper.isValidURL).to.have.been.calledWith(event.location);
+          expect(urlHelper.isAbsoluteURL).to.have.been.calledWith(event.location);
+          expect(emailModule.getMailer).to.have.been.calledWith(user);
+          expect(sendWithCustomTemplateFunctionStub).to.have.been.calledWith(sinon.match({
+            message: {
+              encoding: 'base64',
+              from,
+              to,
+              subject: 'translated',
+              headers: {}
+            },
+            template: { name: emailTemplateName, path: path.resolve(__dirname, '../../../../templates/email') },
+            locals: {
+              content: {
+                ...context,
+                baseUrl,
+                event: {
+                  ...event,
+                  isLocationAValidURL: false,
+                  isLocationAnAbsoluteURL: false
+                },
+                seeInCalendarLink: eventInCalendar
+              },
+              translate
+            }
+          }));
+          expect(sendWithCustomTemplateFunctionStub.getCall(0).args[0].templateFn(untransformedMarkup)).to.equal(html);
+          done();
+        })
+        .catch(err => done(err || new Error('should resolve')));
+    });
+
+    it('should be able to send emails to multiple recipients', function(done) {
+      const anotherUser = { _id: 'recipient-user-id', preferredEmail: 'recipient-user@test.org' };
+      let esnConfigCallCount = 0;
+
+      esnConfig = config => {
+        expect(config).to.equal('datetime');
+
+        return {
+          inModule: module => {
+            expect(module).to.equal('core');
+
+            return {
+              forUser: (whichUser, isUserWide) => {
+                if (esnConfigCallCount === 0) {
+                  expect(whichUser).to.equal(anotherUser);
+                } else {
+                  expect(whichUser).to.equal(user);
+                }
+
+                expect(isUserWide).to.be.true;
+
+                esnConfigCallCount++;
+
+                return {
+                  get: (...args) => {
+                    expect(args).to.be.deep.equal([]);
+
+                    return {
+                      timeZone: 'Asia/Ho_Chi_Minh',
+                      use24hourFormat: true
+                    };
+                  }
+                };
+              }
+            };
+          }
+        };
+      };
+
+      this.moduleHelpers.addDep('esn-config', esnConfig);
+
+      const html = '<span>whatever</span>';
+      const untransformedMJML = '<mjml-span>whatever</mjml-span>';
+      mockery.registerMock('mjml', mjml => {
+        expect(mjml).to.equal(untransformedMJML);
+
+        return { html };
+      });
+
+      this.requireModule().sendWithCustomTemplateFunction({ ...payload, to: [anotherUser, to] })
+        .then(() => {
+          expect(helpers.config.getBaseUrl).to.have.been.calledWith(null);
+          expect(linksHelper.getEventInCalendar).to.have.been.calledWith(ics);
+          expect(userModule.findByEmail).to.have.been.calledWith(to);
+          expect(i18nModule.getI18nForMailer.getCall(0).args[0]).to.deep.equal(anotherUser);
+          expect(i18nModule.getI18nForMailer.getCall(1).args[0]).to.deep.equal(user);
+          expect(jcalHelper.jcal2content).to.have.been.calledTwice;
+          expect(jcalHelper.jcal2content).to.have.been.calledWith(ics, baseUrl);
+          expect(getContentEventStartAndEndStub).to.have.been.calledTwice;
+          expect(getContentEventStartAndEndStub).to.have.been.calledWith({
+            ics,
+            isAllDay: false,
+            timezone: 'Asia/Ho_Chi_Minh',
+            use24hourFormat: true,
+            locale
+          });
+          expect(urlHelper.isValidURL).to.have.been.calledTwice;
+          expect(urlHelper.isValidURL).to.have.been.calledWith(event.location);
+          expect(urlHelper.isAbsoluteURL).to.have.been.calledTwice;
+          expect(urlHelper.isAbsoluteURL).to.have.been.calledWith(event.location);
+          expect(emailModule.getMailer.getCall(0).args[0]).to.deep.equal(anotherUser);
+          expect(emailModule.getMailer.getCall(1).args[0]).to.deep.equal(user);
+          expect(sendWithCustomTemplateFunctionStub.getCall(0).args[0].message).to.deep.equal({
+            encoding: 'base64',
+            from,
+            to: anotherUser.preferredEmail,
+            subject: 'translated',
+            headers: {}
+          });
+          expect(sendWithCustomTemplateFunctionStub.getCall(0).args[0].template).to.deep.equal({
+            name: emailTemplateName, path: path.resolve(__dirname, '../../../../templates/email')
+          });
+          expect(sendWithCustomTemplateFunctionStub.getCall(0).args[0].locals).to.deep.equal({
+            content: {
+              ...context,
+              baseUrl,
+              event: {
+                ...event,
+                isLocationAValidURL: false,
+                isLocationAnAbsoluteURL: false
+              },
+              seeInCalendarLink: eventInCalendar
+            },
+            translate
+          });
+          expect(sendWithCustomTemplateFunctionStub.getCall(0).args[0].templateFn(untransformedMJML)).to.equal(html);
+          expect(sendWithCustomTemplateFunctionStub.getCall(1).args[0].message).to.deep.equal({
+            encoding: 'base64',
+            from,
+            to,
+            subject: 'translated',
+            headers: {}
+          });
+          expect(sendWithCustomTemplateFunctionStub.getCall(1).args[0].template).to.deep.equal({
+            name: emailTemplateName, path: path.resolve(__dirname, '../../../../templates/email')
+          });
+          expect(sendWithCustomTemplateFunctionStub.getCall(1).args[0].locals).to.deep.equal({
+            content: {
+              ...context,
+              baseUrl,
+              event: {
+                ...event,
+                isLocationAValidURL: false,
+                isLocationAnAbsoluteURL: false
+              },
+              seeInCalendarLink: eventInCalendar
+            },
+            translate
+          });
+          expect(sendWithCustomTemplateFunctionStub.getCall(1).args[0].templateFn(untransformedMJML)).to.equal(html);
+          done();
+        })
+        .catch(err => done(err || new Error('should resolve')));
+    });
   });
 });

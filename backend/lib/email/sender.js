@@ -2,21 +2,27 @@ const util = require('util');
 const path = require('path');
 const Q = require('q');
 const _ = require('lodash');
+const mjml2html = require('mjml');
 const jcalHelper = require('../helpers/jcal');
+const { isValidURL, isAbsoluteURL } = require('../helpers/url');
 const TEMPLATE_PATH = path.resolve(__dirname, '../../../templates/email');
 const ATTACHMENT_NAME = 'meeting.ics';
 
 module.exports = dependencies => {
   const helpers = dependencies('helpers');
   const emailModule = dependencies('email');
+  const esnConfig = dependencies('esn-config');
   const logger = dependencies('logger');
   const userModule = dependencies('user');
   const i18nLib = require('../i18n')(dependencies);
   const linksHelper = require('../helpers/links')(dependencies);
-  const findByEmail = util.promisify(userModule.findByEmail);
+  const emailEventHelper = require('../helpers/email-event')(dependencies);
+  const findUserByEmail = util.promisify(userModule.findByEmail);
+  const getBaseURL = util.promisify(helpers.config.getBaseUrl);
 
   return {
-    send
+    send,
+    sendWithCustomTemplateFunction
   };
 
   function send({from, to, subject, ics, eventPath, emailTemplateName, context = {}, headers = {}, includeICS}) {
@@ -73,11 +79,84 @@ module.exports = dependencies => {
             );
           }));
       }
-
-      function _getSubject(subject, translate) {
-        return _.isString(subject) ? translate(subject) : translate(subject.phrase, subject.parameters);
-      }
     });
+  }
+
+  function sendWithCustomTemplateFunction({
+    from,
+    to,
+    subject,
+    ics,
+    emailTemplateName,
+    context = {},
+    headers = {},
+    templateFn
+  }) {
+    return Promise.all([
+      getBaseURL(null),
+      linksHelper.getEventInCalendar(ics)
+    ])
+      .then(([baseURL, seeInCalendarLink]) => {
+        const recipients = Array.isArray(to) ? to : [to];
+
+        return Promise.all(recipients.map(_sendEmail))
+          .then(results => {
+            logger.info('Email has been sent to recipients', JSON.stringify(results));
+
+            return results;
+          })
+          .catch(err => {
+            logger.error('Could not send email to some recipients', err);
+
+            throw err;
+          });
+
+        function _sendEmail(to) {
+          return resolveUserEmail(to)
+            .then(({ user: recipient, email: recipientEmail }) =>
+              Promise.all([
+                i18nLib.getI18nForMailer(recipient),
+                esnConfig('datetime').inModule('core').forUser(recipient, true).get()
+              ])
+                .then(([{ translate, locale }, datetimeOptions]) => {
+                  const message = {
+                    encoding: 'base64',
+                    from,
+                    subject: _getSubject(subject, translate),
+                    to: recipientEmail,
+                    headers
+                  };
+                  const event = jcalHelper.jcal2content(ics, baseURL);
+                  const content = { ...context, baseUrl: baseURL, event, seeInCalendarLink };
+                  const { timeZone: timezone, use24hourFormat } = datetimeOptions;
+
+                  content.event = {
+                    ...content.event,
+                    isLocationAValidURL: isValidURL(content.event.location),
+                    isLocationAnAbsoluteURL: isAbsoluteURL(content.event.location),
+                    ...emailEventHelper.getContentEventStartAndEnd({
+                      ics,
+                      isAllDay: content.event.allDay,
+                      timezone,
+                      use24hourFormat,
+                      locale
+                    })
+                  };
+
+                  return emailModule.getMailer(recipient).sendWithCustomTemplateFunction({
+                    message,
+                    template: { name: emailTemplateName, path: TEMPLATE_PATH },
+                    templateFn: typeof templateFn === 'function' ? templateFn : mjml => mjml2html(mjml).html,
+                    locals: { content, translate }
+                  });
+                })
+            );
+        }
+      });
+  }
+
+  function _getSubject(subject, translate) {
+    return _.isString(subject) ? translate(subject) : translate(subject.phrase, subject.parameters);
   }
 
   function resolveUserEmail(to) {
@@ -85,6 +164,6 @@ module.exports = dependencies => {
       return Promise.resolve({ user: to, email: to.preferredEmail });
     }
 
-    return findByEmail(to).then(user => ({user, email: to}));
+    return findUserByEmail(to).then(user => ({user, email: to}));
   }
 };

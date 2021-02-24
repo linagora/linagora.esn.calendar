@@ -4,7 +4,7 @@ const fs = require('fs');
 const mockery = require('mockery');
 
 describe('The invitation email module', function() {
-  let userMock, domainMock, helpersMock, authMock, emailMock, esnConfigMock, datetimeOptions, datetimeHelpersMock, mjmlMock;
+  let userMock, domainMock, helpersMock, authMock, emailMock, esnConfigMock, datetimeOptions, mjmlMock, emailEventHelperMock;
   let getModule;
   let transformedHTML;
 
@@ -78,13 +78,13 @@ describe('The invitation email module', function() {
       };
     };
 
-    datetimeHelpersMock = () => ({
-      formatDatetime: () => ({})
-    });
-
     transformedHTML = '<span>transformed html</span>';
 
     mjmlMock = sinon.stub().returns({ html: transformedHTML });
+
+    emailEventHelperMock = {
+      getContentEventStartAndEnd: () => ({})
+    };
 
     this.moduleHelpers.addDep('domain', domainMock);
     this.moduleHelpers.addDep('user', userMock);
@@ -94,7 +94,7 @@ describe('The invitation email module', function() {
     this.moduleHelpers.addDep('esn-config', esnConfigMock);
     this.moduleHelpers.addDep('i18n', this.helpers.requireBackend('core/i18n'));
 
-    mockery.registerMock('../helpers/datetime', datetimeHelpersMock);
+    mockery.registerMock('../helpers/email-event', () => emailEventHelperMock);
     mockery.registerMock('mjml', mjmlMock);
 
     getModule = () => require(`${this.moduleHelpers.backendPath}/lib/invitation/email`)(this.moduleHelpers.dependencies);
@@ -750,13 +750,14 @@ describe('The invitation email module', function() {
 
       it('should use the attendee\'s timezone and locale configuration if the attendee is an internal user', function(done) {
         const method = 'REQUEST';
-        const datetimeHelpersMock = {
-          formatDatetime: sinon.stub()
+
+        emailEventHelperMock = {
+          getContentEventStartAndEnd: sinon.stub().returns({
+            start: { date: '01/01/2015', time: '01:01', fullDateTime: '2015年1月1日星期四01点01分', fullDate: '2015年1月1日星期四', timezone: 'Asia/Shanghai' },
+            end: { date: '01/01/2015', time: '02:02', fullDateTime: '2015年1月1日星期四02点02分', fullDate: '2015年1月1日星期四', timezone: 'Asia/Shanghai' }
+          })
         };
         let findByEmailCallCount = 0;
-
-        datetimeHelpersMock.formatDatetime.onCall(0).returns({ date: '01/01/2015', time: '01:01', fullDateTime: '2015年1月1日星期四01点01分', fullDate: '2015年1月1日星期四' });
-        datetimeHelpersMock.formatDatetime.onCall(1).returns({ date: '01/01/2015', time: '02:02', fullDateTime: '2015年1月1日星期四02点02分', fullDate: '2015年1月1日星期四' });
 
         datetimeOptions = {
           timeZone: 'Asia/Shanghai',
@@ -777,7 +778,7 @@ describe('The invitation email module', function() {
           }
         }));
 
-        mockery.registerMock('../helpers/datetime', () => datetimeHelpersMock);
+        mockery.registerMock('../helpers/email-event', () => emailEventHelperMock);
 
         esnConfigMock = function() {
           return {
@@ -870,14 +871,13 @@ describe('The invitation email module', function() {
           isNewEvent
         })
           .then(() => {
-            const convertTzOptions = {
+            expect(emailEventHelperMock.getContentEventStartAndEnd).to.have.been.calledWith({
+              ics,
+              isAllDay: false,
               timezone: datetimeOptions.timeZone,
-              locale: 'zh',
-              use24hourFormat: true
-            };
-
-            expect(datetimeHelpersMock.formatDatetime.getCall(0).args[1]).to.deep.equal(convertTzOptions);
-            expect(datetimeHelpersMock.formatDatetime.getCall(1).args[1]).to.deep.equal(convertTzOptions);
+              use24hourFormat: true,
+              locale: 'zh'
+            });
             done();
           })
           .catch(err => done(err || new Error('should resolve')));
@@ -885,13 +885,14 @@ describe('The invitation email module', function() {
 
       it('should use the organizer\'s timezone and locale configuration if the attendee is an external user', function(done) {
         const method = 'REQUEST';
-        const datetimeHelpersMock = {
-          formatDatetime: sinon.stub()
+
+        emailEventHelperMock = {
+          getContentEventStartAndEnd: sinon.stub().returns({
+            start: { date: '01/01/2015', time: '01:01 SA', fullDateTime: 'Thứ năm ngày 1 tháng 1 năm 2015, 01:01 SA', fullDate: 'Thứ năm ngày 1 tháng 1 năm 2015', timezone: 'Asia/Ho_Chi_Minh' },
+            end: { date: '01/01/2015', time: '02:02 SA', fullDateTime: 'Thứ năm ngày 1 tháng 1 năm 2015, 02:02 SA', fullDate: 'Thứ năm ngày 1 tháng 1 năm 2015', timezone: 'Asia/Ho_Chi_Minh' }
+          })
         };
         let findByEmailCallCount = 0;
-
-        datetimeHelpersMock.formatDatetime.onCall(0).returns({ date: '01/01/2015', time: '01:01 SA', fullDateTime: 'Thứ năm ngày 1 tháng 1 năm 2015, 01:01 SA', fullDate: 'Thứ năm ngày 1 tháng 1 năm 2015' });
-        datetimeHelpersMock.formatDatetime.onCall(1).returns({ date: '01/01/2015', time: '02:02 SA', fullDateTime: 'Thứ năm ngày 1 tháng 1 năm 2015, 02:02 SA', fullDate: 'Thứ năm ngày 1 tháng 1 năm 2015' });
 
         datetimeOptions = {
           timeZone: 'Asia/Ho_Chi_Minh'
@@ -911,7 +912,7 @@ describe('The invitation email module', function() {
           }
         }));
 
-        mockery.registerMock('../helpers/datetime', () => datetimeHelpersMock);
+        mockery.registerMock('../helpers/email-event', () => emailEventHelperMock);
 
         esnConfigMock = function() {
           return {
@@ -1004,14 +1005,13 @@ describe('The invitation email module', function() {
           isNewEvent
         })
           .then(() => {
-            const convertTzOptions = {
+            expect(emailEventHelperMock.getContentEventStartAndEnd).to.have.been.calledWith({
+              ics,
+              isAllDay: false,
               timezone: datetimeOptions.timeZone,
-              locale: 'vi',
-              use24hourFormat: undefined
-            };
-
-            expect(datetimeHelpersMock.formatDatetime.getCall(0).args[1]).to.deep.equal(convertTzOptions);
-            expect(datetimeHelpersMock.formatDatetime.getCall(1).args[1]).to.deep.equal(convertTzOptions);
+              use24hourFormat: undefined,
+              locale: 'vi'
+            });
             done();
           })
           .catch(err => done(err || new Error('should resolve')));

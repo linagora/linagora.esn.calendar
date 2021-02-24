@@ -27,7 +27,7 @@ describe('The Resource declined handler module', function() {
 
     emailModule = {
       sender: {
-        send: sinon.stub()
+        sendWithCustomTemplateFunction: sinon.stub()
       }
     };
 
@@ -85,7 +85,7 @@ describe('The Resource declined handler module', function() {
     it('should reject when email can not be sent', function(done) {
       const error = new Error('I failed to send email');
 
-      emailModule.sender.send.returns(Promise.reject(error));
+      emailModule.sender.sendWithCustomTemplateFunction.returns(Promise.reject(error));
       jcalHelper.jcal2content.returns({organizer: {email}});
       resourceModule.lib.resource.get.returns(Promise.resolve(resource));
 
@@ -104,7 +104,7 @@ describe('The Resource declined handler module', function() {
 
       this.requireModule().handle(payload)
         .then(() => {
-          expect(emailModule.sender.send).to.have.been.calledWith({
+          expect(emailModule.sender.sendWithCustomTemplateFunction).to.have.been.calledWith({
             to: email,
             subject: sinon.match.any,
             ics: sinon.match.any,
