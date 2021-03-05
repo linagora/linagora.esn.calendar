@@ -237,8 +237,9 @@ module.exports = dependencies => {
           const icsFile = response.body;
 
           res.setHeader('Content-Disposition', 'attachment;filename=MyCalendar.ics');
+          res.setHeader('Content-type', 'text/calendar');
 
-          return res.status(200).json(icsFile);
+          return res.status(200).send(icsFile);
         });
       })
       .catch(err => {
