@@ -872,7 +872,10 @@ describe('The calendar controller', function() {
           _id: '12345'
         },
         davserver: 'http://davserver',
-        headers: { 'Content-Disposition': 'attachment; filename=MyCalendar.ics' }
+        headers: {
+          'Content-Disposition': 'attachment; filename=MyCalendar.ics',
+          'Content-type': 'text/calendar'
+        }
       };
 
       requestMock = function(options, callback) {
@@ -1040,9 +1043,10 @@ describe('The calendar controller', function() {
           expect(code).to.equal(200);
 
           return {
-            json: function(result) {
+            send: function(result) {
               expect(result).to.equal(icsData);
-              expect(res.setHeader).to.have.been.calledWith('Content-Disposition', 'attachment;filename=MyCalendar.ics');
+              expect(res.setHeader.firstCall).to.have.been.calledWith('Content-Disposition', 'attachment;filename=MyCalendar.ics');
+              expect(res.setHeader.secondCall).to.have.been.calledWith('Content-type', 'text/calendar');
               done();
             }
           };
