@@ -48,9 +48,68 @@ describe('The email event helper', function() {
   });
 
   describe('The getContentEventStartAndEnd function', function() {
+    it('should return the correct object with only start formatted strings when only the start date is passed in', function() {
+      const convertTzOptions = { timezone, locale, use24hourFormat };
+      const result = this.requireModule().getContentEventStartAndEnd({ start: icalDateAsMoments[0], isAllDay, timezone, use24hourFormat, locale });
+
+      expect(datetimeHelperMock.formatDatetime).to.have.been.calledOnce;
+      expect(datetimeHelperMock.formatDatetime).to.have.been.calledWith(icalDateAsMoments[0], convertTzOptions);
+      expect(result).to.deep.equal({
+        start: { ...formattedDatetimes[0], timezone }
+      });
+    });
+
+    it('should return the correct object with only end formatted strings when only the end date is passed in', function() {
+      datetimeHelperMock.formatDatetime.onCall(0).returns(formattedDatetimes[1]);
+
+      const convertTzOptions = { timezone, locale, use24hourFormat };
+      const result = this.requireModule().getContentEventStartAndEnd({ end: icalDateAsMoments[1], isAllDay, timezone, use24hourFormat, locale });
+
+      expect(datetimeHelperMock.formatDatetime).to.have.been.calledOnce;
+      expect(datetimeHelperMock.formatDatetime).to.have.been.calledWith(icalDateAsMoments[1], convertTzOptions);
+      expect(result).to.deep.equal({
+        end: { ...formattedDatetimes[1], timezone }
+      });
+    });
+
+    it('should return the correct object with start and end formatted strings when both start and end dates are passed in and it is not an all day event', function() {
+      const convertTzOptions = { timezone, locale, use24hourFormat };
+      const result = this.requireModule().getContentEventStartAndEnd({ start: icalDateAsMoments[0], end: icalDateAsMoments[1], isAllDay, timezone, use24hourFormat, locale });
+
+      expect(datetimeHelperMock.formatDatetime).to.have.been.calledTwice;
+      expect(datetimeHelperMock.formatDatetime.getCall(0).args[0]).to.equal(icalDateAsMoments[0]);
+      expect(datetimeHelperMock.formatDatetime.getCall(0).args[1]).to.deep.equal(convertTzOptions);
+      expect(datetimeHelperMock.formatDatetime.getCall(1).args[0]).to.equal(icalDateAsMoments[1]);
+      expect(datetimeHelperMock.formatDatetime.getCall(1).args[1]).to.deep.equal(convertTzOptions);
+      expect(result).to.deep.equal({
+        start: { ...formattedDatetimes[0], timezone },
+        end: { ...formattedDatetimes[1], timezone }
+      });
+    });
+
+    it('should return the correct object with start and end formatted strings when both start and end dates are passed in and it is an all day event', function() {
+      isAllDay = true;
+
+      const convertTzOptions = { timezone, locale, use24hourFormat };
+      const result = this.requireModule().getContentEventStartAndEnd({ start: icalDateAsMoments[0], end: icalDateAsMoments[1], isAllDay, timezone, use24hourFormat, locale });
+
+      expect(datetimeHelperMock.formatDatetime).to.have.been.calledTwice;
+      expect(datetimeHelperMock.formatDatetime.getCall(0).args[0]).to.equal(icalDateAsMoments[0]);
+      expect(datetimeHelperMock.formatDatetime.getCall(0).args[1]).to.deep.equal(convertTzOptions);
+      expect(datetimeHelperMock.formatDatetime.getCall(1).args[0]).to.equal(icalDateAsMoments[1]);
+      expect(datetimeHelperMock.formatDatetime.getCall(1).args[1]).to.deep.equal(convertTzOptions);
+      expect(icalDateAsMoments[1].subtract).to.have.been.calledWith(1, 'day');
+      expect(result).to.deep.equal({
+        start: { ...formattedDatetimes[0], timezone },
+        end: { ...formattedDatetimes[1], timezone }
+      });
+    });
+  });
+
+  describe('The getContentEventStartAndEndFromIcs function', function() {
     it('should return the correct object with start and end formatted strings when the event is not an all day event', function() {
       const convertTzOptions = { timezone, locale, use24hourFormat };
-      const result = this.requireModule().getContentEventStartAndEnd({ ics, isAllDay, timezone, use24hourFormat, locale });
+      const result = this.requireModule().getContentEventStartAndEndFromIcs({ ics, isAllDay, timezone, use24hourFormat, locale });
 
       expect(jcalHelperMock.getIcalEvent).to.have.been.calledWith(ics);
       expect(jcalHelperMock.getIcalDateAsMoment.getCall(0).args[0]).to.equal(icalEvent.startDate);
@@ -69,7 +128,7 @@ describe('The email event helper', function() {
       isAllDay = true;
 
       const convertTzOptions = { timezone, locale, use24hourFormat };
-      const result = this.requireModule().getContentEventStartAndEnd({ ics, isAllDay, timezone, use24hourFormat, locale });
+      const result = this.requireModule().getContentEventStartAndEndFromIcs({ ics, isAllDay, timezone, use24hourFormat, locale });
 
       expect(jcalHelperMock.getIcalEvent).to.have.been.calledWith(ics);
       expect(jcalHelperMock.getIcalDateAsMoment.getCall(0).args[0]).to.equal(icalEvent.startDate);

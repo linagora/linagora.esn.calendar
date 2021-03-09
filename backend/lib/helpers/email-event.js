@@ -4,40 +4,35 @@ module.exports = dependencies => {
   const datetimeHelper = require('./datetime')(dependencies);
 
   return {
-    getContentEventStartAndEnd
+    getContentEventStartAndEnd,
+    getContentEventStartAndEndFromIcs
   };
 
-  function getContentEventStartAndEnd({ ics, isAllDay, timezone, use24hourFormat, locale }) {
+  function getContentEventStartAndEnd({ start, end, isAllDay, timezone, use24hourFormat, locale }) {
     const convertTzOptions = { timezone, locale, use24hourFormat };
-    const icalEvent = jcalHelper.getIcalEvent(ics);
-    const {
-      date: startDateString,
-      time: startTimeString,
-      fullDate: startFullDateString,
-      fullDateTime: startFullDateTimeString
-    } = datetimeHelper.formatDatetime(jcalHelper.getIcalDateAsMoment(icalEvent.startDate), convertTzOptions);
-    const {
-      date: endDateString,
-      time: endTimeString,
-      fullDate: endFullDateString,
-      fullDateTime: endFullDateTimeString
-    } = datetimeHelper.formatDatetime(isAllDay ? jcalHelper.getIcalDateAsMoment(icalEvent.endDate).subtract(1, 'day') : jcalHelper.getIcalDateAsMoment(icalEvent.endDate), convertTzOptions);
+    const contentEventDateTimeObject = {};
 
-    return {
-      start: {
-        date: startDateString,
-        time: startTimeString,
-        fullDate: startFullDateString,
-        fullDateTime: startFullDateTimeString,
-        timezone
-      },
-      end: {
-        date: endDateString,
-        time: endTimeString,
-        fullDate: endFullDateString,
-        fullDateTime: endFullDateTimeString,
-        timezone
-      }
-    };
+    if (start) {
+      contentEventDateTimeObject.start = { ...datetimeHelper.formatDatetime(start, convertTzOptions), timezone };
+    }
+
+    if (end) {
+      contentEventDateTimeObject.end = { ...datetimeHelper.formatDatetime(isAllDay ? end.subtract(1, 'day') : end, convertTzOptions), timezone };
+    }
+
+    return contentEventDateTimeObject;
+  }
+
+  function getContentEventStartAndEndFromIcs({ ics, isAllDay, timezone, use24hourFormat, locale }) {
+    const icalEvent = jcalHelper.getIcalEvent(ics);
+
+    return getContentEventStartAndEnd({
+      start: jcalHelper.getIcalDateAsMoment(icalEvent.startDate),
+      end: jcalHelper.getIcalDateAsMoment(icalEvent.endDate),
+      isAllDay,
+      timezone,
+      use24hourFormat,
+      locale
+    });
   }
 };
