@@ -189,6 +189,8 @@ describe('The event invitation pubsub module', function() {
     });
 
     it('should send notification emails and then resolve when the message is valid and notify is true', function(done) {
+      msg.changes = { some: 'changes' };
+
       notifyFunctions[CONSTANTS.EVENTS.NOTIFICATION_EMAIL.SEND](msg)
         .then(() => {
           expect(loggerMock.error).to.have.not.been.called;
@@ -199,7 +201,8 @@ describe('The event invitation pubsub module', function() {
             ics: msg.event,
             oldIcs: msg.oldEvent,
             calendarURI: msg.calendarURI,
-            isNewEvent: msg.isNewEvent
+            isNewEvent: msg.isNewEvent,
+            changes: msg.changes
           });
           expect(loggerMock.info).to.have.been.calledWith(`Successfully sent notification emails to attendee: "${msg.recipientEmail}". Message: ${JSON.stringify(msg)}`);
           done();
@@ -222,7 +225,8 @@ describe('The event invitation pubsub module', function() {
             ics: msg.event,
             oldIcs: msg.oldEvent,
             calendarURI: msg.calendarURI,
-            isNewEvent: msg.isNewEvent
+            isNewEvent: msg.isNewEvent,
+            changes: undefined
           });
           expect(loggerMock.error).to.have.been.calledWith(`Error when trying to send notification emails to attendee: "${msg.recipientEmail}". Error: ${error.message}. Message: ${JSON.stringify(msg)}`);
           done();
