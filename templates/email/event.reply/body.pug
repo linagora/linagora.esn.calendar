@@ -13,14 +13,14 @@ mj-body
               strong #{translate('Time')}
             td
               if (!content.event.allDay)
-                span
+                span(style='display: inline-block;')
                   if (content.event.start.date === content.event.end.date)
                     | #{content.event.start.fullDateTime} - #{content.event.end.time}
                   else
                     | #{content.event.start.fullDateTime} - #{content.event.end.fullDateTime}
-                span(style='color: #787878; font-weight: 400;') &nbsp;#{content.event.start.timezone}
+                span(style='color: #787878; font-weight: 400; display: inline-block;') &nbsp;#{content.event.start.timezone}
               else
-                span
+                span(style='display: inline-block;')
                   if (content.event.start.date === content.event.end.date)
                     | #{content.event.start.fullDate} (#{translate('All day')})
                   else
