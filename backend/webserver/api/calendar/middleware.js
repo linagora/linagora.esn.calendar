@@ -1,5 +1,4 @@
 const { promisify } = require('util');
-const jwtDecode = require('jwt-decode');
 
 module.exports = dependencies => {
   const logger = dependencies('logger');
@@ -8,7 +7,8 @@ module.exports = dependencies => {
 
   return {
     decodeParticipationJWT,
-    decodeSecretLinkJWT
+    canGetSecretLink,
+    canDownloadIcsFile
   };
 
   function decodeParticipationJWT(req, res, next) {
@@ -51,33 +51,23 @@ module.exports = dependencies => {
     });
   }
 
-  function decodeSecretLinkJWT(req, res, next) {
-    const jwt = req.query.jwt;
-    const payload = jwtDecode.default(jwt);
-    let errorDetails;
-
-    if (!payload.calendarHomeId) {
-      errorDetails = 'Calendar Home Id is required';
+  function canGetSecretLink(req, res, next) {
+    if (String(req.params.calendarHomeId) !== String(req.user._id)) {
+      return res.status(403).json({ error: { code: 403, message: 'Forbidden', details: 'Forbidden' } });
     }
 
-    if (!payload.calendarId) {
-      errorDetails = 'Calendar Id is required';
+    next();
+  }
+
+  function canDownloadIcsFile(req, res, next) {
+    if (!req.query.token) {
+      return res.status(403).json({ error: { code: 403, message: 'Forbidden', details: 'Forbidden' } });
     }
 
-    if (!payload.userId) {
-      errorDetails = 'User Id is required';
-    }
-
-    if (errorDetails) {
-      return res.status(400).json({ error: { code: 400, message: 'Bad request', details: errorDetails } });
-    }
-
-    req.linkPayload = payload;
-
-    findUserById(payload.userId)
+    findUserById(req.params.calendarHomeId)
       .then(user => {
         if (!user) {
-          logger.error(`decodeSecretLinkJWT middleware: User with id ${payload.userId} could not be found`);
+          logger.error(`canDownloadIcsFile middleware: User with id ${req.params.calendarHomeId} could not be found`);
 
           return res.status(404).json({ error: { code: 404, message: 'Not Found', details: 'User not found' } });
         }
@@ -87,7 +77,7 @@ module.exports = dependencies => {
         next();
       })
       .catch(error => {
-        logger.error('decodeSecretLinkJWT middleware: Error while searching for user', error);
+        logger.error('canDownloadIcsFile middleware: Error while searching for user', error);
 
         return res.status(500).json({ error: { code: 500, message: 'Internal Server Error', details: 'Error while searching for user' } });
       });

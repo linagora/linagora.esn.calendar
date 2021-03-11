@@ -8,7 +8,7 @@ var q = require('q');
 var sinon = require('sinon');
 
 describe('The calendar controller', function() {
-  let userModuleMock, invitationMock, calendarMock, helpers, forUserMock, self, esnConfigMock, userMock;
+  let userModuleMock, invitationMock, calendarMock, helpers, forUserMock, self, esnConfigMock, esnConfigInModuleMock;
   let sendMailSpy, replyFromExternalUserMock;
 
   beforeEach(function() {
@@ -38,22 +38,22 @@ describe('The calendar controller', function() {
 
     forUserMock = {
       get: sinon.stub(),
-      set: function() {
-        return q.when({});
-      }
+      set: sinon.stub().returns(q.when({}))
     };
 
-    esnConfigMock = function() {
+    esnConfigInModuleMock = {
+      forUser: sinon.stub().returns(forUserMock)
+    };
+
+    esnConfigMock = sinon.spy(function() {
       return {
         inModule: function(mod) {
           expect(mod).to.equal('linagora.esn.calendar');
 
-          return {
-            forUser: () => forUserMock
-          };
+          return esnConfigInModuleMock;
         }
       };
-    };
+    });
     mockery.registerMock('../../../lib/invitation', () => invitationMock);
     this.moduleHelpers.addDep('helpers', helpers);
     userModuleMock = {
@@ -857,26 +857,28 @@ describe('The calendar controller', function() {
       });
     });
   });
+
   describe('the downloadIcsFile function', function() {
     let req, requestMock, controller;
 
     beforeEach(function() {
       req = {
-        query: { jwt: '1234' },
-        linkPayload: {
-          calendarHomeId: '123',
-          calendarId: '123',
-          userId: '12345'
+        query: { token: 'sfgeag5sda28sddh' },
+        params: {
+          calendarHomeId: 'calendarHomeId',
+          calendarId: 'calendarId'
         },
         user: {
-          _id: '12345'
+          _id: 'calendarHomeId'
         },
         davserver: 'http://davserver',
-        headers: { 'Content-Disposition': 'attachment; filename=MyCalendar.ics' }
+        headers: {
+          'Content-Disposition': 'attachment; filename=calendar.ics',
+          'Content-type': 'text/calendar'
+        }
       };
 
       requestMock = function(options, callback) {
-
         return callback(null, {});
       };
 
@@ -884,12 +886,6 @@ describe('The calendar controller', function() {
         requestMock(options, callback);
       });
 
-      userMock = {
-        _id: 1234,
-        firstname: 'test'
-      };
-
-      userModuleMock.get = (userId, callback) => callback(null, userMock);
       controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
     });
 
@@ -900,9 +896,11 @@ describe('The calendar controller', function() {
 
           return {
             json: function(result) {
-              expect(result).to.shallowDeepEqual({
+              expect(result).to.deep.equal({
                 error: {
-                  code: 403
+                  code: 403,
+                  message: 'Forbidden',
+                  details: 'Forbidden'
                 }
               });
               done();
@@ -911,23 +909,57 @@ describe('The calendar controller', function() {
         }
       };
 
-      forUserMock.get.returns(Promise.resolve([{ calendarId: '123', token: '123' }]));
+      forUserMock.get.returns(Promise.resolve([{ calendarId: req.params.calendarId, token: req.query.token + '123' }]));
+
       controller.downloadIcsFile(req, res);
+
+      expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
+      expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+      expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
     });
 
-    it('should send a request to the DAV server to get get the ics of the calendar, and should return 500 if an error happens while sending the request', function(done) {
-      forUserMock.get.returns(Promise.resolve([{ calendarId: '123', token: '1234' }]));
+    it('should send 403 if the requested calendar\'s id is not found in the user\'s settings', function(done) {
+      const res = {
+        status: function(status) {
+          expect(status).to.equal(403);
+
+          return {
+            json: function(result) {
+              expect(result).to.deep.equal({
+                error: {
+                  code: 403,
+                  message: 'Forbidden',
+                  details: 'Forbidden'
+                }
+              });
+              done();
+            }
+          };
+        }
+      };
+
+      forUserMock.get.returns(Promise.resolve([{ calendarId: req.params.calendarId + '123', token: req.query.token }]));
+
+      controller.downloadIcsFile(req, res);
+
+      expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
+      expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+      expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
+    });
+
+    it('should send a request to the DAV server to get the ics of the calendar, and send 500 if the request fails due to an unexpected error', function(done) {
+      forUserMock.get.returns(Promise.resolve([{ calendarId: req.params.calendarId, token: req.query.token }]));
 
       requestMock = function(options, callback) {
         expect(options.method).to.equal('GET');
         expect(options.url).to.equal([
           req.davserver,
           'calendars',
-          req.linkPayload.calendarHomeId,
-          req.linkPayload.calendarId + '?export'
+          req.params.calendarHomeId,
+          req.params.calendarId + '?export'
         ].join('/'));
 
-        return callback(new Error('Something happened during the request'));
+        return callback(new Error('The request failed due to an unexpected error'));
       };
 
       const res = {
@@ -936,7 +968,7 @@ describe('The calendar controller', function() {
 
           return {
             json: function(result) {
-              expect(result).to.shallowDeepEqual({
+              expect(result).to.deep.equal({
                 error: {
                   code: 500,
                   message: 'Can not download the ics file',
@@ -950,18 +982,22 @@ describe('The calendar controller', function() {
       };
 
       controller.downloadIcsFile(req, res);
+
+      expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
+      expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+      expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
     });
 
-    it('should send a request to the DAV server to get get the ics of the calendar, and should return the error status code if the request fails', function(done) {
-      forUserMock.get.returns(Promise.resolve([{ calendarId: '123', token: '1234' }]));
+    it('should send a request to the DAV server to get the ics of the calendar, and send the error status code if the request fails', function(done) {
+      forUserMock.get.returns(Promise.resolve([{ calendarId: req.params.calendarId, token: req.query.token }]));
 
       requestMock = function(options, callback) {
         expect(options.method).to.equal('GET');
         expect(options.url).to.equal([
           req.davserver,
           'calendars',
-          req.linkPayload.calendarHomeId,
-          req.linkPayload.calendarId + '?export'
+          req.params.calendarHomeId,
+          req.params.calendarId + '?export'
         ].join('/'));
 
         return callback(null, { statusCode: 404 });
@@ -973,7 +1009,7 @@ describe('The calendar controller', function() {
 
           return {
             json: function(result) {
-              expect(result).to.shallowDeepEqual({
+              expect(result).to.deep.equal({
                 error: {
                   code: 404,
                   message: 'Can not download the ics file',
@@ -987,15 +1023,14 @@ describe('The calendar controller', function() {
       };
 
       controller.downloadIcsFile(req, res);
+
+      expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
+      expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+      expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
     });
 
-    it('should return 500 if an unexpected error happens', function(done) {
-      forUserMock.get.returns(Promise.resolve([{ calendarId: '123', token: '1234' }]));
-
-      userModuleMock.get = (id, callback) => {
-        expect(id).to.equal(req.user._id);
-        callback(new Error('An unexpected error happened while getting user info'));
-      };
+    it('should send 500 if it fails to get the config of the user', function(done) {
+      forUserMock.get.returns(Promise.reject(new Error('Could not get the config of the user')));
 
       const res = {
         status: function(status) {
@@ -1007,7 +1042,7 @@ describe('The calendar controller', function() {
                 error: {
                   code: 500,
                   message: 'Can not download the ics file due to an unexpected error',
-                  details: 'An unexpected error happened while getting user info'
+                  details: 'Could not get the config of the user'
                 }
               });
               done();
@@ -1016,11 +1051,14 @@ describe('The calendar controller', function() {
         }
       };
 
-      controller = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
       controller.downloadIcsFile(req, res);
+
+      expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
+      expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+      expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
     });
 
-    it('should send the ICS content of the calendar', function(done) {
+    it('should send the ics content of the calendar', function(done) {
       const icsData = 'ICS DATA';
 
       requestMock = function(options, callback) {
@@ -1028,8 +1066,8 @@ describe('The calendar controller', function() {
         expect(options.url).to.equal([
           req.davserver,
           'calendars',
-          req.linkPayload.calendarHomeId,
-          req.linkPayload.calendarId + '?export'
+          req.params.calendarHomeId,
+          req.params.calendarId + '?export'
         ].join('/'));
 
         return callback(null, { statusCode: 200, body: icsData });
@@ -1042,7 +1080,8 @@ describe('The calendar controller', function() {
           return {
             json: function(result) {
               expect(result).to.equal(icsData);
-              expect(res.setHeader).to.have.been.calledWith('Content-Disposition', 'attachment;filename=MyCalendar.ics');
+              expect(res.setHeader.firstCall).to.have.been.calledWith('Content-Disposition', 'attachment;filename=calendar.ics');
+              expect(res.setHeader.secondCall).to.have.been.calledWith('Content-type', 'text/calendar');
               done();
             }
           };
@@ -1050,142 +1089,257 @@ describe('The calendar controller', function() {
         setHeader: sinon.stub()
       };
 
-      forUserMock.get.returns(Promise.resolve([{ calendarId: '123', token: '1234' }]));
+      forUserMock.get.returns(Promise.resolve([{ calendarId: req.params.calendarId, token: req.query.token }]));
 
       controller.downloadIcsFile(req, res);
+
+      expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
+      expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+      expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
     });
   });
 
-  describe('the generateJWTforSecretLink function', function() {
-    it('should return 500 when it failed to generate the token', function(done) {
-      const error = new Error('I failed to generate the token');
-      const req = {
-        body: {
-          calendarHomeId: 'calendarHomeId'
-        }
-      };
-      const authMock = {
-        jwt: {
-          generateWebToken: function(p, callback) {
-            expect(p).to.shallowDeepEqual(req.body);
+  describe('the getSecretLink function', function() {
+    let token, controller;
 
-            callback(error);
-          }
-        }
-      };
-      const res = {
-        status: function(status) {
-          expect(status).to.equal(500);
+    beforeEach(function() {
+      token = 'dsdf823fh98dya';
 
-          return {
-            json: function(result) {
-              expect(result).to.shallowDeepEqual({
-                error: {
-                  code: 500,
-                  message: 'Error when trying to generate a token for the secret link',
-                  details: 'I failed to generate the token'
-                }
-              });
-              done();
-            }
-          };
-        }
-      };
+      mockery.registerMock('short-uuid', { generate: () => token });
 
-      this.moduleHelpers.addDep('auth', authMock);
-      this.module = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
-      this.module.generateJWTforSecretLink(req, res)
-        .then(() => done(new Error('Error when trying to generate a token for the secret link')))
-        .catch(err => {
-          expect(err.message).to.equal(error.message);
-          done();
-        });
+      controller = require(`${this.moduleHelpers.backendPath}/webserver/api/calendar/controller`)(this.moduleHelpers.dependencies);
     });
 
-    it('should return 500 when an error happens while setting the config for user', function(done) {
-      const req = {
-        body: {
-          calendarHomeId: 'calendarHomeId',
-          calendarId: 'calendarId',
-          userId: 'userId'
-        }
-      };
-      const authMock = {
-        jwt: {
-          generateWebToken: function(p, callback) {
-            expect(p).to.shallowDeepEqual(req.body);
-
-            callback(null, 'token');
+    describe('when shouldResetLink === false', function() {
+      it('should return 500 when it fails to get the user\'s settings', function(done) {
+        const error = new Error('Something went wrong');
+        const req = {
+          query: {},
+          params: {
+            calendarHomeId: 'calendarHomeId',
+            calendarId: 'calendarId'
           }
-        }
-      };
-      const res = {
-        status(code) {
-          expect(code).to.equal(500);
+        };
 
-          return {
-            json: function(result) {
-              expect(forUserMock.set).to.have.been.calledWith('secretLinkSettings', [{ calendarId: req.body.calendarId, token: 'token' }]);
-              expect(result).to.deep.equal({
-                error: {
-                  code: 500,
-                  message: 'Can not generate token',
-                  details: 'An error occurred'
-                }
-              });
-              done();
-            }
-          };
-        }
-      };
+        forUserMock.get = sinon.stub().returns(Promise.reject(error));
 
-      forUserMock.set = sinon.stub().returns(Promise.reject(new Error('An error occurred')));
+        const res = {
+          status: function(status) {
+            expect(status).to.equal(500);
 
-      this.moduleHelpers.addDep('auth', authMock);
-      this.module = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
-      this.module.generateJWTforSecretLink(req, res);
-    });
-
-    it('should generate a token for the secret link', function(done) {
-      const req = {
-        body: {
-          calendarHomeId: 'calendarHomeId',
-          calendarId: 'calendarId',
-          userId: 'userId'
-        }
-      };
-      const authMock = {
-        jwt: {
-          generateWebToken: function(p, callback) {
-            expect(p).to.shallowDeepEqual(req.body);
-
-            callback(null, 'token');
+            return {
+              json: function(result) {
+                expect(result).to.deep.equal({
+                  error: {
+                    code: 500,
+                    message: 'Can not get the secret link',
+                    details: error.message
+                  }
+                });
+                done();
+              }
+            };
           }
-        }
-      };
-      const res = {
-        status(code) {
-          expect(code).to.equal(200);
+        };
 
-          return {
-            json: function(result) {
-              expect(result.token).to.equal('token');
-              done();
-            }
-          };
-        }
-      };
+        controller.getSecretLink(req, res);
 
-      forUserMock.set = sinon.spy(function(nameConfig, param) {
-        expect(nameConfig).to.equal('secretLinkSettings');
-        expect(param).to.deep.equal([{ calendarId: req.body.calendarId, token: 'token' }]);
-
-        return q.when();
+        expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
+        expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+        expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
       });
 
-      this.moduleHelpers.addDep('auth', authMock);
-      this.module = require(this.calendarModulePath + '/backend/webserver/api/calendar/controller')(this.moduleHelpers.dependencies);
-      this.module.generateJWTforSecretLink(req, res);
+      it('should return 500 when it fails to set the user\'s settings when getting a new secret link', function(done) {
+        const error = new Error('Something went wrong');
+        const req = {
+          query: {},
+          params: {
+            calendarHomeId: 'calendarHomeId',
+            calendarId: 'calendarId'
+          }
+        };
+
+        forUserMock.get = sinon.stub().returns(Promise.resolve([]));
+        forUserMock.set = sinon.stub().returns(Promise.reject(error));
+
+        const res = {
+          status: function(status) {
+            expect(status).to.equal(500);
+
+            return {
+              json: function(result) {
+                expect(result).to.deep.equal({
+                  error: {
+                    code: 500,
+                    message: 'Can not get the secret link',
+                    details: error.message
+                  }
+                });
+                expect(forUserMock.set).to.have.been.calledWith('secretLinkSettings', [{
+                  calendarId: req.params.calendarId,
+                  token
+                }]);
+                done();
+              }
+            };
+          }
+        };
+
+        controller.getSecretLink(req, res);
+
+        expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
+        expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+        expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
+      });
+
+      it('should return 200 with the secret link when it succeeds in getting the existing secret link', function(done) {
+        const req = {
+          query: {},
+          params: {
+            calendarHomeId: 'calendarHomeId',
+            calendarId: 'calendarId'
+          }
+        };
+
+        forUserMock.get = sinon.stub().returns(Promise.resolve([{
+          calendarId: req.params.calendarId,
+          token
+        }]));
+
+        const res = {
+          status: function(status) {
+            expect(status).to.equal(200);
+
+            return {
+              json: function(result) {
+                expect(result).to.deep.equal({ secretLink: `baseUrl/calendar/api/calendars/${req.params.calendarHomeId}/${req.params.calendarId}/calendar.ics?token=${token}` });
+                expect(forUserMock.set).to.have.not.been.called;
+                done();
+              }
+            };
+          }
+        };
+
+        controller.getSecretLink(req, res);
+
+        expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
+        expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+        expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
+      });
+
+      it('should return 200 with a newly generated secret link when it does not find an existing secret link', function(done) {
+        const req = {
+          query: {},
+          params: {
+            calendarHomeId: 'calendarHomeId',
+            calendarId: 'calendarId'
+          }
+        };
+
+        forUserMock.get = sinon.stub().returns(Promise.resolve([{
+          calendarId: req.params.calendarId
+        }]));
+
+        const res = {
+          status: function(status) {
+            expect(status).to.equal(200);
+
+            return {
+              json: function(result) {
+                expect(result).to.deep.equal({ secretLink: `baseUrl/calendar/api/calendars/${req.params.calendarHomeId}/${req.params.calendarId}/calendar.ics?token=${token}` });
+                expect(forUserMock.set).to.have.been.calledWith('secretLinkSettings', [{
+                  calendarId: req.params.calendarId,
+                  token
+                }]);
+                done();
+              }
+            };
+          }
+        };
+
+        controller.getSecretLink(req, res);
+
+        expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
+        expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+        expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
+      });
+    });
+
+    describe('when shouldResetLink === true', function() {
+      it('should return 500 when it fails to set the user\'s settings when getting a new secret link', function(done) {
+        const error = new Error('Something went wrong');
+        const req = {
+          query: { shouldResetLink: 'true' },
+          params: {
+            calendarHomeId: 'calendarHomeId',
+            calendarId: 'calendarId'
+          }
+        };
+
+        forUserMock.set = sinon.stub().returns(Promise.reject(error));
+
+        const res = {
+          status: function(status) {
+            expect(status).to.equal(500);
+
+            return {
+              json: function(result) {
+                expect(result).to.deep.equal({
+                  error: {
+                    code: 500,
+                    message: 'Can not get the secret link',
+                    details: error.message
+                  }
+                });
+                expect(forUserMock.set).to.have.been.calledWith('secretLinkSettings', [{
+                  calendarId: req.params.calendarId,
+                  token
+                }]);
+                done();
+              }
+            };
+          }
+        };
+
+        controller.getSecretLink(req, res);
+
+        expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
+        expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+        expect(forUserMock.get).to.have.not.been.called;
+      });
+
+      it('should return 200 with a newly generated secret link', function(done) {
+        const req = {
+          query: { shouldResetLink: 'true' },
+          params: {
+            calendarHomeId: 'calendarHomeId',
+            calendarId: 'calendarId'
+          }
+        };
+
+        const res = {
+          status: function(status) {
+            expect(status).to.equal(200);
+
+            return {
+              json: function(result) {
+                expect(result).to.deep.equal({ secretLink: `baseUrl/calendar/api/calendars/${req.params.calendarHomeId}/${req.params.calendarId}/calendar.ics?token=${token}` });
+                expect(forUserMock.set).to.have.been.calledWith('secretLinkSettings', [{
+                  calendarId: req.params.calendarId,
+                  token
+                }]);
+                done();
+              }
+            };
+          }
+        };
+
+        controller.getSecretLink(req, res);
+
+        expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
+        expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+        expect(forUserMock.get).to.have.not.been.called;
+      });
     });
   });
 });
