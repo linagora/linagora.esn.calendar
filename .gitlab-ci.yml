@@ -11,7 +11,6 @@ stages:
   paths:
     - node_modules
     - frontend/components
-  policy: pull-push
 
 .test-template: &test-template
   image: node:10-stretch
