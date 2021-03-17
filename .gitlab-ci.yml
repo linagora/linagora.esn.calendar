@@ -6,6 +6,9 @@ stages:
   - deploy
   - release
 
+variables:
+  CACHE_FALLBACK_KEY: fallback-key
+
 .cache-tpl: &cache-tpl
   key: "$CI_COMMIT_REF_SLUG"
   paths:
