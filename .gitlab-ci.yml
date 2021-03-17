@@ -39,7 +39,6 @@ prepare:
     - docker
   cache:
     <<: *cache-tpl
-    policy: pull
   script:
     - npm install
     # Weird behaviour: at the time, npm postinstall was not called.
