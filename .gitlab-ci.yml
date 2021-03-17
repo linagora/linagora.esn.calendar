@@ -11,7 +11,7 @@ stages:
   paths:
     - node_modules
     - frontend/components
-  policy: pull
+  policy: pull-push
 
 .test-template: &test-template
   image: node:10-stretch
@@ -39,7 +39,7 @@ prepare:
     - docker
   cache:
     <<: *cache-tpl
-    policy: pull-push
+    policy: pull
   script:
     - npm install
     # Weird behaviour: at the time, npm postinstall was not called.
