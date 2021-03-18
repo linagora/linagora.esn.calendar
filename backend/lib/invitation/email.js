@@ -2,6 +2,7 @@ const ICAL = require('@linagora/ical.js');
 const path = require('path');
 const { promisify } = require('util');
 const mjml2html = require('mjml');
+const momentTimezone = require('moment-timezone');
 const { jcal2content } = require('./../helpers/jcal');
 const { isValidURL, isAbsoluteURL } = require('../helpers/url');
 const emailHelpers = require('./../helpers/email');
@@ -28,7 +29,7 @@ module.exports = dependencies => {
     replyFromExternalUser
   };
 
-  function sendNotificationEmails({ sender, senderEmail, recipientEmail, method, ics, oldIcs, calendarURI, isNewEvent } = {}) {
+  function sendNotificationEmails({ sender, senderEmail, recipientEmail, method, ics, oldIcs, calendarURI, isNewEvent, changes } = {}) {
     const validationError = _validateMessage({ recipientEmail, method, ics, calendarURI });
 
     if (validationError) return Promise.reject(validationError);
@@ -56,11 +57,11 @@ module.exports = dependencies => {
 
         if (!recipient) {
           return esnDatetimeConfig.forUser(emailSender, true).get()
-            .then(datetimeOptions => _sendToRecipient({ method, ics, oldIcs, sender: emailSender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }));
+            .then(datetimeOptions => _sendToRecipient({ method, ics, oldIcs, sender: emailSender, recipient, recipientEmail, domain, baseURL, isNewEvent, changes, calendarURI, mailer, datetimeOptions }));
         }
 
         return esnDatetimeConfig.forUser(recipient, true).get()
-          .then(datetimeOptions => _sendToRecipient({ method, ics, oldIcs, sender: emailSender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }));
+          .then(datetimeOptions => _sendToRecipient({ method, ics, oldIcs, sender: emailSender, recipient, recipientEmail, domain, baseURL, isNewEvent, changes, calendarURI, mailer, datetimeOptions }));
       });
     }
   }
@@ -119,7 +120,7 @@ module.exports = dependencies => {
     });
   }
 
-  function _sendToRecipient({ method, ics, oldIcs, sender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }) {
+  function _sendToRecipient({ method, ics, oldIcs, sender, recipient, recipientEmail, domain, baseURL, isNewEvent, changes, calendarURI, mailer, datetimeOptions }) {
     return _processorsHook({ method, ics, user: sender, recipient, recipientEmail, domain })
       .then(({ ics, emailContentOverrides }) => {
         const event = { ...jcal2content(ics, baseURL), ...emailContentOverrides };
@@ -165,7 +166,7 @@ module.exports = dependencies => {
                 ...content.event,
                 isLocationAValidURL: isValidURL(content.event.location),
                 isLocationAnAbsoluteURL: isAbsoluteURL(content.event.location),
-                ...emailEventHelper.getContentEventStartAndEnd({
+                ...emailEventHelper.getContentEventStartAndEndFromIcs({
                   ics,
                   isAllDay: content.event.allDay,
                   timezone,
@@ -176,6 +177,36 @@ module.exports = dependencies => {
 
               content.rawInviteMessage = metadata.inviteMessage;
 
+              if (method === 'REQUEST' && changes) {
+                let isAllDay;
+
+                if (changes.dtstart) isAllDay = changes.dtstart.previous.isAllDay;
+                else if (changes.dtend) isAllDay = changes.dtend.previous.isAllDay;
+
+                content.changes = changes;
+                content.changes.isOldEventAllDay = isAllDay;
+
+                if (content.changes.dtstart) {
+                  content.changes.dtstart.previous = { ...emailEventHelper.getContentEventStartAndEnd({
+                    start: momentTimezone.tz(content.changes.dtstart.previous.date, content.changes.dtstart.previous.timezone),
+                    isAllDay,
+                    timezone,
+                    use24hourFormat,
+                    locale
+                  }).start };
+                }
+
+                if (content.changes.dtend) {
+                  content.changes.dtend.previous = { ...emailEventHelper.getContentEventStartAndEnd({
+                    end: momentTimezone.tz(content.changes.dtend.previous.date, content.changes.dtend.previous.timezone),
+                    isAllDay,
+                    timezone,
+                    use24hourFormat,
+                    locale
+                  }).end };
+                }
+              }
+
               if (method === 'COUNTER' && oldIcs) {
                 const oldEvent = jcal2content(oldIcs, baseURL);
 
@@ -183,7 +214,7 @@ module.exports = dependencies => {
                   ...oldEvent,
                   isLocationAValidURL: isValidURL(oldEvent.location),
                   isLocationAnAbsoluteURL: isAbsoluteURL(oldEvent.location),
-                  ...emailEventHelper.getContentEventStartAndEnd({
+                  ...emailEventHelper.getContentEventStartAndEndFromIcs({
                     ics: oldIcs,
                     isAllDay: oldEvent.allDay,
                     timezone,
