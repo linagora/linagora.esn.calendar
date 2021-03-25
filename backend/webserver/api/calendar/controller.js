@@ -127,6 +127,8 @@ module.exports = dependencies => {
       if (err || response.statusCode < 200 || response.statusCode >= 300) {
         const statusCode = response && response.statusCode || 500;
 
+        logger.error(`Can not update participation due to an error while sending a GET request to fetch the event's data. statusCode = ${statusCode}. Error:`, err);
+
         return res.status(statusCode).json({
           error: {
             code: statusCode,
@@ -171,6 +173,8 @@ module.exports = dependencies => {
           tryUpdateParticipation(url, ESNToken, res, req, numTry);
         } else if (err || response.statusCode < 200 || response.statusCode >= 300) {
           const statusCode = response && response.statusCode || 500;
+
+          logger.error(`An error occurred while sending a PUT request to update participation. statusCode = ${statusCode}. Error:`, err);
 
           return res.status(statusCode).json({
             error: {
