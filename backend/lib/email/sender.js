@@ -127,6 +127,7 @@ module.exports = dependencies => {
                     headers
                   };
                   const event = jcalHelper.jcal2content(ics, baseURL);
+                  const icalEvent = jcalHelper.getIcalEvent(ics);
                   const content = { ...context, baseUrl: baseURL, event, seeInCalendarLink };
                   const { timeZone: timezone, use24hourFormat } = datetimeOptions;
 
@@ -135,7 +136,8 @@ module.exports = dependencies => {
                     isLocationAValidURL: isValidURL(content.event.location),
                     isLocationAnAbsoluteURL: isAbsoluteURL(content.event.location),
                     ...emailEventHelper.getContentEventStartAndEnd({
-                      ics,
+                      start: jcalHelper.getIcalDateAsMoment(icalEvent.startDate),
+                      end: jcalHelper.getIcalDateAsMoment(icalEvent.endDate),
                       isAllDay: content.event.allDay,
                       timezone,
                       use24hourFormat,
