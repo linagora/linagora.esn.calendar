@@ -172,6 +172,23 @@ describe('The email sender module', function() {
   });
 
   describe('The sendWithCustomTemplateFunction function', function() {
+    let icalEvent, startDateAsMoment, endDateAsMoment;
+
+    beforeEach(function() {
+      icalEvent = {
+        startDate: 'startDate',
+        endDate: 'endDate'
+      };
+
+      startDateAsMoment = { _i: 'start' };
+      endDateAsMoment = { _i: 'end' };
+
+      jcalHelper.getIcalEvent = sinon.stub().returns(icalEvent);
+      jcalHelper.getIcalDateAsMoment = sinon.stub();
+      jcalHelper.getIcalDateAsMoment.onCall(0).returns(startDateAsMoment);
+      jcalHelper.getIcalDateAsMoment.onCall(1).returns(endDateAsMoment);
+    });
+
     it('should reject when getBaseUrl rejects', function(done) {
       helpers.config.getBaseUrl = function(arg, callback) {
         expect(arg).to.be.null;
@@ -244,8 +261,12 @@ describe('The email sender module', function() {
           expect(userModule.findByEmail).to.have.been.calledWith(to);
           expect(i18nModule.getI18nForMailer).to.have.been.calledWith(user);
           expect(jcalHelper.jcal2content).to.have.been.calledWith(ics, baseUrl);
+          expect(jcalHelper.getIcalEvent).to.have.been.calledWith(ics);
+          expect(jcalHelper.getIcalDateAsMoment.getCall(0).args[0]).to.equal(icalEvent.startDate);
+          expect(jcalHelper.getIcalDateAsMoment.getCall(1).args[0]).to.equal(icalEvent.endDate);
           expect(getContentEventStartAndEndStub).to.have.been.calledWith({
-            ics,
+            start: startDateAsMoment,
+            end: endDateAsMoment,
             isAllDay: false,
             timezone: 'Asia/Ho_Chi_Minh',
             use24hourFormat: true,
@@ -329,8 +350,12 @@ describe('The email sender module', function() {
           expect(userModule.findByEmail).to.have.been.calledWith(to);
           expect(i18nModule.getI18nForMailer).to.have.been.calledWith(user);
           expect(jcalHelper.jcal2content).to.have.been.calledWith(ics, baseUrl);
+          expect(jcalHelper.getIcalEvent).to.have.been.calledWith(ics);
+          expect(jcalHelper.getIcalDateAsMoment.getCall(0).args[0]).to.equal(icalEvent.startDate);
+          expect(jcalHelper.getIcalDateAsMoment.getCall(1).args[0]).to.equal(icalEvent.endDate);
           expect(getContentEventStartAndEndStub).to.have.been.calledWith({
-            ics,
+            start: startDateAsMoment,
+            end: endDateAsMoment,
             isAllDay: false,
             timezone: 'Asia/Ho_Chi_Minh',
             use24hourFormat: true,
@@ -426,9 +451,16 @@ describe('The email sender module', function() {
           expect(i18nModule.getI18nForMailer.getCall(1).args[0]).to.deep.equal(user);
           expect(jcalHelper.jcal2content).to.have.been.calledTwice;
           expect(jcalHelper.jcal2content).to.have.been.calledWith(ics, baseUrl);
+          expect(jcalHelper.getIcalEvent).to.have.been.calledTwice;
+          expect(jcalHelper.getIcalEvent).to.have.been.calledWith(ics);
+          expect(jcalHelper.getIcalDateAsMoment.getCall(0).args[0]).to.equal(icalEvent.startDate);
+          expect(jcalHelper.getIcalDateAsMoment.getCall(1).args[0]).to.equal(icalEvent.endDate);
+          expect(jcalHelper.getIcalDateAsMoment.getCall(2).args[0]).to.equal(icalEvent.startDate);
+          expect(jcalHelper.getIcalDateAsMoment.getCall(3).args[0]).to.equal(icalEvent.endDate);
           expect(getContentEventStartAndEndStub).to.have.been.calledTwice;
           expect(getContentEventStartAndEndStub).to.have.been.calledWith({
-            ics,
+            start: startDateAsMoment,
+            end: endDateAsMoment,
             isAllDay: false,
             timezone: 'Asia/Ho_Chi_Minh',
             use24hourFormat: true,
