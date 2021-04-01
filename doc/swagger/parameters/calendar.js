@@ -77,10 +77,4 @@
   *     description: a token of calendar.
   *     required: true
   *     type: string
-  *   secret_link_token:
-  *     name: token
-  *     in: query
-  *     description: a token to used in a secret link to download the ics file of a calendar
-  *     required: true
-  *     type: string
   */
