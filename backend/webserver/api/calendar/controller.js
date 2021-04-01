@@ -1,10 +1,10 @@
 const request = require('request');
 const urljoin = require('url-join');
-const shortUUID = require('short-uuid');
 const ICAL = require('@linagora/ical.js');
 const jcalHelper = require('../../../lib/helpers/jcal');
 const { promisify } = require('util');
 const MAX_TRY_NUMBER = 12;
+const extend = require('extend');
 
 module.exports = dependencies => {
   const logger = dependencies('logger');
@@ -13,15 +13,17 @@ module.exports = dependencies => {
   const configHelpers = dependencies('helpers').config;
   const userModule = dependencies('user');
   const invitation = require('../../../lib/invitation')(dependencies);
+  const auth = dependencies('auth');
 
   const findUserByEmail = promisify(userModule.findByEmail);
+  const findUserById = promisify(userModule.get);
   const getBaseUrl = promisify(configHelpers.getBaseUrl);
 
   return {
     dispatchEvent,
     changeParticipation,
     downloadIcsFile,
-    getSecretLink
+    generateJWTforSecretLink
   };
 
   function dispatchEvent(req, res) {
@@ -196,20 +198,23 @@ module.exports = dependencies => {
 
   function downloadIcsFile(req, res) {
     const ESNToken = req.token && req.token.token ? req.token.token : '';
-    const url = urljoin(req.davserver, 'calendars', req.params.calendarHomeId, req.params.calendarId + '?export');
+    const url = urljoin(req.davserver, 'calendars', req.linkPayload.calendarHomeId, req.linkPayload.calendarId + '?export');
 
-    const secretLinkTokenEsnConfig = esnConfig('secretLinkToken').inModule('linagora.esn.calendar').forUser(req.user);
+    findUserById(req.user._id)
+      .then(user => {
+        const secretLinkTokenEsnConfig = esnConfig('secretLinkToken').inModule('linagora.esn.calendar').forUser(user);
 
-    secretLinkTokenEsnConfig.get('secretLinkSettings')
+        return secretLinkTokenEsnConfig.get('secretLinkSettings');
+      })
       .then(secretLinks => {
-        const secretLinkSettingForCalendar = secretLinks.find(({ calendarId }) => calendarId === req.params.calendarId);
+        const secretLinkSettingForCalendar = secretLinks.find(({ calendarId }) => calendarId === req.linkPayload.calendarId);
 
-        if (!secretLinkSettingForCalendar || secretLinkSettingForCalendar.token !== req.query.token) {
+        if (secretLinkSettingForCalendar && secretLinkSettingForCalendar.token !== req.query.jwt) {
           return res.status(403).json({
             error: {
               code: 403,
-              message: 'Forbidden',
-              details: 'Forbidden'
+              message: 'Unauthorized',
+              details: 'Unauthorized'
             }
           });
         }
@@ -231,8 +236,7 @@ module.exports = dependencies => {
 
           const icsFile = response.body;
 
-          res.setHeader('Content-Disposition', 'attachment;filename=calendar.ics');
-          res.setHeader('Content-type', 'text/calendar');
+          res.setHeader('Content-Disposition', 'attachment;filename=MyCalendar.ics');
 
           return res.status(200).json(icsFile);
         });
@@ -250,65 +254,40 @@ module.exports = dependencies => {
       });
   }
 
-  function getSecretLink(req, res) {
-    const { shouldResetLink } = req.query;
-    const secretLinkTokenEsnConfig = esnConfig('secretLinkToken').inModule('linagora.esn.calendar').forUser(req.user);
+  function generateJWTforSecretLink(req, res) {
+    const payload = {};
+    const jwtPayload = req.body;
 
-    if (shouldResetLink === 'true') {
-      return _getNewSecretLink();
-    }
+    extend(true, payload, jwtPayload);
 
-    return secretLinkTokenEsnConfig.get('secretLinkSettings')
-      .then(secretLinks => {
-        const secretLinkSettingForCalendar = secretLinks.find(({ calendarId }) => calendarId === req.params.calendarId);
+    auth.jwt.generateWebToken(payload, (err, token) => {
+      if (err) {
+        logger.error('Error when trying to generate a token for the secret link', err);
 
-        if (secretLinkSettingForCalendar && secretLinkSettingForCalendar.token) {
-          return getBaseUrl(null)
-            .then(baseUrl => {
-              const secretLink = `${baseUrl}/calendar/api/calendars/${req.params.calendarHomeId}/${req.params.calendarId}/calendar.ics?token=${secretLinkSettingForCalendar.token}`;
+        return res.status(500).json({ error: { code: 500, message: 'Error when trying to generate a token for the secret link', details: err.message } });
+      }
 
-              return res.status(200).json({ secretLink });
-            });
-        }
+      // save the token in the esnConfig
+      const secretLinkTokenEsnConfig = esnConfig('secretLinkToken').inModule('linagora.esn.calendar').forUser(req.user);
 
-        return _getNewSecretLink();
-      })
-      .catch(err => {
-        logger.error('Can not get the secret link due to an unexpected error', err);
-
-        res.status(500).json({
-          error: {
-            code: 500,
-            message: 'Can not get the secret link',
-            details: err.message || 'Can not get secret link'
-          }
-        });
-      });
-
-    function _getNewSecretLink() {
-      const token = shortUUID.generate();
-
-      return secretLinkTokenEsnConfig.set('secretLinkSettings', [{
-        calendarId: req.params.calendarId,
+      secretLinkTokenEsnConfig.set('secretLinkSettings', [{
+        calendarId: payload.calendarId,
         token
       }])
-        .then(() => getBaseUrl(null))
-        .then(baseUrl => {
-          const secretLink = `${baseUrl}/calendar/api/calendars/${req.params.calendarHomeId}/${req.params.calendarId}/calendar.ics?token=${token}`;
-
-          res.status(200).json({ secretLink });
+        .then(() => {
+          res.status(200).json({ token });
         })
         .catch(err => {
-          logger.error('Can not get the secret link due to an unexpected error', err);
+          logger.error('Can not generate a token for the secret link due to an unexpected error', err);
 
           res.status(500).json({
             error: {
               code: 500,
-              message: 'Can not get the secret link',
-              details: err.message || 'Can not get secret link'
+              message: 'Can not generate token',
+              details: err.message || 'Can not generate token'
             }
           });
         });
-    }
+    });
   }
 };
