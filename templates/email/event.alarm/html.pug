@@ -68,7 +68,7 @@ html.mail
             td.indent
               img(src="cid:account-multiple", alt=translate('Attendees'))
             td(colspan="5")
-              include ../mixins/attendees.pug
+              include ../mixins/old/attendees.pug
               +displayAttendees(content.event.attendees)
 
           if (content.event.description)
