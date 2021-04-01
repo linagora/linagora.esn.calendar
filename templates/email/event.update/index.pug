@@ -5,4 +5,171 @@ mjml
     include ../event.invitation/style.pug
     mj-style(inline='inline')
       | .invitation-title-container { background: #fffcde; border-radius: 4px; border: 1px solid #fffcde; }
-  include ../event.invitation/body.pug
+  mj-body
+    mj-wrapper(padding-bottom='0')
+      mj-section(padding-top='0' padding-bottom='0')
+        mj-column(width='100%' css-class='invitation-title-container' padding-top='4px' padding-bottom='4px')
+          mj-text(font-size='16px' color='#222222' padding='0' padding-left='20px' padding-right='20px' padding-top='8px' padding-bottom='8px')
+            span(style='font-weight: 500;') #{content.event.organizer.cn}
+            span &nbsp;#{content.inviteMessage}
+        mj-column(width='100%' css-class='content')
+          if (content.changes && content.changes.summary)
+            mj-text(font-size='20px' color='#434343' font-weight='500' padding='20px')
+              span(style="color: orange; font-weight: bold;") #{translate('Changed')}:&nbsp;
+              if (content.changes.summary.previous)
+                span(style="text-decoration: line-through;") #{content.changes.summary.previous}
+              else
+                span(style="text-decoration: line-through;") #{translate('No title')}
+              span &nbsp;➡&nbsp;
+              if (content.event.summary)
+                span #{content.event.summary}
+              else
+                span #{translate('No title')}
+          else
+            mj-text(font-size='20px' color='#434343' font-weight='500' padding='20px')
+              if (content.event.summary)
+                span #{content.event.summary}
+              else
+                span #{translate('No title')}
+          mj-table(font-size='14px' color='#434343' cellpadding='4px' padding='20px' padding-top='0px')
+            tr
+              td(valign='top' style='min-width: 80px;')
+                strong #{translate('Time')}
+              td
+                if ((content.changes && content.changes.dtstart && content.changes.dtstart.previous.fullDateTime !== content.event.start.fullDateTime) || (content.changes.dtend && content.changes.dtend.previous.fullDateTime !== content.event.end.fullDateTime))
+                  span(style="color: orange; font-weight: bold;") #{translate('Changed')}:&nbsp;
+                  span(style="text-decoration: line-through; display: inline-block;")
+                    if (!content.changes.isOldEventAllDay)
+                      if (content.changes.dtstart && content.changes.dtend)
+                        if (content.changes.dtstart.previous.date === content.changes.dtend.previous.date)
+                          | #{content.changes.dtstart.previous.fullDateTime} - #{content.changes.dtend.previous.time}
+                        else
+                          | #{content.changes.dtstart.previous.fullDateTime} - #{content.changes.dtend.previous.fullDateTime}
+                      else if (!content.changes.dtstart)
+                        if (content.event.start.date === content.changes.dtend.previous.date)
+                          | #{content.event.start.fullDateTime} - #{content.changes.dtend.previous.time}
+                        else
+                          | #{content.event.start.fullDateTime} - #{content.changes.dtend.previous.fullDateTime}
+                      else
+                        if (content.changes.dtstart.previous.date === content.event.end.date)
+                          | #{content.changes.dtstart.previous.fullDateTime} - #{content.event.end.time}
+                        else
+                          | #{content.changes.dtstart.previous.fullDateTime} - #{content.event.end.fullDateTime}
+                    else
+                      if (content.changes.dtstart && content.changes.dtend)
+                        if (content.changes.dtstart.previous.date === content.changes.dtend.previous.date)
+                          | #{content.changes.dtstart.previous.fullDate} (#{translate('All day')})
+                        else
+                          | #{content.changes.dtstart.previous.fullDate} - #{content.changes.dtend.previous.fullDate} (#{translate('All day')})
+                      else if (!content.changes.dtstart)
+                        if (content.event.start.date === content.changes.dtend.previous.date)
+                          | #{content.event.start.fullDate} (#{translate('All day')})
+                        else
+                          | #{content.event.start.fullDate} - #{content.changes.dtend.previous.fullDate} (#{translate('All day')})
+                      else
+                        if (content.changes.dtstart.previous.date === content.event.end.date)
+                          | #{content.changes.dtstart.previous.fullDate} (#{translate('All day')})
+                        else
+                          | #{content.changes.dtstart.previous.fullDate} - #{content.event.end.fullDate} (#{translate('All day')})
+                  span &nbsp;➡&nbsp;
+                if (!content.event.allDay)
+                  span(style='display: inline-block;')
+                    if (content.event.start.date === content.event.end.date)
+                      | #{content.event.start.fullDateTime} - #{content.event.end.time}
+                    else
+                      | #{content.event.start.fullDateTime} - #{content.event.end.fullDateTime}
+                  span(style='color: #787878; font-weight: 400; display: inline-block;') &nbsp;#{content.event.start.timezone}
+                else
+                  span(style='display: inline-block;')
+                    if (content.event.start.date === content.event.end.date)
+                      | #{content.event.start.fullDate} (#{translate('All day')})
+                    else
+                      | #{content.event.start.fullDate} - #{content.event.end.fullDate} (#{translate('All day')})
+                if (content.seeInCalendarLink)
+                  | &nbsp;(
+                  a.link(href=content.seeInCalendarLink) #{translate('See in Calendar')}
+                  | )
+            if (content.event.location)
+              tr
+                td(style="min-width: 96px;" valign='top')
+                  strong #{translate('Location')}
+                td
+                  if (content.changes && content.changes.location)
+                    if (content.changes.location.previous)
+                      span(style="color: orange; font-weight: bold;") #{translate('Changed')}:&nbsp;
+                      span(style="text-decoration: line-through;") #{content.changes.location.previous}
+                      span &nbsp;➡&nbsp;
+                    else
+                      span(style="color: green; font-weight: bold;") #{translate('Added')}:&nbsp;
+                  if (content.event.isLocationAValidURL)
+                    if (content.event.isLocationAnAbsoluteURL)
+                      a.link(href=content.event.location) #{content.event.location}
+                    else
+                      a.link(href=`//${content.event.location}`) #{content.event.location}
+                  else
+                    | #{content.event.location} (
+                    a(href=`https://www.openstreetmap.org/search?query=${content.event.location}`) #{translate('See in Map')}
+                    | )
+            else if (content.changes && content.changes.location && content.changes.location.previous)
+              tr
+                td(style="min-width: 96px;" valign='top')
+                  strong #{translate('Location')}
+                td
+                  span(style="color: red; font-weight: bold;") #{translate('Removed')}:&nbsp;
+                  span(style="text-decoration: line-through;") #{content.changes.location.previous}
+            tr
+              td(valign='top')
+                strong #{translate('Attendees')}
+              td
+                include ../mixins/attendees.pug
+                +displayAttendees(content.event.attendees, content.event.organizer)
+            if (content.event.hasResources)
+              tr
+                td(valign='top')
+                  strong #{translate('Resources')}
+                td
+                  include ../mixins/resources.pug
+                  +displayResources(content.event.resources)
+            if (content.event.description)
+              tr
+                td(valign='top')
+                  strong #{translate('Notes')}
+                td
+                  if (content.changes && content.changes.description)
+                    if (content.changes.description.previous)
+                      span(style="color: orange; font-weight: bold;") #{translate('Changed')}:&nbsp;
+                      span(style="text-decoration: line-through;") #{content.changes.description.previous}
+                      span &nbsp;➡&nbsp;
+                    else
+                      span(style="color: green; font-weight: bold;") #{translate('Added')}:&nbsp;
+                  span #{content.event.description}
+            else if (content.changes && content.changes.description && content.changes.description.previous)
+              tr
+                td(valign='top')
+                  strong #{translate('Notes')}
+                td
+                  span(style="color: red; font-weight: bold;") #{translate('Removed')}:&nbsp;
+                  span(style="text-decoration: line-through;") #{content.changes.description.previous}
+          if (content.method !== 'CANCEL')
+            mj-table(css-class='part-table' padding='20px' padding-top='16px' padding-bottom='16px')
+              tr
+                td.part-message-container(colspan='3' style='padding-bottom: 12px;') #{translate('Will you attend this event?')}
+              tr
+                td.part-button-container
+                  a.part-button(href=content.yes)
+                    span(style='color: green; font-size: 18px;') &nbsp;&check;&nbsp;
+                    | &nbsp;#{translate('Yes')}&nbsp;
+                td.part-button-container
+                  a.part-button(href=content.maybe)
+                    span(style='color: orange; font-weight: 500;') &nbsp;?&nbsp;
+                    | &nbsp;#{translate('Maybe')}&nbsp;
+                td.part-button-container
+                  a.part-button(href=content.no)
+                    span(style='color: red; font-size: 18px;') &nbsp;&#x2715;&nbsp;
+                    | &nbsp;#{translate('No')}&nbsp;
+                td.part-button-container--last &nbsp;
+    mj-wrapper
+      mj-section(padding='0')
+        mj-column(width='100%')
+          mj-text(padding='12px' css-class='warning-text' font-size='12px' color='#808080')
+            | &#x26A0; #{translate('Forwarding this invitation could allow any recipient to send a response to the organizer and be added to the guest list, or invite others regardless of their own invitation status, or to modify your RSVP.')}

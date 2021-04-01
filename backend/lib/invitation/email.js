@@ -2,7 +2,8 @@ const ICAL = require('@linagora/ical.js');
 const path = require('path');
 const { promisify } = require('util');
 const mjml2html = require('mjml');
-const { jcal2content, getIcalDateAsMoment, getIcalEvent } = require('./../helpers/jcal');
+const momentTimezone = require('moment-timezone');
+const { jcal2content } = require('./../helpers/jcal');
 const { isValidURL, isAbsoluteURL } = require('../helpers/url');
 const emailHelpers = require('./../helpers/email');
 const TEMPLATES_PATH = path.resolve(__dirname, '../../../templates/email');
@@ -13,10 +14,10 @@ module.exports = dependencies => {
   const configHelpers = dependencies('helpers').config;
   const emailModule = dependencies('email');
   const esnConfig = dependencies('esn-config');
-  const datetimeHelpers = require('../helpers/datetime')(dependencies);
   const i18nLib = require('./../i18n')(dependencies);
   const invitationLink = require('./link')(dependencies);
   const linksHelper = require('../helpers/links')(dependencies);
+  const emailEventHelper = require('../helpers/email-event')(dependencies);
   const processors = require('./processors')(dependencies);
 
   const getBaseURL = promisify(configHelpers.getBaseUrl);
@@ -28,7 +29,7 @@ module.exports = dependencies => {
     replyFromExternalUser
   };
 
-  function sendNotificationEmails({ sender, senderEmail, recipientEmail, method, ics, calendarURI, isNewEvent } = {}) {
+  function sendNotificationEmails({ sender, senderEmail, recipientEmail, method, ics, oldIcs, calendarURI, isNewEvent, changes } = {}) {
     const validationError = _validateMessage({ recipientEmail, method, ics, calendarURI });
 
     if (validationError) return Promise.reject(validationError);
@@ -56,11 +57,11 @@ module.exports = dependencies => {
 
         if (!recipient) {
           return esnDatetimeConfig.forUser(emailSender, true).get()
-            .then(datetimeOptions => _sendToRecipient({ method, ics, sender: emailSender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }));
+            .then(datetimeOptions => _sendToRecipient({ method, ics, oldIcs, sender: emailSender, recipient, recipientEmail, domain, baseURL, isNewEvent, changes, calendarURI, mailer, datetimeOptions }));
         }
 
         return esnDatetimeConfig.forUser(recipient, true).get()
-          .then(datetimeOptions => _sendToRecipient({ method, ics, sender: emailSender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }));
+          .then(datetimeOptions => _sendToRecipient({ method, ics, oldIcs, sender: emailSender, recipient, recipientEmail, domain, baseURL, isNewEvent, changes, calendarURI, mailer, datetimeOptions }));
       });
     }
   }
@@ -119,7 +120,7 @@ module.exports = dependencies => {
     });
   }
 
-  function _sendToRecipient({ method, ics, sender, recipient, recipientEmail, domain, baseURL, isNewEvent, calendarURI, mailer, datetimeOptions }) {
+  function _sendToRecipient({ method, ics, oldIcs, sender, recipient, recipientEmail, domain, baseURL, isNewEvent, changes, calendarURI, mailer, datetimeOptions }) {
     return _processorsHook({ method, ics, user: sender, recipient, recipientEmail, domain })
       .then(({ ics, emailContentOverrides }) => {
         const event = { ...jcal2content(ics, baseURL), ...emailContentOverrides };
@@ -160,52 +161,74 @@ module.exports = dependencies => {
               recipientEmail
             }).then(content => {
               const { timeZone: timezone, use24hourFormat } = datetimeOptions;
-              const convertTzOptions = { timezone, locale, use24hourFormat };
-              const icalEvent = getIcalEvent(ics);
-              const {
-                date: startDateString,
-                time: startTimeString,
-                fullDate: startFullDateString,
-                fullDateTime: startFullDateTimeString
-              } = datetimeHelpers.formatDatetime(getIcalDateAsMoment(icalEvent.startDate), convertTzOptions);
-              const {
-                date: endDateString,
-                time: endTimeString,
-                fullDate: endFullDateString,
-                fullDateTime: endFullDateTimeString
-              } = datetimeHelpers.formatDatetime(content.event.allDay ? getIcalDateAsMoment(icalEvent.endDate).subtract(1, 'day') : getIcalDateAsMoment(icalEvent.endDate), convertTzOptions);
 
               content.event = {
                 ...content.event,
                 isLocationAValidURL: isValidURL(content.event.location),
                 isLocationAnAbsoluteURL: isAbsoluteURL(content.event.location),
-                start: {
-                  date: startDateString,
-                  time: startTimeString,
-                  fullDate: startFullDateString,
-                  fullDateTime: startFullDateTimeString,
-                  timezone
-                },
-                end: {
-                  date: endDateString,
-                  time: endTimeString,
-                  fullDate: endFullDateString,
-                  fullDateTime: endFullDateTimeString,
-                  timezone
-                }
+                ...emailEventHelper.getContentEventStartAndEndFromIcs({
+                  ics,
+                  isAllDay: content.event.allDay,
+                  timezone,
+                  use24hourFormat,
+                  locale
+                })
               };
 
               content.rawInviteMessage = metadata.inviteMessage;
+
+              if (method === 'REQUEST' && changes) {
+                let isAllDay;
+
+                if (changes.dtstart) isAllDay = changes.dtstart.previous.isAllDay;
+                else if (changes.dtend) isAllDay = changes.dtend.previous.isAllDay;
+
+                content.changes = changes;
+                content.changes.isOldEventAllDay = isAllDay;
+
+                if (content.changes.dtstart) {
+                  content.changes.dtstart.previous = { ...emailEventHelper.getContentEventStartAndEnd({
+                    start: momentTimezone.tz(content.changes.dtstart.previous.date, content.changes.dtstart.previous.timezone),
+                    isAllDay,
+                    timezone,
+                    use24hourFormat,
+                    locale
+                  }).start };
+                }
+
+                if (content.changes.dtend) {
+                  content.changes.dtend.previous = { ...emailEventHelper.getContentEventStartAndEnd({
+                    end: momentTimezone.tz(content.changes.dtend.previous.date, content.changes.dtend.previous.timezone),
+                    isAllDay,
+                    timezone,
+                    use24hourFormat,
+                    locale
+                  }).end };
+                }
+              }
+
+              if (method === 'COUNTER' && oldIcs) {
+                const oldEvent = jcal2content(oldIcs, baseURL);
+
+                content.oldEvent = {
+                  ...oldEvent,
+                  isLocationAValidURL: isValidURL(oldEvent.location),
+                  isLocationAnAbsoluteURL: isAbsoluteURL(oldEvent.location),
+                  ...emailEventHelper.getContentEventStartAndEndFromIcs({
+                    ics: oldIcs,
+                    isAllDay: oldEvent.allDay,
+                    timezone,
+                    use24hourFormat,
+                    locale
+                  })
+                };
+              }
 
               return mailer.sendWithCustomTemplateFunction({
                 message,
                 template,
                 templateFn: _mjmlTemplateFunction,
-                locals: {
-                  content,
-                  translate,
-                  filter: emailHelpers.filterEventAttachments(event)
-                }
+                locals: { content, translate }
               });
             });
           });

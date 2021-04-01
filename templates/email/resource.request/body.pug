@@ -1,10 +1,11 @@
 mj-body
-  mj-wrapper(padding-bottom='0')
+  mj-wrapper(padding-bottom='32px')
     mj-section(padding-top='0' padding-bottom='0')
-      mj-column(width='100%' css-class='reply-title-container' padding-top='4px' padding-bottom='4px')
+      mj-column(width='100%' css-class='resource-request-title-container' padding-top='4px' padding-bottom='4px')
         mj-text(font-size='16px' color='#222222' padding='0' padding-left='20px' padding-right='20px' padding-top='8px' padding-bottom='8px')
-          span(style='font-weight: 500;') #{content.editor.displayName}
-          span &nbsp;#{content.inviteMessage}
+          span(style='font-weight: 500;') #{content.event.organizer.cn}
+          span &nbsp;#{translate('has requested to book the resource')}
+          span &nbsp;#{content.resource.name}
       mj-column(width='100%' css-class='content')
         mj-text(font-size='20px' color='#434343' font-weight='500' padding='20px') #{content.event.summary}
         mj-table(font-size='14px' color='#434343' cellpadding='4px' padding='20px' padding-top='0px')
@@ -18,7 +19,7 @@ mj-body
                     | #{content.event.start.fullDateTime} - #{content.event.end.time}
                   else
                     | #{content.event.start.fullDateTime} - #{content.event.end.fullDateTime}
-                span(style='color: #787878; font-weight: 400; display: inline-block;') &nbsp;#{content.event.start.timezone}
+                span(style='display: inline-block; color: #787878; font-weight: 400;') &nbsp;#{content.event.start.timezone}
               else
                 span(style='display: inline-block;')
                   if (content.event.start.date === content.event.end.date)
@@ -61,3 +62,16 @@ mj-body
               td(valign='top')
                 strong #{translate('Notes')}
               td #{content.event.description}
+        mj-table(css-class='part-table' padding='20px' padding-top='16px' padding-bottom='16px')
+          tr
+            td.part-message-container(colspan='3' style='padding-bottom: 12px;') #{translate('Do you accept the request?')}
+          tr
+            td.part-button-container
+              a.part-button(href=content.links.yes)
+                span(style='color: green; font-size: 18px;') &nbsp;&check;&nbsp;
+                | &nbsp;#{translate('Accept')}&nbsp;
+            td.part-button-container
+              a.part-button(href=content.links.no)
+                span(style='color: red; font-size: 18px;') &nbsp;&#x2715;&nbsp;
+                | &nbsp;#{translate('Decline')}&nbsp;
+            td.part-button-container--last &nbsp;

@@ -6,12 +6,14 @@ stages:
   - deploy
   - release
 
+variables:
+  CACHE_FALLBACK_KEY: fallback-key
+
 .cache-tpl: &cache-tpl
   key: "$CI_COMMIT_REF_SLUG"
   paths:
     - node_modules
     - frontend/components
-  policy: pull
 
 .test-template: &test-template
   image: node:10-stretch
@@ -39,7 +41,6 @@ prepare:
     - docker
   cache:
     <<: *cache-tpl
-    policy: pull-push
   script:
     - npm install
     # Weird behaviour: at the time, npm postinstall was not called.

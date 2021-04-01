@@ -1,8 +1,4 @@
 const { expect } = require('chai');
-const mockery = require('mockery');
-const sinon = require('sinon');
-
-let jwtDecodeMock;
 
 describe('The calendar middlewares', function() {
   let userModuleMock;
@@ -186,114 +182,102 @@ describe('The calendar middlewares', function() {
     });
   });
 
-  describe('the decodeSecretLinkJWT middleware', function() {
-
-    beforeEach(function() {
-      jwtDecodeMock = {
-        default: sinon.stub()
-      };
-      mockery.registerMock('jwt-decode', jwtDecodeMock);
-
-      this.check400 = function(req, done) {
-        const res = {
-          status: function(status) {
-            expect(status).to.equal(400);
-
-            return {
-              json: function(error) {
-                expect(error).to.exist;
-                done();
-              }
-            };
-          }
-        };
-
-        this.loadModule().decodeSecretLinkJWT(req, res, function() {
-          done(new Error('Next should not have been called'));
-        });
-      };
-
-    });
-
-    //The token is generated without calendarHomeId
-    it('should send 400 if req has no calendarHomeId', function(done) {
-      const payload = {
-        calendarId: 'calendarId',
-        userId: 'userId'
-      };
-
-      jwtDecodeMock.default.returns(payload);
-      const req = { query: { jwt: 'jwt' } };
-
-      this.check400(req, done);
-    });
-
-    //The token is generated without calendarId
-    it('should send 400 if req has no calendarId', function(done) {
-      const payload = {
-        calendarHomeId: 'calendarHomeId',
-        userId: 'userId'
-      };
-
-      jwtDecodeMock.default.returns(payload);
-      const req = { query: { jwt: 'jwt' } };
-
-      this.check400(req, done);
-    });
-
-    //The token is generated without userId
-    it('should send 400 if req has no userId', function(done) {
+  describe('the canGetSecretLink middleware', function() {
+    it('should allow the request to continue if the user requests to get the secret link of one of his own calendars', function(done) {
       const payload = {
         calendarHomeId: 'calendarHomeId',
         calendarId: 'calendarId'
       };
+      const req = { params: payload, user: { _id: payload.calendarHomeId } };
 
-      jwtDecodeMock.default.returns(payload);
-      const req = { query: { jwt: 'jwt' } };
-
-      this.check400(req, done);
+      this.loadModule().canGetSecretLink(req, null, () => {
+        done();
+      });
     });
 
-    it('should find the user and call next if all the required properties are present and valid', function(done) {
-      const jwt = '123';
+    it('should return 403 if the user requests to get the secret link of a calendar that does not belong to him', function(done) {
       const payload = {
         calendarHomeId: 'calendarHomeId',
-        calendarId: 'calendarId',
-        userId: 'userId'
+        calendarId: 'calendarId'
       };
-      const userMock = { _id: payload.userId };
+      const req = { params: payload, user: { _id: 'someOtherUser' } };
+      const res = {
+        status: function(status) {
+          expect(status).to.equal(403);
 
-      jwtDecodeMock.default.returns(payload);
+          return {
+            json: function(responseBody) {
+              expect(responseBody).to.deep.equal({ error: { code: 403, message: 'Forbidden', details: 'Forbidden' } });
+              done();
+            }
+          };
+        }
+      };
 
-      const req = { query: { jwt }, linkPayload: null, user: null };
+      this.loadModule().canGetSecretLink(req, res, () => {
+        throw new Error('next should have not been called');
+      });
+    });
+  });
+
+  describe('the canDownloadIcsFile middleware', function() {
+    it('should find the user and allow the request to continue if all the required properties are present and valid', function(done) {
+      const token = 'fuf983j19d9d';
+      const payload = {
+        calendarHomeId: 'calendarHomeId',
+        calendarId: 'calendarId'
+      };
+      const userMock = { _id: payload.calendarHomeId };
+
+      const req = { query: { token }, params: payload };
 
       userModuleMock.get = function(userId, callback) {
-        expect(userId).to.equal(req.linkPayload.userId);
+        expect(userId).to.equal(req.params.calendarHomeId);
 
         callback(null, userMock);
       };
 
       this.moduleHelpers.addDep('user', userModuleMock);
 
-      this.loadModule().decodeSecretLinkJWT(req, null, () => {
+      this.loadModule().canDownloadIcsFile(req, null, () => {
         expect(req.user).to.deep.equal(userMock);
         done();
       });
+    });
 
-      expect(req.linkPayload).to.equal(payload);
+    it('should return 403 if the token is missing', function(done) {
+      const payload = {
+        calendarHomeId: 'calendarHomeId',
+        calendarId: 'calendarId'
+      };
+
+      const req = { query: {}, params: payload };
+      const res = {
+        status: function(status) {
+          expect(status).to.equal(403);
+
+          return {
+            json: function(responseBody) {
+              expect(responseBody).to.deep.equal({ error: { code: 403, message: 'Forbidden', details: 'Forbidden' } });
+              done();
+            }
+          };
+        }
+      };
+
+      this.loadModule().canDownloadIcsFile(req, res, () => {
+        throw new Error('next should have not been called');
+      });
     });
 
     it('should return 404 if the user cannot be found', function(done) {
-      const jwt = '123';
+      const token = 'asdflk13f093fi';
       const payload = {
         calendarHomeId: 'calendarHomeId',
-        calendarId: 'calendarId',
-        userId: 'userId'
+        calendarId: 'calendarId'
       };
 
-      jwtDecodeMock.default.returns(payload);
-
-      const req = { query: { jwt }, linkPayload: null, user: null };
+      const req = { query: { token }, params: payload };
       const res = {
         status: function(status) {
           expect(status).to.equal(404);
@@ -308,31 +292,26 @@ describe('The calendar middlewares', function() {
       };
 
       userModuleMock.get = function(userId, callback) {
-        expect(userId).to.equal(req.linkPayload.userId);
+        expect(userId).to.equal(req.params.calendarHomeId);
 
         callback(null, null);
       };
 
       this.moduleHelpers.addDep('user', userModuleMock);
 
-      this.loadModule().decodeSecretLinkJWT(req, res, () => {
+      this.loadModule().canDownloadIcsFile(req, res, () => {
         throw new Error('next should have not been called');
       });
-
-      expect(req.linkPayload).to.equal(payload);
     });
 
     it('should return 500 if an unexpected error happens when finding the user', function(done) {
-      const jwt = '123';
+      const token = 'sdkg2930sdfsfa';
       const payload = {
         calendarHomeId: 'calendarHomeId',
-        calendarId: 'calendarId',
-        userId: 'userId'
+        calendarId: 'calendarId'
       };
 
-      jwtDecodeMock.default.returns(payload);
-
-      const req = { query: { jwt }, linkPayload: null, user: null };
+      const req = { query: { token }, params: payload };
       const res = {
         status: function(status) {
           expect(status).to.equal(500);
@@ -347,18 +326,16 @@ describe('The calendar middlewares', function() {
       };
 
       userModuleMock.get = function(userId, callback) {
-        expect(userId).to.equal(req.linkPayload.userId);
+        expect(userId).to.equal(req.params.calendarHomeId);
 
         callback(new Error('Something unexpected happened'));
       };
 
       this.moduleHelpers.addDep('user', userModuleMock);
 
-      this.loadModule().decodeSecretLinkJWT(req, res, () => {
+      this.loadModule().canDownloadIcsFile(req, res, () => {
         throw new Error('next should have not been called');
       });
-
-      expect(req.linkPayload).to.equal(payload);
     });
   });
 });

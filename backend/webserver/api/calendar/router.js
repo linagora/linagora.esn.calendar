@@ -76,11 +76,11 @@ module.exports = dependencies => {
 
   /**
    * @swagger
-   * /generateJWTforSecretLink:
+   * /{calendarHomeId}/{calendarId}/secret-link:
    *   post:
    *     tags:
    *       - Calendar
-   *     description: Generate token for the secret link to download calendar in ical format
+   *     description: Get the secret link to download the ics file of a calendar
    *     responses:
    *       200:
    *         $ref: "#/responses/cm_200"
@@ -91,19 +91,20 @@ module.exports = dependencies => {
    *       500:
    *         $ref: "#/responses/cm_500"
    */
-  router.post('/generateJWTforSecretLink',
+  router.get('/:calendarHomeId/:calendarId/secret-link',
     authorizationMW.requiresAPILogin,
-    controller.generateJWTforSecretLink);
+    calendarMW.canGetSecretLink,
+    controller.getSecretLink);
 
   /**
    * @swagger
-   * /secretLink:
+   * /{calendarHomeId}/{calendarId}/calendar.ics:
    *   get:
    *     tags:
    *       - Calendar
-   *     description: Download ics file of calendar from external link.
+   *     description: Download the ics file of a calendar
    *     parameters:
-   *       - $ref: "#/parameters/calendar_token"
+   *       - $ref: "#/parameters/secret_link_token"
    *     responses:
    *       200:
    *         $ref: "#/responses/cm_200"
@@ -111,12 +112,13 @@ module.exports = dependencies => {
    *         $ref: "#/responses/cm_400"
    *       401:
    *         $ref: "#/responses/cm_401"
+   *       403:
+   *         $ref: "#/responses/cm_403"
    *       500:
    *         $ref: "#/responses/cm_500"
    */
-  router.get('/secretLink',
-    authorizationMW.requiresJWT,
-    calendarMW.decodeSecretLinkJWT,
+  router.get('/:calendarHomeId/:calendarId/calendar.ics',
+    calendarMW.canDownloadIcsFile,
     tokenMW.generateNewToken(),
     davMiddleware.getDavEndpoint,
     controller.downloadIcsFile);

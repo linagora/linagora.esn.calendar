@@ -2,9 +2,12 @@ const { expect } = require('chai');
 const sinon = require('sinon');
 const fs = require('fs');
 const mockery = require('mockery');
+const momentTimezone = require('moment-timezone');
+
+momentTimezone.locale('en');
 
 describe('The invitation email module', function() {
-  let userMock, domainMock, helpersMock, authMock, emailMock, esnConfigMock, datetimeOptions, datetimeHelpersMock, mjmlMock;
+  let userMock, domainMock, helpersMock, authMock, emailMock, esnConfigMock, datetimeOptions, mjmlMock, emailEventHelperMock;
   let getModule;
   let transformedHTML;
 
@@ -78,13 +81,13 @@ describe('The invitation email module', function() {
       };
     };
 
-    datetimeHelpersMock = () => ({
-      formatDatetime: () => ({})
-    });
-
     transformedHTML = '<span>transformed html</span>';
 
     mjmlMock = sinon.stub().returns({ html: transformedHTML });
+
+    emailEventHelperMock = {
+      getContentEventStartAndEndFromIcs: () => ({})
+    };
 
     this.moduleHelpers.addDep('domain', domainMock);
     this.moduleHelpers.addDep('user', userMock);
@@ -94,7 +97,7 @@ describe('The invitation email module', function() {
     this.moduleHelpers.addDep('esn-config', esnConfigMock);
     this.moduleHelpers.addDep('i18n', this.helpers.requireBackend('core/i18n'));
 
-    mockery.registerMock('../helpers/datetime', datetimeHelpersMock);
+    mockery.registerMock('../helpers/email-event', () => emailEventHelperMock);
     mockery.registerMock('mjml', mjmlMock);
 
     getModule = () => require(`${this.moduleHelpers.backendPath}/lib/invitation/email`)(this.moduleHelpers.dependencies);
@@ -750,13 +753,14 @@ describe('The invitation email module', function() {
 
       it('should use the attendee\'s timezone and locale configuration if the attendee is an internal user', function(done) {
         const method = 'REQUEST';
-        const datetimeHelpersMock = {
-          formatDatetime: sinon.stub()
+
+        emailEventHelperMock = {
+          getContentEventStartAndEndFromIcs: sinon.stub().returns({
+            start: { date: '01/01/2015', time: '01:01', fullDateTime: '2015年1月1日星期四01点01分', fullDate: '2015年1月1日星期四', timezone: 'Asia/Shanghai' },
+            end: { date: '01/01/2015', time: '02:02', fullDateTime: '2015年1月1日星期四02点02分', fullDate: '2015年1月1日星期四', timezone: 'Asia/Shanghai' }
+          })
         };
         let findByEmailCallCount = 0;
-
-        datetimeHelpersMock.formatDatetime.onCall(0).returns({ date: '01/01/2015', time: '01:01', fullDateTime: '2015年1月1日星期四01点01分', fullDate: '2015年1月1日星期四' });
-        datetimeHelpersMock.formatDatetime.onCall(1).returns({ date: '01/01/2015', time: '02:02', fullDateTime: '2015年1月1日星期四02点02分', fullDate: '2015年1月1日星期四' });
 
         datetimeOptions = {
           timeZone: 'Asia/Shanghai',
@@ -777,7 +781,7 @@ describe('The invitation email module', function() {
           }
         }));
 
-        mockery.registerMock('../helpers/datetime', () => datetimeHelpersMock);
+        mockery.registerMock('../helpers/email-event', () => emailEventHelperMock);
 
         esnConfigMock = function() {
           return {
@@ -852,6 +856,7 @@ describe('The invitation email module', function() {
                 fullDateTime: '2015年1月1日星期四02点02分',
                 fullDate: '2015年1月1日星期四'
               });
+              expect(locals.content.changes).to.be.undefined;
 
               checkTemplateFn(templateFn);
 
@@ -870,14 +875,13 @@ describe('The invitation email module', function() {
           isNewEvent
         })
           .then(() => {
-            const convertTzOptions = {
+            expect(emailEventHelperMock.getContentEventStartAndEndFromIcs).to.have.been.calledWith({
+              ics,
+              isAllDay: false,
               timezone: datetimeOptions.timeZone,
-              locale: 'zh',
-              use24hourFormat: true
-            };
-
-            expect(datetimeHelpersMock.formatDatetime.getCall(0).args[1]).to.deep.equal(convertTzOptions);
-            expect(datetimeHelpersMock.formatDatetime.getCall(1).args[1]).to.deep.equal(convertTzOptions);
+              use24hourFormat: true,
+              locale: 'zh'
+            });
             done();
           })
           .catch(err => done(err || new Error('should resolve')));
@@ -885,13 +889,14 @@ describe('The invitation email module', function() {
 
       it('should use the organizer\'s timezone and locale configuration if the attendee is an external user', function(done) {
         const method = 'REQUEST';
-        const datetimeHelpersMock = {
-          formatDatetime: sinon.stub()
+
+        emailEventHelperMock = {
+          getContentEventStartAndEndFromIcs: sinon.stub().returns({
+            start: { date: '01/01/2015', time: '01:01 SA', fullDateTime: 'Thứ năm ngày 1 tháng 1 năm 2015, 01:01 SA', fullDate: 'Thứ năm ngày 1 tháng 1 năm 2015', timezone: 'Asia/Ho_Chi_Minh' },
+            end: { date: '01/01/2015', time: '02:02 SA', fullDateTime: 'Thứ năm ngày 1 tháng 1 năm 2015, 02:02 SA', fullDate: 'Thứ năm ngày 1 tháng 1 năm 2015', timezone: 'Asia/Ho_Chi_Minh' }
+          })
         };
         let findByEmailCallCount = 0;
-
-        datetimeHelpersMock.formatDatetime.onCall(0).returns({ date: '01/01/2015', time: '01:01 SA', fullDateTime: 'Thứ năm ngày 1 tháng 1 năm 2015, 01:01 SA', fullDate: 'Thứ năm ngày 1 tháng 1 năm 2015' });
-        datetimeHelpersMock.formatDatetime.onCall(1).returns({ date: '01/01/2015', time: '02:02 SA', fullDateTime: 'Thứ năm ngày 1 tháng 1 năm 2015, 02:02 SA', fullDate: 'Thứ năm ngày 1 tháng 1 năm 2015' });
 
         datetimeOptions = {
           timeZone: 'Asia/Ho_Chi_Minh'
@@ -911,7 +916,7 @@ describe('The invitation email module', function() {
           }
         }));
 
-        mockery.registerMock('../helpers/datetime', () => datetimeHelpersMock);
+        mockery.registerMock('../helpers/email-event', () => emailEventHelperMock);
 
         esnConfigMock = function() {
           return {
@@ -1004,14 +1009,554 @@ describe('The invitation email module', function() {
           isNewEvent
         })
           .then(() => {
-            const convertTzOptions = {
+            expect(emailEventHelperMock.getContentEventStartAndEndFromIcs).to.have.been.calledWith({
+              ics,
+              isAllDay: false,
               timezone: datetimeOptions.timeZone,
-              locale: 'vi',
-              use24hourFormat: undefined
-            };
+              use24hourFormat: undefined,
+              locale: 'vi'
+            });
+            done();
+          })
+          .catch(err => done(err || new Error('should resolve')));
+      });
 
-            expect(datetimeHelpersMock.formatDatetime.getCall(0).args[1]).to.deep.equal(convertTzOptions);
-            expect(datetimeHelpersMock.formatDatetime.getCall(1).args[1]).to.deep.equal(convertTzOptions);
+      it('should include the changes correctly if there\'s any when the method is REQUEST', function(done) {
+        const method = 'REQUEST';
+        const changes = {
+          dtstart: {
+            previous: {
+              date: '2015-01-01T01:00:00.000',
+              isAllDay: false,
+              timezone: 'Asia/Shanghai'
+            },
+            current: {
+              date: '2015-01-01T01:01:00.000',
+              isAllDay: false,
+              timezone: 'Asia/Shanghai'
+            }
+          },
+          dtend: {
+            previous: {
+              date: '2015-01-01T02:00:00.000',
+              isAllDay: false,
+              timezone: 'Asia/Shanghai'
+            },
+            current: {
+              date: '2015-01-01T02:02:00.000',
+              isAllDay: false,
+              timezone: 'Asia/Shanghai'
+            }
+          },
+          location: {
+            previous: 'Beijing',
+            current: 'Shanghai'
+          }
+        };
+
+        emailEventHelperMock = {
+          getContentEventStartAndEnd: sinon.stub().returns({
+            start: { date: '01/01/2015', time: '01:00', fullDateTime: '2015年1月1日星期四01点00分', fullDate: '2015年1月1日星期四', timezone: 'Asia/Shanghai' },
+            end: { date: '01/01/2015', time: '02:00', fullDateTime: '2015年1月1日星期四02点00分', fullDate: '2015年1月1日星期四', timezone: 'Asia/Shanghai' }
+          }),
+          getContentEventStartAndEndFromIcs: sinon.stub().returns({
+            start: { date: '01/01/2015', time: '01:01', fullDateTime: '2015年1月1日星期四01点01分', fullDate: '2015年1月1日星期四', timezone: 'Asia/Shanghai' },
+            end: { date: '01/01/2015', time: '02:02', fullDateTime: '2015年1月1日星期四02点02分', fullDate: '2015年1月1日星期四', timezone: 'Asia/Shanghai' }
+          })
+        };
+        let findByEmailCallCount = 0;
+
+        datetimeOptions = {
+          timeZone: 'Asia/Shanghai',
+          use24hourFormat: true
+        };
+
+        mockery.registerMock('./../i18n', () => ({
+          getI18nForMailer: user => {
+            expect(user).to.equal(attendee1);
+
+            return Promise.resolve({
+              i18n: {
+                __: ({ phrase }) => phrase
+              },
+              locale: 'zh',
+              translate: text => text
+            });
+          }
+        }));
+
+        mockery.registerMock('../helpers/email-event', () => emailEventHelperMock);
+
+        esnConfigMock = function() {
+          return {
+            inModule: function(mod) {
+              expect(mod).to.equal('core');
+
+              return {
+                forUser: (user, isUserWide) => {
+                  expect(user).to.equal(attendee1);
+                  expect(isUserWide).to.be.true;
+
+                  return {
+                    get: () => Promise.resolve(datetimeOptions)
+                  };
+                }
+              };
+            }
+          };
+        };
+
+        this.moduleHelpers.addDep('esn-config', esnConfigMock);
+
+        helpersMock.config.getBaseUrl = function(user, callback) {
+          callback(null, 'http://localhost:8888');
+        };
+
+        userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 1) {
+            return callback(null, organizer);
+          }
+
+          return callback(null, attendee1);
+        };
+
+        emailMock.getMailer = function() {
+          return {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn, locals }) {
+              expect(email.from).to.equal(organizer.emails[0]);
+
+              expect(email.to).to.equal(attendeeEmail);
+              expect(email).to.shallowDeepEqual({
+                subject: 'New event from {{organizerName}}: {{& summary}}',
+                encoding: 'base64',
+                alternatives: [{
+                  content: ics,
+                  contentType: `text/calendar; charset=UTF-8; method=${method}`
+                }],
+                attachments: [{
+                  filename: 'meeting.ics',
+                  content: ics,
+                  contentType: 'application/ics'
+                }]
+              });
+              expect(template.name).to.equal('event.invitation');
+              expect(template.path).to.match(/templates\/email/);
+              expect(locals).to.be.an('object');
+              expect(locals.filter).is.a.function;
+              expect(locals.content.method).to.equal(method);
+              expect(locals.content.event.start).to.deep.equal({
+                date: '01/01/2015',
+                time: '01:01',
+                timezone: 'Asia/Shanghai',
+                fullDateTime: '2015年1月1日星期四01点01分',
+                fullDate: '2015年1月1日星期四'
+              });
+              expect(locals.content.event.end).to.deep.equal({
+                date: '01/01/2015',
+                time: '02:02',
+                timezone: 'Asia/Shanghai',
+                fullDateTime: '2015年1月1日星期四02点02分',
+                fullDate: '2015年1月1日星期四'
+              });
+              expect(locals.content.changes).to.deep.equal(changes);
+              expect(locals.content.changes.isOldEventAllDay).to.equal(false);
+              expect(locals.content.changes.dtstart.previous).to.deep.equal({
+                date: '01/01/2015',
+                time: '01:00',
+                timezone: 'Asia/Shanghai',
+                fullDateTime: '2015年1月1日星期四01点00分',
+                fullDate: '2015年1月1日星期四'
+              });
+              expect(locals.content.changes.dtend.previous).to.deep.equal({
+                date: '01/01/2015',
+                time: '02:00',
+                timezone: 'Asia/Shanghai',
+                fullDateTime: '2015年1月1日星期四02点00分',
+                fullDate: '2015年1月1日星期四'
+              });
+
+              checkTemplateFn(templateFn);
+
+              return Promise.resolve();
+            }
+          };
+        };
+
+        getModule().sendNotificationEmails({
+          senderEmail: 'bar@foo.com',
+          recipientEmail: attendee1.emails[0],
+          method,
+          ics,
+          calendarURI: 'calendarURI',
+          domain: null,
+          isNewEvent,
+          changes
+        })
+          .then(() => {
+            expect(emailEventHelperMock.getContentEventStartAndEnd).to.have.been.calledTwice;
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(0).args[0].start._i).to.equal('2015-01-01T01:00:00.000');
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(0).args[0].isAllDay).to.equal(false);
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(0).args[0].timezone).to.equal(datetimeOptions.timeZone);
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(0).args[0].use24hourFormat).to.equal(true);
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(0).args[0].locale).to.equal('zh');
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(1).args[0].end._i).to.equal('2015-01-01T02:00:00.000');
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(1).args[0].isAllDay).to.equal(false);
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(1).args[0].timezone).to.equal(datetimeOptions.timeZone);
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(1).args[0].use24hourFormat).to.equal(true);
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(1).args[0].locale).to.equal('zh');
+            expect(emailEventHelperMock.getContentEventStartAndEndFromIcs).to.have.been.calledWith({
+              ics,
+              isAllDay: false,
+              timezone: datetimeOptions.timeZone,
+              use24hourFormat: true,
+              locale: 'zh'
+            });
+            done();
+          })
+          .catch(err => done(err || new Error('should resolve')));
+      });
+
+      it('should include the changes correctly if there\'s changes about DTSTART but not DTEND when the method is REQUEST', function(done) {
+        const method = 'REQUEST';
+        const changes = {
+          dtstart: {
+            previous: {
+              date: '2015-01-01T01:00:00.000',
+              isAllDay: false,
+              timezone: 'Asia/Shanghai'
+            },
+            current: {
+              date: '2015-01-01T01:01:00.000',
+              isAllDay: false,
+              timezone: 'Asia/Shanghai'
+            }
+          },
+          location: {
+            previous: 'Beijing',
+            current: 'Shanghai'
+          }
+        };
+
+        emailEventHelperMock = {
+          getContentEventStartAndEnd: sinon.stub().returns({
+            start: { date: '01/01/2015', time: '01:00', fullDateTime: '2015年1月1日星期四01点00分', fullDate: '2015年1月1日星期四', timezone: 'Asia/Shanghai' }
+          }),
+          getContentEventStartAndEndFromIcs: sinon.stub().returns({
+            start: { date: '01/01/2015', time: '01:01', fullDateTime: '2015年1月1日星期四01点01分', fullDate: '2015年1月1日星期四', timezone: 'Asia/Shanghai' },
+            end: { date: '01/01/2015', time: '02:02', fullDateTime: '2015年1月1日星期四02点02分', fullDate: '2015年1月1日星期四', timezone: 'Asia/Shanghai' }
+          })
+        };
+        let findByEmailCallCount = 0;
+
+        datetimeOptions = {
+          timeZone: 'Asia/Shanghai',
+          use24hourFormat: true
+        };
+
+        mockery.registerMock('./../i18n', () => ({
+          getI18nForMailer: user => {
+            expect(user).to.equal(attendee1);
+
+            return Promise.resolve({
+              i18n: {
+                __: ({ phrase }) => phrase
+              },
+              locale: 'zh',
+              translate: text => text
+            });
+          }
+        }));
+
+        mockery.registerMock('../helpers/email-event', () => emailEventHelperMock);
+
+        esnConfigMock = function() {
+          return {
+            inModule: function(mod) {
+              expect(mod).to.equal('core');
+
+              return {
+                forUser: (user, isUserWide) => {
+                  expect(user).to.equal(attendee1);
+                  expect(isUserWide).to.be.true;
+
+                  return {
+                    get: () => Promise.resolve(datetimeOptions)
+                  };
+                }
+              };
+            }
+          };
+        };
+
+        this.moduleHelpers.addDep('esn-config', esnConfigMock);
+
+        helpersMock.config.getBaseUrl = function(user, callback) {
+          callback(null, 'http://localhost:8888');
+        };
+
+        userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 1) {
+            return callback(null, organizer);
+          }
+
+          return callback(null, attendee1);
+        };
+
+        emailMock.getMailer = function() {
+          return {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn, locals }) {
+              expect(email.from).to.equal(organizer.emails[0]);
+
+              expect(email.to).to.equal(attendeeEmail);
+              expect(email).to.shallowDeepEqual({
+                subject: 'New event from {{organizerName}}: {{& summary}}',
+                encoding: 'base64',
+                alternatives: [{
+                  content: ics,
+                  contentType: `text/calendar; charset=UTF-8; method=${method}`
+                }],
+                attachments: [{
+                  filename: 'meeting.ics',
+                  content: ics,
+                  contentType: 'application/ics'
+                }]
+              });
+              expect(template.name).to.equal('event.invitation');
+              expect(template.path).to.match(/templates\/email/);
+              expect(locals).to.be.an('object');
+              expect(locals.filter).is.a.function;
+              expect(locals.content.method).to.equal(method);
+              expect(locals.content.event.start).to.deep.equal({
+                date: '01/01/2015',
+                time: '01:01',
+                timezone: 'Asia/Shanghai',
+                fullDateTime: '2015年1月1日星期四01点01分',
+                fullDate: '2015年1月1日星期四'
+              });
+              expect(locals.content.event.end).to.deep.equal({
+                date: '01/01/2015',
+                time: '02:02',
+                timezone: 'Asia/Shanghai',
+                fullDateTime: '2015年1月1日星期四02点02分',
+                fullDate: '2015年1月1日星期四'
+              });
+              expect(locals.content.changes).to.deep.equal(changes);
+              expect(locals.content.changes.isOldEventAllDay).to.equal(false);
+              expect(locals.content.changes.dtstart.previous).to.deep.equal({
+                date: '01/01/2015',
+                time: '01:00',
+                timezone: 'Asia/Shanghai',
+                fullDateTime: '2015年1月1日星期四01点00分',
+                fullDate: '2015年1月1日星期四'
+              });
+
+              checkTemplateFn(templateFn);
+
+              return Promise.resolve();
+            }
+          };
+        };
+
+        getModule().sendNotificationEmails({
+          senderEmail: 'bar@foo.com',
+          recipientEmail: attendee1.emails[0],
+          method,
+          ics,
+          calendarURI: 'calendarURI',
+          domain: null,
+          isNewEvent,
+          changes
+        })
+          .then(() => {
+            expect(emailEventHelperMock.getContentEventStartAndEnd).to.have.been.calledOnce;
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(0).args[0].start._i).to.equal('2015-01-01T01:00:00.000');
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(0).args[0].isAllDay).to.equal(false);
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(0).args[0].timezone).to.equal(datetimeOptions.timeZone);
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(0).args[0].use24hourFormat).to.equal(true);
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(0).args[0].locale).to.equal('zh');
+            expect(emailEventHelperMock.getContentEventStartAndEndFromIcs).to.have.been.calledWith({
+              ics,
+              isAllDay: false,
+              timezone: datetimeOptions.timeZone,
+              use24hourFormat: true,
+              locale: 'zh'
+            });
+            done();
+          })
+          .catch(err => done(err || new Error('should resolve')));
+      });
+
+      it('should include the changes correctly if there\'s changes about DTEND but not DTSTART when the method is REQUEST', function(done) {
+        const method = 'REQUEST';
+        const changes = {
+          dtend: {
+            previous: {
+              date: '2015-01-01T02:00:00.000',
+              isAllDay: false,
+              timezone: 'Asia/Shanghai'
+            },
+            current: {
+              date: '2015-01-01T02:02:00.000',
+              isAllDay: false,
+              timezone: 'Asia/Shanghai'
+            }
+          },
+          location: {
+            previous: 'Beijing',
+            current: 'Shanghai'
+          }
+        };
+
+        emailEventHelperMock = {
+          getContentEventStartAndEnd: sinon.stub().returns({
+            end: { date: '01/01/2015', time: '02:00', fullDateTime: '2015年1月1日星期四02点00分', fullDate: '2015年1月1日星期四', timezone: 'Asia/Shanghai' }
+          }),
+          getContentEventStartAndEndFromIcs: sinon.stub().returns({
+            start: { date: '01/01/2015', time: '01:01', fullDateTime: '2015年1月1日星期四01点01分', fullDate: '2015年1月1日星期四', timezone: 'Asia/Shanghai' },
+            end: { date: '01/01/2015', time: '02:02', fullDateTime: '2015年1月1日星期四02点02分', fullDate: '2015年1月1日星期四', timezone: 'Asia/Shanghai' }
+          })
+        };
+        let findByEmailCallCount = 0;
+
+        datetimeOptions = {
+          timeZone: 'Asia/Shanghai',
+          use24hourFormat: true
+        };
+
+        mockery.registerMock('./../i18n', () => ({
+          getI18nForMailer: user => {
+            expect(user).to.equal(attendee1);
+
+            return Promise.resolve({
+              i18n: {
+                __: ({ phrase }) => phrase
+              },
+              locale: 'zh',
+              translate: text => text
+            });
+          }
+        }));
+
+        mockery.registerMock('../helpers/email-event', () => emailEventHelperMock);
+
+        esnConfigMock = function() {
+          return {
+            inModule: function(mod) {
+              expect(mod).to.equal('core');
+
+              return {
+                forUser: (user, isUserWide) => {
+                  expect(user).to.equal(attendee1);
+                  expect(isUserWide).to.be.true;
+
+                  return {
+                    get: () => Promise.resolve(datetimeOptions)
+                  };
+                }
+              };
+            }
+          };
+        };
+
+        this.moduleHelpers.addDep('esn-config', esnConfigMock);
+
+        helpersMock.config.getBaseUrl = function(user, callback) {
+          callback(null, 'http://localhost:8888');
+        };
+
+        userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 1) {
+            return callback(null, organizer);
+          }
+
+          return callback(null, attendee1);
+        };
+
+        emailMock.getMailer = function() {
+          return {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn, locals }) {
+              expect(email.from).to.equal(organizer.emails[0]);
+
+              expect(email.to).to.equal(attendeeEmail);
+              expect(email).to.shallowDeepEqual({
+                subject: 'New event from {{organizerName}}: {{& summary}}',
+                encoding: 'base64',
+                alternatives: [{
+                  content: ics,
+                  contentType: `text/calendar; charset=UTF-8; method=${method}`
+                }],
+                attachments: [{
+                  filename: 'meeting.ics',
+                  content: ics,
+                  contentType: 'application/ics'
+                }]
+              });
+              expect(template.name).to.equal('event.invitation');
+              expect(template.path).to.match(/templates\/email/);
+              expect(locals).to.be.an('object');
+              expect(locals.filter).is.a.function;
+              expect(locals.content.method).to.equal(method);
+              expect(locals.content.event.start).to.deep.equal({
+                date: '01/01/2015',
+                time: '01:01',
+                timezone: 'Asia/Shanghai',
+                fullDateTime: '2015年1月1日星期四01点01分',
+                fullDate: '2015年1月1日星期四'
+              });
+              expect(locals.content.event.end).to.deep.equal({
+                date: '01/01/2015',
+                time: '02:02',
+                timezone: 'Asia/Shanghai',
+                fullDateTime: '2015年1月1日星期四02点02分',
+                fullDate: '2015年1月1日星期四'
+              });
+              expect(locals.content.changes).to.deep.equal(changes);
+              expect(locals.content.changes.isOldEventAllDay).to.equal(false);
+              expect(locals.content.changes.dtend.previous).to.deep.equal({
+                date: '01/01/2015',
+                time: '02:00',
+                timezone: 'Asia/Shanghai',
+                fullDateTime: '2015年1月1日星期四02点00分',
+                fullDate: '2015年1月1日星期四'
+              });
+
+              checkTemplateFn(templateFn);
+
+              return Promise.resolve();
+            }
+          };
+        };
+
+        getModule().sendNotificationEmails({
+          senderEmail: 'bar@foo.com',
+          recipientEmail: attendee1.emails[0],
+          method,
+          ics,
+          calendarURI: 'calendarURI',
+          domain: null,
+          isNewEvent,
+          changes
+        })
+          .then(() => {
+            expect(emailEventHelperMock.getContentEventStartAndEnd).to.have.been.calledOnce;
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(0).args[0].end._i).to.equal('2015-01-01T02:00:00.000');
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(0).args[0].isAllDay).to.equal(false);
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(0).args[0].timezone).to.equal(datetimeOptions.timeZone);
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(0).args[0].use24hourFormat).to.equal(true);
+            expect(emailEventHelperMock.getContentEventStartAndEnd.getCall(0).args[0].locale).to.equal('zh');
+            expect(emailEventHelperMock.getContentEventStartAndEndFromIcs).to.have.been.calledWith({
+              ics,
+              isAllDay: false,
+              timezone: datetimeOptions.timeZone,
+              use24hourFormat: true,
+              locale: 'zh'
+            });
             done();
           })
           .catch(err => done(err || new Error('should resolve')));
@@ -1333,6 +1878,62 @@ describe('The invitation email module', function() {
           recipientEmail: organizer.emails[0],
           method,
           ics,
+          calendarURI: 'calendarURI'
+        })
+          .then(done)
+          .catch(err => done(err || new Error('should resolve')));
+      });
+
+      it('should send email with correct content including the \'old\' event', function(done) {
+        const ics = fs.readFileSync(__dirname + '/../../../fixtures/counter.ics', 'utf-8');
+        const oldIcs = ics;
+        let findByEmailCallCount = 0;
+
+        attendee1.domains = [{ domain_id: 'domain_id' }];
+        userMock.findByEmail = function(email, callback) {
+          findByEmailCallCount++;
+
+          if (findByEmailCallCount === 2) {
+            return callback(null, organizer);
+          }
+
+          callback(null, attendee1);
+        };
+
+        const editor = {
+          displayName: attendee1.firstname + ' ' + attendee1.lastname,
+          email: attendee1.emails[0]
+        };
+
+        emailMock.getMailer = function() {
+          return {
+            sendWithCustomTemplateFunction: function({ message: email, template, templateFn, locals }) {
+              expect(template.name).to.equal('event.counter');
+              expect(template.path).to.match(/templates\/email/);
+              expect(email.subject).to.equal('New changes proposed to event Démo OPENPAAS');
+              expect(locals.content.event.comment).to.contains('This demo is going to be awesome!');
+              expect(locals.content.editor).to.deep.equal(editor);
+              expect(locals.content.oldEvent.summary).to.equal('Démo OPENPAAS');
+              expect(locals.content.oldEvent.isLocationAValidURL).to.be.true;
+              expect(locals.content.oldEvent.isLocationAnAbsoluteURL).to.be.true;
+              expect(locals.content.oldEvent.start.date).to.equal('06/12/2015');
+              expect(locals.content.oldEvent.start.time).to.equal('1:00 PM');
+              expect(locals.content.oldEvent.end.date).to.equal('06/12/2015');
+              expect(locals.content.oldEvent.end.time).to.equal('1:30 PM');
+
+              checkTemplateFn(templateFn);
+
+              return Promise.resolve();
+            }
+          };
+        };
+
+        getModule().sendNotificationEmails({
+          senderEmail: attendee1.emails[0],
+          recipientEmail: organizer.emails[0],
+          method,
+          ics,
+          oldIcs,
           calendarURI: 'calendarURI'
         })
           .then(done)

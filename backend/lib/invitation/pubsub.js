@@ -25,7 +25,7 @@ module.exports = dependencies => {
   }
 
   function sendEmail(msg) {
-    const { senderEmail, recipientEmail, notify, method, event, calendarURI, isNewEvent } = msg;
+    const { senderEmail, recipientEmail, notify, method, event, oldEvent, calendarURI, isNewEvent, changes } = msg;
 
     if (typeof recipientEmail !== 'string') {
       return logger.error('Error when trying to send notification emails to the attendee. Reason: The recipient email is missing or invalid. ' +
@@ -58,8 +58,10 @@ module.exports = dependencies => {
       recipientEmail,
       method,
       ics: event,
+      oldIcs: oldEvent,
       calendarURI,
-      isNewEvent
+      isNewEvent,
+      changes
     })
       .then(() => {
         logger.info(`Successfully sent notification emails to attendee: "${recipientEmail}". Message: ${JSON.stringify(msg)}`);

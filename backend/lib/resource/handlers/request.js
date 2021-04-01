@@ -1,7 +1,7 @@
 const Q = require('q');
 const CONSTANTS = require('../../constants');
 const emailTemplateName = 'resource.request';
-const subject = 'An user booked the resource {{name}}';
+const subject = 'A user booked the resource {{name}}';
 const EMAIL_REFERER = 'email';
 
 // A resource has been booked from a user ie has been added as attendee in an event
@@ -44,7 +44,7 @@ module.exports = dependencies => {
       }
 
       function sendEmail(administrators, links) {
-        return emailModule.sender.send({
+        return emailModule.sender.sendWithCustomTemplateFunction({
           // from: Will be set as resourceEvent.userId/creatorId in https://ci.linagora.com/linagora/lgs/openpaas/linagora.esn.calendar/issues/945
           to: administrators,
           subject: { phrase: subject, parameters: { name: resource.name }},
