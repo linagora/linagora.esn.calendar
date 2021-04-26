@@ -1094,7 +1094,7 @@ describe('The calendar controller', function() {
       controller.downloadIcsFile(req, res);
 
       expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
-      expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+      expect(esnConfigInModuleMock.forUser).to.have.been.calledWithExactly(req.user);
       expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
     });
   });
@@ -1114,6 +1114,7 @@ describe('The calendar controller', function() {
       it('should return 500 when it fails to get the user\'s settings', function(done) {
         const error = new Error('Something went wrong');
         const req = {
+          user: { _id: 'calendarHomeId' },
           query: {},
           params: {
             calendarHomeId: 'calendarHomeId',
@@ -1145,13 +1146,14 @@ describe('The calendar controller', function() {
         controller.getSecretLink(req, res);
 
         expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
-        expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+        expect(esnConfigInModuleMock.forUser).to.have.been.calledWithExactly(req.user, true);
         expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
       });
 
       it('should return 500 when it fails to set the user\'s settings when getting a new secret link', function(done) {
         const error = new Error('Something went wrong');
         const req = {
+          user: { _id: 'calendarHomeId' },
           query: {},
           params: {
             calendarHomeId: 'calendarHomeId',
@@ -1188,12 +1190,13 @@ describe('The calendar controller', function() {
         controller.getSecretLink(req, res);
 
         expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
-        expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+        expect(esnConfigInModuleMock.forUser).to.have.been.calledWithExactly(req.user, true);
         expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
       });
 
       it('should return 200 with the secret link when it succeeds in getting the existing secret link', function(done) {
         const req = {
+          user: { _id: 'calendarHomeId' },
           query: {},
           params: {
             calendarHomeId: 'calendarHomeId',
@@ -1223,12 +1226,13 @@ describe('The calendar controller', function() {
         controller.getSecretLink(req, res);
 
         expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
-        expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+        expect(esnConfigInModuleMock.forUser).to.have.been.calledWithExactly(req.user, true);
         expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
       });
 
       it('should return 200 with a newly generated secret link when it does not find an existing secret link', function(done) {
         const req = {
+          user: { _id: 'calendarHomeId' },
           query: {},
           params: {
             calendarHomeId: 'calendarHomeId',
@@ -1260,7 +1264,7 @@ describe('The calendar controller', function() {
         controller.getSecretLink(req, res);
 
         expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
-        expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+        expect(esnConfigInModuleMock.forUser).to.have.been.calledWithExactly(req.user, true);
         expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
       });
     });
@@ -1269,6 +1273,7 @@ describe('The calendar controller', function() {
       it('should return 500 when it fails to set the user\'s settings when getting a new secret link', function(done) {
         const error = new Error('Something went wrong');
         const req = {
+          user: { _id: 'calendarHomeId' },
           query: { shouldResetLink: 'true' },
           params: {
             calendarHomeId: 'calendarHomeId',
@@ -1304,12 +1309,13 @@ describe('The calendar controller', function() {
         controller.getSecretLink(req, res);
 
         expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
-        expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+        expect(esnConfigInModuleMock.forUser).to.have.been.calledWithExactly(req.user, true);
         expect(forUserMock.get).to.have.not.been.called;
       });
 
       it('should return 200 with a newly generated secret link', function(done) {
         const req = {
+          user: { _id: 'calendarHomeId' },
           query: { shouldResetLink: 'true' },
           params: {
             calendarHomeId: 'calendarHomeId',
@@ -1337,7 +1343,7 @@ describe('The calendar controller', function() {
         controller.getSecretLink(req, res);
 
         expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
-        expect(esnConfigInModuleMock.forUser).to.have.been.calledWith(req.user);
+        expect(esnConfigInModuleMock.forUser).to.have.been.calledWithExactly(req.user, true);
         expect(forUserMock.get).to.have.not.been.called;
       });
     });

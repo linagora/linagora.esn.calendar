@@ -256,7 +256,7 @@ module.exports = dependencies => {
 
   function getSecretLink(req, res) {
     const { shouldResetLink } = req.query;
-    const secretLinkTokenEsnConfig = esnConfig('secretLinkToken').inModule('linagora.esn.calendar').forUser(req.user);
+    const secretLinkTokenEsnConfig = esnConfig('secretLinkToken').inModule('linagora.esn.calendar').forUser(req.user, true);
 
     if (shouldResetLink === 'true') {
       return _getNewSecretLink();
