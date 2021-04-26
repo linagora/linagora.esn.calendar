@@ -1240,9 +1240,9 @@ describe('The calendar controller', function() {
           }
         };
 
-        forUserMock.get = sinon.stub().returns(Promise.resolve([{
-          calendarId: req.params.calendarId
-        }]));
+        const existingSecretLinkSettings = [{ calendarId: req.params.calendarId }, { calendarId: 'another-calendar-id', token: 'another-calendar-id-token' }];
+
+        forUserMock.get = sinon.stub().returns(Promise.resolve(existingSecretLinkSettings));
 
         const res = {
           status: function(status) {
@@ -1251,10 +1251,15 @@ describe('The calendar controller', function() {
             return {
               json: function(result) {
                 expect(result).to.deep.equal({ secretLink: `baseUrl/calendar/api/calendars/${req.params.calendarHomeId}/${req.params.calendarId}/calendar.ics?token=${token}` });
-                expect(forUserMock.set).to.have.been.calledWith('secretLinkSettings', [{
-                  calendarId: req.params.calendarId,
-                  token
-                }]);
+                expect(forUserMock.set).to.have.been.calledWith('secretLinkSettings', [
+                  { calendarId: 'another-calendar-id', token: 'another-calendar-id-token' },
+                  { calendarId: req.params.calendarId, token }
+                ]);
+                expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
+                expect(esnConfigInModuleMock.forUser).to.have.been.calledWithExactly(req.user, true);
+                expect(forUserMock.get).to.have.been.calledTwice;
+                expect(forUserMock.get.getCall(0).args[0]).to.equal('secretLinkSettings');
+                expect(forUserMock.get.getCall(1).args[0]).to.equal('secretLinkSettings');
                 done();
               }
             };
@@ -1262,10 +1267,6 @@ describe('The calendar controller', function() {
         };
 
         controller.getSecretLink(req, res);
-
-        expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
-        expect(esnConfigInModuleMock.forUser).to.have.been.calledWithExactly(req.user, true);
-        expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
       });
     });
 
@@ -1281,6 +1282,9 @@ describe('The calendar controller', function() {
           }
         };
 
+        const existingSecretLinkSettings = [{ calendarId: req.params.calendarId, token: `existing${token}` }, { calendarId: 'another-calendar-id', token: 'another-calendar-id-token' }];
+
+        forUserMock.get = sinon.stub().returns(Promise.resolve(existingSecretLinkSettings));
         forUserMock.set = sinon.stub().returns(Promise.reject(error));
 
         const res = {
@@ -1296,10 +1300,10 @@ describe('The calendar controller', function() {
                     details: error.message
                   }
                 });
-                expect(forUserMock.set).to.have.been.calledWith('secretLinkSettings', [{
-                  calendarId: req.params.calendarId,
-                  token
-                }]);
+                expect(forUserMock.set).to.have.been.calledWith('secretLinkSettings', [
+                  { calendarId: 'another-calendar-id', token: 'another-calendar-id-token' },
+                  { calendarId: req.params.calendarId, token }
+                ]);
                 done();
               }
             };
@@ -1310,7 +1314,7 @@ describe('The calendar controller', function() {
 
         expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
         expect(esnConfigInModuleMock.forUser).to.have.been.calledWithExactly(req.user, true);
-        expect(forUserMock.get).to.have.not.been.called;
+        expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
       });
 
       it('should return 200 with a newly generated secret link', function(done) {
@@ -1323,6 +1327,10 @@ describe('The calendar controller', function() {
           }
         };
 
+        const existingSecretLinkSettings = [{ calendarId: req.params.calendarId, token: `existing${token}` }, { calendarId: 'another-calendar-id', token: 'another-calendar-id-token' }];
+
+        forUserMock.get = sinon.stub().returns(Promise.resolve(existingSecretLinkSettings));
+
         const res = {
           status: function(status) {
             expect(status).to.equal(200);
@@ -1330,10 +1338,10 @@ describe('The calendar controller', function() {
             return {
               json: function(result) {
                 expect(result).to.deep.equal({ secretLink: `baseUrl/calendar/api/calendars/${req.params.calendarHomeId}/${req.params.calendarId}/calendar.ics?token=${token}` });
-                expect(forUserMock.set).to.have.been.calledWith('secretLinkSettings', [{
-                  calendarId: req.params.calendarId,
-                  token
-                }]);
+                expect(forUserMock.set).to.have.been.calledWith('secretLinkSettings', [
+                  { calendarId: 'another-calendar-id', token: 'another-calendar-id-token' },
+                  { calendarId: req.params.calendarId, token }
+                ]);
                 done();
               }
             };
@@ -1344,7 +1352,7 @@ describe('The calendar controller', function() {
 
         expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
         expect(esnConfigInModuleMock.forUser).to.have.been.calledWithExactly(req.user, true);
-        expect(forUserMock.get).to.have.not.been.called;
+        expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
       });
     });
   });

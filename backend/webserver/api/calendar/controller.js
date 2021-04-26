@@ -263,8 +263,8 @@ module.exports = dependencies => {
     }
 
     return secretLinkTokenEsnConfig.get('secretLinkSettings')
-      .then(secretLinks => {
-        const secretLinkSettingForCalendar = secretLinks.find(({ calendarId }) => calendarId === req.params.calendarId);
+      .then(secretLinkSettings => {
+        const secretLinkSettingForCalendar = secretLinkSettings.find(({ calendarId }) => calendarId === req.params.calendarId);
 
         if (secretLinkSettingForCalendar && secretLinkSettingForCalendar.token) {
           return getBaseUrl(null)
@@ -292,10 +292,12 @@ module.exports = dependencies => {
     function _getNewSecretLink() {
       const token = shortUUID.generate();
 
-      return secretLinkTokenEsnConfig.set('secretLinkSettings', [{
-        calendarId: req.params.calendarId,
-        token
-      }])
+      return secretLinkTokenEsnConfig.get('secretLinkSettings')
+        .then(secretLinkSettings => {
+          const newSecretLinkSettings = [...secretLinkSettings.filter(({ calendarId }) => calendarId !== req.params.calendarId), { calendarId: req.params.calendarId, token }];
+
+          return secretLinkTokenEsnConfig.set('secretLinkSettings', newSecretLinkSettings);
+        })
         .then(() => getBaseUrl(null))
         .then(baseUrl => {
           const secretLink = `${baseUrl}/calendar/api/calendars/${req.params.calendarHomeId}/${req.params.calendarId}/calendar.ics?token=${token}`;
