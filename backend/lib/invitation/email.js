@@ -3,6 +3,7 @@ const path = require('path');
 const { promisify } = require('util');
 const mjml2html = require('mjml');
 const momentTimezone = require('moment-timezone');
+const _ = require('lodash');
 const { jcal2content } = require('./../helpers/jcal');
 const { isValidURL, isAbsoluteURL } = require('../helpers/url');
 const emailHelpers = require('./../helpers/email');
@@ -183,7 +184,7 @@ module.exports = dependencies => {
                 if (changes.dtstart) isAllDay = changes.dtstart.previous.isAllDay;
                 else if (changes.dtend) isAllDay = changes.dtend.previous.isAllDay;
 
-                content.changes = changes;
+                content.changes = _.cloneDeep(changes);
                 content.changes.isOldEventAllDay = isAllDay;
 
                 if (content.changes.dtstart) {

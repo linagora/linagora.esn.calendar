@@ -1160,7 +1160,7 @@ describe('The invitation email module', function() {
                 fullDateTime: '2015年1月1日星期四02点02分',
                 fullDate: '2015年1月1日星期四'
               });
-              expect(locals.content.changes).to.deep.equal(changes);
+              expect(locals.content.changes.location).to.deep.equal(changes.location);
               expect(locals.content.changes.isOldEventAllDay).to.equal(false);
               expect(locals.content.changes.dtstart.previous).to.deep.equal({
                 date: '01/01/2015',
@@ -1344,7 +1344,7 @@ describe('The invitation email module', function() {
                 fullDateTime: '2015年1月1日星期四02点02分',
                 fullDate: '2015年1月1日星期四'
               });
-              expect(locals.content.changes).to.deep.equal(changes);
+              expect(locals.content.changes.location).to.deep.equal(changes.location);
               expect(locals.content.changes.isOldEventAllDay).to.equal(false);
               expect(locals.content.changes.dtstart.previous).to.deep.equal({
                 date: '01/01/2015',
@@ -1516,7 +1516,7 @@ describe('The invitation email module', function() {
                 fullDateTime: '2015年1月1日星期四02点02分',
                 fullDate: '2015年1月1日星期四'
               });
-              expect(locals.content.changes).to.deep.equal(changes);
+              expect(locals.content.changes.location).to.deep.equal(changes.location);
               expect(locals.content.changes.isOldEventAllDay).to.equal(false);
               expect(locals.content.changes.dtend.previous).to.deep.equal({
                 date: '01/01/2015',
