@@ -1,6 +1,9 @@
 const extend = require('extend');
 const _ = require('lodash');
+
 const { ACCEPTED, DECLINED, TENTATIVE } = require('../constants').ATTENDEE.ACTIONS;
+
+
 
 module.exports = dependencies => {
   const {jwt} = dependencies('auth');

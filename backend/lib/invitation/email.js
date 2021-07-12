@@ -20,6 +20,7 @@ module.exports = dependencies => {
   const linksHelper = require('../helpers/links')(dependencies);
   const emailEventHelper = require('../helpers/email-event')(dependencies);
   const processors = require('./processors')(dependencies);
+  const excalHelper = require('../helpers/excal');
 
   const getBaseURL = promisify(configHelpers.getBaseUrl);
   const findUserByEmail = promisify(findByEmail);
@@ -100,7 +101,7 @@ module.exports = dependencies => {
               const subject = i18n.__({ phrase: metadata.subject.phrase, locale }, metadata.subject.parameters);
               const inviteMessage = i18n.__({ phrase: metadata.inviteMessage, locale }, {});
               const message = _buildMessage({ method, ics, subject, replyTo: editorEmail, to: recipientEmail });
-
+             
               return _buildMessageContent({
                 baseURL,
                 calendarURI,
@@ -243,11 +244,12 @@ module.exports = dependencies => {
       uid: event.uid,
       calendarURI
     };
+    const invitationBaseURL = excalHelper.getBaseURL(isExternalRecipient) || baseURL;
 
-    return invitationLink.generateActionLinks(baseURL, jwtPayload, isExternalRecipient)
+    return invitationLink.generateActionLinks(invitationBaseURL, jwtPayload, isExternalRecipient)
       .then(links => {
         const content = {
-          baseUrl: baseURL,
+          baseUrl: invitationBaseURL,
           inviteMessage,
           method,
           event,

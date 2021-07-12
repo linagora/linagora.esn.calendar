@@ -12,6 +12,10 @@ describe('The invitation email module', function() {
   let transformedHTML;
 
   beforeEach(function() {
+    this.calendarModulePath = this.moduleHelpers.modulePath;
+    this.excalHelper = require(this.calendarModulePath + '/backend/lib/helpers/excal');
+  
+
     authMock = {
       jwt: {
         generateWebToken: function(p, callback) {
@@ -57,6 +61,7 @@ describe('The invitation email module', function() {
       getMailer: function() { return {}; }
     };
 
+    
     datetimeOptions = {
       timeZone: 'UTC'
     };
@@ -493,9 +498,8 @@ describe('The invitation email module', function() {
         };
         let findByEmailCallCount = 0;
 
-        helpersMock.config.getBaseUrl = function(user, callback) {
-          callback(null, 'http://localhost:8888');
-        };
+        this.baseURL = this.excalHelper.getBaseURL(false);
+        expect(this.baseURL).to.equal('http://calendar.open-paas.org.local');
 
         userMock.findByEmail = function(email, callback) {
           findByEmailCallCount++;
@@ -533,10 +537,10 @@ describe('The invitation email module', function() {
               expect(template.path).to.match(/templates\/email/);
               expect(locals.filter).is.a.function;
               expect(locals.content.method).to.equal(method);
-              expect(locals.content.baseUrl).to.equal('http://localhost:8888');
-              expect(locals.content.yes).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
-              expect(locals.content.no).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
-              expect(locals.content.maybe).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
+              expect(locals.content.baseUrl).to.equal('http://calendar.open-paas.org.local');
+              expect(locals.content.yes).to.equal('http://calendar.open-paas.org.local/calendar/#/calendar/participation/?jwt=token');
+              expect(locals.content.no).to.equal('http://calendar.open-paas.org.local/calendar/#/calendar/participation/?jwt=token');
+              expect(locals.content.maybe).to.equal('http://calendar.open-paas.org.local/calendar/#/calendar/participation/?jwt=token');
 
               checkTemplateFn(templateFn);
 
@@ -601,10 +605,10 @@ describe('The invitation email module', function() {
               expect(locals.filter).is.a.function;
               expect(locals.content.method).to.equal(method);
               expect(locals.content.seeInCalendarLink).to.be.defined;
-              expect(locals.content.baseUrl).to.equal('http://localhost:8888');
-              expect(locals.content.yes).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
-              expect(locals.content.no).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
-              expect(locals.content.maybe).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
+              expect(locals.content.baseUrl).to.equal('http://calendar.open-paas.org.local');
+              expect(locals.content.yes).to.equal('http://calendar.open-paas.org.local/calendar/#/calendar/participation/?jwt=token');
+              expect(locals.content.no).to.equal('http://calendar.open-paas.org.local/calendar/#/calendar/participation/?jwt=token');
+              expect(locals.content.maybe).to.equal('http://calendar.open-paas.org.local/calendar/#/calendar/participation/?jwt=token');
 
               checkTemplateFn(templateFn);
 
@@ -628,9 +632,8 @@ describe('The invitation email module', function() {
       it('should send HTML email with correct parameters using the provided sender object', function(done) {
         const method = 'REQUEST';
 
-        helpersMock.config.getBaseUrl = function(user, callback) {
-          callback(null, 'http://localhost:8888');
-        };
+          this.baseURL = this.excalHelper.getBaseURL(true);
+          expect(this.baseURL).to.equal('http://excal.open-paas.org.local');
 
         userMock.findByEmail = sinon.spy(function(email, callback) {
           return callback(null, (email === attendee1.emails[0]) ? attendee1 : otherAttendee);
@@ -661,10 +664,10 @@ describe('The invitation email module', function() {
               expect(locals.filter).is.a.function;
               expect(locals.content.method).to.equal(method);
               expect(locals.content.seeInCalendarLink).to.be.defined;
-              expect(locals.content.baseUrl).to.equal('http://localhost:8888');
-              expect(locals.content.yes).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
-              expect(locals.content.no).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
-              expect(locals.content.maybe).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
+              expect(locals.content.baseUrl).to.equal('http://calendar.open-paas.org.local');
+              expect(locals.content.yes).to.equal('http://calendar.open-paas.org.local/calendar/#/calendar/participation/?jwt=token');
+              expect(locals.content.no).to.equal('http://calendar.open-paas.org.local/calendar/#/calendar/participation/?jwt=token');
+              expect(locals.content.maybe).to.equal('http://calendar.open-paas.org.local/calendar/#/calendar/participation/?jwt=token');
               expect(userMock.findByEmail).to.have.been.calledOnce;
               expect(userMock.findByEmail).to.have.been.calledWith(attendeeEmail);
 

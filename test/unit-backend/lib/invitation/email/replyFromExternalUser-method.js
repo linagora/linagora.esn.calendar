@@ -4,11 +4,14 @@ const fs = require('fs');
 const mockery = require('mockery');
 
 describe('The invitation email module', function() {
-  let userMock, domainMock, helpersMock, authMock, emailMock, esnConfigMock, datetimeHelpersMock;
+  let userMock, domainMock, helpersMock, authMock, emailMock , esnConfigMock, datetimeHelpersMock;
   let getModule;
   const method = 'REPLY';
 
   beforeEach(function() {
+    this.calendarModulePath = this.moduleHelpers.modulePath;
+    this.excalHelper = require(this.calendarModulePath + '/backend/lib/helpers/excal');
+
     authMock = {
       jwt: {
         generateWebToken: function(p, callback) {
@@ -32,13 +35,13 @@ describe('The invitation email module', function() {
 
     domainMock = {
       load: function(domainId, callback) {
-        callback(null, { _id: 'domainId '});
+        callback(null, { _id: 'domainId ' });
       }
     };
 
     helpersMock = {
       message: {
-        messageSharesToTimelineTarget: function() {}
+        messageSharesToTimelineTarget: function() { }
       },
       array: {
         isNullOrEmpty: function(array) {
@@ -51,7 +54,7 @@ describe('The invitation email module', function() {
         }
       }
     };
-
+  
     emailMock = {
       getMailer: function() { return {}; }
     };
@@ -64,7 +67,7 @@ describe('The invitation email module', function() {
           expect(mod).to.equal('core');
 
           return {
-            forUser: () => {}
+            forUser: () => { }
           };
         }
       };
@@ -115,7 +118,7 @@ describe('The invitation email module', function() {
     ].join('\r\n');
 
     it('should return an error if editorEmail is undefined', function(done) {
-      getModule().replyFromExternalUser({ editorEmail: null, recipientEmail: 'foo@bar.com', method, ics: 'ICS', calendarURI: 'calendarURI'}).then(done, () => done());
+      getModule().replyFromExternalUser({ editorEmail: null, recipientEmail: 'foo@bar.com', method, ics: 'ICS', calendarURI: 'calendarURI' }).then(done, () => done());
     });
 
     it('should return an error if attendeeEmails is not an email string', function(done) {
@@ -127,7 +130,7 @@ describe('The invitation email module', function() {
     });
 
     it('should return an error if method is undefined', function(done) {
-      getModule().replyFromExternalUser({ editorEmail: externalAttendeeEmail, recipientEmail: 'foo@bar.com', method: null, ics: 'ICS', calendarURI: 'calendarURI'}).then(done, () => done());
+      getModule().replyFromExternalUser({ editorEmail: externalAttendeeEmail, recipientEmail: 'foo@bar.com', method: null, ics: 'ICS', calendarURI: 'calendarURI' }).then(done, () => done());
     });
 
     it('should return an error if ics is undefined', function(done) {
@@ -135,7 +138,7 @@ describe('The invitation email module', function() {
     });
 
     it('should return an error if calendarURI is undefined', function(done) {
-      getModule().replyFromExternalUser({ editorEmail: externalAttendeeEmail, recipientEmail: 'foo@bar.com', method, ics: 'ICS', calendarURI: null}).then(done, () => done());
+      getModule().replyFromExternalUser({ editorEmail: externalAttendeeEmail, recipientEmail: 'foo@bar.com', method, ics: 'ICS', calendarURI: null }).then(done, () => done());
     });
 
     it('should return an error if findByEmail return an error', function(done) {
@@ -143,7 +146,7 @@ describe('The invitation email module', function() {
         callback(new Error('Error in findByEmail'));
       };
 
-      getModule().replyFromExternalUser({ editorEmail: externalAttendeeEmail, recipientEmail: organizer.preferredEmail, method, ics, calendarURI: 'calendarURI'}).then(done, () => done());
+      getModule().replyFromExternalUser({ editorEmail: externalAttendeeEmail, recipientEmail: organizer.preferredEmail, method, ics, calendarURI: 'calendarURI' }).then(done, () => done());
     });
 
     it('should return an error it cannot retrieve base url', function(done) {
@@ -151,7 +154,7 @@ describe('The invitation email module', function() {
         callback(new Error('cannot get base_url'));
       };
 
-      getModule().replyFromExternalUser({ editorEmail: externalAttendeeEmail, recipientEmail: organizer.preferredEmail, method, ics, calendarURI: 'calendarURI'}).then(done, () => done());
+      getModule().replyFromExternalUser({ editorEmail: externalAttendeeEmail, recipientEmail: organizer.preferredEmail, method, ics, calendarURI: 'calendarURI' }).then(done, () => done());
     });
 
     it('should return an error if an error happens during links generation', function(done) {
@@ -163,7 +166,7 @@ describe('The invitation email module', function() {
         return callback(new Error());
       };
 
-      getModule().replyFromExternalUser({ editorEmail: externalAttendeeEmail, recipientEmail: organizer.preferredEmail, method, ics, calendarURI: 'calendarURI'}).then(done, () => done());
+      getModule().replyFromExternalUser({ editorEmail: externalAttendeeEmail, recipientEmail: organizer.preferredEmail, method, ics, calendarURI: 'calendarURI' }).then(done, () => done());
     });
 
     it('should generate a token with proper information', function(done) {
@@ -171,13 +174,13 @@ describe('The invitation email module', function() {
         callback(null, organizer);
       };
 
-      emailMock.getMailer = () => ({sendHTML: () => Promise.resolve()});
+      emailMock.getMailer = () => ({ sendHTML: () => Promise.resolve() });
 
       authMock.jwt.generateWebToken = sinon.spy(function(token, callback) {
         callback(null, 'a_token');
       });
 
-      getModule().replyFromExternalUser({ editorEmail: externalAttendeeEmail, recipientEmail: organizer.preferredEmail, method, ics, calendarURI: 'calendarURI'})
+      getModule().replyFromExternalUser({ editorEmail: externalAttendeeEmail, recipientEmail: organizer.preferredEmail, method, ics, calendarURI: 'calendarURI' })
         .then(() => {
           ['ACCEPTED', 'DECLINED', 'TENTATIVE'].forEach(action => testTokenWith(action, externalAttendeeEmail));
 
@@ -209,7 +212,7 @@ describe('The invitation email module', function() {
         };
       };
 
-      getModule().replyFromExternalUser({ editorEmail: externalAttendeeEmail, recipientEmail: organizer.preferredEmail, method, ics, calendarURI: 'calendarURI'}).then(done, () => done());
+      getModule().replyFromExternalUser({ editorEmail: externalAttendeeEmail, recipientEmail: organizer.preferredEmail, method, ics, calendarURI: 'calendarURI' }).then(done, () => done());
     });
 
     it('should work even if findByEmail doesn\'t find the recipient', function(done) {
@@ -230,7 +233,7 @@ describe('The invitation email module', function() {
         };
       };
 
-      getModule().replyFromExternalUser({ editorEmail: externalAttendeeEmail, recipientEmail: organizer.preferredEmail, method, ics, calendarURI: 'calendarURI'}).then(done, done);
+      getModule().replyFromExternalUser({ editorEmail: externalAttendeeEmail, recipientEmail: organizer.preferredEmail, method, ics, calendarURI: 'calendarURI' }).then(done, done);
     });
 
     it('should not send an email if the recipient is not involved in the event', function(done) {
@@ -247,7 +250,7 @@ describe('The invitation email module', function() {
         };
       };
 
-      getModule().replyFromExternalUser({ editorEmail: externalAttendeeEmail, recipientEmail: emailAttendeeNotInvited, method, ics, calendarURI: 'calendarURI'})
+      getModule().replyFromExternalUser({ editorEmail: externalAttendeeEmail, recipientEmail: emailAttendeeNotInvited, method, ics, calendarURI: 'calendarURI' })
         .then(() => done())
         .catch(err => {
           expect(err.message).to.match(/The recipient is not involved in the event/);
@@ -256,10 +259,10 @@ describe('The invitation email module', function() {
         });
     });
 
-    it('should send HTML email with correct parameters', function(done) {
-      helpersMock.config.getBaseUrl = function(user, callback) {
-        callback(null, 'http://localhost:8888');
-      };
+    it.only('should send HTML email with correct parameters', function(done) {
+     
+      this.baseURL = this.excalHelper.getBaseURL(true);
+      expect(this.baseURL).to.equal('http://excal.open-paas.org.local');
 
       userMock.findByEmail = function(email, callback) {
         return callback(null, organizer);
@@ -290,15 +293,16 @@ describe('The invitation email module', function() {
             expect(locals.filter).is.a.function;
             expect(locals.content.method).to.equal(method);
             expect(locals.content.seeInCalendarLink).to.be.defined;
-            expect(locals.content.baseUrl).to.equal('http://localhost:8888');
-            expect(locals.content.yes).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
-            expect(locals.content.no).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
-            expect(locals.content.maybe).to.equal('http://localhost:8888/calendar/#/calendar/participation/?jwt=token');
+            expect(locals.content.baseUrl).to.equal('http://calendar.open-paas.org.local');
+            expect(locals.content.yes).to.equal('http://calendar.open-paas.org.local/calendar/#/calendar/participation/?jwt=token');
+            expect(locals.content.no).to.equal('http://calendar.open-paas.org.local/calendar/#/calendar/participation/?jwt=token');
+            expect(locals.content.maybe).to.equal('http://calendar.open-paas.org.local/calendar/#/calendar/participation/?jwt=token');
 
             return Promise.resolve();
           }
         };
       };
+
       getModule().replyFromExternalUser({
         editorEmail: externalAttendeeEmail,
         recipientEmail: organizer.preferredEmail,
@@ -310,9 +314,9 @@ describe('The invitation email module', function() {
     });
 
     it('should not include calendar link when attendee is external user', function(done) {
-      helpersMock.config.getBaseUrl = function(user, callback) {
-        callback(null, 'http://localhost:8888');
-      };
+      this.baseURL = this.excalHelper.getBaseURL(true);
+      expect(this.baseURL).to.equal('http://excal.open-paas.org.local');
+
 
       userMock.findByEmail = function(email, callback) {
         return callback();
