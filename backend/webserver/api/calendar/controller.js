@@ -202,7 +202,7 @@ module.exports = dependencies => {
     const ESNToken = req.token && req.token.token ? req.token.token : '';
     const url = urljoin(req.davserver, 'calendars', req.params.calendarHomeId, req.params.calendarId + '?export');
 
-    const secretLinkTokenEsnConfig = esnConfig('secretLinkToken').inModule('linagora.esn.calendar').forUser(req.user);
+    const secretLinkTokenEsnConfig = esnConfig('secretLinkToken').inModule('linagora.esn.calendar').forUser(req.user, true);
 
     secretLinkTokenEsnConfig.get('secretLinkSettings')
       .then(secretLinks => {

@@ -1094,7 +1094,7 @@ describe('The calendar controller', function() {
       controller.downloadIcsFile(req, res);
 
       expect(esnConfigMock).to.have.been.calledWith('secretLinkToken');
-      expect(esnConfigInModuleMock.forUser).to.have.been.calledWithExactly(req.user);
+      expect(esnConfigInModuleMock.forUser).to.have.been.calledWithExactly(req.user, true);
       expect(forUserMock.get).to.have.been.calledWith('secretLinkSettings');
     });
   });
