@@ -1,7 +1,7 @@
 {
   "name": "linagora.esn.calendar",
   "main": "index.js",
-  "version": "1.9.0-rc9",
+  "version": "1.9.0-dev",
   "authors": [
     "Linagora <lgs-openpaas-dev@linagora.com>"
   ],
